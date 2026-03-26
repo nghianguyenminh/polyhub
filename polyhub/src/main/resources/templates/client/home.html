@@ -1,96 +1,122 @@
-<div th:replace="~{layouts/main_layout :: layout(~{::section})}">
-    <section layout:fragment="content" style="background-color: #F0F2F5; min-height: 100vh; padding-top: 20px;">
-        <div class="container">
-            <div class="row">
-                
-                <div class="col-lg-3 d-none d-lg-block">
-                    <div class="position-sticky" style="top: 80px;">
-                        <ul class="list-group list-group-flush rounded-3 shadow-sm mb-4">
-                            <a href="#" class="list-group-item list-group-item-action d-flex align-items-center p-3 fw-bold" style="color: #F27125; background-color: #FFF3EB;">
-                                <i class="bi bi-house-door-fill fs-5 me-3"></i> Trang chủ
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex align-items-center p-3 text-dark">
-                                <i class="bi bi-people fs-5 me-3 text-secondary"></i> Nhóm học
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex align-items-center p-3 text-dark">
-                                <i class="bi bi-mortarboard fs-5 me-3 text-secondary"></i> Mentors
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action d-flex align-items-center p-3 text-dark">
-                                <i class="bi bi-file-earmark-text fs-5 me-3 text-secondary"></i> Tài liệu
-                            </a>
-                        </ul>
+﻿<div th:replace="~{layouts/main_layout :: layout(~{::main})}">
+    <main class="w-100 d-flex justify-content-center"> 
+        
+        <div class="poly-sidebar-left d-none d-lg-block">
+            <div class="text-muted fw-bold mb-2 px-2 mt-2" style="font-size: 12px; letter-spacing: 0.5px;">MENU CHÍNH</div>
+            <a href="#" class="poly-nav-item active"><i class="bi bi-house-door"></i> Trang chủ</a>
+            <a href="#" class="poly-nav-item"><i class="bi bi-people"></i> Nhóm học tập</a>
+            <a href="#" class="poly-nav-item"><i class="bi bi-award"></i> Poly Mentors</a>
+            <a href="#" class="poly-nav-item"><i class="bi bi-journal-bookmark"></i> Góc Tài liệu</a>
+            
+            <div class="text-muted fw-bold mb-2 px-2 mt-4" style="font-size: 12px; letter-spacing: 0.5px;">PHÍM TẮT & KHÁM PHÁ</div>
+            <a href="#" class="poly-nav-item"><i class="bi bi-play-btn"></i> Video <span class="badge bg-danger ms-auto rounded-pill" style="font-size: 10px;">Mới</span></a>
+            <a href="#" class="poly-nav-item"><i class="bi bi-calendar-event"></i> Sự kiện FPT</a>
+            <a href="#" class="poly-nav-item"><i class="bi bi-briefcase"></i> Việc làm IT</a>
+            <a href="#" class="poly-nav-item"><i class="bi bi-bookmark"></i> Đã lưu</a>
 
-                        <div class="card border-0 shadow-sm bg-white rounded-3 p-3 text-center">
-                            <h6 class="fw-bold mb-1">Gói Tháng / 45k</h6>
-                            <p class="text-muted small">Nâng cấp lên Pro để nhận nhiều ưu đãi hấp dẫn nhất</p>
-                            <button class="btn btn-sm btn-primary rounded-pill w-100">✨ Nâng Cấp Lên Pro</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="text-muted fw-bold mb-2 px-2 mt-4" style="font-size: 12px; letter-spacing: 0.5px;">TIN NHẮN TRỰC TIẾP</div>
+            <a href="#" class="poly-nav-item">
+                <img src="https://ui-avatars.com/api/?name=Bao+Chau&background=random" class="rounded-circle me-2" width="28" height="28">
+                Bảo Châu <span class="badge bg-danger ms-auto rounded-circle p-1" style="width: 8px; height: 8px;"></span>
+            </a>
+            <a href="#" class="poly-nav-item">
+                <img src="https://ui-avatars.com/api/?name=Anh+Khoa&background=random" class="rounded-circle me-2" width="28" height="28">
+                Anh Khoa
+            </a>
+        </div>
 
-                <div class="col-lg-6 col-md-8 mx-auto">
-                    <div class="card border-0 rounded-4 mb-4" style="background: linear-gradient(90deg, #F27125, #ff9452); color: white;">
-                        <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="fw-bold">Chỉ với 50.000/Tháng bạn đã có thể trải nghiệm vô vàn ưu đãi</h5>
-                                <button class="btn btn-dark btn-sm rounded-pill mt-2">Xem ngay <i class="bi bi-arrow-right-circle"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm rounded-4 mb-4">
-                        <div class="card-body d-flex align-items-center gap-3">
-                            <img src="https://ui-avatars.com/api/?name=Minh+Nghia&background=random" class="rounded-circle" width="45" height="45">
-                            <input type="text" class="form-control rounded-pill bg-light border-0 py-2" placeholder="Bạn đang nghĩ gì, Minh Nghĩa?">
-                            <button class="btn btn-light rounded-circle"><i class="bi bi-image text-success fs-5"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm rounded-4 mb-4">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Bao+Chau&background=random" class="rounded-circle" width="45" height="45">
-                                    <div>
-                                        <h6 class="mb-0 fw-bold">Lưu Phan Bảo Châu</h6>
-                                        <small class="text-muted">2 ngày trước</small>
-                                    </div>
-                                </div>
-                                <i class="bi bi-three-dots cursor-pointer"></i>
-                            </div>
-                            <p class="card-text">Thiết kế không phải chuyện dễ dàng, nắm bắt nhu cầu người dùng lại càng khó hơn... 🎨✨ Cùng học hỏi cách phân tích tạo ra sản phẩm chạm đến người dùng.</p>
-                            <img src="https://placehold.co/600x300" class="img-fluid rounded-3 mb-3 w-100" alt="Post image">
-                            <hr class="text-muted">
-                            <div class="d-flex justify-content-between text-muted fw-semibold">
-                                <div class="cursor-pointer hover-orange"><i class="bi bi-hand-thumbs-up me-1"></i> 108 Thích</div>
-                                <div class="cursor-pointer hover-orange"><i class="bi bi-chat-dots me-1"></i> 55 Bình luận</div>
-                                <div class="cursor-pointer hover-orange"><i class="bi bi-share me-1"></i> Chia sẻ</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 d-none d-lg-block">
-                    <div class="position-sticky" style="top: 80px;">
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div class="card-body">
-                                <h6 class="fw-bold mb-3">Top Mentors bạn nên biết</h6>
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <img src="https://ui-avatars.com/api/?name=Tan+Dung&background=random" class="rounded-circle" width="40">
-                                        <div>
-                                            <div class="fw-bold fs-7">Mr. Tấn Dũng</div>
-                                            <div class="text-muted" style="font-size: 12px;">Quản lý dự án Viettel</div>
-                                        </div>
-                                    </div>
-                                    <i class="bi bi-plus-circle text-warning fs-5 cursor-pointer"></i>
-                                </div>
-                                </div>
-                        </div>
-                    </div>
+        <div class="poly-main-feed">
+            <div class="poly-card p-3">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="https://ui-avatars.com/api/?name=Minh+Nghia&background=F27125&color=fff" class="rounded-circle" width="40" height="40">
+                    <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" placeholder="Bạn đang nghĩ gì, Nghĩa?" style="cursor: pointer; font-size: 14.5px;" readonly>
                 </div>
                 
+                <div class="d-flex justify-content-between px-1 mt-3">
+                    <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
+                    <button class="btn-ghost flex-grow-1"><i class="bi bi-image text-success me-2 fs-5"></i> Ảnh/GIF</button>
+                    <button class="btn-ghost flex-grow-1"><i class="bi bi-emoji-smile text-warning me-2 fs-5"></i> Cảm xúc</button>
+                </div>
+            </div>
+
+            <div class="poly-card p-0"> 
+                <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="https://ui-avatars.com/api/?name=Bao+Chau&background=random" class="rounded-circle" width="40" height="40">
+                        <div style="line-height: 1.3;">
+                            <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;">Lưu Phan Bảo Châu</a>
+                            <div class="text-muted" style="font-size: 13px;">2 giờ trước • <i class="bi bi-globe-asia-australia"></i></div>
+                        </div>
+                    </div>
+                    <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
+                </div>
+                
+                <div class="px-3 pb-2">
+                    <p class="mb-0" style="font-size: 14.5px;">Giao diện không chỉ cần đẹp mà còn phải giải quyết được bài toán UX. Đã gỡ bỏ toàn bộ đường kẻ vạch thô cứng, dùng khoảng trắng tinh tế hơn! 🚀✨</p>
+                </div>
+                
+                <img src="https://i.pinimg.com/1200x/23/d9/56/23d9562dec825fe3a068667b1bb8aa18.jpg" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
+                
+                <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
+                    <div class="d-flex align-items-center"><i class="bi bi-heart-fill text-danger me-1"></i> 142</div>
+                    <div>55 Bình luận • 12 Chia sẻ</div>
+                </div>
+
+                <div class="d-flex justify-content-between px-2 pb-2 pt-1">
+                    <button class="btn-ghost flex-grow-1 btn-like">
+                        <i class="bi bi-heart me-1 fs-5"></i> Thích
+                    </button>
+                    <button class="btn-ghost flex-grow-1">
+                        <i class="bi bi-chat-dots me-1 fs-5"></i> Bình luận
+                    </button>
+                    <button class="btn-ghost flex-grow-1">
+                        <i class="bi bi-share me-1 fs-5"></i> Chia sẻ
+                    </button>
+                </div>
             </div>
         </div>
-    </section>
+
+        <div class="poly-sidebar-right d-none d-xl-block">
+            <div class="text-muted fw-bold mb-3 mt-2" style="font-size: 12px; letter-spacing: 0.5px;">GỢI Ý KẾT NỐI MENTOR</div>
+            
+            <div class="d-flex align-items-center mb-3">
+                <img src="https://ui-avatars.com/api/?name=Tan+Dung&background=random" class="rounded-circle me-2" width="40" height="40">
+                <div class="flex-grow-1" style="line-height: 1.2;">
+                    <div class="fw-bold text-dark" style="font-size: 14px;">Mr. Tấn Dũng</div>
+                    <div class="text-muted" style="font-size: 12px;">Chuyên gia Backend</div>
+                </div>
+                <button class="btn-icon-circle bg-light text-poly" style="width: 32px; height: 32px;"><i class="bi bi-person-plus-fill"></i></button>
+            </div>
+            
+            <div class="d-flex align-items-center mb-3">
+                <img src="https://ui-avatars.com/api/?name=Mai+Anh&background=random" class="rounded-circle me-2" width="40" height="40">
+                <div class="flex-grow-1" style="line-height: 1.2;">
+                    <div class="fw-bold text-dark" style="font-size: 14px;">Ms. Mai Anh</div>
+                    <div class="text-muted" style="font-size: 12px;">UI/UX Designer</div>
+                </div>
+                <button class="btn-icon-circle bg-light text-poly" style="width: 32px; height: 32px;"><i class="bi bi-person-plus-fill"></i></button>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const likeBtns = document.querySelectorAll('.btn-like');
+                likeBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        this.classList.toggle('text-danger');
+                        const icon = this.querySelector('i');
+                        if (icon.classList.contains('bi-heart')) {
+                            icon.classList.replace('bi-heart', 'bi-heart-fill');
+                            icon.style.transform = 'scale(1.3)';
+                            setTimeout(() => icon.style.transform = 'scale(1)', 200);
+                        } else {
+                            icon.classList.replace('bi-heart-fill', 'bi-heart');
+                            this.classList.remove('text-danger');
+                        }
+                        icon.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    });
+                });
+            });
+        </script>
+    </main>
 </div>

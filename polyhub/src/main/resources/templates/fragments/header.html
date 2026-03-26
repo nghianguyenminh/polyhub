@@ -1,70 +1,58 @@
-<header th:fragment="header" class="navbar navbar-expand-lg fixed-top bg-white shadow-sm" style="height: 76px;">
-    <div class="container">
-        <a class="navbar-brand fw-bold fs-3 text-poly d-flex align-items-center" th:href="@{/}">
-            <img src="/client/images/logo.png" alt="PolyHUB" width="40" height="40" class="me-2 d-none d-sm-block" onerror="this.style.display='none'">
-            PolyHUB
-        </a>
-
-        <div class="d-none d-md-flex mx-auto" style="width: 40%;">
-            <div class="input-group">
-                <span class="input-group-text bg-light border-0 rounded-start-pill text-muted px-3">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="text" class="form-control bg-light border-0 rounded-end-pill py-2" placeholder="Tìm kiếm trên PolyHUB...">
-            </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-3">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <header th:fragment="header" class="poly-header fixed-top d-flex align-items-center px-3 px-md-4">
+        <div class="d-flex align-items-center w-100 mx-auto justify-content-between" style="max-width: 1400px;">
             
-            <a href="#" class="position-relative text-dark hover-orange bg-light p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                <i class="bi bi-chat-fill fs-5 text-secondary"></i>
-                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+            <a href="/" class="text-decoration-none d-flex align-items-center me-4">
+                <h3 class="mb-0 fw-bold text-poly" style="letter-spacing: -0.5px;">PolyHUB</h3>
             </a>
 
-            <a href="#" class="position-relative text-dark hover-orange bg-light p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                <i class="bi bi-bell-fill fs-5 text-secondary"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                    3
-                </span>
-            </a>
-
-            <div class="dropdown ms-2">
-                <a href="#" class="d-flex align-items-center text-decoration-none" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="https://ui-avatars.com/api/?name=Minh+Nghia&background=F27125&color=fff" alt="Avatar" class="rounded-circle border" width="40" height="40">
-                    <div class="d-none d-lg-block ms-2 text-dark text-start">
-                        <div class="fw-bold" style="font-size: 14px; line-height: 1.2;">Nguyễn Minh Nghĩa</div>
-                        <small class="text-muted" style="font-size: 11px;">SV, K21 - CNTT</small>
-                    </div>
-                </a>
-                
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 rounded-3" aria-labelledby="userDropdown">
-                    <li>
-                        <a class="dropdown-item py-2 fw-semibold d-flex align-items-center" href="#">
-                            <div class="bg-light p-2 rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                <i class="bi bi-person-fill fs-5 text-secondary"></i>
-                            </div>
-                            Trang cá nhân
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item py-2 fw-semibold d-flex align-items-center" href="#">
-                            <div class="bg-light p-2 rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                <i class="bi bi-gear-fill fs-5 text-secondary"></i>
-                            </div>
-                            Cài đặt & Quyền riêng tư
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item py-2 fw-semibold text-danger d-flex align-items-center" th:href="@{/login}">
-                            <div class="bg-light p-2 rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                <i class="bi bi-box-arrow-right fs-5 text-danger"></i>
-                            </div>
-                            Đăng xuất
-                        </a>
-                    </li>
-                </ul>
+            <div class="d-none d-md-flex flex-grow-1 mx-4" style="max-width: 600px;">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0 rounded-start-pill text-muted ps-3">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control bg-light border-0 rounded-end-pill py-2" style="font-size: 15px;" placeholder="Tìm kiếm tài liệu, mentor hoặc bạn bè trên PolyHUB...">
+                </div>
             </div>
+
+            <div class="d-flex align-items-center gap-2 gap-md-3">
+                <button class="btn-icon-circle d-md-none"><i class="bi bi-search fs-5"></i></button>
+                
+                <button class="btn-icon-circle position-relative">
+                    <i class="bi bi-bell-fill fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="margin-top: 5px; margin-left: -5px;"></span>
+                </button>
+                
+                <button class="btn-icon-circle"><i class="bi bi-chat-dots-fill fs-5"></i></button>
+
+                <div class="dropdown ms-1 ms-md-2">
+                    <a href="#" class="d-block link-dark text-decoration-none" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://ui-avatars.com/api/?name=Minh+Nghia&background=F27125&color=fff" alt="User" width="40" height="40" class="rounded-circle shadow-sm border border-1">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser" style="border-radius: 10px;">
+                        <li>
+                            <a class="dropdown-item py-2 fw-medium d-flex align-items-center" href="/profile">
+                                <i class="bi bi-person-circle fs-5 me-2 text-muted"></i> Trang cá nhân
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2 fw-medium d-flex align-items-center" href="/settings">
+                                <i class="bi bi-gear fs-5 me-2 text-muted"></i> Cài đặt & Quyền riêng tư
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider opacity-10"></li>
+                        <li>
+                            <a class="dropdown-item py-2 fw-medium text-danger d-flex align-items-center" href="/logout">
+                                <i class="bi bi-box-arrow-right fs-5 me-2"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
-    </div>
-</header>
+    </header>
+</body>
+</html>
