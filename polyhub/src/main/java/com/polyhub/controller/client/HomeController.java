@@ -8,6 +8,6 @@ public class HomeController {
 
     @GetMapping("/")
     public String index() {
-        return "client/home"; // Nó sẽ tìm file src/main/resources/templates/client/home.html
+        return "client/home"; // Mở file src/main/resources/templates/client/home.html
     }
 }
