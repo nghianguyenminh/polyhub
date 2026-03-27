@@ -1,0 +1,153 @@
+/* =========================================
+   1. BỐ CỤC SIDEBAR (TRÁI & PHẢI)
+   ========================================= */
+.poly-sidebar-left, .poly-sidebar-right {
+    position: sticky;
+    top: calc(var(--header-height) + 16px);
+    height: calc(100vh - var(--header-height) - 16px);
+    overflow-y: auto;
+    background: transparent;
+    scrollbar-width: none; 
+}
+.poly-sidebar-left::-webkit-scrollbar, .poly-sidebar-right::-webkit-scrollbar {
+    display: none;
+}
+/* Thu gọn sidebar lại để tổng thể tinh tế hơn, không bị thô */
+.poly-sidebar-left { width: 250px; padding-right: 12px; }
+.poly-sidebar-right { width: 280px; padding-left: 12px; }
+
+/* =========================================
+   2. MENU TRÁI (LEFT SIDEBAR ITEMS)
+   ========================================= */
+.sidebar-heading {
+    color: #8c939d;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding: 0 14px;
+}
+
+.poly-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    color: #4b5563; /* Màu chữ dịu mắt, bớt cứng nhắc */
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14.5px;
+    border-radius: 12px; /* Bo cong nhiều hơn để trông mềm mại */
+    margin-bottom: 4px;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    margin-right: 12px;
+    transition: transform 0.25s ease;
+}
+
+.poly-nav-item i {
+    font-size: 1.25rem;
+}
+
+/* Hiệu ứng Hover - Trượt nhẹ mượt mà */
+.poly-nav-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    color: var(--text-main);
+    transform: translateX(3px); 
+}
+.poly-nav-item:hover .nav-icon-box {
+    transform: scale(1.1);
+}
+
+/* Trạng thái Active - Xịn xò hơn */
+.poly-nav-item.active {
+    background-color: var(--poly-primary-soft);
+    color: var(--poly-primary);
+    font-weight: 600;
+}
+/* Thêm thanh highlight nhỏ bên cạnh viền khi active */
+.poly-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    height: 70%;
+    width: 3px;
+    background-color: var(--poly-primary);
+    border-radius: 0 4px 4px 0;
+}
+
+/* Avatar Tin nhắn */
+.user-msg-item {
+    padding: 8px 14px;
+}
+
+/* =========================================
+   3. MENU PHẢI (RIGHT SIDEBAR ITEMS)
+   ========================================= */
+/* Thẻ Gợi ý Mentor */
+.mentor-suggestion-card {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.mentor-suggestion-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.mentor-cover {
+    height: 55px; 
+    background-size: cover;
+    background-position: center;
+    background-color: #e9ecef; 
+}
+.mentor-info {
+    padding: 0 12px 12px 12px;
+    position: relative;
+}
+.mentor-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid var(--bg-card); 
+    margin-top: -22px; 
+    background-color: white;
+}
+
+/* Sự kiện nổi bật */
+.event-card {
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    margin-left: -8px; 
+    margin-right: -8px;
+}
+.event-card:hover {
+    background-color: var(--border-color);
+}
+.event-card:active {
+    transform: scale(0.98);
+}
+.event-date {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* Chủ đề / Group Trending */
+.trending-topic {
+    cursor: pointer;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.trending-topic:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}

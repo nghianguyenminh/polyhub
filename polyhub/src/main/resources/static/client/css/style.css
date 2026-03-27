@@ -1,12 +1,15 @@
+/* =========================================
+   1. CORE & VARIABLES
+   ========================================= */
 :root {
     --poly-primary: #F27125; /* Cam FPT */
-    --poly-primary-soft: rgba(242, 113, 37, 0.08); /* Đã làm nhạt đi cho mềm mại */
+    --poly-primary-soft: rgba(242, 113, 37, 0.08);
     --bg-body: #F0F2F5; 
     --bg-card: #FFFFFF;
     --text-main: #050505;
     --text-muted: #65676B;
-    --border-color: rgba(0, 0, 0, 0.05); /* Viền mờ đi cho đỡ thô */
-    --header-height: 60px; /* Thu gọn header lại 1 chút */
+    --border-color: rgba(0, 0, 0, 0.05);
+    --header-height: 60px;
 }
 
 body {
@@ -16,7 +19,9 @@ body {
     padding-top: var(--header-height); 
 }
 
-/* --- TỐI ƯU HEADER --- */
+/* =========================================
+   2. HEADER & TỔNG THỂ
+   ========================================= */
 .poly-header {
     height: var(--header-height);
     background-color: var(--bg-card) !important;
@@ -26,88 +31,49 @@ body {
 .text-poly { color: var(--poly-primary) !important; }
 .bg-poly { background-color: var(--poly-primary) !important; }
 
-/* --- BỐ CỤC TỔNG THỂ (ĐÃ THU GỌN) --- */
 .app-container {
-    max-width: 1200px; /* Giảm từ 1400px xuống 1200px để giao diện không bị bành trướng */
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 16px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
 }
 
-/* --- SIDEBAR TRÁI & PHẢI (CỐ ĐỊNH) --- */
-.poly-sidebar-left, .poly-sidebar-right {
-    position: sticky;
-    top: calc(var(--header-height) + 16px);
-    height: calc(100vh - var(--header-height) - 16px);
-    overflow-y: auto;
-    background: transparent;
-    scrollbar-width: none; 
-}
-.poly-sidebar-left::-webkit-scrollbar, .poly-sidebar-right::-webkit-scrollbar {
-    display: none;
-}
-.poly-sidebar-left { width: 260px; padding-right: 12px; } /* Thu gọn bề ngang */
-.poly-sidebar-right { width: 280px; padding-left: 12px; } /* Thu gọn bề ngang */
-
-/* --- MAIN FEED (CUỘN ĐỘC LẬP) --- */
+/* =========================================
+   3. COMPONENTS DÙNG CHUNG (Cards, Buttons, Icons)
+   ========================================= */
 .poly-main-feed {
     flex: 1;
-    max-width: 580px; /* Thu gọn khu vực đọc bài để mắt đỡ mỏi */
-    margin: 16px 20px;
+    max-width: 580px; /* Sẽ được ghi đè bằng style inline ở trang Groups nếu cần */
+    margin: 16px auto;
 }
 
-/* --- THẺ CARD & BÀI VIẾT --- */
 .poly-card {
     background-color: var(--bg-card);
     border-radius: 12px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     border: 1px solid var(--border-color);
-    margin-bottom: 16px; /* Khoảng cách giữa các bài ngắn lại */
+    margin-bottom: 16px;
     transition: box-shadow 0.2s ease;
 }
 
-/* --- MENU NAVIGATION TRONG SIDEBAR (LÀM MỀM MẠI LẠI) --- */
-.poly-nav-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 12px; /* Tối ưu padding để nhỏ nhắn hơn */
-    color: var(--text-main);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14.5px; /* Giảm size chữ xuống xíu */
-    border-radius: 10px; /* Bo góc mềm mại hơn */
-    margin-bottom: 2px;
-    transition: all 0.2s ease;
-}
-.poly-nav-item:hover, .poly-nav-item.active {
-    background-color: var(--poly-primary-soft);
-    color: var(--poly-primary);
-}
-.poly-nav-item i {
-    font-size: 1.15rem; /* Icon gọn gàng lại */
-    margin-right: 12px;
-    width: 24px;
-    text-align: center;
-}
-
-/* --- NÚT TƯƠNG TÁC (BUTTONS) --- */
 .btn-ghost {
     background: transparent;
     border: none;
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 13.5px; /* Nhỏ lại cho sang */
+    font-size: 13.5px;
     border-radius: 8px;
     transition: 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 0; /* Cho nút mỏng lại */
+    padding: 6px 0;
 }
 .btn-ghost:hover {
     background-color: rgba(0, 0, 0, 0.04);
 }
+
 .btn-icon-circle {
     width: 38px; height: 38px;
     border-radius: 50%;
@@ -119,3 +85,23 @@ body {
     transition: background 0.2s;
 }
 .btn-icon-circle:hover { background: #D8DADF; }
+
+.btn-poly-gradient {
+    background: linear-gradient(135deg, #F27125, #FFC371);
+    color: white !important;
+    border: none;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+.btn-poly-gradient:hover { opacity: 0.9; }
+
+/* Icon Gradient */
+.icon-grad {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+.icon-grad-main { background-image: linear-gradient(135deg, #F27125, #FFC371); }
+.icon-grad-red { background-image: linear-gradient(135deg, #FF512F, #DD2476); }
+.icon-grad-warm { background-image: linear-gradient(135deg, #F27125, #E94057); }
