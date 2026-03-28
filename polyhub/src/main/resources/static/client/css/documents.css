@@ -2,24 +2,21 @@
    GIAO DIỆN GÓC TÀI LIỆU (DOCUMENTS PAGE)
    ========================================= */
 
-/* --- THẺ TÀI LIỆU NHỎ GỌN (COMPACT DOC CARD) --- */
+/* --- THẺ TÀI LIỆU (DOCUMENT CARD) --- */
 .doc-card {
     background-color: var(--bg-card);
     border-radius: 14px;
     border: 1px solid var(--border-color);
-    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    padding: 16px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .doc-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.06);
     border-color: rgba(242, 113, 37, 0.2);
 }
 
-/* Biểu tượng định dạng file */
 .doc-icon-box {
     width: 42px;
     height: 42px;
@@ -27,59 +24,194 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
-    font-weight: bold;
+    font-size: 20px;
 }
 
-/* Các tone màu soft cho icon */
+/* Các màu Soft Background cho Icon */
 .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
 .bg-warning-soft { background-color: rgba(255, 193, 7, 0.15); }
-.bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
-.bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+.bg-info-soft { background-color: rgba(13, 202, 240, 0.15); }
+.bg-purple-soft { background-color: rgba(162, 89, 255, 0.1); }
 
-/* Tiêu đề & Thông tin */
 .doc-title {
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--text-main);
     line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 2; /* Giới hạn đúng 2 dòng để card không bị vỡ */
+    -webkit-line-clamp: 2; /* Chỉ cho phép tối đa 2 dòng */
     -webkit-box-orient: vertical;
     overflow: hidden;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-.doc-title:hover {
-    color: var(--poly-primary);
 }
 
 .doc-meta {
     font-size: 12px;
-    color: var(--text-muted);
 }
 
-/* Thống kê (Tải/Lưu) */
-.doc-stats {
+.btn-icon-transparent {
+    background: none;
+    border: none;
+    font-size: 16px;
+    padding: 0;
+    transition: transform 0.2s;
+}
+.btn-icon-transparent:active { transform: scale(0.9); }
+
+/* --- NÚT TẢI VỀ HIỆN ĐẠI --- */
+.btn-download {
+    background-color: var(--poly-primary-soft);
+    color: var(--poly-primary);
+    border: none;
+    padding: 5px 16px;
     font-size: 12.5px;
-    color: #8c939d;
-    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.btn-download:hover {
+    background: linear-gradient(135deg, var(--poly-primary), #FFC371);
+    color: white;
+    box-shadow: 0 4px 8px rgba(242, 113, 37, 0.3);
 }
 
-/* Nút Tải xuống tròn gọn gàng */
-.doc-btn-dl {
-    width: 32px;
-    height: 32px;
+/* --- COURSERA SMART FILTER MENU --- */
+.coursera-dropdown-menu {
+    position: absolute;
+    z-index: 1050; /* Z-index cực cao để đè lên mọi thứ */
+    min-width: 280px;
+    padding: 0;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    overflow: hidden; /* Bo tròn góc mượt mà */
+    margin-top: 8px !important;
+}
+
+.coursera-filter-header {
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    background-color: #fcfcfc;
+}
+
+.coursera-filter-body {
+    padding: 12px 16px;
+    max-height: 250px; /* Giới hạn chiều cao */
+    overflow-y: auto;  /* Scroll nếu nội dung dài */
+}
+/* Tuỳ chỉnh Scrollbar cho filter-body */
+.coursera-filter-body::-webkit-scrollbar { width: 6px; }
+.coursera-filter-body::-webkit-scrollbar-track { background: transparent; }
+.coursera-filter-body::-webkit-scrollbar-thumb { background: #cbd0d6; border-radius: 10px; }
+
+.custom-checkbox .form-check-label {
+    font-size: 13.5px;
+    color: #4b5563;
+    cursor: pointer;
+    user-select: none;
+}
+.custom-checkbox .form-check-input {
+    cursor: pointer;
+    border-color: #cbd0d6;
+}
+.custom-checkbox .form-check-input:checked {
+    background-color: var(--poly-primary);
+    border-color: var(--poly-primary);
+}
+
+.coursera-filter-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    background-color: white;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    position: sticky; /* Ghim dưới cùng */
+    bottom: 0;
+}
+
+/* =========================================
+   SỬA LỖI MÀU SẮC CHECKBOX VÀ BỘ LỌC
+   ========================================= */
+/* Bắt buộc Checkbox phải là màu cam của hệ thống */
+
+.custom-checkbox .form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(242, 113, 37, 0.25);
+    border-color: var(--poly-primary);
+}
+
+/* =========================================
+   PHÂN TRANG (PAGINATION) - ĐỒNG BỘ ẢNH 3
+   ========================================= */
+.poly-pagination {
+    gap: 6px;
+}
+.poly-pagination .page-link {
+    color: #4b5563; /* Màu xám đậm cho chữ */
+    border: none;
+    background-color: #f8f9fa; /* Nền xám nhạt */
+    border-radius: 8px !important; /* Bo góc vuông hơi tròn (giống ảnh 3) */
+    font-weight: 600;
+    width: 36px; 
+    height: 36px;
+    display: flex; 
+    align-items: center; 
     justify-content: center;
     transition: all 0.2s ease;
-    border: 1px solid var(--border-color);
-}
-.doc-card:hover .doc-btn-dl {
-    background-color: var(--poly-primary-soft);
-    border-color: var(--poly-primary-soft);
-    transform: scale(1.1);
 }
 
-/* Tái sử dụng .filter-coursera từ CSS cũ nhưng nếu muốn đổi sang file này cũng được */
+/* Hover mượt mà */
+.poly-pagination .page-link:hover { 
+    background-color: rgba(242, 113, 37, 0.1); 
+    color: var(--poly-primary);
+}
+
+/* Trạng thái Active (Giống ảnh 3: Nền cam mờ, chữ cam đậm) */
+.poly-pagination .page-item.active .page-link {
+    background-color: rgba(242, 113, 37, 0.15) !important; 
+    color: var(--poly-primary) !important;
+    box-shadow: none; /* Bỏ đổ bóng thừa */
+    transform: none; /* Bỏ scale */
+}
+
+/* Trạng thái Disabled */
+.poly-pagination .page-item.disabled .page-link {
+    background-color: transparent;
+    color: #adb5bd;
+}
+
+/* Bỏ viền xanh khi click */
+.poly-pagination .page-link:focus {
+    box-shadow: none;
+}
+
+/* =========================================
+   5. BỘ LỌC THÔNG MINH (SMART FILTERS) - DÙNG CHUNG
+   ========================================= */
+.filter-coursera {
+    background-color: #ffffff;
+    color: var(--text-main);
+    border: 1px solid #d1d5db; /* Viền xám nhạt tinh tế */
+    padding: 8px 18px;
+    border-radius: 50rem; /* Bo tròn hoàn toàn hình hạt đậu */
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02); /* Đổ bóng siêu nhẹ */
+}
+
+/* Hiệu ứng mượt mà khi di chuột vào */
+.filter-coursera:hover, .filter-coursera:focus {
+    background-color: #fcfcfc;
+    border-color: #b1b5ba;
+    color: var(--poly-primary); /* Chữ ngả viền cam nhẹ cho đồng bộ */
+    outline: none;
+}
+
+/* Xóa mũi tên mặc định hơi thô của Bootstrap Dropdown */
+.filter-coursera::after { 
+    display: none !important; 
+}

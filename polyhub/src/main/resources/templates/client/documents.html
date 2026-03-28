@@ -10,219 +10,230 @@
 </head>
 <body>
 
-    <div th:fragment="myContent" class="poly-main-feed" style="max-width: 850px;">
+ <div th:fragment="myContent" class="poly-main-feed" style="max-width: 1000px; width: 100%;">
         
-        <div class="poly-card p-3 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="poly-card p-3 mb-4" style="background: linear-gradient(to right, #ffffff, #fffaf5);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                    <h5 class="fw-bold mb-0 text-dark">Góc Tài liệu</h5>
-                    <div class="text-muted mt-1" style="font-size: 13px;">Kho tàng tri thức, đồ án và tài nguyên học tập</div>
+                    <h5 class="fw-bold mb-1 text-dark">Thư viện Tài liệu</h5>
+                    <div class="text-muted" style="font-size: 13px;">Hơn 5,000+ tài liệu, đề thi, slide bài giảng được chia sẻ</div>
                 </div>
-                <button class="btn btn-poly-gradient btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm d-flex align-items-center">
-                    <i class="bi bi-cloud-arrow-up-fill me-2 fs-6"></i> Tải lên
+                <button class="btn btn-poly-gradient fw-bold rounded-pill px-3 py-2 shadow-sm d-flex align-items-center" style="font-size: 13.5px;">
+                    <i class="bi bi-cloud-arrow-up-fill me-2 fs-5"></i> Chia sẻ tài liệu
                 </button>
             </div>
             
-            <div class="input-group mb-4 shadow-sm" style="border-radius: 50rem; border: 1px solid rgba(242, 113, 37, 0.2); background: white;">
-                <span class="input-group-text bg-transparent border-0 text-poly ps-4">
+            <div class="input-group mt-3 shadow-sm" style="border-radius: 50rem; border: 1px solid rgba(242, 113, 37, 0.2); background: white;">
+                <span class="input-group-text bg-transparent border-0 text-poly ps-3 pe-2 py-2">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" class="form-control bg-transparent border-0 py-3 shadow-none" style="font-size: 14.5px;" placeholder="Tìm kiếm theo mã môn (vd: SOF3021), tên tài liệu, chủ đề...">
-                <button class="btn btn-poly-gradient px-4 fw-bold" style="border-radius: 0 50rem 50rem 0; z-index: 0;">Tìm kiếm</button>
+                <input type="text" class="form-control bg-transparent border-0 py-2 shadow-none" style="font-size: 13.5px;" placeholder="Tìm kiếm theo mã môn (vd: SOF3021), tên tài liệu, chuyên ngành...">
+                <button class="btn btn-poly-gradient px-4 fw-bold py-2" style="border-radius: 0 50rem 50rem 0; font-size: 13.5px;">Tìm kiếm</button>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 mb-4 overflow-visible">
+            <button class="filter-coursera shadow-sm fw-bold text-dark">
+                <i class="bi bi-sliders"></i> Bộ lọc
+            </button>
+            <div class="vr mx-1 opacity-25"></div> 
+            
+            <div class="dropdown">
+                <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    Chuyên ngành <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
+                </button>
+                <div class="dropdown-menu coursera-dropdown-menu shadow">
+                    <div class="coursera-filter-header">Chọn Chuyên ngành</div>
+                    <div class="coursera-filter-body">
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="cn1">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="cn1">
+                                <span>Phát triển Phần mềm</span> <span class="text-muted">(1,415)</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="cn2">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="cn2">
+                                <span>Thiết kế Đồ họa</span> <span class="text-muted">(824)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="coursera-filter-footer">
+                        <button class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
+                        <button class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" style="color: #6c757d !important;">Xóa lọc</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="d-flex align-items-center gap-2 overflow-auto pb-1" style="scrollbar-width: none;">
-                <button class="filter-coursera shadow-sm border-secondary-subtle">
-                    <i class="bi bi-funnel"></i> Lọc
+            <div class="dropdown">
+                <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    Loại tài liệu <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
                 </button>
-                <div class="vr mx-1 opacity-25"></div> 
-                
-                <div class="dropdown">
-                    <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Học kỳ <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
-                    </button>
-                    <ul class="dropdown-menu shadow-sm border-0" style="font-size: 14px;">
-                        <li><a class="dropdown-item" href="#">Học kỳ 1 - 3</a></li>
-                        <li><a class="dropdown-item" href="#">Học kỳ 4 - 6 (Chuyên ngành)</a></li>
-                        <li><a class="dropdown-item" href="#">Học kỳ 7 (Dự án tốt nghiệp)</a></li>
-                    </ul>
-                </div>
-
-                <div class="dropdown">
-                    <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Loại tài liệu <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
-                    </button>
-                    <ul class="dropdown-menu shadow-sm border-0" style="font-size: 14px;">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Slide / PDF</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-zip text-warning me-2"></i>Source Code (ZIP)</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-text text-primary me-2"></i>Đề thi / Bài tập</a></li>
-                    </ul>
+                <div class="dropdown-menu coursera-dropdown-menu shadow">
+                    <div class="coursera-filter-header">Định dạng file</div>
+                    <div class="coursera-filter-body">
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="type1">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="type1">
+                                <span>Tài liệu (PDF, Word)</span> <span class="text-muted">(2,100)</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="type2">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="type2">
+                                <span>Source Code (ZIP)</span> <span class="text-muted">(505)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="coursera-filter-footer">
+                        <button class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
+                        <button class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" style="color: #6c757d !important;">Xóa lọc</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <ul class="nav nav-underline mb-3 border-bottom" id="docTabs" role="tablist" style="gap: 20px;">
+        <ul class="nav nav-underline mb-3 border-bottom" role="tablist" style="gap: 20px;">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold pb-2" id="discover-tab" data-bs-toggle="tab" data-bs-target="#discover-pane" type="button" role="tab">Khám phá</button>
+                <button class="nav-link active fw-bold pb-2" style="color: var(--poly-primary);">Mới nhất</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link text-muted fw-medium pb-2" id="mydocs-tab" data-bs-toggle="tab" data-bs-target="#mydocs-pane" type="button" role="tab">Tủ sách của bạn (12)</button>
+                <button class="nav-link text-muted fw-medium pb-2">Đã lưu (12)</button>
             </li>
         </ul>
 
-        <div class="tab-content" id="docTabsContent">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3 mb-4">
             
-            <div class="tab-pane fade show active" id="discover-pane" role="tabpanel" tabindex="0">
-                
-                <div class="d-flex justify-content-between align-items-end mb-3 mt-2 px-1">
-                    <h6 class="fw-bold text-dark mb-0 fs-6">Tài liệu thịnh hành 🔥</h6>
-                </div>
-
-                <div class="row row-cols-1 row-cols-md-2 g-3 mb-5">
+            <div class="col">
+                <div class="doc-card h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="doc-icon-box bg-danger-soft text-danger">
+                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                        </div>
+                        <button class="btn-icon-transparent text-muted"><i class="bi bi-bookmark"></i></button>
+                    </div>
                     
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-danger-soft text-danger">
-                                    <i class="bi bi-filetype-pdf"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">SOF3021</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Tài liệu hướng dẫn Spring Boot toàn tập (Kỳ 5)</h6>
-                            <div class="doc-meta mb-3">2.4 MB • Tải lên 2 ngày trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Tan+Dung&background=random" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Mr. Tấn Dũng</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-download me-1"></i> 1.2K</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark-fill text-poly me-1"></i> 340</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-cloud-arrow-down-fill text-poly"></i></button>
-                            </div>
-                        </div>
+                    <div class="mb-2 flex-grow-1">
+                        <span class="badge bg-light text-dark border mb-2 fw-normal">SOF3021</span>
+                        <h6 class="doc-title text-dark">Bộ đề thi PE môn Java 5 (Spring Boot) - Kèm giải chi tiết</h6>
                     </div>
-
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-warning-soft text-warning">
-                                    <i class="bi bi-file-earmark-zip-fill"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">PRO1121</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Source code mẫu Dự án 1: Website bán giày (Vue.js + API)</h6>
-                            <div class="doc-meta mb-3">15.8 MB • Tải lên 1 tuần trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Bao+Chau&background=random" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Bảo Châu</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-download me-1"></i> 856</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark me-1"></i> 120</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-cloud-arrow-down-fill text-poly"></i></button>
-                            </div>
-                        </div>
+                    
+                    <div class="doc-meta text-muted mb-3 d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Tan+Dung&background=random" class="rounded-circle me-2" width="16" height="16">
+                        <span class="text-truncate">Tấn Dũng</span>
+                        <span class="mx-1">•</span>
+                        <span>2.4 MB</span>
                     </div>
-
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-primary-soft text-primary">
-                                    <i class="bi bi-filetype-docx"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">AGILE201</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Mẫu báo cáo tiến độ Scrum & Sprint Backlog (Chuẩn FPT)</h6>
-                            <div class="doc-meta mb-3">1.2 MB • Tải lên 3 tuần trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Mai+Anh&background=random" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Ms. Mai Anh</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-download me-1"></i> 540</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark me-1"></i> 89</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-cloud-arrow-down-fill text-poly"></i></button>
-                            </div>
-                        </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                        <div class="text-muted" style="font-size: 11.5px;"><i class="bi bi-download me-1"></i> 1.2k</div>
+                        <button class="btn btn-download btn-sm rounded-pill fw-bold">Tải về</button>
                     </div>
-
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-success-soft text-success">
-                                    <i class="bi bi-palette-fill"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">UIUX101</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Template Figma App Mạng xã hội sinh viên (PolyHUB clone)</h6>
-                            <div class="doc-meta mb-3">Link • Tải lên 1 tháng trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Minh+Nghia&background=F27125&color=fff" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Bạn</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-box-arrow-up-right me-1"></i> 3.2K</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark-fill text-poly me-1"></i> 850</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-link-45deg text-poly fs-6"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-
-                <nav aria-label="Page navigation">
-                    <ul class="pagination poly-pagination justify-content-center mt-2 mb-5">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1"><i class="bi bi-chevron-left"></i></a>
-                        </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a>
-                        </li>
-                    </ul>
-                </nav>
-
             </div>
 
-            <div class="tab-pane fade" id="mydocs-pane" role="tabpanel" tabindex="0">
-                <div class="text-center py-5">
-                    <i class="bi bi-journal-bookmark text-muted" style="font-size: 3rem; opacity: 0.5;"></i>
-                    <h6 class="mt-3 fw-bold text-dark">Tủ sách đang trống</h6>
-                    <p class="text-muted" style="font-size: 14px;">Hãy nhấn lưu các tài liệu hữu ích để đọc lại sau nhé.</p>
+            <div class="col">
+                <div class="doc-card h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="doc-icon-box bg-warning-soft text-warning">
+                            <i class="bi bi-file-earmark-zip-fill"></i>
+                        </div>
+                        <button class="btn-icon-transparent text-poly"><i class="bi bi-bookmark-fill"></i></button>
+                    </div>
+                    
+                    <div class="mb-2 flex-grow-1">
+                        <span class="badge bg-light text-dark border mb-2 fw-normal">Dự án Mẫu</span>
+                        <h6 class="doc-title text-dark">Source Code J4Video Full Tính Năng + Database</h6>
+                    </div>
+                    
+                    <div class="doc-meta text-muted mb-3 d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Bao+Chau&background=random" class="rounded-circle me-2" width="16" height="16">
+                        <span class="text-truncate">Bảo Châu</span>
+                        <span class="mx-1">•</span>
+                        <span>15 MB</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                        <div class="text-muted" style="font-size: 11.5px;"><i class="bi bi-download me-1"></i> 856</div>
+                        <button class="btn btn-download btn-sm rounded-pill fw-bold">Tải về</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="doc-card h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="doc-icon-box bg-info-soft text-info">
+                            <i class="bi bi-file-earmark-slides-fill"></i>
+                        </div>
+                        <button class="btn-icon-transparent text-muted"><i class="bi bi-bookmark"></i></button>
+                    </div>
+                    
+                    <div class="mb-2 flex-grow-1">
+                        <span class="badge bg-light text-dark border mb-2 fw-normal">Kỹ năng mềm</span>
+                        <h6 class="doc-title text-dark">Slide Thuyết trình mẫu: Dự án Agile & Scrum</h6>
+                    </div>
+                    
+                    <div class="doc-meta text-muted mb-3 d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Anh+Khoa&background=random" class="rounded-circle me-2" width="16" height="16">
+                        <span class="text-truncate">Anh Khoa</span>
+                        <span class="mx-1">•</span>
+                        <span>5.1 MB</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                        <div class="text-muted" style="font-size: 11.5px;"><i class="bi bi-download me-1"></i> 420</div>
+                        <button class="btn btn-download btn-sm rounded-pill fw-bold">Tải về</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="doc-card h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="doc-icon-box bg-purple-soft" style="color: #a259ff;">
+                            <i class="bi bi-palette-fill"></i>
+                        </div>
+                        <button class="btn-icon-transparent text-muted"><i class="bi bi-bookmark"></i></button>
+                    </div>
+                    
+                    <div class="mb-2 flex-grow-1">
+                        <span class="badge bg-light text-dark border mb-2 fw-normal">UI/UX</span>
+                        <h6 class="doc-title text-dark">Template Figma Hệ thống Quản lý Kho Hàng (WMS)</h6>
+                    </div>
+                    
+                    <div class="doc-meta text-muted mb-3 d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Mai+Anh&background=random" class="rounded-circle me-2" width="16" height="16">
+                        <span class="text-truncate">Mai Anh</span>
+                        <span class="mx-1">•</span>
+                        <span>Link Figma</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                        <div class="text-muted" style="font-size: 11.5px;"><i class="bi bi-box-arrow-up-right me-1"></i> 315</div>
+                        <button class="btn btn-download btn-sm rounded-pill fw-bold">Mở Link</button>
+                    </div>
                 </div>
             </div>
 
         </div>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination poly-pagination justify-content-center mt-4 mb-5">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><span class="page-link border-0 text-muted">...</span></li>
+                <li class="page-item"><a class="page-link" href="#">12</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+
     </div>
 
 </body>
