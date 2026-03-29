@@ -105,3 +105,131 @@ body {
 .icon-grad-main { background-image: linear-gradient(135deg, #F27125, #FFC371); }
 .icon-grad-red { background-image: linear-gradient(135deg, #FF512F, #DD2476); }
 .icon-grad-warm { background-image: linear-gradient(135deg, #F27125, #E94057); }
+
+/* =========================================
+   [GLOBAL] 1. BỘ LỌC THÔNG MINH (NÚT BẤM)
+   ========================================= */
+.filter-coursera {
+    background-color: #ffffff;
+    color: var(--text-main);
+    border: 1px solid #d1d5db; 
+    padding: 8px 18px;
+    border-radius: 50rem; 
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.filter-coursera:hover, .filter-coursera:focus {
+    background-color: #fcfcfc;
+    border-color: #b1b5ba;
+    color: var(--poly-primary);
+    outline: none;
+}
+.filter-coursera::after { display: none !important; }
+
+/* =========================================
+   [GLOBAL] 2. MENU DROPDOWN & CHECKBOX CAM
+   ========================================= */
+.coursera-dropdown-menu {
+    position: absolute;
+    z-index: 1050 !important; /* Ưu tiên hiển thị trên cùng */
+    min-width: 260px;
+    padding: 0;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    overflow: hidden; 
+    margin-top: 8px !important;
+}
+
+.coursera-filter-header {
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    background-color: #fcfcfc;
+}
+
+.coursera-filter-body {
+    padding: 12px 16px;
+    max-height: 250px;
+    overflow-y: auto; 
+}
+.coursera-filter-body::-webkit-scrollbar { width: 6px; }
+.coursera-filter-body::-webkit-scrollbar-track { background: transparent; }
+.coursera-filter-body::-webkit-scrollbar-thumb { background: #cbd0d6; border-radius: 10px; }
+
+.custom-checkbox .form-check-label {
+    font-size: 13.5px;
+    color: #4b5563;
+    cursor: pointer;
+    user-select: none;
+}
+.custom-checkbox .form-check-input {
+    cursor: pointer;
+    border-color: #cbd0d6;
+}
+/* Ép Checkbox thành màu cam PolyHUB */
+.custom-checkbox .form-check-input:checked {
+    background-color: var(--poly-primary) !important;
+    border-color: var(--poly-primary) !important;
+}
+.custom-checkbox .form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(242, 113, 37, 0.25) !important;
+    border-color: var(--poly-primary) !important;
+}
+
+.coursera-filter-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    bottom: 0;
+}
+
+/* =========================================
+   [GLOBAL] 3. PHÂN TRANG (PAGINATION)
+   ========================================= */
+.poly-pagination {
+    gap: 6px;
+}
+.poly-pagination .page-link {
+    color: #4b5563; 
+    border: none;
+    background-color: #f8f9fa; 
+    border-radius: 8px !important; 
+    font-weight: 600;
+    width: 36px; 
+    height: 36px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.poly-pagination .page-link:hover { 
+    background-color: rgba(242, 113, 37, 0.1); 
+    color: var(--poly-primary);
+}
+/* Ghi đè màu xanh mặc định của Bootstrap */
+.poly-pagination .page-item.active .page-link {
+    background-color: rgba(242, 113, 37, 0.15) !important; 
+    color: var(--poly-primary) !important;
+    box-shadow: none !important; 
+    transform: none !important; 
+}
+.poly-pagination .page-item.disabled .page-link {
+    background-color: transparent;
+    color: #adb5bd;
+}
+.poly-pagination .page-link:focus {
+    box-shadow: none;
+}
