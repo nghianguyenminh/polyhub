@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layouts/main_layout :: layout(~{this :: myCss}, ~{this :: myContent}, 'settings')}">
+<head>
+    <title>Cài đặt & Quyền riêng tư - PolyHUB</title> 
+    
+    <th:block th:fragment="myCss">
+        <link rel="stylesheet" th:href="@{/client/css/settings.css}">
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent" class="settings-container w-100 mx-auto" style="max-width: 950px; padding: 20px 0;">
+        
+        <h2 class="fw-bold mb-4 px-2 px-md-0"><i class="bi bi-gear-fill me-2 text-poly"></i>Cài đặt & Quyền riêng tư</h2>
+
+        <div class="row g-4">
+            <!-- Left Sidebar Navigation -->
+            <div class="col-md-4">
+                <div class="poly-card p-0 overflow-hidden sticky-top" style="top: 80px; z-index: 10;">
+                    <div class="list-group list-group-flush settings-nav">
+                        <a href="#account" class="list-group-item list-group-item-action d-flex align-items-center active" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Thông tin tài khoản</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Họ tên, email, liên hệ</small>
+                            </div>
+                        </a>
+                        <a href="#security" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Mật khẩu & Bảo mật</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Đổi mật khẩu, 2FA</small>
+                            </div>
+                        </a>
+                        <a href="#privacy" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-eye-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Quyền riêng tư</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Ai có thể xem nội dung</small>
+                            </div>
+                        </a>
+                        <a href="#notifications" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-bell-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Thông báo</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Tùy chỉnh thông báo</small>
+                            </div>
+                        </a>
+                        <a href="#display" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-palette-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Hiển thị & Giao diện</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Chủ đề, ngôn ngữ</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content Area -->
+            <div class="col-md-8">
+                <div class="tab-content" id="nav-tabContent">
+                    
+                    <!-- TAB 1: THÔNG TIN TÀI KHOẢN -->
+                    <div class="tab-pane fade show active" id="account" role="tabpanel">
+                        <div class="poly-card p-4">
+                            <h4 class="fw-bold mb-1">Thông tin cá nhân</h4>
+                            <p class="text-muted mb-4" style="font-size: 14.5px;">Quản lý thông tin định danh của bạn trên hệ thống PolyHUB.</p>
+                            
+                            <form>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Họ và Tên</label>
+                                        <input type="text" class="form-control form-control-poly" value="Nguyễn Minh Nghĩa">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mã Sinh Viên</label>
+                                        <input type="text" class="form-control form-control-poly bg-light" value="PS12345" readonly>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Điện thoại</label>
+                                    <input type="text" class="form-control form-control-poly" placeholder="Nhập số điện thoại">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Email liên hệ</label>
+                                    <input type="email" class="form-control form-control-poly" value="nghianm@fpt.edu.vn">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Giới thiệu ngắn (Tiểu sử)</label>
+                                    <textarea class="form-control form-control-poly" rows="3" placeholder="Viết gì đó về bản thân bạn...">Code is poetry. Always seeking new challenges and learning new technologies! 🚀☕💻</textarea>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-primary btn-poly fw-semibold px-4 rounded-pill">Lưu thay đổi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: BẢO MẬT -->
+                    <div class="tab-pane fade" id="security" role="tabpanel">
+                        <div class="poly-card p-4 mb-4">
+                            <h4 class="fw-bold mb-1">Đổi mật khẩu</h4>
+                            <p class="text-muted mb-4" style="font-size: 14.5px;">Đảm bảo tài khoản của bạn đang sử dụng mật khẩu mạnh và an toàn.</p>
+                            
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu hiện tại</label>
+                                    <input type="password" class="form-control form-control-poly" placeholder="Tối thiểu 8 ký tự">
+                                </div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu mới</label>
+                                        <input type="password" class="form-control form-control-poly" placeholder="Mật khẩu mới">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Xác nhận mật khẩu</label>
+                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu">
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-dark fw-semibold px-4 rounded-pill shadow-sm">Cập nhật mật khẩu</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="poly-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h4 class="fw-bold mb-1 fs-5">Xác thực 2 yếu tố (2FA)</h4>
+                                    <p class="text-muted mb-0" style="font-size: 13.5px;">Bảo vệ tài khoản bằng lớp bảo mật thứ hai.</p>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="switch2FA">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: QUYỀN RIÊNG TƯ -->
+                    <div class="tab-pane fade" id="privacy" role="tabpanel">
+                        <div class="poly-card p-4 mb-4">
+                            <h4 class="fw-bold mb-4">Quyền riêng tư</h4>
+                            
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Ai có thể xem danh sách theo dõi của bạn?</h6>
+                                    <span class="text-muted" style="font-size: 13.5px;">Giới hạn người có thể thấy bạn bè/người bạn theo dõi.</span>
+                                </div>
+                                <select class="form-select form-control-poly w-auto d-inline-block">
+                                    <option value="public">Công khai</option>
+                                    <option value="friends">Bạn bè</option>
+                                    <option value="private" selected>Chỉ mình tôi</option>
+                                </select>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Ai có thể nhắn tin cho bạn?</h6>
+                                    <span class="text-muted" style="font-size: 13.5px;">Kiểm soát ai sẽ được phép gửi tin nhắn trực tiếp.</span>
+                                </div>
+                                <select class="form-select form-control-poly w-auto d-inline-block">
+                                    <option value="everyone" selected>Mọi người</option>
+                                    <option value="friends">Chỉ bạn bè</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="poly-card p-4 border border-danger border-opacity-25" style="background-color: #fef2f2;">
+                            <h5 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>Vùng nguy hiểm</h5>
+                            <p class="text-danger opacity-75 mb-3" style="font-size: 14px;">Khi bạn xóa tài khoản, toàn bộ dữ liệu, bài viết và tương tác của bạn sẽ bị xóa vĩnh viễn và không thể khôi phục lại được.</p>
+                            <button class="btn btn-outline-danger font-weight-bold rounded-pill border-2 px-4 shadow-sm fw-medium" style="font-size: 14.5px;">Yêu cầu xóa tài khoản</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: THÔNG BÁO -->
+                    <div class="tab-pane fade" id="notifications" role="tabpanel">
+                        <div class="poly-card p-4">
+                            <h4 class="fw-bold mb-4">Cài đặt thông báo</h4>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h6 class="fw-semibold mb-1">Thông báo qua Email</h6>
+                                    <span class="text-muted" style="font-size: 13.5px;">Nhận email tổng hợp các thông báo chưa đọc.</span>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" role="switch" checked>
+                                </div>
+                            </div>
+                            
+                            <h6 class="fw-bold mb-3 text-poly mt-4 border-top pt-3">Thông báo ứng dụng (Push Notifications)</h6>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <label class="d-flex align-items-center custom-checkbox cursor-pointer">
+                                    <input type="checkbox" class="form-check-input shadow-none mt-0 me-3" checked style="width: 20px; height: 20px;">
+                                    <span style="font-size: 15px;" class="fw-medium">Có người bình luận bài viết của bạn</span>
+                                </label>
+                                <label class="d-flex align-items-center custom-checkbox cursor-pointer">
+                                    <input type="checkbox" class="form-check-input shadow-none mt-0 me-3" checked style="width: 20px; height: 20px;">
+                                    <span style="font-size: 15px;" class="fw-medium">Lượt thích bài viết</span>
+                                </label>
+                                <label class="d-flex align-items-center custom-checkbox cursor-pointer">
+                                    <input type="checkbox" class="form-check-input shadow-none mt-0 me-3" checked style="width: 20px; height: 20px;">
+                                    <span style="font-size: 15px;" class="fw-medium">Có người theo dõi mới</span>
+                                </label>
+                                <label class="d-flex align-items-center custom-checkbox cursor-pointer">
+                                    <input type="checkbox" class="form-check-input shadow-none mt-0 me-3" style="width: 20px; height: 20px;">
+                                    <span style="font-size: 15px;" class="fw-medium">Đề xuất khóa học/Nhóm mới</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: GIAO DIỆN -->
+                    <div class="tab-pane fade" id="display" role="tabpanel">
+                        <div class="poly-card p-4">
+                            <h4 class="fw-bold mb-4">Giao diện hệ thống</h4>
+                            
+                            <h6 class="fw-semibold mb-3">Chế độ hiển thị</h6>
+                            <div class="d-flex gap-3 mb-4">
+                                <div class="theme-option text-center">
+                                    <div class="border rounded p-2 mb-2 active-theme shadow-sm cursor-pointer" style="width: 100px; height: 70px; background: #fff;">
+                                        <div class="w-100 bg-light rounded mb-1" style="height: 15px;"></div>
+                                        <div class="w-75 bg-light rounded" style="height: 30px;"></div>
+                                    </div>
+                                    <span class="fw-medium" style="font-size: 14px;">Giao diện Sáng</span>
+                                </div>
+                                <div class="theme-option text-center">
+                                    <div class="border rounded p-2 mb-2 shadow-sm cursor-pointer" style="width: 100px; height: 70px; background: #1f2937;">
+                                        <div class="w-100 bg-secondary bg-opacity-25 rounded mb-1" style="height: 15px;"></div>
+                                        <div class="w-75 bg-secondary bg-opacity-25 rounded" style="height: 30px;"></div>
+                                    </div>
+                                    <span class="fw-medium" style="font-size: 14px;">Giao diện Tối</span>
+                                </div>
+                            </div>
+
+                            <div class="border-top pt-4">
+                                <h6 class="fw-semibold mb-3">Ngôn ngữ</h6>
+                                <select class="form-select form-control-poly w-50">
+                                    <option value="vi" selected>🇻🇳 Tiếng Việt</option>
+                                    <option value="en">🇺🇸 English</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

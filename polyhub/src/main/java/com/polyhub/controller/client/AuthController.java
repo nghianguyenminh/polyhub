@@ -13,7 +13,6 @@ public class AuthController {
 
     @GetMapping("/register")
     public String register() {
-        // Có thể bổ sung sau, tạm thời redirect về login hoặc gọi trang đăng ký
-        return "client/login";
+        return "client/register";
     }
 }
