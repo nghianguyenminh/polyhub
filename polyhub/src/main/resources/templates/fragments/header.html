@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <header th:fragment="header" class="poly-header fixed-top d-flex align-items-center px-3 px-md-4">
+        <div class="d-flex align-items-center w-100 mx-auto justify-content-between" style="max-width: 1400px;">
+            
+            <a href="/" class="text-decoration-none d-flex align-items-center me-4">
+                <h3 class="mb-0 fw-bold text-poly" style="letter-spacing: -0.5px;">PolyHUB</h3>
+            </a>
+
+            
+
+            <div class="d-flex align-items-center gap-2 gap-md-3">
+                <button class="btn-icon-circle d-md-none"><i class="bi bi-search fs-5"></i></button>
+                
+                <button class="btn-icon-circle position-relative">
+                    <i class="bi bi-bell-fill fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="margin-top: 5px; margin-left: -5px;"></span>
+                </button>
+                
+                <button class="btn-icon-circle"><i class="bi bi-chat-dots-fill fs-5"></i></button>
+
+                <div class="dropdown ms-1 ms-md-2">
+                    <a href="#" class="d-block link-dark text-decoration-none" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" alt="User" width="40" height="40" class="rounded-circle shadow-sm border border-1">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser" style="border-radius: 10px;">
+                        <li>
+                            <a class="dropdown-item py-2 fw-medium d-flex align-items-center" href="/profile">
+                                <i class="bi bi-person-circle fs-5 me-2 text-muted"></i> Trang cá nhân
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2 fw-medium d-flex align-items-center" href="/settings">
+                                <i class="bi bi-gear fs-5 me-2 text-muted"></i> Cài đặt & Quyền riêng tư
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider opacity-10"></li>
+                        <li>
+                            <a class="dropdown-item py-2 fw-medium text-danger d-flex align-items-center" href="/logout">
+                                <i class="bi bi-box-arrow-right fs-5 me-2"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </header>
+</body>
+</html>
