@@ -1,0 +1,49 @@
+/* =========================================
+   POLYHUB ADMIN: STYLE CORE & RESET
+   ========================================= */
+:root {
+    --admin-primary: #F27125;   /* Màu Cam PolyHUB chủ đạo */
+    --admin-dark: #1A1D21;      /* Màu nền tối cho Sidebar */
+    --admin-bg: #F4F6F9;        /* Màu nền tổng thể trang Admin */
+    --text-main: #343a40;       /* Màu chữ đậm */
+    --text-muted: #6c757d;      /* Màu chữ nhạt */
+    --border-color: #dee2e6;    /* Màu viền */
+    --header-height: 65px;
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 14px;
+    background-color: var(--admin-bg);
+    color: var(--text-main);
+    letter-spacing: -0.1px;
+}
+
+/* Các lớp thẻ Component dùng chung */
+.poly-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: box-shadow 0.2s;
+}
+.poly-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Biểu đồ phẳng, không viền, tối ưu diện tích */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Định nghĩa lại Badge trạng thái */
+.badge-active { background-color: rgba(40, 167, 69, 0.1) !important; color: #28a745 !important; }
+.badge-pending { background-color: rgba(255, 193, 7, 0.1) !important; color: #ffc107 !important; }
+.badge-banned { background-color: rgba(220, 53, 69, 0.1) !important; color: #dc3545 !important; }
+
+/* Bỏ đổ bóng thừa */
+.btn-light { border: 1px solid var(--border-color); }
