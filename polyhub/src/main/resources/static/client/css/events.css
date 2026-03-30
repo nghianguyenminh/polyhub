@@ -1,0 +1,75 @@
+/* Màu chủ đạo PolyHUB */
+.text-poly { color: #F27125 !important; }
+.bg-poly-light { background-color: #fff1e8 !important; }
+
+.event-card {
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(242, 113, 37, 0.15) !important;
+}
+
+/* Tag ngày tháng đè lên ảnh */
+.event-date-tag {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    line-height: 1;
+}
+
+.event-date-tag .day {
+    font-size: 20px;
+    font-weight: 800;
+    color: #333;
+}
+
+.event-date-tag .month {
+    font-size: 11px;
+    font-weight: 600;
+    color: #F27125;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+/* Tiêu đề sự kiện */
+.event-title {
+    font-size: 17px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 48px;
+}
+
+/* Nút bấm chuẩn Poly */
+.btn-poly {
+    background-color: #F27125;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.btn-poly:hover {
+    background-color: #d65d1a;
+    color: white;
+}
+
+.btn-white {
+    background-color: white;
+    color: #555;
+    font-weight: 500;
+}
