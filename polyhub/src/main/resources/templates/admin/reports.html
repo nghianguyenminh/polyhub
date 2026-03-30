@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'reports')}">
+<head>
+    <title>Xử lý Báo cáo - PolyHUB Admin</title>
+    
+    <th:block th:fragment="myCss">
+        <style>
+            /* KPIs */
+            .kpi-card {
+                background: #fff; border-radius: var(--border-radius-lg); border: 1px solid var(--admin-border);
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 1.25rem; display: flex; align-items: center; gap: 1rem;
+                transition: transform 0.2s;
+            }
+            .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+            
+            .kpi-pending .kpi-icon { background-color: #FEE2E2; color: #DC2626; }
+            .kpi-resolved .kpi-icon { background-color: #DEF7EC; color: #057A55; }
+            .kpi-false .kpi-icon { background-color: #F3F4F6; color: #4B5563; }
+            
+            .kpi-value { font-size: 1.5rem; font-weight: 700; line-height: 1.2; margin-bottom: 2px; }
+            .kpi-pending .kpi-value { color: #B91C1C; }
+            .kpi-label { font-size: 0.85rem; color: var(--admin-text-muted); font-weight: 500; }
+
+            /* Filter & search */
+            .filter-card {
+                background: #fff; border-radius: var(--border-radius-lg); border: 1px solid var(--admin-border);
+                padding: 1.25rem; margin-bottom: 1.5rem;
+            }
+            .search-box { position: relative; }
+            .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+            .search-box input { padding-left: 40px; background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 13.5px; }
+            .search-box input:focus { border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); background-color: #fff; }
+
+            .filter-btn {
+                background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 13.5px; color: #4B5563; padding: 8px 16px;
+            }
+            
+            /* Table */
+            .table-container { background: #fff; border: 1px solid var(--admin-border); border-radius: var(--border-radius-lg); overflow: hidden; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+            
+            .reporter-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+            .target-type { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+            .target-post { background-color: #E0E7FF; color: #4338CA; }
+            .target-cmt { background-color: #FEF3C7; color: #B45309; }
+            .target-doc { background-color: #E1EFFE; color: #1E429F; }
+            .target-acc { background-color: #FDE8E8; color: #9B1C1C; }
+            
+            .reason-tag { border: 1px solid #E5E7EB; background: #F9FAFB; color: #374151; padding: 4px 10px; border-radius: 100px; font-size: 11.5px; font-weight: 500; display: inline-block; }
+            .reason-spam { border-color: #FCD6BB; background: #FFF7ED; color: #9A3412; }
+            .reason-hate { border-color: #FBCFE8; background: #FFF1F2; color: #9F1239; }
+            
+            .status-badge { padding: 5px 10px; font-size: 11.5px; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; }
+            .status-pending { background-color: #FEE2E2; color: #9B1C1C; animation: pulse 2s infinite; }
+            .status-resolved { background-color: #DEF7EC; color: #03543F; }
+            .status-false { background-color: #F3F4F6; color: #4B5563; }
+
+            @keyframes pulse {
+                0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+                70% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+            }
+
+            .row-link { cursor: pointer; transition: background-color 0.2s; }
+            .row-link:hover { background-color: #F9FAFB; }
+
+            /* Modal Evidence */
+            .evidence-box { background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.25rem; font-size: 14px; position: relative; }
+            .evidence-box blockquote { border-left: 4px solid #D1D5DB; padding-left: 1rem; color: #4B5563; font-style: italic; margin-bottom: 0; }
+            
+            .trust-score { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+            .trust-high { background: #DEF7EC; color: #03543F; }
+            .trust-low { background: #FDE8E8; color: #9B1C1C; }
+
+        </style>
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent">
+        <!-- 1. Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 text-uppercase text-muted" style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Kiểm duyệt Cộng đồng</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Xử lý Báo cáo</li>
+                    </ol>
+                </nav>
+                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Tòa án / Report Tickets</h3>
+            </div>
+        </div>
+
+        <!-- 2. KPIs -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+                <div class="kpi-card kpi-pending">
+                    <div class="kpi-icon"><i class="bi bi-fire"></i></div>
+                    <div>
+                        <div class="kpi-value text-danger">42</div>
+                        <div class="kpi-label">Tickets Chờ xử lý khẩn</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="kpi-card kpi-resolved">
+                    <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <div>
+                        <div class="kpi-value">1,208</div>
+                        <div class="kpi-label">Đã xử lý (Tháng này)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="kpi-card kpi-false">
+                    <div class="kpi-icon"><i class="bi bi-shield-slash-fill"></i></div>
+                    <div>
+                        <div class="kpi-value">315</div>
+                        <div class="kpi-label">Báo cáo sai / Lạm dụng</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Filter -->
+        <div class="filter-card">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" placeholder="Tìm theo ID Ticket, MSSV người gửi...">
+                    </div>
+                </div>
+                <div class="col-12 col-md-8">
+                    <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                        <select class="form-select filter-btn w-auto">
+                            <option value="">Tất cả Trạng thái</option>
+                            <option value="pending" selected>Chờ xử lý</option>
+                            <option value="resolved">Đã xử lý</option>
+                        </select>
+                        <select class="form-select filter-btn w-auto">
+                            <option value="">Loại vi phạm</option>
+                            <option value="spam">Spam / Rác</option>
+                            <option value="hate">Ngôn từ kích động</option>
+                            <option value="scam">Lừa đảo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Table -->
+        <div class="table-container mb-4">
+            <div class="table-responsive">
+                <table class="table admin-table mb-0 align-middle" style="font-size: 13.5px;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Mã Ticket</th>
+                            <th>Mục tiêu (Target)</th>
+                            <th>Người gửi (Reporter)</th>
+                            <th>Lý do vi phạm</th>
+                            <th>Ngày gửi</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Record 1 (Pending) -->
+                        <tr class="row-link" data-bs-toggle="modal" data-bs-target="#ticketModal">
+                            <td class="ps-4 fw-bold text-muted">#REP-1023</td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="target-type target-post"><i class="bi bi-file-post"></i> Bài viết trong Nhóm</span>
+                                    <span class="text-truncate" style="max-width: 200px; font-weight: 500;">Bán tài khoản ChatGPT giá rẻ...</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name=Hieu&background=random" class="reporter-avatar">
+                                    <div class="lh-1">
+                                        <div class="fw-medium text-dark">Trần Trung Hiếu</div>
+                                        <span class="text-muted" style="font-size: 11px;">PS21045</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="reason-tag reason-spam"><i class="bi bi-bug me-1"></i> Spam / Lừa đảo</span></td>
+                            <td class="text-muted">10 phút trước</td>
+                            <td><span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Chờ xử lý</span></td>
+                        </tr>
+
+                        <!-- Record 2 (Pending) -->
+                        <tr class="row-link" data-bs-toggle="modal" data-bs-target="#ticketModal">
+                            <td class="ps-4 fw-bold text-muted">#REP-1022</td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="target-type target-cmt"><i class="bi bi-chat-dots-fill"></i> Bình luận</span>
+                                    <span class="text-truncate" style="max-width: 200px; font-weight: 500;">Thằng ngu này code dở mà còn...</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name=Lan&background=random" class="reporter-avatar">
+                                    <div class="lh-1">
+                                        <div class="fw-medium text-dark">Lê Thị Lan</div>
+                                        <span class="text-muted" style="font-size: 11px;">PS21099</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="reason-tag reason-hate"><i class="bi bi-exclamation-octagon me-1"></i> Ngôn từ kích động</span></td>
+                            <td class="text-muted">1 giờ trước</td>
+                            <td><span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Chờ xử lý</span></td>
+                        </tr>
+
+                        <!-- Record 3 (Resolved) -->
+                        <tr>
+                            <td class="ps-4 fw-bold text-muted">#REP-1010</td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="target-type target-doc"><i class="bi bi-file-earmark"></i> Tài liệu</span>
+                                    <span class="text-muted text-decoration-line-through text-truncate" style="max-width: 200px;">Share_Assignment_Final.zip</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name=Long&background=random" class="reporter-avatar opacity-75">
+                                    <div class="lh-1">
+                                        <div class="fw-medium text-muted">Phạm Hoàng Long</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="reason-tag">Bản quyền</span></td>
+                            <td class="text-muted">Hôm qua</td>
+                            <td><span class="status-badge status-resolved"><i class="bi bi-check2"></i> Đã Gỡ (Take Action)</span></td>
+                        </tr>
+                        
+                        <!-- Record 4 (False) -->
+                        <tr>
+                            <td class="ps-4 fw-bold text-muted">#REP-1008</td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="target-type target-acc"><i class="bi bi-person-badge"></i> Tài khoản</span>
+                                    <span class="text-truncate" style="max-width: 200px; font-weight: 500;">Bùi Anh Tuấn</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name=Khoa&background=random" class="reporter-avatar">
+                                    <div class="lh-1">
+                                        <div class="fw-medium text-dark d-flex align-items-center gap-1">
+                                            Lê Khoa
+                                            <span class="trust-score trust-low" title="Tỷ lệ report đúng thấp">Uy tín: Thấp</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="reason-tag">Giả mạo</span></td>
+                            <td class="text-muted">Hôm qua</td>
+                            <td><span class="status-badge status-false"><i class="bi bi-dash-circle"></i> Đã Bác bỏ (False)</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. Ticket Modal -->
+        <div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <div class="d-flex align-items-center gap-3">
+                            <h5 class="modal-title fw-bold">Ticket #REP-1022</h5>
+                            <span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Chờ xử lý</span>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-3">
+                        <div class="row g-4 mb-4">
+                            <!-- Cột trái: Thông tin người gửi -->
+                            <div class="col-md-6 border-end">
+                                <p class="text-uppercase text-muted fw-bold mb-2" style="font-size: 11px; letter-spacing: 0.5px;">Người gửi (Reporter)</p>
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <img src="https://ui-avatars.com/api/?name=Lan&background=random" class="rounded-circle" width="40">
+                                    <div>
+                                        <div class="fw-bold">Lê Thị Lan (PS21099)</div>
+                                        <span class="trust-score trust-high mt-1 d-inline-block">Uy tín: 95% (Report đúng 18/19 lần)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Cột phải: Target & Reason -->
+                            <div class="col-md-6">
+                                <p class="text-uppercase text-muted fw-bold mb-2" style="font-size: 11px; letter-spacing: 0.5px;">Phân loại Vi phạm</p>
+                                <div class="mb-2"><span class="target-type target-cmt"><i class="bi bi-chat-dots-fill"></i> Bình luận</span> trong bài viết <a href="#" class="text-decoration-none">"Hỏi bài Java..."</a></div>
+                                <div><span class="reason-tag reason-hate"><i class="bi bi-exclamation-octagon me-1"></i> Ngôn từ kích động / Xúc phạm</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Bằng chứng -->
+                        <p class="text-uppercase text-muted fw-bold mb-2" style="font-size: 11px; letter-spacing: 0.5px;"><i class="bi bi-search text-primary"></i> Bằng chứng (Evidence)</p>
+                        <div class="evidence-box">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div class="fw-bold d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-circle text-muted"></i> Chủ Comment: Nguyễn Văn B (PS20111)
+                                </div>
+                                <span class="text-muted" style="font-size: 12px;">Ngày đăng: 29/03/2026</span>
+                            </div>
+                            <blockquote>
+                                "Thằng ngu này code dở mà còn bày đặt lên đây hỏi, nghỉ học về quê chăn bò đi cho rảnh nợ."
+                            </blockquote>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer bg-light border-top-0 d-flex justify-content-between" style="border-radius: 0 0 16px 16px;">
+                        
+                        <!-- Action Bác bỏ -->
+                        <button type="button" class="btn btn-outline-secondary fw-medium px-4" data-bs-dismiss="modal">
+                            <i class="bi bi-shield-slash-fill me-1"></i> Bác bỏ (False Report)
+                        </button>
+                        
+                        <!-- Các Hành động Xử phạt -->
+                        <div class="dropdown">
+                            <button class="btn btn-danger fw-bold px-4 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-hammer me-1"></i> Xử phạt (Take Action)
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" style="border-radius: 12px; margin-bottom: 8px;">
+                                <li><h6 class="dropdown-header">Cấp độ 1</h6></li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center gap-2 py-2" type="button">
+                                        <i class="bi bi-trash text-danger"></i> Xóa Comment + Cảnh cáo (Cờ vàng)
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Cấp độ 2 (Nguy hiểm)</h6></li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center gap-2 py-2" type="button" data-bs-toggle="modal" data-bs-target="#escalateModal">
+                                        <i class="bi bi-person-x-fill text-dark"></i> Escalate tới USER_ADMIN kỉ luật acc
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <th:block th:fragment="myJs"></th:block>
+</body>
+</html>

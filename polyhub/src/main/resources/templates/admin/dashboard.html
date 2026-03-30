@@ -20,14 +20,14 @@
                 </nav>
                 <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -1px;">Tổng quan PolyHUB</h3>
             </div>
-            <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-medium"><i class="bi bi-download me-1"></i> Xuất báo cáo</button>
+            <button class="btn btn-export btn-sm rounded-pill px-3 py-2 fw-medium d-flex align-items-center gap-2"><i class="bi bi-file-earmark-arrow-down fs-6"></i> Xuất báo cáo</button>
         </div>
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 mb-4">
             
             <div class="col">
                 <div class="poly-card p-3 d-flex align-items-center gap-3">
-                    <div class="icon-box-lg bg-poly-soft text-poly rounded-circle">
+                    <div class="icon-box-lg bg-primary-soft rounded-circle">
                         <i class="bi bi-people fs-4"></i>
                     </div>
                     <div>
@@ -87,7 +87,7 @@
                         <h6 class="fw-bold text-dark mb-0">Lưu lượng truy cập hệ thống (30 ngày gần nhất)</h6>
                         <div class="badge bg-light text-dark border fw-medium" style="font-size: 11px;">Cập nhật: 12:00 PM</div>
                     </div>
-                    <div class="chart-container">
+                    <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
                         <canvas id="trafficChart"></canvas>
                     </div>
                 </div>
@@ -174,86 +174,67 @@
 
     </div>
 
-    <th:block th:fragment="myJs">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   <th:block th:fragment="myJs">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
         
-        <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            
-            // --- 1. Biểu đồ truy cập (LINE CHART - Phẳng, Tone Cam) ---
-            const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
-            new Chart(ctxTraffic, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], // Dữ liệu 12 tháng
-                    datasets: [{
-                        label: 'Lượt truy cập',
-                        data: [2500, 2900, 3100, 2800, 3400, 3700, 4200, 4100, 3900, 4600, 4900, 5200],
-                        borderColor: '#F27125', // Màu Cam chủ đạo
-                        backgroundColor: 'rgba(242, 113, 37, 0.1)', // Màu nền cam siêu nhạt mờ
-                        borderWidth: 3,
-                        tension: 0.4, // Tạo đường cong mượt mà
-                        fill: true, // Fill màu nền dưới đường kẻ
-                        pointRadius: 0, // Bỏ điểm tròn mặc định cho sạch
-                        pointHoverRadius: 6, // Hiển thị điểm tròn khi hover
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }, // Ẩn legend rườm rà
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            grid: { borderDash: [5, 5], color: '#e9ecef' }, // Viền xám mờ đứt nét
-                            ticks: { font: { size: 11 } }
-                        },
-                        x: { 
-                            grid: { display: false }, // Ẩn grid trục X cho phẳng
-                            ticks: { font: { size: 11 } }
-                        }
-                    }
+        // 1. LINE CHART - Màu Indigo
+        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+        new Chart(ctxTraffic, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Lượt truy cập',
+                    data: [2500, 2900, 3100, 2800, 3400, 3700, 4200, 4100, 3900, 4600, 4900, 5200],
+                    borderColor: '#4F46E5', /* Indigo Primary */
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)', /* Indigo mờ */
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#E5E7EB' }, ticks: { font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 }
-            });
-
-            // --- 2. Biểu đồ Chuyên ngành (DOUGHNUT CHART) ---
-            const ctxMajor = document.getElementById('majorChart').getContext('2d');
-            new Chart(ctxMajor, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Ứng dụng phần mềm', 'Thiết kế đồ họa', 'Digital Marketing', 'Ngành khác'],
-                    datasets: [{
-                        data: [45, 25, 20, 10], // Tỉ lệ %
-                        backgroundColor: [
-                            '#F27125', // Cam (Ngành lớn)
-                            'rgba(242, 113, 37, 0.7)', // Cam nhạt
-                            'rgba(242, 113, 37, 0.4)', // Cam nhạt mờ
-                            '#e9ecef' // Xám mờ (Khác)
-                        ],
-                        borderWidth: 4,
-                        borderColor: '#ffffff', // Viền trắng giữa các miếng
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '80%', // Tạo lỗ rỗng lớn ở giữa
-                    plugins: {
-                        legend: {
-                            position: 'bottom', // Legend nằm dưới biểu đồ
-                            labels: {
-                                boxWidth: 10,
-                                font: { size: 12 },
-                                padding: 15
-                            }
-                        }
-                    }
-                }
-            });
-
+            }
         });
-        </script>
-    </th:block>
+
+        // 2. DOUGHNUT CHART - Các sắc độ của Indigo
+        const ctxMajor = document.getElementById('majorChart').getContext('2d');
+        new Chart(ctxMajor, {
+            type: 'doughnut',
+            data: {
+                labels: ['Ứng dụng phần mềm', 'Thiết kế đồ họa', 'Digital Marketing', 'Ngành khác'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: [
+                        '#4F46E5', /* Indigo 100% */
+                        '#818CF8', /* Indigo 70% */
+                        '#C7D2FE', /* Indigo 40% */
+                        '#E5E7EB'  /* Xám cho Ngành khác */
+                    ],
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '75%',
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 12 }, padding: 15 } } }
+            }
+        });
+
+    });
+    </script>
+</th:block>
 
 </body>
 </html>

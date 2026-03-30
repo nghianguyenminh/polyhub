@@ -11,13 +11,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (sidebarToggle && sidebar && mainMain) {
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('collapsed');
-            
-            // Nếu có main content area, điều chỉnh padding
-            if(sidebar.classList.contains('collapsed')) {
-                mainMain.style.paddingLeft = 'var(--sidebar-collapsed-width)';
-            } else {
-                mainMain.style.paddingLeft = 'var(--sidebar-width)';
-            }
         });
     }
 
