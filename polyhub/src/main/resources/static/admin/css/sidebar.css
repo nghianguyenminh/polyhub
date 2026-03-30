@@ -1,0 +1,63 @@
+/* =========================================
+   POLYHUB ADMIN: SIDEBAR (MENU TRÁI)
+   ========================================= */
+.admin-sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--admin-dark);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: all 0.3s ease;
+    z-index: 1040;
+}
+
+/* Khi sidebar thu gọn */
+.admin-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-brand {
+    height: var(--header-height);
+    color: #fff;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+.menu-item i {
+    font-size: 1.15rem;
+    margin-right: 16px;
+    transition: margin 0.3s;
+}
+
+/* Hiệu ứng Hover - Sáng chữ lên */
+.menu-item:hover {
+    color: #fff;
+}
+
+/* Trạng thái Active - Sáng Cam và có vạch bên trái */
+.menu-item.active {
+    color: #fff;
+    background-color: rgba(242, 113, 37, 0.15);
+    font-weight: 600;
+    border-left-color: var(--admin-primary);
+}
+
+/* Ẩn text khi sidebar thu gọn */
+.admin-sidebar.collapsed .brand-text,
+.admin-sidebar.collapsed .menu-text,
+.admin-sidebar.collapsed .menu-title {
+    display: none !important;
+}
+.admin-sidebar.collapsed .menu-item i {
+    margin-right: 0;
+    font-size: 1.35rem;
+}
