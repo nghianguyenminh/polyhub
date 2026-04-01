@@ -18,51 +18,84 @@
                 <button class="btn btn-light btn-sm fw-medium rounded-pill px-3">Tạo nhóm mới</button>
             </div>
             
-            <div class="input-group mb-3">
-                <span class="input-group-text bg-light border-0 rounded-start-pill text-muted ps-3">
+            <div class="input-group mt-3 shadow-sm" style="border-radius: 50rem; border: 1px solid rgba(242, 113, 37, 0.2); background: white;">
+                <span class="input-group-text bg-transparent border-0 text-poly ps-3 pe-2 py-2">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" class="form-control bg-light border-0 rounded-end-pill py-2" style="font-size: 14.5px;" placeholder="Tìm kiếm môn học, công nghệ hoặc tên nhóm...">
+                <input type="text" class="form-control bg-transparent border-0 py-2 shadow-none" style="font-size: 13.5px;" placeholder="Tìm kiếm môn học, công nghệ hoặc tên nhóm...">
+                <button class="btn btn-poly-gradient px-4 fw-bold py-2" style="border-radius: 0 50rem 50rem 0; font-size: 13.5px;">Tìm kiếm</button>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 mb-4 overflow-visible" style="scrollbar-width: none;">
+            <button class="filter-coursera shadow-sm fw-bold text-dark">
+                <i class="bi bi-sliders"></i> Bộ lọc
+            </button>
+            <div class="vr mx-1 opacity-25"></div> 
+            
+            <div class="dropdown">
+                <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    Chuyên ngành <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
+                </button>
+                <div class="dropdown-menu coursera-dropdown-menu shadow">
+                    <div class="coursera-filter-header">Chọn Chuyên ngành</div>
+                    <div class="coursera-filter-body">
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="cn-it">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="cn-it">
+                                <span>Công nghệ thông tin</span> <span class="text-muted">(120)</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="cn-design">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="cn-design">
+                                <span>Thiết kế đồ họa</span> <span class="text-muted">(45)</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="cn-marketing">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="cn-marketing">
+                                <span>Digital Marketing</span> <span class="text-muted">(32)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="coursera-filter-footer">
+                        <button class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
+                        <button class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" style="color: #6c757d !important;">Xóa lọc</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="d-flex align-items-center gap-2 overflow-auto pb-1" style="scrollbar-width: none;">
-                
-                <button class="filter-coursera shadow-sm border-secondary-subtle">
-                    <i class="bi bi-sliders"></i> Lọc & Sắp xếp
+            <div class="dropdown">
+                <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    Kỹ năng lõi <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
                 </button>
-                
-                <div class="vr mx-1 opacity-25"></div> 
-                <div class="dropdown">
-                    <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Chuyên ngành <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
-                    </button>
-                    <ul class="dropdown-menu shadow-sm border-0" style="font-size: 14px;">
-                        <li><a class="dropdown-item" href="#">Công nghệ thông tin</a></li>
-                        <li><a class="dropdown-item" href="#">Thiết kế đồ họa</a></li>
-                        <li><a class="dropdown-item" href="#">Digital Marketing</a></li>
-                    </ul>
-                </div>
-
-                <div class="dropdown">
-                    <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Kỹ năng lõi <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
-                    </button>
-                    <ul class="dropdown-menu shadow-sm border-0" style="font-size: 14px;">
-                        <li><a class="dropdown-item" href="#">Spring Boot</a></li>
-                        <li><a class="dropdown-item" href="#">Vue.js</a></li>
-                        <li><a class="dropdown-item" href="#">Figma</a></li>
-                    </ul>
-                </div>
-
-                <div class="dropdown">
-                    <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Mục tiêu <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
-                    </button>
-                    <ul class="dropdown-menu shadow-sm border-0" style="font-size: 14px;">
-                        <li><a class="dropdown-item" href="#">Làm dự án (Project)</a></li>
-                        <li><a class="dropdown-item" href="#">Ôn thi qua môn</a></li>
-                        <li><a class="dropdown-item" href="#">Giao lưu / Thể thao</a></li>
-                    </ul>
+                <div class="dropdown-menu coursera-dropdown-menu shadow">
+                    <div class="coursera-filter-header">Chọn Kỹ năng lõi</div>
+                    <div class="coursera-filter-body">
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="skill-spring">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="skill-spring">
+                                <span>Spring Boot</span> <span class="text-muted">(45)</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="skill-vue">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="skill-vue">
+                                <span>Vue.js</span> <span class="text-muted">(30)</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="skill-figma">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="skill-figma">
+                                <span>Figma</span> <span class="text-muted">(25)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="coursera-filter-footer">
+                        <button class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
+                        <button class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" style="color: #6c757d !important;">Xóa lọc</button>
+                    </div>
                 </div>
             </div>
         </div>
