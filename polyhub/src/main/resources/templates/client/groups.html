@@ -40,22 +40,11 @@
                 <div class="dropdown-menu coursera-dropdown-menu shadow">
                     <div class="coursera-filter-header">Chọn Chuyên ngành</div>
                     <div class="coursera-filter-body">
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="cn-it">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="cn-it">
-                                <span>Công nghệ thông tin</span> <span class="text-muted">(120)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="cn-design">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="cn-design">
-                                <span>Thiết kế đồ họa</span> <span class="text-muted">(45)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="cn-marketing">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="cn-marketing">
-                                <span>Digital Marketing</span> <span class="text-muted">(32)</span>
+                        <div class="form-check custom-checkbox mb-2" th:each="category : ${categories}">
+                            <input class="form-check-input shadow-none" type="checkbox" th:id="'cn-' + ${category.id}" th:value="${category.id}">
+                            <label class="form-check-label d-flex justify-content-between w-100" th:for="'cn-' + ${category.id}">
+                                <span class="text-truncate" style="max-width: 85%;" th:text="${category.name}">Công nghệ thông tin</span>
+                                <span class="text-muted" th:text="${category.documents != null ? category.documents.size() : 0}">(0)</span>
                             </label>
                         </div>
                     </div>
@@ -66,38 +55,7 @@
                 </div>
             </div>
 
-            <div class="dropdown">
-                <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                    Kỹ năng lõi <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
-                </button>
-                <div class="dropdown-menu coursera-dropdown-menu shadow">
-                    <div class="coursera-filter-header">Chọn Kỹ năng lõi</div>
-                    <div class="coursera-filter-body">
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="skill-spring">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="skill-spring">
-                                <span>Spring Boot</span> <span class="text-muted">(45)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="skill-vue">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="skill-vue">
-                                <span>Vue.js</span> <span class="text-muted">(30)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="skill-figma">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="skill-figma">
-                                <span>Figma</span> <span class="text-muted">(25)</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="coursera-filter-footer">
-                        <button class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
-                        <button class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" style="color: #6c757d !important;">Xóa lọc</button>
-                    </div>
-                </div>
-            </div>
+            
         </div>
 
         <ul class="nav nav-underline mb-3 border-bottom" id="groupTabs" role="tablist" style="gap: 20px;">
