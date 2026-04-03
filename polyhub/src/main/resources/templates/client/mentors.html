@@ -45,55 +45,11 @@
                 <div class="dropdown-menu coursera-dropdown-menu shadow">
                     <div class="coursera-filter-header">Chọn Chuyên ngành</div>
                     <div class="coursera-filter-body">
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="m_cn1">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="m_cn1">
-                                <span>Ứng dụng phần mềm</span> <span class="text-muted">(120)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="m_cn2">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="m_cn2">
-                                <span>Thiết kế Web</span> <span class="text-muted">(85)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="m_cn3">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="m_cn3">
-                                <span>Lập trình Mobile</span> <span class="text-muted">(42)</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="coursera-filter-footer">
-                        <button class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
-                        <button class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" style="color: #6c757d !important;">Xóa lọc</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="dropdown">
-                <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                    Kỹ năng <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
-                </button>
-                <div class="dropdown-menu coursera-dropdown-menu shadow">
-                    <div class="coursera-filter-header">Kỹ năng chuyên môn</div>
-                    <div class="coursera-filter-body">
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="m_kn1">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="m_kn1">
-                                <span>Java / Spring Boot</span> <span class="text-muted">(64)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="m_kn2">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="m_kn2">
-                                <span>React / Vue.js</span> <span class="text-muted">(38)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="m_kn3">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="m_kn3">
-                                <span>UI/UX Design</span> <span class="text-muted">(52)</span>
+                        <div class="form-check custom-checkbox mb-2" th:each="category : ${categories}">
+                            <input class="form-check-input shadow-none" type="checkbox" th:id="'m_cn_' + ${category.id}" th:value="${category.id}">
+                            <label class="form-check-label d-flex justify-content-between w-100" th:for="'m_cn_' + ${category.id}">
+                                <span class="text-truncate" style="max-width: 85%;" th:text="${category.name}">Ứng dụng phần mềm</span>
+                                <span class="text-muted" th:text="${category.documents != null ? category.documents.size() : 0}">(0)</span>
                             </label>
                         </div>
                     </div>

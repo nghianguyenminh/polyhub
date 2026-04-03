@@ -49,9 +49,6 @@ public class AdminController {
         return "admin/reports"; 
     }
 
-    @GetMapping("/categories")
-    public String categories() {
-        return "admin/categories"; 
-    }
+
     
 }

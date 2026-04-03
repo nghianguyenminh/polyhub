@@ -45,16 +45,11 @@
                 <div class="dropdown-menu coursera-dropdown-menu shadow">
                     <div class="coursera-filter-header">Chọn Chuyên ngành</div>
                     <div class="coursera-filter-body">
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="cn1">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="cn1">
-                                <span>Phát triển Phần mềm</span> <span class="text-muted">(1,415)</span>
-                            </label>
-                        </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="cn2">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="cn2">
-                                <span>Thiết kế Đồ họa</span> <span class="text-muted">(824)</span>
+                        <div class="form-check custom-checkbox mb-2" th:each="category : ${categories}">
+                            <input class="form-check-input shadow-none" type="checkbox" th:id="'d_cn_' + ${category.id}" th:value="${category.id}">
+                            <label class="form-check-label d-flex justify-content-between w-100" th:for="'d_cn_' + ${category.id}">
+                                <span class="text-truncate" style="max-width: 85%;" th:text="${category.name}">Phát triển Phần mềm</span>
+                                <span class="text-muted" th:text="${category.documents != null ? category.documents.size() : 0}">(0)</span>
                             </label>
                         </div>
                     </div>
@@ -73,15 +68,27 @@
                     <div class="coursera-filter-header">Định dạng file</div>
                     <div class="coursera-filter-body">
                         <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="type1">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="type1">
-                                <span>Tài liệu (PDF, Word)</span> <span class="text-muted">(2,100)</span>
+                            <input class="form-check-input shadow-none" type="checkbox" id="type-pdf" value="PDF">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="type-pdf">
+                                <span>PDF</span> <span class="text-muted">...</span>
                             </label>
                         </div>
                         <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="type2">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="type2">
-                                <span>Source Code (ZIP)</span> <span class="text-muted">(505)</span>
+                            <input class="form-check-input shadow-none" type="checkbox" id="type-word" value="WORD">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="type-word">
+                                <span>Word (DOC/DOCX)</span> <span class="text-muted">...</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="type-excel" value="EXCEL">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="type-excel">
+                                <span>Excel (XLS/XLSX)</span> <span class="text-muted">...</span>
+                            </label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input shadow-none" type="checkbox" id="type-other" value="OTHER">
+                            <label class="form-check-label d-flex justify-content-between w-100" for="type-other">
+                                <span>Khác</span> <span class="text-muted">...</span>
                             </label>
                         </div>
                     </div>
