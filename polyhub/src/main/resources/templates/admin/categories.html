@@ -98,6 +98,13 @@
                                         onclick="openEditModal(this.getAttribute('data-id'), this.getAttribute('data-name'))">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
+                                
+                                <!-- Xóa -->
+                                <form th:action="@{/admin/categories/delete/{id}(id=${major.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa chuyên ngành này? Hành động này không thể hoàn tác.');">
+                                    <button type="submit" class="btn btn-sm btn-light rounded-2 text-danger ms-1" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         <tr th:if="${majors == null or majors.isEmpty()}">
