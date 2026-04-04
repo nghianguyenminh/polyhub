@@ -74,4 +74,20 @@ public class CategoryAdminController {
         }
         return "redirect:/admin/categories";
     }
+
+    // Action: Xóa chuyên ngành
+    @PostMapping("/delete/{id}")
+    public String deleteMajor(
+            @PathVariable("id") Long id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            categoryService.deleteCategory(id);
+            redirectAttributes.addFlashAttribute("success_msg", "Xóa chuyên ngành thành công.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error_msg", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error_msg", "Không thể xóa chuyên ngành: " + e.getMessage());
+        }
+        return "redirect:/admin/categories";
+    }
 }

@@ -56,4 +56,17 @@ public class CategoryService {
         cat.setActive(!cat.isActive());
         return categoryRepository.save(cat);
     }
+
+    /** Admin: Xóa chuyên ngành */
+    @Transactional
+    public void deleteCategory(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Danh mục."));
+        
+        if (!category.getDocuments().isEmpty()) {
+            throw new IllegalStateException("Chuyên ngành này đang có tài liệu, không thể xóa.");
+        }
+        
+        categoryRepository.delete(category);
+    }
 }
