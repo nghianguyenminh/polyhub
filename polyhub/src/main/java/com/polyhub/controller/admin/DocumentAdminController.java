@@ -81,4 +81,15 @@ public class DocumentAdminController {
         }
         return "redirect:/admin/documents";
     }
+
+    @PostMapping("/{id}/restore")
+    public String restoreDocument(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            documentAdminService.restoreDocument(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Ph?c h?i thành công! Tài li?u dã hi?n th? l?i trên trang ch?.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "L?i: " + e.getMessage());
+        }
+        return "redirect:/admin/documents";
+    }
 }

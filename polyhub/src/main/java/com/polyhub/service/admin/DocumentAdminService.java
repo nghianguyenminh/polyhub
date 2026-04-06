@@ -48,6 +48,14 @@ public class DocumentAdminService {
         documentRepository.save(doc);
     }
 
+    // Phục hồi / Mở khóa tài liệu
+    public void restoreDocument(Long id) {
+        Document doc = getDocumentById(id);
+        doc.setStatus(DocumentStatus.APPROVED);
+        doc.setRejectionReason(null);
+        documentRepository.save(doc);
+    }
+
     // Xóa vật lý (Hard delete: Xóa Cloudinary & DB)
     public void hardDeleteDocument(Long id) {
         Document doc = getDocumentById(id);

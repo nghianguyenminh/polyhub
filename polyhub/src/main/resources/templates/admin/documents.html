@@ -128,7 +128,7 @@
                     <div class="kpi-icon"><i class="bi bi-cloud-check-fill"></i></div>
                     <div class="flex-grow-1">
                         <div class="kpi-value">45.2 <span style="font-size: 0.9rem; color: #6B7280; font-weight: 500;">/ 100 GB</span></div>
-                        <div class="kpi-label">Dung lượng Server</div>
+                        <div class="kpi-label">Dung lượng Storage</div>
                         <div class="storage-progress"><div class="storage-progress-bar" style="width: 45.2%;"></div></div>
                     </div>
                 </div>
@@ -147,7 +147,7 @@
                     <div class="kpi-icon"><i class="bi bi-flag-fill"></i></div>
                     <div>
                         <div class="kpi-value text-danger">12</div>
-                        <div class="kpi-label">Tài liệu bị Báo cáo</div>
+                        <div class="kpi-label">Tài liệu Chờ duyệt</div>
                     </div>
                 </div>
             </div>
@@ -155,8 +155,8 @@
                 <div class="kpi-card kpi-top">
                     <div class="kpi-icon"><i class="bi bi-trophy-fill"></i></div>
                     <div>
-                        <div class="kpi-value">Slide Java 1</div>
-                        <div class="kpi-label">Top tải xuống tuần</div>
+                        <div class="kpi-value" th:text="${stats.hidden != null ? stats.hidden : 0}">0</div>
+                        <div class="kpi-label">Tài liệu bị Thu hồi</div>
                     </div>
                 </div>
             </div>
@@ -232,85 +232,44 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Record 1: Normal PDF -->
-                        <tr>
+                        <tr th:each="doc : ${documentPage.content}" th:classappend="${doc.status.name() == 'HIDDEN'} ? 'opacity-75' : (${doc.status.name() == 'REJECTED'} ? 'bg-danger-subtle' : '')">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="file-icon icon-pdf"><i class="bi bi-filetype-pdf"></i></div>
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark" style="font-size: 14px;">Slide_Bai1_Java_Core.pdf</div>
-                                        <div class="text-muted" style="font-size: 11px; margin-top: 2px;">Ủy quyền • 2.4 MB • 20/03/2026</div>
+                                    <div class="file-icon"
+                                         th:classappend="${doc.documentType == 'PDF' ? 'icon-pdf' : (doc.documentType == 'WORD' ? 'icon-word' : (doc.documentType == 'EXCEL' ? 'icon-excel' : (doc.documentType == 'PPT' ? 'icon-ppt' : 'icon-zip')))}">
+                                        <i th:class="${doc.documentType == 'PDF' ? 'bi bi-file-earmark-pdf-fill' : (doc.documentType == 'WORD' ? 'bi bi-file-earmark-word-fill' : (doc.documentType == 'EXCEL' ? 'bi bi-file-earmark-excel-fill' : (doc.documentType == 'PPT' ? 'bi bi-file-earmark-ppt-fill' : 'bi bi-file-earmark-zip-fill')))}"></i>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Lê+Nam&background=random" class="owner-avatar">
-                                    <span class="text-dark fw-medium" style="font-size: 13px;">Lê Văn Nam</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="subject-tag">Lập trình Java 1</span>
-                            </td>
-                            <td>
-                                <div class="interaction-stats">
-                                    <div class="stat-item" title="Lượt tải xuống"><i class="bi bi-download"></i> 1,204</div>
-                                    <div class="stat-item" title="Lượt thích"><i class="bi bi-heart-fill text-danger text-opacity-75"></i> 345</div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge status-public">
-                                    <span class="status-dot"></span> Công khai
-                                </span>
-                            </td>
-                            <td class="text-center" style="padding-right: 1.5rem;">
-                                <div class="dropdown">
-                                    <button class="btn-action-dots mx-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end action-menu shadow">
-                                        <li><a class="dropdown-item fw-medium" href="#" data-bs-toggle="modal" data-bs-target="#previewModal"><i class="bi bi-eye text-primary"></i> Xem trước tài liệu</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-download text-success"></i> Tải xuống (Download)</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item item-warning" href="#" data-bs-toggle="modal" data-bs-target="#warnUserModal"><i class="bi bi-exclamation-triangle"></i> Gửi cảnh cáo User</a></li>
-                                        <li><a class="dropdown-item item-danger" href="#" data-bs-toggle="modal" data-bs-target="#takedownModal"><i class="bi bi-eye-slash-fill"></i> Gỡ tài liệu (Ẩn)</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Record 2: Reported ZIP (Red Flag) -->
-                        <tr style="background-color: #FEF2F2;">
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="file-icon icon-zip"><i class="bi bi-file-earmark-zip-fill"></i></div>
                                     <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark d-flex align-items-center gap-2" style="font-size: 14px;">
-                                            SourceCode_Assigment_Final.zip
-                                            <i class="bi bi-flag-fill text-danger" title="Bị Report 24 lần"></i>
+                                        <div class="fw-semibold text-dark" style="font-size: 14px;">
+                                            <a th:href="${doc.fileUrl}" target="_blank" class="text-dark text-decoration-none" th:text="${doc.title}">Tên tài liệu</a>
                                         </div>
-                                        <div class="text-danger fw-medium" style="font-size: 11px; margin-top: 2px;">15.8 MB • 24 Reports (Share giải bài)</div>
+                                        <div class="text-muted" style="font-size: 11px; margin-top: 2px;">
+                                            <span th:text="${doc.fileSize != null ? #numbers.formatDecimal(doc.fileSize / 1024.0 / 1024.0, 1, 2) + ' MB' : '0 MB'}">Dung lượng</span> • 
+                                            <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy')}">Ngày tạo</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Hải+Đăng&background=random" class="owner-avatar">
-                                    <span class="text-dark fw-medium" style="font-size: 13px;">Nguyễn Hải Đăng</span>
+                                    <img src="https://ui-avatars.com/api/?name=User&background=random" class="owner-avatar">
+                                    <span class="text-dark fw-medium" style="font-size: 13px;">Học viên</span>
                                 </div>
                             </td>
                             <td>
-                                <span class="subject-tag">Thiết kế Web</span>
+                                <span class="subject-tag" th:text="${doc.category != null ? doc.category.name : 'Khác'}">Môn học</span>
                             </td>
                             <td>
                                 <div class="interaction-stats">
-                                    <div class="stat-item"><i class="bi bi-download"></i> 56</div>
-                                    <div class="stat-item"><i class="bi bi-heart text-muted"></i> 2</div>
+                                    <div class="stat-item" title="Lượt tải xuống"><i class="bi bi-download"></i> <span th:text="${doc.downloadCount}">0</span></div>
+                                    <div class="stat-item" title="Lượt thích"><i class="bi bi-heart-fill text-danger text-opacity-75"></i> 0</div>
                                 </div>
                             </td>
                             <td>
-                                <span class="status-badge status-warning">
-                                    <span class="status-dot"></span> Bị Cảnh báo
+                                <span class="status-badge"
+                                      th:classappend="${doc.status.name() == 'APPROVED' ? 'status-active' : (doc.status.name() == 'PENDING' ? 'status-pending' : (doc.status.name() == 'HIDDEN' ? 'status-hidden' : 'status-danger'))}">
+                                    <span class="status-dot"></span>
+                                    <span th:text="${doc.status.name() == 'APPROVED' ? 'Đã duyệt' : (doc.status.name() == 'PENDING' ? 'Chờ duyệt' : (doc.status.name() == 'HIDDEN' ? 'Đã gỡ/ẩn' : 'Từ chối'))}">Trạng thái</span>
                                 </span>
                             </td>
                             <td class="text-center" style="padding-right: 1.5rem;">
@@ -319,60 +278,88 @@
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end action-menu shadow">
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-flag-fill text-danger"></i> Xem danh sách Reports</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-download text-success"></i> Tải File để Kiểm duyệt</a></li>
+                                        <li><a class="dropdown-item fw-medium" th:href="${doc.fileUrl}" target="_blank"><i class="bi bi-eye text-primary"></i> Xem / Tải file gốc</a></li>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item item-warning" href="#" data-bs-toggle="modal" data-bs-target="#warnUserModal"><i class="bi bi-exclamation-triangle"></i> Gửi cảnh cáo đánh gậy User</a></li>
-                                        <li><a class="dropdown-item item-danger fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#takedownModal"><i class="bi bi-eye-slash-fill"></i> Gỡ tài liệu Khẩn cấp</a></li>
-                                        <li><a class="dropdown-item item-danger" href="#" data-bs-toggle="modal" data-bs-target="#hardDeleteModal"><i class="bi bi-fire"></i> Xóa File Vĩnh viễn (Hard Delete)</a></li>
+                                        
+                                        <li th:if="${doc.status.name() == 'PENDING'}">
+                                            <form th:action="@{/admin/documents/{id}/approve(id=${doc.id})}" method="post" class="m-0">
+                                                <button type="submit" class="dropdown-item item-success fw-medium"><i class="bi bi-check-circle-fill"></i> Duyệt (Approve)</button>
+                                            </form>
+                                        </li>
+                                        
+                                        <li th:if="${doc.status.name() != 'HIDDEN'}">
+                                            <a class="dropdown-item item-warning fw-medium" href="#" data-bs-toggle="modal" th:attr="data-bs-target='#takedownModal' + ${doc.id}"><i class="bi bi-eye-slash-fill"></i> Gỡ / Ẩn (Soft Delete)</a>
+                                        </li>
+                                        
+                                        <li th:if="${doc.status.name() == 'HIDDEN'}">
+                                            <form th:action="@{/admin/documents/{id}/restore(id=${doc.id})}" method="post" class="m-0">
+                                                <button type="submit" class="dropdown-item fw-medium" style="color: #0dcaf0;"><i class="bi bi-unlock-fill"></i> Mở khóa (Restore)</button>
+                                            </form>
+                                        </li>
+                                        
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item item-danger fw-medium" href="#" data-bs-toggle="modal" th:attr="data-bs-target='#hardDeleteModal' + ${doc.id}"><i class="bi bi-fire"></i> Xóa sạch (Hard Delete)</a></li>
                                     </ul>
                                 </div>
-                            </td>
-                        </tr>
-
-                        <!-- Record 3: Taken down (Hidden) -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3 opacity-75">
-                                    <div class="file-icon icon-word"><i class="bi bi-file-earmark-word-fill"></i></div>
-                                    <div style="line-height: 1.4;">
-                                        <div class="text-muted text-decoration-line-through" style="font-size: 14px;">Bai_Tap_Ve_Nha.docx</div>
-                                        <div class="text-muted" style="font-size: 11px; margin-top: 2px;">1.2 MB • Gỡ bởi: Admin Hoàng</div>
+                                
+                                <!-- Modal Gỡ Tài Liệu -->
+                                <div class="modal fade text-start" th:id="'takedownModal' + ${doc.id}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content" style="border-radius: 16px; border: none;">
+                                            <form th:action="@{/admin/documents/{id}/takedown(id=${doc.id})}" method="post">
+                                                <div class="modal-header" style="background-color: #F9FAFB; border-radius: 16px 16px 0 0;">
+                                                    <h5 class="modal-title fw-bold" style="font-size: 1.1rem;"><i class="bi bi-eye-slash-fill text-danger me-2"></i> Gỡ Tài liệu</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p class="text-muted" style="font-size: 14px;">Tài liệu <strong th:text="${doc.title}"></strong> sẽ bị ẩn khỏi cộng đồng.</p>
+                                                    <div class="mb-3">
+                                                        <label class="form-label" style="font-size: 13px;">Lý do (Bắt buộc)</label>
+                                                        <select name="reason" class="form-select form-select-sm mb-2" required>
+                                                            <option value="">-- Chọn lý do --</option>
+                                                            <option value="Vi phạm bản quyền">Vi phạm bản quyền</option>
+                                                            <option value="Sai môn học">Sai môn học</option>
+                                                            <option value="File lỗi / rác">File lỗi / rác</option>
+                                                            <option value="Khác">Lý do khác...</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer bg-light" style="border-radius: 0 0 16px 16px;">
+                                                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Gỡ Tài liệu</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Modal Hard Delete -->
+                                <div class="modal fade text-start" th:id="'hardDeleteModal' + ${doc.id}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-danger" style="border-radius: 16px;">
+                                            <form th:action="@{/admin/documents/{id}/delete(id=${doc.id})}" method="post">
+                                                <div class="modal-header bg-danger text-white" style="border-radius: 14px 14px 0 0;">
+                                                    <h5 class="modal-title fw-bold" style="font-size: 1.1rem;"><i class="bi bi-fire me-2"></i>Xóa vĩnh viễn</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center py-4">
+                                                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3.5rem;"></i>
+                                                    <h5 class="fw-bold mt-3 mb-2 text-danger">Xóa vĩnh viễn trên Server!</h5>
+                                                    <p class="text-muted mb-0" style="font-size: 14px;">Đang xóa: <strong th:text="${doc.title}"></strong></p>
+                                                </div>
+                                                <div class="modal-footer justify-content-center" style="border-radius: 0 0 16px 16px;">
+                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-danger">Xóa sạch</button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2 opacity-75">
-                                    <img src="https://ui-avatars.com/api/?name=Orphan&background=F3F4F6&color=6B7280" class="owner-avatar">
-                                    <span class="text-muted" style="font-size: 13px;">Tài khoản đã xóa</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="subject-tag opacity-75">Kỹ năng mềm</span>
-                            </td>
-                            <td>
-                                <div class="interaction-stats opacity-75">
-                                    <div class="stat-item"><i class="bi bi-download"></i> 12</div>
-                                    <div class="stat-item"><i class="bi bi-heart text-muted"></i> 0</div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge status-hidden">
-                                    <span class="status-dot"></span> Đã Gỡ / Ẩn
-                                </span>
-                            </td>
-                            <td class="text-center" style="padding-right: 1.5rem;">
-                                <div class="dropdown">
-                                    <button class="btn-action-dots mx-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end action-menu shadow">
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-eye text-primary"></i> Xem lý do Gỡ (Audit Log)</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-counterclockwise text-success"></i> Khôi phục Public</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item item-danger" href="#" data-bs-toggle="modal" data-bs-target="#hardDeleteModal"><i class="bi bi-fire"></i> Dọn dẹp File (Hard Delete)</a></li>
-                                    </ul>
-                                </div>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(documentPage.content)}">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-folder-x fs-1 d-block mb-3"></i>Không tìm thấy tài liệu nào.
                             </td>
                         </tr>
                     </tbody>
@@ -395,85 +382,7 @@
             </div>
         </div>
 
-        <!-- 5. Modals for Interventions -->
         
-        <!-- Modal View PDF Preview -->
-        <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
-                    <div class="modal-header py-2" style="background-color: #1F2937; color: white; border-bottom: none;">
-                        <h5 class="modal-title" style="font-size: 1rem;"><i class="bi bi-file-pdf me-2 text-danger"></i> Slide_Bai1_Java_Core.pdf</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <!-- Mock Preview Container -->
-                        <div class="preview-container">
-                            <div class="text-center text-muted">
-                                <i class="bi bi-file-earmark-pdf" style="font-size: 3rem; color: #9CA3AF;"></i>
-                                <p class="mt-2 mb-0">Trình cắm PDF Viewer sẽ hiển thị ở đây</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Gỡ Tài Liệu (Soft Delete) -->
-        <div class="modal fade" id="takedownModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="border-radius: 16px; border: none;">
-                    <div class="modal-header" style="background-color: #F9FAFB; border-radius: 16px 16px 0 0;">
-                        <h5 class="modal-title fw-bold" style="font-size: 1.1rem;"><i class="bi bi-eye-slash-fill text-danger me-2"></i> Gỡ Tài liệu (Takedown)</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-muted" style="font-size: 14px;">Tài liệu sẽ bị <strong>Ẩn khỏi cộng đồng</strong> (Soft Delete) nhưng vẫn giữ File gốc trên Server. Người đăng sẽ nhận được email thông báo do lỗi vi phạm.</p>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 13px;">Lý do gỡ tài liệu (Bắt buộc) <span class="text-danger">*</span></label>
-                            <select class="form-select form-select-sm mb-2" style="font-size: 13.5px; height: 38px;">
-                                <option value="">-- Chọn một lý do tiêu chuẩn --</option>
-                                <option value="copyright">Vi phạm bản quyền / Share Assignment</option>
-                                <option value="wrong_subject">Sai môn học / Nội dung không liên quan</option>
-                                <option value="corrupted">File lỗi / File rác</option>
-                                <option value="other">Lý do khác...</option>
-                            </select>
-                            <textarea class="form-control" rows="2" placeholder="Ghi chú chi tiết thêm vào Audit Log..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light" style="border-radius: 0 0 16px 16px;">
-                        <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal">Hủy</button>
-                        <button type="button" class="btn btn-danger btn-sm px-4 fw-bold">Xác nhận Gỡ Tài liệu</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Hard Delete File -->
-        <div class="modal fade" id="hardDeleteModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-danger" style="border-radius: 16px;">
-                    <div class="modal-header bg-danger text-white" style="border-radius: 14px 14px 0 0;">
-                        <h5 class="modal-title fw-bold" style="font-size: 1.1rem;"><i class="bi bi-fire me-2"></i>Xóa vĩnh viễn (Hard Delete)</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-center py-4">
-                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3.5rem;"></i>
-                        <h5 class="fw-bold mt-3 mb-2 text-danger">Xóa tận gốc File trên Server!</h5>
-                        <p class="text-muted mb-0" style="font-size: 14px;">
-                            Hành động này sẽ <strong>xóa file vật lý khỏi Cloud Storage</strong> và không thể hoàn tác. Chỉ nên dùng khi phát hiện File chứa Malware/Virus hoặc dọn rác hệ thống.
-                        </p>
-                    </div>
-                    <div class="modal-footer justify-content-center" style="border-radius: 0 0 16px 16px;">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Hủy bỏ</button>
-                        <button type="button" class="btn btn-danger px-4 fw-bold"><i class="bi bi-trash3-fill"></i> Tiến hành Xóa sạch</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
-    
-    <th:block th:fragment="myJs"></th:block>
 </body>
 </html>
