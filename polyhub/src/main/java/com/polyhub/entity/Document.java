@@ -42,6 +42,14 @@ public class Document {
     @Builder.Default
     private Integer downloadCount = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    @Builder.Default
+    private DocumentStatus status = DocumentStatus.PENDING;
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
+
     // Liên kết với Chuyên Ngành (Category) ManyToOne
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
