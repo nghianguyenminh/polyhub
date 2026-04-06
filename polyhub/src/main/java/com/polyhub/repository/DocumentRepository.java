@@ -1,7 +1,12 @@
-package com.polyhub.repository;
+﻿package com.polyhub.repository;
 
 import com.polyhub.entity.Document;
+import com.polyhub.entity.DocumentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,12 +14,21 @@ import java.util.List;
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
-    // Tìm tất cả tài liệu của 1 chuyên ngành cụ thể
     List<Document> findByCategoryId(Long categoryId);
     
-    // Tìm tất cả tài liệu lọc theo Định dạng FILE (PDF, WORD, EXCEL)
     List<Document> findByDocumentTypeIgnoreCase(String documentType);
 
-    // Lọc tổng hợp nhiều DK (Chuyên ngành & Loại File)
     List<Document> findByCategoryIdAndDocumentTypeIgnoreCase(Long categoryId, String documentType);
+
+    List<Document> findByStatus(DocumentStatus status);
+
+    @Query("SELECT d FROM Document d WHERE " +
+           "(:status IS NULL OR d.status = :status) AND " +
+           "(:keyword IS NULL OR :keyword = '' OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:categoryId IS NULL OR d.category.id = :categoryId)")
+    Page<Document> searchAndFilterDocuments(
+            @Param("status") DocumentStatus status,
+            @Param("keyword") String keyword,
+            @Param("categoryId") Long categoryId,
+            Pageable pageable);
 }
