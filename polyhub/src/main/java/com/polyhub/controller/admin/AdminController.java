@@ -39,10 +39,6 @@ public class AdminController {
         return "admin/groups"; 
     }
 
-    @GetMapping("/documents")
-    public String documents() {
-        return "admin/documents"; 
-    }
 
     @GetMapping("/reports")
     public String reports() {
