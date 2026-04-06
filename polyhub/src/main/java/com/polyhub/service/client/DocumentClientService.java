@@ -62,7 +62,7 @@ public class DocumentClientService {
      * Lấy tất cả tài liệu để render trang chủ (Tạm thời get All, sau này có thể thêm Paging/Sorting)
      */
     public java.util.List<Document> getAllDocuments() {
-        return documentRepository.findAll(); // Sử dụng hàm mặc định
+        return documentRepository.findByStatus(com.polyhub.entity.DocumentStatus.APPROVED);
     }
 
     // --- CÁC HÀM TIỆN ÍCH DÙNG CHUNG TRONG SERVICE ---
