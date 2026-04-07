@@ -1,6 +1,7 @@
 package com.polyhub.service;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,19 @@ public class FileStorageService {
 
     // Inject đối tượng Cloudinary chúng ta đã cấu hình ở CloudinaryConfig
     private final Cloudinary cloudinary;
+
+    /**
+     * LẤY THÔNG TIN SỬ DỤNG DUNG LƯỢNG (USAGE) TỪ CLOUDINARY
+     */
+    public Map<String, Object> getStorageUsage() {
+        try {
+            ApiResponse usage = cloudinary.api().usage(ObjectUtils.emptyMap());
+            return usage;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     /**
      * TẢI LÊN TÀI LIỆU
