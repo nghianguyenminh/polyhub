@@ -28,21 +28,31 @@ public class DocumentAdminController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "category_id", required = false) Long categoryId,
             @RequestParam(value = "status", required = false) DocumentStatus status,
+            @RequestParam(value = "document_type", required = false) String documentType,
             @RequestParam(value = "page", defaultValue = "1") int page,
             Model model) {
 
-        int size = 10;
-        Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, page, size);
+        int size = 5; // Cập nhật số lượng tài liệu hiển thị trên một trang thành 5
+        Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page, size);
         List<Category> categories = categoryService.getAllCategoriesForAdmin();
-        Map<String, Long> stats = documentAdminService.getDocumentStats();
+        Map<String, Object> stats = documentAdminService.getDocumentStats();
+
+        // Get filter stats
+        List<Object[]> typeStats = documentAdminService.getDocumentTypeStats();
+        List<Object[]> categoryStats = documentAdminService.getCategoryStats();
+        List<Object[]> statusStats = documentAdminService.getStatusStats();
 
         model.addAttribute("documentPage", documentPage);
         model.addAttribute("categories", categories);
         model.addAttribute("keyword", keyword);
         model.addAttribute("categoryId", categoryId);
         model.addAttribute("status", status);
+        model.addAttribute("documentType", documentType);
         model.addAttribute("currentPage", page);
         model.addAttribute("stats", stats);
+        model.addAttribute("typeStats", typeStats);
+        model.addAttribute("categoryStats", categoryStats);
+        model.addAttribute("statusStats", statusStats);
 
         return "admin/documents";
     }
@@ -86,7 +96,7 @@ public class DocumentAdminController {
     public String restoreDocument(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             documentAdminService.restoreDocument(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Ph?c h?i th�nh c�ng! T�i li?u d� hi?n th? l?i tr�n trang ch?.");
+            redirectAttributes.addFlashAttribute("successMessage", "Ph?c h?i th�nh c�ng! T�i li?u d� hi?n th? l?i tr�n trang ch?.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "L?i: " + e.getMessage());
         }

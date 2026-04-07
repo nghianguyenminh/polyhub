@@ -48,7 +48,7 @@
                         <div class="form-check custom-checkbox mb-2" th:each="category : ${categories}">
                             <input class="form-check-input shadow-none" type="checkbox" th:id="'d_cn_' + ${category.id}" th:value="${category.id}">
                             <label class="form-check-label d-flex justify-content-between w-100" th:for="'d_cn_' + ${category.id}">
-                                <span class="text-truncate" style="max-width: 85%;" th:text="${category.name}">Phát triển Phần mềm</span>
+                                <span class="text-truncate" style="max-width: 85%;" th:text="${category.name}"></span>
                                 <span class="text-muted" th:text="${category.documents != null ? category.documents.size() : 0}">(0)</span>
                             </label>
                         </div>
@@ -100,14 +100,7 @@
             </div>
         </div>
 
-        <ul class="nav nav-underline mb-3 border-bottom" role="tablist" style="gap: 20px;">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold pb-2" style="color: var(--poly-primary);">Mới nhất</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link text-muted fw-medium pb-2">Đã lưu (12)</button>
-            </li>
-        </ul>
+       
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3 mb-4">
             

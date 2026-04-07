@@ -126,10 +126,15 @@
             <div class="col-12 col-md-3">
                 <div class="kpi-card kpi-storage">
                     <div class="kpi-icon"><i class="bi bi-cloud-check-fill"></i></div>
-                    <div class="flex-grow-1">
-                        <div class="kpi-value">45.2 <span style="font-size: 0.9rem; color: #6B7280; font-weight: 500;">/ 100 GB</span></div>
+                    <div class="flex-grow-1" th:if="${!stats.containsKey('cloudinaryError')}">
+                        <div class="kpi-value"><span th:text="${stats.cloudinaryUsageGb}">0</span> <span style="font-size: 0.9rem; color: #6B7280; font-weight: 500;">/ <span th:text="${stats.cloudinaryLimitGb}">0</span> GB</span></div>
                         <div class="kpi-label">Dung lượng Storage</div>
-                        <div class="storage-progress"><div class="storage-progress-bar" style="width: 45.2%;"></div></div>
+                        <div class="storage-progress"><div class="storage-progress-bar" th:style="'width: ' + ${stats.cloudinaryPercent} + '%;'"></div></div>
+                    </div>
+                    <div class="flex-grow-1" th:if="${stats.containsKey('cloudinaryError')}">
+                        <div class="kpi-value text-danger" style="font-size: 1.1rem;">Lỗi kết nối</div>
+                        <div class="kpi-label">Dung lượng Storage</div>
+                        <div class="storage-progress"><div class="storage-progress-bar bg-danger" style="width: 100%;"></div></div>
                     </div>
                 </div>
             </div>
@@ -137,7 +142,7 @@
                 <div class="kpi-card kpi-total">
                     <div class="kpi-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
                     <div>
-                        <div class="kpi-value">8,450</div>
+                        <div class="kpi-value" th:text="${#numbers.formatInteger(stats.total, 1, 'COMMA')}">0</div>
                         <div class="kpi-label">Tổng file học liệu</div>
                     </div>
                 </div>
@@ -146,17 +151,17 @@
                 <div class="kpi-card kpi-reported">
                     <div class="kpi-icon"><i class="bi bi-flag-fill"></i></div>
                     <div>
-                        <div class="kpi-value text-danger">12</div>
+                        <div class="kpi-value text-danger" th:text="${stats.pending}">0</div>
                         <div class="kpi-label">Tài liệu Chờ duyệt</div>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-md-3">
                 <div class="kpi-card kpi-top">
-                    <div class="kpi-icon"><i class="bi bi-trophy-fill"></i></div>
+                    <div class="kpi-icon"><i class="bi bi-eye-slash-fill"></i></div>
                     <div>
                         <div class="kpi-value" th:text="${stats.hidden != null ? stats.hidden : 0}">0</div>
-                        <div class="kpi-label">Tài liệu bị Thu hồi</div>
+                        <div class="kpi-label">Tài liệu Đã xóa/ẩn</div>
                     </div>
                 </div>
             </div>
@@ -164,57 +169,75 @@
 
         <!-- 3. Bộ lọc & Tìm kiếm -->
         <div class="filter-card">
-            <div class="row g-3 align-items-center">
-                <div class="col-12 col-lg-4">
-                    <div class="search-input-wrapper">
-                        <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm theo tên file hoặc người đăng...">
-                    </div>
-                </div>
-                <div class="col-12 col-lg-8">
-                    <div class="d-flex gap-2 flex-wrap justify-content-lg-end">
-                        
-                        <div class="dropdown d-inline-block">
-                            <button class="bs-select-mock d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 140px;">
-                                <span>Định dạng</span>
-                                <i class="bi bi-chevron-down ms-2" style="font-size: 11px;"></i>
-                            </button>
-                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
-                                <li><a class="dropdown-item active" href="#">Tất cả định dạng</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF Document (.pdf)</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-word text-primary me-2"></i> Word (.docx)</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-zip text-warning me-2"></i> Archive (.zip/.rar)</a></li>
-                            </ul>
+            <form action="/admin/documents" method="get" id="filterForm">
+                <input type="hidden" name="document_type" id="documentTypeInput" th:value="${documentType}">
+                <input type="hidden" name="category_id" id="categoryInput" th:value="${categoryId}">
+                <input type="hidden" name="status" id="statusInput" th:value="${status}">
+                
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-lg-4">
+                        <div class="search-input-wrapper">
+                            <i class="bi bi-search"></i>
+                            <input type="text" name="keyword" class="form-control" th:value="${keyword}" placeholder="Tìm theo tên file, hoặc môn học...">
                         </div>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="d-flex gap-2 flex-wrap justify-content-lg-end">
+                            <div class="dropdown d-inline-block">
+                                <button class="bs-select-mock d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 160px;">
+                                    <span th:text="${documentType == null or documentType == '' ? 'Định dạng' : documentType}">Tất cả định dạng</span>
+                                    <i class="bi bi-chevron-down ms-2" style="font-size: 11px;"></i>
+                                </button>
+                                <ul class="dropdown-menu shadow-sm dropdown-menu-end">
+                                    <li><a class="dropdown-item filter-type" href="#" data-value="" th:classappend="${documentType == null or documentType == '' ? 'active' : ''}">Tất cả định dạng</a></li>
+                                    <li th:each="stat : ${typeStats}">
+                                        <a class="dropdown-item filter-type d-flex justify-content-between align-items-center" href="#" th:data-value="${stat[0]}" th:classappend="${documentType == stat[0] ? 'active' : ''}">
+                                            <span>
+                                                <i class="bi bi-file-earmark-text text-secondary me-2"></i>
+                                                <span th:text="${stat[0]}">Định dạng</span>
+                                            </span>
+                                            <span class="badge bg-light text-dark rounded-pill ms-2" th:text="${stat[1]}">0</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
 
-                        <div class="dropdown d-inline-block">
-                            <button class="bs-select-mock d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 150px;">
-                                <span>Chuyên ngành</span>
-                                <i class="bi bi-chevron-down ms-2" style="font-size: 11px;"></i>
-                            </button>
-                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
-                                <li><a class="dropdown-item active" href="#">Tất cả Chuyên ngành</a></li>
-                                <li><a class="dropdown-item" href="#">Ứng dụng phần mềm</a></li>
-                                <li><a class="dropdown-item" href="#">Thiết kế đồ họa</a></li>
-                                <li><a class="dropdown-item" href="#">Digital Marketing</a></li>
-                            </ul>
-                        </div>
-                        
-                        <div class="dropdown d-inline-block">
-                            <button class="bs-select-mock d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 150px;">
-                                <span>Trạng thái</span>
-                                <i class="bi bi-chevron-down ms-2" style="font-size: 11px;"></i>
-                            </button>
-                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
-                                <li><a class="dropdown-item active" href="#">Tất cả Trạng thái</a></li>
-                                <li><a class="dropdown-item text-danger fw-bold" href="#"><i class="bi bi-flag me-1"></i> Bị Report</a></li>
-                                <li><a class="dropdown-item" href="#">Công khai</a></li>
-                                <li><a class="dropdown-item text-muted" href="#">Đã Gỡ/Ẩn</a></li>
-                            </ul>
+                            <div class="dropdown d-inline-block">
+                                <button class="bs-select-mock d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 170px;">
+                                    <span th:text="${categoryId == null ? 'Chuyên ngành' : (categories.?[id == __${categoryId}__].size() > 0 ? categories.?[id == __${categoryId}__][0].name : 'Tất cả Chuyên ngành')}">Tất cả Chuyên ngành</span>
+                                    <i class="bi bi-chevron-down ms-2" style="font-size: 11px;"></i>
+                                </button>
+                                <ul class="dropdown-menu shadow-sm dropdown-menu-end" style="max-height: 300px; overflow-y: auto;">
+                                    <li><a class="dropdown-item filter-category" href="#" data-value="" th:classappend="${categoryId == null ? 'active' : ''}">Tất cả Chuyên ngành</a></li>
+                                    <li th:each="stat : ${categoryStats}">
+                                        <a class="dropdown-item filter-category d-flex justify-content-between align-items-center" href="#" th:data-value="${stat[0]}" th:classappend="${categoryId == stat[0] ? 'active' : ''}">
+                                            <span th:text="${stat[1]}">Chuyên ngành</span>
+                                            <span class="badge bg-light text-dark rounded-pill ms-2" th:text="${stat[2]}">0</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="dropdown d-inline-block">
+                                <button class="bs-select-mock d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 160px;">
+                                    <span th:text="${status == null ? 'Trạng thái' : (status.name() == 'APPROVED' ? 'Đã duyệt' : (status.name() == 'PENDING' ? 'Chờ duyệt' : (status.name() == 'HIDDEN' ? 'Đã Gỡ/Ẩn' : 'Từ chối')))}">Tất cả Trạng thái</span>
+                                    <i class="bi bi-chevron-down ms-2" style="font-size: 11px;"></i>
+                                </button>
+                                <ul class="dropdown-menu shadow-sm dropdown-menu-end">
+                                    <li><a class="dropdown-item filter-status" href="#" data-value="" th:classappend="${status == null ? 'active' : ''}">Tất cả Trạng thái</a></li>
+                                    <li th:each="stat : ${statusStats}">
+                                        <a class="dropdown-item filter-status d-flex justify-content-between align-items-center" href="#" th:data-value="${stat[0]}" th:classappend="${status == stat[0] ? 'active' : ''}">
+                                            <span th:text="${stat[0].name() == 'APPROVED' ? 'Đã duyệt' : (stat[0].name() == 'PENDING' ? 'Chờ duyệt' : (stat[0].name() == 'HIDDEN' ? 'Đã Gỡ/Ẩn' : 'Từ chối'))}">Trạng thái</span>
+                                            <span class="badge bg-light text-dark rounded-pill ms-2" th:text="${stat[1]}">0</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <button type="submit" class="btn btn-primary d-none">Lọc</button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
 
         <!-- 4. Data Table (Hậu kiểm) -->
@@ -367,16 +390,26 @@
             </div>
             
             <!-- Pagination -->
-            <div class="p-3 border-top d-flex align-items-center justify-content-between">
-                <span class="text-muted" style="font-size: 13px;">Hiển thị 1 - 10 trong 8,450 tài liệu</span>
+            <div class="p-3 border-top d-flex align-items-center justify-content-between" th:if="${documentPage.totalPages > 0}">
+                <span class="text-muted" style="font-size: 13px;" th:text="'Hiển thị ' + (${documentPage.number * documentPage.size + 1}) + ' - ' + (${documentPage.number * documentPage.size + documentPage.numberOfElements}) + ' trong ' + ${documentPage.totalElements} + ' tài liệu'"></span>
                 <nav aria-label="Page navigation">
                     <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item disabled"><a class="page-link" href="#">Trang trước</a></li>
-                        <li class="page-item active" style="--bs-pagination-active-bg: var(--admin-primary); --bs-pagination-active-border-color: var(--admin-primary);"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link text-dark" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link text-dark" href="#">...</a></li>
-                        <li class="page-item"><a class="page-link text-dark" href="#">845</a></li>
-                        <li class="page-item"><a class="page-link text-dark" href="#">Trang sau</a></li>
+                        <li class="page-item" th:classappend="${documentPage.first ? 'disabled' : ''}">
+                            <a class="page-link" th:href="@{/admin/documents(page=${documentPage.number - 1}, keyword=${keyword}, categoryId=${categoryId}, status=${status}, documentType=${documentType})}" tabindex="-1" aria-disabled="true">Trang trước</a>
+                        </li>
+                        
+                        <li th:each="i : ${#numbers.sequence(0, documentPage.totalPages - 1)}" 
+                            class="page-item" 
+                            th:classappend="${documentPage.number == i ? 'active' : ''}"
+                            th:styleappend="${documentPage.number == i ? '--bs-pagination-active-bg: var(--admin-primary); --bs-pagination-active-border-color: var(--admin-primary);' : ''}">
+                            <a class="page-link" th:classappend="${documentPage.number != i ? 'text-dark' : ''}" 
+                               th:href="@{/admin/documents(page=${i}, keyword=${keyword}, categoryId=${categoryId}, status=${status}, documentType=${documentType})}" 
+                               th:text="${i + 1}">1</a>
+                        </li>
+
+                        <li class="page-item" th:classappend="${documentPage.last ? 'disabled' : ''}">
+                            <a class="page-link" th:classappend="${!documentPage.last ? 'text-dark' : ''}" th:href="@{/admin/documents(page=${documentPage.number + 1}, keyword=${keyword}, categoryId=${categoryId}, status=${status}, documentType=${documentType})}">Trang sau</a>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -384,5 +417,41 @@
 
         
     </div>
+    <!-- Scripts -->
+    <th:block th:fragment="myJs">
+        <script>
+            // Lắng nghe sự kiện click cho các item trong dropdown bộ lọc
+            document.addEventListener("DOMContentLoaded", function() {
+                const filterForm = document.getElementById("filterForm");
+                const documentTypeInput = document.getElementById("documentTypeInput");
+                const categoryInput = document.getElementById("categoryInput");
+                const statusInput = document.getElementById("statusInput");
+                
+                document.querySelectorAll(".filter-type").forEach(function(el) {
+                    el.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        documentTypeInput.value = this.getAttribute("data-value");
+                        filterForm.submit();
+                    });
+                });
+                
+                document.querySelectorAll(".filter-category").forEach(function(el) {
+                    el.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        categoryInput.value = this.getAttribute("data-value");
+                        filterForm.submit();
+                    });
+                });
+                
+                document.querySelectorAll(".filter-status").forEach(function(el) {
+                    el.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        statusInput.value = this.getAttribute("data-value");
+                        filterForm.submit();
+                    });
+                });
+            });
+        </script>
+    </th:block>
 </body>
 </html>
