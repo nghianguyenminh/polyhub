@@ -25,6 +25,9 @@
                 <p class="auth-subtitle">Tham gia cộng đồng PolyHUB ngay hôm nay</p>
             </div>
 
+            <div th:if="${error}" class="alert-custom alert-error">
+                <i class="bi bi-exclamation-circle-fill"></i> <span th:text="${error}"></span>
+            </div>
             <div th:if="${param.error}" class="alert-custom alert-error">
                 <i class="bi bi-exclamation-circle-fill"></i> Có lỗi xảy ra trong quá trình đăng ký!
             </div>
@@ -42,19 +45,50 @@
                         </div>
                     </div>
                     <div class="col-md-6 form-group">
-                        <label class="form-label" for="studentId">Mã sinh viên</label>
+                        <label class="form-label" for="username">Mã sinh viên (Tên đăng nhập)</label>
                         <div class="input-wrapper">
                             <i class="bi bi-card-text input-icon"></i>
-                            <input type="text" class="form-control-custom" id="studentId" name="studentId" placeholder="VD: PS12345" required>
+                            <input type="text" class="form-control-custom" id="username" name="username" placeholder="VD: PS12345" required>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="email">Địa chỉ Email</label>
-                    <div class="input-wrapper">
-                        <i class="bi bi-envelope input-icon"></i>
-                        <input type="email" class="form-control-custom" id="email" name="email" placeholder="Nhập địa chỉ email" required>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="form-label" for="email">Địa chỉ Email</label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input type="email" class="form-control-custom" id="email" name="email" placeholder="VD: email@fpt.edu.vn" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="form-label" for="phone">Số điện thoại</label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-telephone input-icon"></i>
+                            <input type="tel" class="form-control-custom" id="phone" name="phone" placeholder="VD: 0987654321" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="form-label" for="birthday">Ngày sinh</label>
+                        <div class="input-wrapper">
+                            <input type="date" class="form-control-custom" id="birthday" name="birthday" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="form-label d-block">Giới tính</label>
+                        <div class="d-flex align-items-center mt-2">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="radio" name="gender" id="genderMale" value="true" checked>
+                                <label class="form-check-label" for="genderMale">Nam</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="false">
+                                <label class="form-check-label" for="genderFemale">Nữ</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
