@@ -13,8 +13,11 @@
     <div th:fragment="myContent" class="poly-main-feed" style="max-width: 850px;">
         <div class="poly-card p-3">
             <div class="d-flex align-items-center gap-2">
-                <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" class="rounded-circle" width="40" height="40">
-                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" placeholder="Bạn đang nghĩ gì, Nghĩa?" style="cursor: pointer; font-size: 14.5px;" readonly>
+                <!-- Hiển thị Avatar Động từ currentUser -->
+                <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar != 'default.png' ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="rounded-circle object-fit-cover" width="40" height="40" alt="Avatar">
+                
+                <!-- Thay chữ 'Nghĩa' bằng fullname của người dùng hiện tại, có thể dùng thuộc tính th:placeholder -->
+                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" th:placeholder="'Bạn đang nghĩ gì, ' + (${currentUser != null} ? ${currentUser.fullname} : 'bạn') + '?'" style="cursor: pointer; font-size: 14.5px;" readonly>
             </div>
             
             <div class="d-flex justify-content-between px-1 mt-3">

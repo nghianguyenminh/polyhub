@@ -14,29 +14,48 @@
         
         <!-- PROFILE HEADER -->
         <div class="poly-card profile-header-card mb-3 overflow-hidden">
-            <!-- Cover Image -->
+            <!-- Thông báo trạng thái cập nhật (thành công/lỗi) -->
+            <div th:if="${success}" class="alert alert-success m-3" role="alert" th:text="${success}"></div>
+            <div th:if="${error}" class="alert alert-danger m-3" role="alert" th:text="${error}"></div>
+
+            <!-- Cover Image (Ảnh Bìa) -->
             <div class="profile-cover position-relative">
-                <img src="https://i.pinimg.com/736x/24/4b/8e/244b8ea08a5ec264a8b2714e281e7e5c.jpg" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;">
-                <button class="btn btn-light position-absolute bottom-0 end-0 m-3 shadow-sm btn-edit-cover rounded-pill fw-medium px-3 py-1">
-                    <i class="bi bi-camera me-1"></i> Sửa ảnh bìa
-                </button>
+                <!-- Hiển thị ảnh bìa từ Database. Nếu giá trị = default-cover.jpg, gán hiển thị ảnh cứng, ko thì lấy link URL cloudinary. -->
+                <img th:src="${currentUser.coverImage != null and currentUser.coverImage != 'default-cover.jpg' ? currentUser.coverImage : 'https://i.pinimg.com/736x/24/4b/8e/244b8ea08a5ec264a8b2714e281e7e5c.jpg'}" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;">
+                
+                <form th:action="@{/profile/update-cover}" method="post" enctype="multipart/form-data" class="d-inline position-absolute bottom-0 end-0 m-3" id="formUpdateCover">
+                    <label class="btn btn-light shadow-sm btn-edit-cover rounded-pill fw-medium px-3 py-1 mb-0" style="cursor: pointer;">
+                        <i class="bi bi-camera me-1"></i> Sửa ảnh bìa
+                        <input type="file" name="coverFile" accept="image/*" class="d-none" onchange="document.getElementById('formUpdateCover').submit();">
+                    </label>
+                </form>
             </div>
 
             <!-- Profile Info -->
             <div class="profile-info px-4 pb-4 position-relative">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-end text-center text-md-start">
                     
+                    <!-- Avatar (Ảnh đại diện) -->
                     <div class="avatar-wrapper position-relative z-2" style="margin-top: -65px; margin-bottom: 10px;">
-                        <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;">
-                        <button class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-camera-fill text-dark"></i>
-                        </button>
+                        <img th:src="${currentUser.avatar != null and currentUser.avatar != 'default.png' ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;">
+                        
+                        <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data" id="formUpdateAvatar">
+                            <label class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar mb-0" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="bi bi-camera-fill text-dark"></i>
+                                <input type="file" name="avatarFile" accept="image/*" class="d-none" onchange="document.getElementById('formUpdateAvatar').submit();">
+                            </label>
+                        </form>
                     </div>
 
                     <div class="flex-grow-1 ms-md-4 mb-3 mb-md-0 w-100">
-                        <h2 class="mb-1 fw-bold d-flex justify-content-center justify-content-md-start align-items-center gap-2">Nguyễn Minh Nghĩa <i class="bi bi-check-circle-fill text-primary" style="font-size: 18px;"></i></h2>
-                        <p class="text-muted mb-1 fw-medium" style="font-size: 15px;">@nghianguyenminh • SV Ngành CNTT</p>
-                        <p class="text-muted mb-0" style="font-size: 14px;"><strong>632</strong> người theo dõi • <strong>124</strong> Đang theo dõi</p>
+                        <h2 class="mb-1 fw-bold d-flex justify-content-center justify-content-md-start align-items-center gap-2">
+                            <span th:text="${currentUser.fullname}">Nguyễn Minh Nghĩa</span> 
+                            <i class="bi bi-check-circle-fill text-primary" style="font-size: 18px;"></i>
+                        </h2>
+                        <p class="text-muted mb-1 fw-medium" style="font-size: 15px;">
+                            @<span th:text="${currentUser.username}">nghianguyenminh</span> • <span th:text="${currentUser.role.name}">SV Ngành CNTT</span>
+                        </p>
+                        <p class="text-muted mb-0" style="font-size: 14px;"><strong>0</strong> người theo dõi • <strong>0</strong> Đang theo dõi</p>
                     </div>
 
                     <div class="d-flex gap-2 justify-content-center w-100 w-md-auto mb-2 mb-md-0">

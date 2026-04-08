@@ -20,11 +20,18 @@
                 
                 <button class="btn-icon-circle"><i class="bi bi-chat-dots-fill fs-5"></i></button>
 
-                <div class="dropdown ms-1 ms-md-2">
+                <div class="dropdown ms-1 ms-md-2" th:if="${currentUser != null}">
                     <a href="#" class="d-block link-dark text-decoration-none" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" alt="User" width="40" height="40" class="rounded-circle shadow-sm border border-1">
+                        <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar != 'default.png' ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" 
+                             alt="User" width="40" height="40" class="rounded-circle shadow-sm border border-1 object-fit-cover">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser" style="border-radius: 10px;">
+                        <li>
+                            <div class="px-3 pb-2 pt-1 border-bottom mb-1">
+                                <strong class="d-block" th:text="${currentUser.fullname}" style="font-size: 14.5px;">Nguyễn Minh Nghĩa</strong>
+                                <small class="text-muted">@<span th:text="${currentUser.username}">id</span></small>
+                            </div>
+                        </li>
                         <li>
                             <a class="dropdown-item py-2 fw-medium d-flex align-items-center" href="/profile">
                                 <i class="bi bi-person-circle fs-5 me-2 text-muted"></i> Trang cá nhân
