@@ -1,0 +1,135 @@
+/* Layout chính cho Chat */
+.chat-container {
+    display: flex;
+    height: calc(100vh - 60px); /* Trừ đi chiều cao của header */
+    background-color: #fff;
+    overflow: hidden;
+}
+
+/* Sidebar bên trái (Danh sách hội thoại) */
+.chat-sidebar {
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+}
+
+.chat-list {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.chat-item {
+    cursor: pointer;
+    transition: background 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.chat-item:hover {
+    background-color: #f8f9fa;
+}
+
+.chat-item.active {
+    background-color: #fff1e8; /* Màu cam nhạt Poly */
+    border-left-color: #F27125; /* Viền cam đậm */
+}
+
+/* Khu vực chat chính (Ở giữa) */
+.chat-main {
+    flex-grow: 1;
+    background-color: #f0f2f5;
+    position: relative;
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Style cho bong bóng tin nhắn */
+.msg-content {
+    max-width: 70%;
+    padding: 10px 16px;
+    border-radius: 18px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.msg-content.received {
+    background-color: #fff;
+    color: #050505;
+    border-bottom-left-radius: 4px;
+}
+
+.msg-content.sent {
+    background-color: #F27125; /* Màu cam Poly */
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+/* Footer nhập liệu */
+.chat-footer {
+    background-color: #fff;
+}
+
+.input-group i {
+    transition: transform 0.2s;
+}
+
+.input-group i:hover {
+    transform: scale(1.1);
+    color: #F27125 !important;
+}
+
+.text-poly {
+    color: #F27125 !important;
+}
+
+/* Sidebar bên phải (Thông tin nhóm/tài liệu) */
+.chat-info {
+    width: 320px;
+    background-color: #fff;
+    overflow-y: auto;
+}
+
+.file-item {
+    background-color: #f8f9fa;
+    transition: background 0.2s;
+}
+
+.file-item:hover {
+    background-color: #fff1e8;
+}
+
+/* Custom thanh cuộn (Scrollbar) cho đẹp */
+.chat-list::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar,
+.chat-info::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-list::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+/* Responsive cho thiết bị nhỏ */
+@media (max-width: 992px) {
+    .chat-sidebar {
+        width: 80px;
+    }
+    .chat-sidebar h5, 
+    .chat-sidebar .search-box, 
+    .chat-sidebar .flex-grow-1 {
+        display: none;
+    }
+    .chat-item {
+        justify-content: center;
+        padding: 15px 0;
+    }
+}

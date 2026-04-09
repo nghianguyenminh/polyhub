@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/main_layout :: layout(~{this :: myCss}, ~{this :: myContent}, 'events')}">
+
+<head>
+    <meta charset="UTF-8">
+    <th:block th:fragment="myCss">
+        <link rel="stylesheet" th:href="@{/client/css/events.css}">
+    </th:block>
+</head>
+
+<body>
+    <div th:fragment="myContent" class="events-container bg-light min-vh-100">
+        <div class="container py-4" style="max-width: 1000px;">
+            
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1 text-poly">Sự kiện sắp tới</h2>
+                    <p class="text-muted mb-0">Đừng bỏ lỡ các hoạt động hấp dẫn tại FPT Polytechnic</p>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-white shadow-sm border dropdown-toggle" data-bs-toggle="dropdown">
+                        Tất cả cơ sở
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Hà Nội</a></li>
+                        <li><a class="dropdown-item" href="#">Đà Nẵng</a></li>
+                        <li><a class="dropdown-item" href="#">TP. Hồ Chí Minh</a></li>
+                        <li><a class="dropdown-item" href="#">Cần Thơ</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="event-card bg-white shadow-sm border-0 h-100 overflow-hidden">
+                        <div class="position-relative">
+                            <img src="https://caodang.fpt.edu.vn/wp-content/uploads/1-32.png" class="w-100" height="180" style="object-fit: cover;">
+                            <div class="event-date-tag">
+                                <span class="day">15</span>
+                                <span class="month">Tháng 4</span>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <span class="badge bg-poly-light text-poly mb-2">Hackathon</span>
+                            <h5 class="fw-bold mb-2 event-title">Poly Hackathon 2026</h5>
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill me-1"></i> Hội trường tòa nhà P, FPT Polytechnic
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <span class="text-muted small"><i class="bi bi-people me-1"></i> 120 đã đăng ký</span>
+                                <button class="btn btn-poly btn-sm px-3 fw-bold">Tham gia</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="event-card bg-white shadow-sm border-0 h-100 overflow-hidden">
+                        <div class="position-relative">
+                            <img src="https://caodang.fpt.edu.vn/wp-content/uploads/Golden-Bee-Award-2023-FPT-Polytechnic-Da-Nang-7.jpg" class="w-100" height="180" style="object-fit: cover;">
+                            <div class="event-date-tag">
+                                <span class="day">22</span>
+                                <span class="month">Tháng 4</span>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <span class="badge bg-poly-light text-poly mb-2">Lễ hội</span>
+                            <h5 class="fw-bold mb-2 event-title">Golden Bee Award 2026</h5>
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill me-1"></i> Sân bóng FPT Polytechnic
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <span class="text-muted small"><i class="bi bi-people me-1"></i> 500+ đã đăng ký</span>
+                                <button class="btn btn-poly btn-sm px-3 fw-bold">Chi tiết</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="event-card bg-white shadow-sm border-0 h-100 overflow-hidden">
+                        <div class="position-relative">
+                            <img src="https://caodang.fpt.edu.vn/wp-content/uploads/English-Poly-Cup-2023-2.jpg" class="w-100" height="180" style="object-fit: cover;">
+                            <div class="event-date-tag">
+                                <span class="day">05</span>
+                                <span class="month">Tháng 5</span>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <span class="badge bg-poly-light text-poly mb-2">Học thuật</span>
+                            <h5 class="fw-bold mb-2 event-title">English Poly Cup 2026</h5>
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill me-1"></i> Phòng Lab 402, Tòa T
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <span class="text-muted small"><i class="bi bi-people me-1"></i> 45 đã đăng ký</span>
+                                <button class="btn btn-poly btn-sm px-3 fw-bold">Tham gia</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

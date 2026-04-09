@@ -1,0 +1,14 @@
+package com.polyhub.controller.client;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class ChatController {
+
+    @GetMapping("/chat")
+    public String chatPage() {
+        // Trả về file chat.html trong thư mục templates
+        return "client/chat"; 
+    }
+}
