@@ -23,8 +23,15 @@ public class HomeController {
     @Autowired
     private CategoryService categoryService;
 
+    @Autowired
+    private com.polyhub.repository.PostRepository postRepository;
+
     @GetMapping("/")
     public String index(Principal principal, Model model) {
+        // Tải danh sách bài viết từ database
+        org.springframework.data.domain.Page<com.polyhub.entity.Post> posts = postRepository.findAllOrderByCreatedAtDesc(org.springframework.data.domain.PageRequest.of(0, 10));
+        model.addAttribute("recentPosts", posts.getContent());
+
         if (principal != null) {
             User user = userRepository.findById(principal.getName()).orElse(null);
             if (user != null) {

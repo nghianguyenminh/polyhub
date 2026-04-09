@@ -14,76 +14,102 @@
         <div class="poly-card p-3">
             <div class="d-flex align-items-center gap-2">
                 <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" class="rounded-circle" width="40" height="40">
-                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" placeholder="Bạn đang nghĩ gì, Nghĩa?" style="cursor: pointer; font-size: 14.5px;" readonly>
+                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" placeholder="Bạn đang nghĩ gì, Nghĩa?" style="cursor: pointer; font-size: 14.5px;" readonly data-bs-toggle="modal" data-bs-target="#createPostModal">
             </div>
             
             <div class="d-flex justify-content-between px-1 mt-3">
                 <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
-                <button class="btn-ghost flex-grow-1"><i class="bi bi-image text-success me-2 fs-5"></i> Ảnh/GIF</button>
+                <button class="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal"><i class="bi bi-image text-success me-2 fs-5"></i> Ảnh/GIF</button>
                 <button class="btn-ghost flex-grow-1"><i class="bi bi-emoji-smile text-warning me-2 fs-5"></i> Cảm xúc</button>
             </div>
         </div>
 
-        <div class="poly-card p-0"> 
-            <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-2">
-                    <img src="https://i.pinimg.com/1200x/6d/7f/72/6d7f72dc3b314ea337807512a793dabe.jpg" class="rounded-circle" width="40" height="40">
-                    <div style="line-height: 1.3;">
-                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;">Lưu Phan Bảo Châu</a>
-                        <div class="text-muted" style="font-size: 13px;">2 giờ trước • <i class="bi bi-globe-americas"></i></div>
-                    </div>
-                </div>
-                <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
-            </div>
-            
-            <div class="px-3 pb-2">
-                <p class="mb-0" style="font-size: 14.5px;">Giao diện không chỉ cần đẹp mà còn phải giải quyết được bài toán UX. Đã gỡ bỏ toàn bộ đường kẻ vạch thô cứng, dùng khoảng trắng tinh tế hơn! 🚀✨</p>
-            </div>
-            
-            <img src="https://i.pinimg.com/1200x/23/d9/56/23d9562dec825fe3a068667b1bb8aa18.jpg" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
-            
-            <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                <div class="d-flex align-items-center"><i class="bi bi-heart-fill text-danger me-1"></i> 142</div>
-                <div>55 Bình luận • 12 Chia sẻ</div>
-            </div>
+        <!-- Modal Tạo Bài Đăng -->
+        <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="postForm">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold w-100 text-center" id="createPostModalLabel">Tạo bài viết</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; right: 15px;"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" class="rounded-circle" width="40" height="40">
+                                <div>
+                                    <div class="fw-bold" style="font-size: 14px;">Nghĩa Nguyễn</div>
+                                    <span class="badge bg-light text-dark shadow-sm border" style="font-size: 11px;"><i class="bi bi-globe-americas me-1"></i>Công khai</span>
+                                </div>
+                            </div>
+                            
+                            <textarea id="post-content" class="form-control border-0 px-0 shadow-none fs-5" rows="3" placeholder="Bạn đang nghĩ gì, Nghĩa?" required style="resize: none;"></textarea>
+                            
+                            <!-- Hiển thị ảnh Preview -->
+                            <div id="imagePreviewContainer" class="mt-2 d-none position-relative">
+                                <img id="imagePreview" src="" class="img-fluid rounded w-100" style="max-height: 300px; object-fit: cover;">
+                                <button type="button" class="btn btn-light rounded-circle position-absolute" style="top: 10px; right: 10px;" onclick="removeImage()">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
 
-            <div class="d-flex justify-content-between px-2 pb-2 pt-1">
-                <button class="btn-ghost flex-grow-1 btn-like">
-                    <i class="bi bi-heart me-1 fs-5"></i> Thích
-                </button>
-                <button class="btn-ghost flex-grow-1">
-                    <i class="bi bi-chat-fill me-1 fs-5"></i> Bình luận
-                </button>
-                <button class="btn-ghost flex-grow-1">
-                    <i class="bi bi-share-fill me-1 fs-5"></i> Chia sẻ
-                </button>
+                            <div class="d-flex align-items-center gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="btn-ai-improve" title="Yêu cầu AI cải thiện nội dung bạn vừa nhập">
+                                    <i class="bi bi-magic me-1"></i>Cải thiện văn bản
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill d-none" id="btn-ai-caption" title="AI sẽ gợi ý nội dung phù hợp với bức ảnh">
+                                    <i class="bi bi-stars me-1"></i>Gợi ý từ ảnh
+                                </button>
+                            </div>
+                            
+                            <p id="ai-loading" class="text-muted d-none mt-2 mb-0" style="font-size: 13px;"><i class="spinner-border spinner-border-sm me-1"></i>AI đang suy nghĩ...</p>
+                            
+                            <div class="border rounded p-2 d-flex align-items-center justify-content-between mt-3">
+                                <span class="fw-semibold px-2">Thêm vào bài viết</span>
+                                <div>
+                                    <label for="post-image" class="btn btn-icon-circle bg-light mb-0 ms-1 text-success fs-5 cursor-pointer">
+                                        <i class="bi bi-image"></i>
+                                    </label>
+                                    <input type="file" id="post-image" accept="image/*" class="d-none" onchange="previewImage(event)">
+                                    <button type="button" class="btn btn-icon-circle bg-light ms-1 text-primary fs-5"><i class="bi bi-person-plus-fill"></i></button>
+                                    <button type="button" class="btn btn-icon-circle bg-light ms-1 text-warning fs-5"><i class="bi bi-emoji-smile"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-primary w-100 fw-bold" onclick="submitPost()">Đăng</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div class="poly-card p-0"> 
+        <!-- Feed list: Sử dụng Thymeleaf lấy Post từ Controller -->
+        <div th:each="post : ${recentPosts}" class="poly-card p-0 mt-3"> 
             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <img src="https://i.pinimg.com/1200x/6d/7f/72/6d7f72dc3b314ea337807512a793dabe.jpg" class="rounded-circle" width="40" height="40">
+                    <img th:src="@{https://i.pinimg.com/736x/07/33/ba/0733ba760b29378474dea0fdbcb97107.jpg}" class="rounded-circle" width="40" height="40" alt="Avatar">
                     <div style="line-height: 1.3;">
-                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;">Lưu Phan Bảo Châu</a>
-                        <div class="text-muted" style="font-size: 13px;">2 giờ trước • <i class="bi bi-globe-americas"></i></div>
+                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                        <div class="text-muted" style="font-size: 13px;">
+                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                        </div>
                     </div>
                 </div>
                 <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
             </div>
             
             <div class="px-3 pb-2">
-                <p class="mb-0" style="font-size: 14.5px;">Giao diện không chỉ cần đẹp mà còn phải giải quyết được bài toán UX. Đã gỡ bỏ toàn bộ đường kẻ vạch thô cứng, dùng khoảng trắng tinh tế hơn! 🚀✨</p>
+                <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
             </div>
             
-            <img src="https://i.pinimg.com/1200x/f9/80/29/f9802947c0968932c14b0edeaf38935a.jpg" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
+            <img th:if="${post.imageUrl != null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
             
             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                <div class="d-flex align-items-center"><i class="bi bi-heart-fill text-danger me-1"></i> 142</div>
-                <div>55 Bình luận • 12 Chia sẻ</div>
+                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> 0</div>
+                <div>0 Bình luận • 0 Chia sẻ</div>
             </div>
 
-            <div class="d-flex justify-content-between px-2 pb-2 pt-1">
+            <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top">
                 <button class="btn-ghost flex-grow-1 btn-like">
                     <i class="bi bi-heart me-1 fs-5"></i> Thích
                 </button>
@@ -115,6 +141,150 @@
                     });
                 });
             });
+
+            // Handle Image Preview
+            function previewImage(event) {
+                const previewContainer = document.getElementById('imagePreviewContainer');
+                const previewImg = document.getElementById('imagePreview');
+                const file = event.target.files[0];
+                
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        previewContainer.classList.remove('d-none');
+                        // Hiển thị nút AI caption
+                        document.getElementById('btn-ai-caption').classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Xóa ảnh đã chọn
+            function removeImage() {
+                document.getElementById('post-image').value = '';
+                document.getElementById('imagePreviewContainer').classList.add('d-none');
+                document.getElementById('imagePreview').src = '';
+                document.getElementById('btn-ai-caption').classList.add('d-none');
+            }
+
+            // Gọi AI cải thiện văn bản
+            document.getElementById('btn-ai-improve').addEventListener('click', async () => {
+                const text = document.getElementById('post-content').value;
+                if (!text.trim()) {
+                    alert('Vui lòng nhập nội dung trước khi dùng AI!');
+                    return;
+                }
+
+                document.getElementById('ai-loading').classList.remove('d-none');
+                document.getElementById('btn-ai-improve').disabled = true;
+
+                try {
+                    const res = await fetch('/api/ai/improve-text', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text })
+                    });
+                    if(res.ok) {
+                        document.getElementById('post-content').value = await res.text();
+                    } else {
+                        alert('Lỗi khi gọi AI: ' + await res.text());
+                    }
+                } catch(e) {
+                    alert('Lỗi kết nối tới Server AI!');
+                }
+
+                document.getElementById('ai-loading').classList.add('d-none');
+                document.getElementById('btn-ai-improve').disabled = false;
+            });
+
+            // Gọi AI gợi ý caption từ ảnh
+            document.getElementById('btn-ai-caption').addEventListener('click', async () => {
+                const file = document.getElementById('post-image').files[0];
+                if (!file) return;
+
+                document.getElementById('ai-loading').classList.remove('d-none');
+                document.getElementById('btn-ai-caption').disabled = true;
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const res = await fetch('/api/ai/suggest-caption', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if(res.ok) {
+                        const caption = await res.text();
+                        // Append vào nội dung hiện tại
+                        const currentText = document.getElementById('post-content').value;
+                        document.getElementById('post-content').value = currentText ? currentText + '\n\n' + caption : caption;
+                    } else {
+                        alert('Lỗi khi gọi AI: ' + await res.text());
+                    }
+                } catch(e) {
+                    alert('Lỗi kết nối tới Server AI!');
+                }
+
+                document.getElementById('ai-loading').classList.add('d-none');
+                document.getElementById('btn-ai-caption').disabled = false;
+            });
+
+            async function submitPost() {
+                const content = document.getElementById('post-content').value;
+                const imageFile = document.getElementById('post-image').files[0];
+
+                if (!content.trim()) {
+                    alert('Bạn chưa nhập nội dung gì mà!');
+                    return;
+                }
+
+                // Ẩn nút đăng tạm thời & hiện trạng thái loading
+                const btnSubmit = document.querySelector('button[onclick="submitPost()"]');
+                const originalText = btnSubmit.innerText;
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang đăng...';
+
+                // Setup dử liệu FormData
+                const formData = new FormData();
+                formData.append('content', content);
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+
+                try {
+                    const response = await fetch('/api/posts/create', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        alert(result.message);
+
+                        // Đăng xong thì đóng modal và xóa trắng form
+                        document.getElementById('post-content').value = '';
+                        removeImage();
+                        const modalElement = document.getElementById('createPostModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                        modalInstance.hide();
+                        
+                        // Ở bài toán thực tế, ta sẽ thêm div HTML bài mới vào đầu feed (Dùng JS prepend)
+                        // Tạm thời reload trình duyệt để thấy thay đổi luôn nè:
+                        window.location.reload(); 
+                    } else {
+                        alert('Có lỗi xảy ra: ' + response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Lỗi upload', error);
+                    alert('Lỗi hệ thống khi đăng bài!');
+                } finally {
+                    // Trả nút về trạng thái cũ
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = originalText;
+                }
+            }
         </script>
 
         <script th:if="${showMajorPopup}">
