@@ -2,6 +2,8 @@ package com.polyhub.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -31,7 +33,11 @@ public class User implements Serializable {
     private Boolean gender = true; // True: Nam, False: Nữ
 
     @Temporal(TemporalType.DATE)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date birthday;
+
+    @Column(columnDefinition = "nvarchar(100)")
+    private String major; // Chuyên ngành
 
     private String avatar = "default.png";
 

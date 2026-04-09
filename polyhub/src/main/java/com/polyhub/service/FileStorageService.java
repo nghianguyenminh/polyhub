@@ -20,10 +20,11 @@ public class FileStorageService {
     /**
      * LẤY THÔNG TIN SỬ DỤNG DUNG LƯỢNG (USAGE) TỪ CLOUDINARY
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getStorageUsage() {
         try {
             ApiResponse usage = cloudinary.api().usage(ObjectUtils.emptyMap());
-            return usage;
+            return (Map<String, Object>) (Map<?, ?>) usage;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -38,17 +39,17 @@ public class FileStorageService {
      * @return Map chứa các thuộc tính do Cloudinary trả về (url, public_id, format, bytes,...)
      * @throws IOException Bắt lỗi nếu file bị hỏng hoặc lỗi mạng
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
         
         // Cấu hình các tham số khi đẩy file lên cloud
-        Map<String, Object> options = ObjectUtils.asMap(
+        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
                 "folder", "polyhub_documents", // Tự động tạo thư mục trên Cloudinary để lưu file gọn gàng
                 "resource_type", "auto"        // Tự động nhận diện loại file (image cho ảnh, raw cho zip/pdf/docx...)
         );
 
         // Chuyển file thành biến byte và upload thẳng lên Cloudinary
-        @SuppressWarnings("unchecked")
-        Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+        Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(file.getBytes(), options);
 
         return uploadResult;
     }
@@ -60,9 +61,10 @@ public class FileStorageService {
      * @param publicId ID công khai của file trên Cloudinary (lưu trong database)
      * @throws IOException Bắt lỗi nếu có trục trặc mạng
      */
+    @SuppressWarnings("unchecked")
     public void deleteFile(String publicId) throws IOException {
         // Khai báo tùy chọn xóa: invalidate = true để cưỡng chế xóa sạch bộ nhớ đệm (cache) trên máy chủ
-        Map<String, Object> options = ObjectUtils.asMap(
+        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
             "invalidate", true,
             "resource_type", "raw" // Các file thư mục, zip, word,... thường được Cloud phân loại là "raw"
         );

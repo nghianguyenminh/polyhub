@@ -57,16 +57,16 @@ public class AuthController {
             return "client/register";
         }
 
-        // 4. Lấy Role "STUDENT" mặc định từ DB để gán cho User mới
-        Role studentRole = roleRepository.findById("STUDENT").orElse(null);
-        if (studentRole == null) {
-            // Nếu trong DB chưa có role STUDENT thì tạo mới luôn để tránh lỗi
-            studentRole = new Role("STUDENT", "Sinh viên");
-            roleRepository.save(studentRole);
+        // 4. Lấy Role "CLIENT" mặc định từ DB để gán cho User mới
+        Role clientRole = roleRepository.findById("CLIENT").orElse(null);
+        if (clientRole == null) {
+            // Nếu trong DB chưa có role CLIENT thì tạo mới luôn để tránh lỗi
+            clientRole = new Role("CLIENT", "Khách hàng");
+            roleRepository.save(clientRole);
         }
         
         // 5. Gán các thông tin mặc định
-        user.setRole(studentRole); // Phân quyền sinh viên mặc định
+        user.setRole(clientRole); // Phân quyền client mặc định
         user.setPassword(passwordEncoder.encode(user.getPassword())); // Mã hóa mật khẩu
         user.setAvatar("default.png"); // Ảnh đại diện mặc định
         user.setActive(true); // Trạng thái hoạt động
