@@ -44,7 +44,7 @@ public class ProfileController {
                              @RequestParam("fullname") String fullname,
                              @RequestParam("email") String email,
                              @RequestParam("phone") String phone,
-                             @RequestParam("birthday") @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd") Date birthday,
+                             @RequestParam("birthday") @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd") java.time.LocalDate birthday,
                              @RequestParam("gender") Boolean gender) {
         if (principal != null) {
             User user = userRepository.findById(principal.getName()).orElse(null);

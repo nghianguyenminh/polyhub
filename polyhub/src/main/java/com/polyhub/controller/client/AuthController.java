@@ -70,7 +70,7 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(user.getPassword())); // Mã hóa mật khẩu
         user.setAvatar("default.png"); // Ảnh đại diện mặc định
         user.setActive(true); // Trạng thái hoạt động
-        user.setCreatedAt(new java.util.Date()); // Ngày tạo
+        user.setCreatedAt(java.time.LocalDateTime.now()); // Ngày tạo
 
         // 6. Lưu user vào DB
         userRepository.save(user);
