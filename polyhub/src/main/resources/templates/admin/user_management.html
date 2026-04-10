@@ -55,24 +55,24 @@
                     </thead>
                     <tbody>
                         <tr th:each="user : ${users}">
-                            <td class="text-muted fw-bold" th:text="${user.id}">1</td>
-                            <td class="fw-semibold text-dark" th:text="${user.fullName}"></td>
+                            <td class="text-muted fw-bold" th:text="${user.username}">1</td>
+                            <td class="fw-semibold text-dark" th:text="${user.fullname}"></td>
                             <td th:text="${user.email}"></td>
                             <td th:text="${user.role.name}"></td>
                             <td>
-                                <span th:if="${user.enabled}" class="badge bg-success">Hoạt động</span>
-                                <span th:unless="${user.enabled}" class="badge bg-danger">Bị khóa</span>
+                                <span th:if="${user.active}" class="badge bg-success">Hoạt động</span>
+                                <span th:unless="${user.active}" class="badge bg-danger">Bị khóa</span>
                             </td>
                             <td class="text-end">
-                                <a th:href="@{/admin/users/{id}(id=${user.id})}" class="btn btn-sm btn-light rounded-2 text-primary" title="Xem chi tiết">
+                                <a th:href="@{/admin/users/{id}(id=${user.username})}" class="btn btn-sm btn-light rounded-2 text-primary" title="Xem chi tiết">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <form th:action="@{/admin/users/toggle-lock/{id}(id=${user.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-light rounded-2 text-warning ms-1" th:title="${user.enabled ? 'Khóa' : 'Mở khóa'}">
-                                        <i th:class="${user.enabled ? 'bi bi-lock' : 'bi bi-unlock'}"></i>
+                                <form th:action="@{/admin/users/toggle-lock/{id}(id=${user.username})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-light rounded-2 text-warning ms-1" th:title="${user.active ? 'Khóa' : 'Mở khóa'}">
+                                        <i th:class="${user.active ? 'bi bi-lock' : 'bi bi-unlock'}"></i>
                                     </button>
                                 </form>
-                                <form th:if="${user.wantsToBecomeMentor}" th:action="@{/admin/users/approve-mentor/{id}(id=${user.id})}" method="post" class="d-inline">
+                                <form th:if="${user.wantsToBecomeMentor}" th:action="@{/admin/users/approve-mentor/{id}(id=${user.username})}" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-light rounded-2 text-success ms-1" title="Phê duyệt Mentor">
                                         <i class="bi bi-check-circle"></i>
                                     </button>

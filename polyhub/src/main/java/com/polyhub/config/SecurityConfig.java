@@ -31,10 +31,10 @@ public class SecurityConfig {
                 
                 // Chỉ "Quản trị viên" hoặc "Quản trị viên cấp cao" mới vào được route /admin/**
                 // Lưu ý: role ID trong DB nếu là "Admin" -> "ROLE_ADMIN". hasAnyAuthority() thường được khuyên dùng để tránh rắc rối tự động thêm tiền tố ROLE_
-                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ADMIN_SUPER", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ROLE_ADMIN_SYSTEM")
+                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN", "ROLE_ADMIN_SUPER", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ROLE_ADMIN_SYSTEM")
                 
                 // Các chức năng riêng tư yêu cầu đăng nhập đối với Sinh viên, Mentor...
-                .requestMatchers("/profile/**", "/saved").authenticated()
+                .requestMatchers("/profile/**", "/saved").hasAnyAuthority("STUDENT", "MENTOR", "ROLE_STUDENT", "ROLE_MENTOR")
                 
                 // Cho phép mặc định các route còn lại (nên siết lại sau này)
                 .anyRequest().permitAll() 
