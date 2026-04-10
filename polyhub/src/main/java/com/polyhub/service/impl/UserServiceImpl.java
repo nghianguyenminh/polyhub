@@ -107,7 +107,7 @@ public class UserServiceImpl implements UserService {
     public void rejectMentor(String id, String reason) {
         userRepository.findById(id).ifPresent(user -> {
             user.setWantsToBecomeMentor(false);
-            // Optionally handle the reason, e.g., save it to a new field
+            user.setRejectionReason(reason); // Save the reason for rejection
             userRepository.save(user);
         });
     }
@@ -115,10 +115,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findById(String id) {
         return userRepository.findById(id);
-    }
-
-    @Override
-    public List<User> findByRole(String role) {
-        return userRepository.findByRole_Id(role);
     }
 }
