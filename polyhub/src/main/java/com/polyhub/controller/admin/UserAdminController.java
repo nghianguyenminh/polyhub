@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -27,6 +28,13 @@ public class UserAdminController {
         return "admin/user_management";
     }
 
+    @GetMapping("/mentor-detail/{id}")
+    public String mentorDetail(@PathVariable("id") String id, Model model) {
+        User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        model.addAttribute("user", user);
+        return "admin/mentor_detail";
+    }
+
     @PostMapping("/toggle-lock/{id}")
     public String toggleLock(@PathVariable String id) {
         userService.toggleLock(id);
@@ -36,6 +44,12 @@ public class UserAdminController {
     @PostMapping("/approve-mentor/{id}")
     public String approveMentor(@PathVariable String id) {
         userService.approveMentor(id);
-        return "redirect:/admin/users";
+        return "redirect:/admin/users/mentor-detail/" + id;
+    }
+
+    @PostMapping("/reject-mentor/{id}")
+    public String rejectMentor(@PathVariable String id, @RequestParam("reason") String reason) {
+        userService.rejectMentor(id, reason);
+        return "redirect:/admin/users/mentor-detail/" + id;
     }
 }

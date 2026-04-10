@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -100,5 +101,19 @@ public class UserServiceImpl implements UserService {
             user.setWantsToBecomeMentor(false);
             userRepository.save(user);
         }
+    }
+
+    @Override
+    public void rejectMentor(String id, String reason) {
+        userRepository.findById(id).ifPresent(user -> {
+            user.setWantsToBecomeMentor(false);
+            // Optionally handle the reason, e.g., save it to a new field
+            userRepository.save(user);
+        });
+    }
+
+    @Override
+    public Optional<User> findById(String id) {
+        return userRepository.findById(id);
     }
 }

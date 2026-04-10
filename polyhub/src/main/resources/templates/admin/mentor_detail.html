@@ -228,15 +228,25 @@
                     <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Chi tiết Hồ sơ Mentor</h3>
                 </div>
             </div>
+             <div class="d-flex gap-2">
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectionModal">
+                    <i class="bi bi-x-circle me-2"></i>Từ chối
+                </button>
+                <form th:action="@{/admin/users/approve-mentor/{id}(id=${user.id})}" method="post">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Phê duyệt
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- 2. Profile Cover -->
         <div class="profile-cover">
             <div class="profile-avatar-wrap">
-                <img src="https://ui-avatars.com/api/?name=Phạm+Minh+Tuấn&background=random&size=200" class="profile-avatar" alt="Avatar">
+                <img th:src="${user.avatarUrl}" class="profile-avatar" alt="Avatar">
                 <div style="margin-bottom: -15px;">
-                    <div class="profile-name">Phạm Minh Tuấn</div>
-                    <div class="profile-role-badge">Mã Sinh Viên: PS45678</div>
+                    <div class="profile-name" th:text="${user.fullName}"></div>
+                    <div class="profile-role-badge" th:text="'Mã Sinh Viên: ' + ${user.studentCode}"></div>
                 </div>
             </div>
         </div>
@@ -250,13 +260,13 @@
                     <h5 class="card-title-custom"><i class="bi bi-person-badge"></i> Thông tin cơ bản</h5>
                     
                     <div class="info-label-sm">Họ và tên</div>
-                    <div class="info-value-sm">Phạm Minh Tuấn</div>
+                    <div class="info-value-sm" th:text="${user.fullName}"></div>
                     
                     <div class="info-label-sm">Mã Sinh Viên</div>
-                    <div class="info-value-sm">PS45678</div>
+                    <div class="info-value-sm" th:text="${user.studentCode}"></div>
                     
                     <div class="info-label-sm">Email</div>
-                    <div class="info-value-sm">tuanpmps45678@fpt.edu.vn</div>
+                    <div class="info-value-sm" th:text="${user.email}"></div>
 
                     <div class="info-label-sm">Chuyên ngành đăng ký</div>
                     <div class="info-value-sm fw-bold text-primary">Lập trình Web</div>
@@ -337,6 +347,25 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Rejection Modal -->
+        <div class="modal fade" id="rejectionModal" tabindex="-1" aria-labelledby="rejectionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="rejectionModalLabel">Lý do từ chối</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea class="form-control" id="rejectionReason" rows="5" placeholder="Nhập lý do từ chối..."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-danger">Xác nhận từ chối</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
