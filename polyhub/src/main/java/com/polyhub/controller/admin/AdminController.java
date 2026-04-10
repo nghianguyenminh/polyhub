@@ -14,11 +14,6 @@ public class AdminController {
         return "admin/dashboard"; // Mở file templates/admin/dashboard.html
     }
 
-    @GetMapping("/users")
-    public String users() {
-        return "admin/users"; // Mở file templates/admin/users.html
-    }
-
     @GetMapping("/users/detail")
     public String userDetail() {
         return "admin/user_detail"; 
