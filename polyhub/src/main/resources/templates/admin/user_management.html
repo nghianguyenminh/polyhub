@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'user_management')}">
+<head>
+    <title>Quản lý người dùng - PolyHUB Admin</title>
+    
+    <th:block th:fragment="myCss">
+        <style>
+            .page-wrapper {
+                background-color: #ffffff;
+                border-radius: var(--border-radius-lg);
+                border: 1px solid var(--admin-border);
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+                padding: 1.5rem;
+                min-height: calc(100vh - 140px);
+            }
+            .clean-table th { text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; color: #6B7280; font-weight: 700; border-bottom: 2px solid #E5E7EB; padding-bottom: 12px; }
+            .clean-table td { padding: 16px 8px; vertical-align: middle; border-bottom: 1px solid #F3F4F6; }
+            .clean-table tbody tr:hover { background-color: #F9FAFB; }
+        </style>
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Quản lý người dùng</h3>
+                <ol class="breadcrumb mb-1 text-uppercase text-muted mt-2" style="font-size: 11px; font-weight: 600;">
+                    <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
+                    <li class="breadcrumb-item active">Người dùng</li>
+                </ol>
+            </div>
+        </div>
+
+        <div th:if="${success_msg}" class="alert alert-success fw-medium mb-4" th:text="${success_msg}"></div>
+        <div th:if="${error_msg}" class="alert alert-danger fw-medium mb-4" th:text="${error_msg}"></div>
+
+        <div class="page-wrapper">
+            <h6 class="fw-bold mb-3 pb-2 border-bottom">Danh sách người dùng</h6>
+            
+            <div class="table-responsive">
+                <table class="table clean-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Tùy chọn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td class="text-muted fw-bold" th:text="${user.id}">1</td>
+                            <td class="fw-semibold text-dark" th:text="${user.fullName}"></td>
+                            <td th:text="${user.email}"></td>
+                            <td th:text="${user.role.name}"></td>
+                            <td>
+                                <span th:if="${user.enabled}" class="badge bg-success">Hoạt động</span>
+                                <span th:unless="${user.enabled}" class="badge bg-danger">Bị khóa</span>
+                            </td>
+                            <td class="text-end">
+                                <a th:href="@{/admin/users/{id}(id=${user.id})}" class="btn btn-sm btn-light rounded-2 text-primary" title="Xem chi tiết">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form th:action="@{/admin/users/toggle-lock/{id}(id=${user.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-light rounded-2 text-warning ms-1" th:title="${user.enabled ? 'Khóa' : 'Mở khóa'}">
+                                        <i th:class="${user.enabled ? 'bi bi-lock' : 'bi bi-unlock'}"></i>
+                                    </button>
+                                </form>
+                                <form th:if="${user.wantsToBecomeMentor}" th:action="@{/admin/users/approve-mentor/{id}(id=${user.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-light rounded-2 text-success ms-1" title="Phê duyệt Mentor">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${users == null or users.isEmpty()}">
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-2 d-block mb-3 opacity-50"></i>
+                                Hệ thống chưa có dữ liệu người dùng.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

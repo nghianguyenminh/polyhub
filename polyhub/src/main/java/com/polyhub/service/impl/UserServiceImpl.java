@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -70,5 +71,34 @@ public class UserServiceImpl implements UserService {
         userRepository.save(newUser);
 
         return "success"; // Trả về text báo hiệu thành công
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
+    public void toggleLock(Long id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null) {
+            user.setEnabled(!user.isEnabled());
+            userRepository.save(user);
+        }
+    }
+
+    @Override
+    public void approveMentor(Long id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null) {
+            Role mentorRole = roleRepository.findById("MENTOR").orElse(null);
+            if (mentorRole == null) {
+                mentorRole = new Role("MENTOR", "Mentor");
+                roleRepository.save(mentorRole);
+            }
+            user.setRole(mentorRole);
+            user.setWantsToBecomeMentor(false);
+            userRepository.save(user);
+        }
     }
 }

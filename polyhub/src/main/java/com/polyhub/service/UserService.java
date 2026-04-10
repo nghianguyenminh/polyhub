@@ -1,6 +1,9 @@
 package com.polyhub.service;
 
 import com.polyhub.dto.request.RegisterRequest;
+import com.polyhub.entity.User;
+
+import java.util.List;
 
 public interface UserService {
     /**
@@ -9,4 +12,10 @@ public interface UserService {
      * @return String: Thông báo kết quả ("success" nếu thành công, hoặc các lỗi cụ thể như "Trùng username")
      */
     String registerUser(RegisterRequest request);
+
+    List<User> getAllUsers();
+
+    void toggleLock(Long id);
+
+    void approveMentor(Long id);
 }
