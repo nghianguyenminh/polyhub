@@ -116,4 +116,9 @@ public class UserServiceImpl implements UserService {
     public Optional<User> findById(String id) {
         return userRepository.findById(id);
     }
+
+    @Override
+    public List<User> findByRole(String role) {
+        return userRepository.findByRole_Id(role);
+    }
 }

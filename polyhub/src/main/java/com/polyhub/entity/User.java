@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -45,6 +46,21 @@ public class User implements Serializable {
     private Date createdAt = new Date();
 
     private Boolean wantsToBecomeMentor = false;
+
+    private String mentorMajor;
+
+    private Double gpa;
+
+    private String rejectionReason;
+
+    private String mentorReason;
+
+    @ElementCollection
+    private List<String> mentorSkills;
+
+    private String evidenceLink;
+
+    private String evidenceName;
 
     // --- KẾT NỐI VỚI BẢNG ROLE ---
     @ManyToOne

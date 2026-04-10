@@ -232,7 +232,7 @@
                 <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectionModal">
                     <i class="bi bi-x-circle me-2"></i>Từ chối
                 </button>
-                <form th:action="@{/admin/users/approve-mentor/{id}(id=${user.id})}" method="post">
+                <form th:action="@{/admin/users/approve-mentor/{id}(id=${user.username})}" method="post">
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-check-circle me-2"></i>Phê duyệt
                     </button>
@@ -242,11 +242,12 @@
 
         <!-- 2. Profile Cover -->
         <div class="profile-cover">
+            <img th:src="@{/images/{img}(img=${user.coverImage})}" alt="Cover image" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--border-radius-lg);">
             <div class="profile-avatar-wrap">
-                <img th:src="${user.avatarUrl}" class="profile-avatar" alt="Avatar">
+                <img th:src="@{/images/user-avatars/{img}(img=${user.avatar})}" class="profile-avatar" alt="Avatar">
                 <div style="margin-bottom: -15px;">
-                    <div class="profile-name" th:text="${user.fullName}"></div>
-                    <div class="profile-role-badge" th:text="'Mã Sinh Viên: ' + ${user.studentCode}"></div>
+                    <div class="profile-name" th:text="${user.fullname}"></div>
+                    <div class="profile-role-badge" th:text="'Username: ' + ${user.username}"></div>
                 </div>
             </div>
         </div>
@@ -260,19 +261,19 @@
                     <h5 class="card-title-custom"><i class="bi bi-person-badge"></i> Thông tin cơ bản</h5>
                     
                     <div class="info-label-sm">Họ và tên</div>
-                    <div class="info-value-sm" th:text="${user.fullName}"></div>
+                    <div class="info-value-sm" th:text="${user.fullname}"></div>
                     
-                    <div class="info-label-sm">Mã Sinh Viên</div>
-                    <div class="info-value-sm" th:text="${user.studentCode}"></div>
+                    <div class="info-label-sm">Username</div>
+                    <div class="info-value-sm" th:text="${user.username}"></div>
                     
                     <div class="info-label-sm">Email</div>
                     <div class="info-value-sm" th:text="${user.email}"></div>
 
                     <div class="info-label-sm">Chuyên ngành đăng ký</div>
-                    <div class="info-value-sm fw-bold text-primary">Lập trình Web</div>
+                    <div class="info-value-sm fw-bold text-primary" th:text="${user.mentorMajor}">Lập trình Web</div>
 
                     <div class="info-label-sm">GPA Hiện tại</div>
-                    <div class="info-value-sm">8.2 / 10</div>
+                    <div class="info-value-sm" th:text="${user.gpa} + ' / 10'">8.2 / 10</div>
                 </div>
 
                 <div class="info-card">
@@ -301,12 +302,11 @@
             <div class="col-12 col-xl-8">
                 
                 <!-- Cảnh báo Bị từ chối -->
-                <div class="rejection-banner">
+                <div class="rejection-banner" th:if="${user.rejectionReason}">
                     <i class="bi bi-x-circle-fill"></i>
                     <div>
                         <h6 class="fw-bold text-danger mb-1" style="font-size: 15px;">Hồ sơ này đã bị Từ chối</h6>
-                        <p class="mb-0" style="font-size: 14px; color: #9B1C1C;">
-                            <strong>Lý do từ chối:</strong> Bảng điểm môn Thiết kế Web chưa đạt yêu cầu (< 8.0) và thiếu minh chứng thực tế trên Github. Không đạt tiêu chuẩn bảo vệ chất lượng. Vui lòng cải thiện và đăng ký đợt sau.
+                        <p class="mb-0" style="font-size: 14px; color: #9B1C1C;" th:text="'Lý do từ chối: ' + ${user.rejectionReason}">
                         </p>
                     </div>
                 </div>
@@ -314,8 +314,8 @@
                 <!-- Lời giới thiệu -->
                 <div class="info-card">
                     <h5 class="card-title-custom"><i class="bi bi-chat-quote"></i> Lý do muốn trở thành Mentor</h5>
-                    <div class="reason-box">
-                        "Em có đam mê lớn với lập trình Web, đặc biệt là với framework ReactJS. Em muốn có cơ hội để hướng dẫn các bạn khóa dưới tạo ra những giao diện chuyên nghiệp, cũng như rèn luyện khả năng giao tiếp và truyền đạt kiến thức của mình. Rất mong được phòng đào tạo tạo điều kiện ạ."
+                    <div class="reason-box" th:text="${user.mentorReason}">
+                        "Em có đam mê lớn với lập trình Web, đặc biệt là với framework ReactJS..."
                     </div>
                 </div>
 
@@ -324,10 +324,7 @@
                         <div class="info-card h-100">
                             <h5 class="card-title-custom"><i class="bi bi-tools"></i> Bộ Kỹ năng (Tags)</h5>
                             <div>
-                                <span class="skill-tag">#HTML_CSS</span>
-                                <span class="skill-tag">#JavaScript</span>
-                                <span class="skill-tag">#ReactJS</span>
-                                <span class="skill-tag">#NodeJS</span>
+                                <span class="skill-tag" th:each="skill : ${user.mentorSkills}" th:text="${skill}">#HTML_CSS</span>
                             </div>
                         </div>
                     </div>
@@ -335,10 +332,10 @@
                         <div class="info-card h-100">
                             <h5 class="card-title-custom"><i class="bi bi-paperclip"></i> Minh chứng (Evidence)</h5>
                             <div class="d-flex flex-column gap-2">
-                                <a href="#" class="evidence-link">
+                                <a th:href="${user.evidenceLink}" class="evidence-link">
                                     <i class="bi bi-file-earmark-pdf-fill evidence-icon" style="color: #E02424;"></i>
                                     <div class="flex-grow-1">
-                                        <div class="fw-semibold text-dark" style="font-size: 14px;">Bảng_Điểm_Học_Kỳ.pdf</div>
+                                        <div class="fw-semibold text-dark" style="font-size: 14px;" th:text="${user.evidenceName}">Bảng_Điểm_Học_Kỳ.pdf</div>
                                         <div class="text-muted" style="font-size: 12px;">Đã tải lên</div>
                                     </div>
                                 </a>
@@ -359,11 +356,13 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <textarea class="form-control" id="rejectionReason" rows="5" placeholder="Nhập lý do từ chối..."></textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="button" class="btn btn-danger">Xác nhận từ chối</button>
+                        <form th:action="@{/admin/users/reject-mentor/{id}(id=${user.username})}" method="post">
+                            <textarea class="form-control" name="reason" rows="5" placeholder="Nhập lý do từ chối..."></textarea>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -23,4 +23,6 @@ public interface UserService {
     void rejectMentor(String id, String reason);
 
     Optional<User> findById(String id);
+
+    List<User> findByRole(String role);
 }

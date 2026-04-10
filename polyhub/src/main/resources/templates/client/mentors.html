@@ -68,13 +68,13 @@
 
         <div class="row row-cols-1 row-cols-md-2 g-3 mb-5">
             
-            <div class="col">
+            <div class="col" th:each="mentor : ${mentors}">
                 <div class="mentor-profile-card">
-                    <div class="mentor-card-cover" style="background-image: url('https://images.unsplash.com/photo-1550439062-609e1531270e?q=80&w=600');"></div>
+                    <div class="mentor-card-cover" th:style="'background-image: url(' + @{/img/cover/} + ${mentor.coverImage} + ');'"></div>
                     
                     <div class="mentor-card-body">
                         <div class="d-flex justify-content-between align-items-start">
-                            <img src="https://ui-avatars.com/api/?name=Tan+Dung&background=random" class="mentor-card-avatar">
+                            <img th:src="@{/img/avatar/} + ${mentor.avatar}" class="mentor-card-avatar">
                             <div class="mentor-rating mt-2 shadow-sm">
                                 <i class="bi bi-star-fill text-warning"></i> 5.0 <span class="text-muted fw-normal">(42)</span>
                             </div>
@@ -82,7 +82,7 @@
                         
                         <div class="mt-2 mb-3">
                             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
-                                Tấn Dũng <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực"></i>
+                                <span th:text="${mentor.fullname}"></span> <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực"></i>
                             </h5>
                             <div class="text-muted" style="font-size: 13px; font-weight: 500;">Giảng viên / Chuyên gia Backend</div>
                         </div>
@@ -101,87 +101,7 @@
                         </div>
                         
                         <div class="d-flex gap-2 mt-auto">
-                            <a th:href="@{/mentors/1}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
-                            <button class="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action"><i class="bi bi-chat-dots-fill me-1"></i> Nhắn tin</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="mentor-profile-card">
-                    <div class="mentor-card-cover" style="background-image: url('https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=600');"></div>
-                    
-                    <div class="mentor-card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <img src="https://ui-avatars.com/api/?name=Mai+Anh&background=random" class="mentor-card-avatar">
-                            <div class="mentor-rating mt-2 shadow-sm">
-                                <i class="bi bi-star-fill text-warning"></i> 4.9 <span class="text-muted fw-normal">(86)</span>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-2 mb-3">
-                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
-                                Mai Anh <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực"></i>
-                            </h5>
-                            <div class="text-muted" style="font-size: 13px; font-weight: 500;">Senior UI/UX Designer</div>
-                        </div>
-                        
-                        <p class="mentor-bio">"Sẵn sàng review portfolio, sửa lỗi UX và hướng dẫn tư duy thiết kế lấy người dùng làm trung tâm cho sinh viên Thiết kế đồ họa."</p>
-                        
-                        <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="mentor-tag">Figma</span>
-                            <span class="mentor-tag">User Research</span>
-                            <span class="mentor-tag">Prototyping</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between text-muted mb-3" style="font-size: 12.5px; font-weight: 500;">
-                            <div><i class="bi bi-people-fill me-1"></i> 256 Mentee</div>
-                            <div><i class="bi bi-journal-check me-1"></i> 32 Dự án</div>
-                        </div>
-                        
-                        <div class="d-flex gap-2 mt-auto">
-                            <a th:href="@{/mentors/2}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
-                            <button class="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action"><i class="bi bi-chat-dots-fill me-1"></i> Nhắn tin</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="mentor-profile-card">
-                    <div class="mentor-card-cover" style="background-image: url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=600');"></div>
-                    
-                    <div class="mentor-card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <img src="https://ui-avatars.com/api/?name=Hoang+Nam&background=42b883&color=fff" class="mentor-card-avatar">
-                            <div class="mentor-rating mt-2 shadow-sm">
-                                <i class="bi bi-star-fill text-warning"></i> 4.8 <span class="text-muted fw-normal">(15)</span>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-2 mb-3">
-                            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
-                                Hoàng Nam
-                            </h5>
-                            <div class="text-muted" style="font-size: 13px; font-weight: 500;">Frontend Developer</div>
-                        </div>
-                        
-                        <p class="mentor-bio">"Cựu sinh viên FPT. Chuyên trị các bug frontend khó nhằn. Đồng hành cùng các bạn năm cuối làm dự án ReactJS/VueJS."</p>
-                        
-                        <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="mentor-tag">Vue.js</span>
-                            <span class="mentor-tag">ReactJS</span>
-                            <span class="mentor-tag">Tailwind</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between text-muted mb-3" style="font-size: 12.5px; font-weight: 500;">
-                            <div><i class="bi bi-people-fill me-1"></i> 45 Mentee</div>
-                            <div><i class="bi bi-journal-check me-1"></i> 8 Dự án</div>
-                        </div>
-                        
-                        <div class="d-flex gap-2 mt-auto">
-                            <a th:href="@{/mentors/3}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
+                            <a th:href="@{/mentors/} + ${mentor.username}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
                             <button class="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action"><i class="bi bi-chat-dots-fill me-1"></i> Nhắn tin</button>
                         </div>
                     </div>
