@@ -21,24 +21,26 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         // Lấy danh sách quyền hạn của người dùng vừa đăng nhập
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        // Biến kiểm tra điều hướng cơ bản
+        // Biến kiểm tra quyền Quản trị
         boolean isAdmin = false;
 
         for (GrantedAuthority authority : authorities) {
-            String role = authority.getAuthority();
-            // Nếu người dùng có quyền Quản trị viên (có thể điều chỉnh tuỳ vào Data của bạn)
-            if (role.equals("ROLE_ADMIN") || role.equals("ROLE_ADMIN_SUPER")) {
+            String role = authority.getAuthority().toUpperCase(); // Đảm bảo đồng bộ IN HOA
+            // Kiểm tra các Role có tiền tố ROLE_ADMIN (VD: ROLE_ADMIN, ROLE_SUPER_ADMIN, ROLE_ADMIN_SUPER)
+            // hoặc chứa từ khóa ADMIN / SUPERADMIN
+            if (role.contains("ADMIN")) {
                 isAdmin = true;
                 break;
             }
         }
 
-        // Điều hướng tương ứng sau khi đăng nhập thành công
+        // Điều hướng thông minh dựa vào nhóm quyền
         if (isAdmin) {
+            // Đối với Quản trị viên (Super Admin, Admin con) -> Vào màn hình trang quản trị
             response.sendRedirect("/admin/dashboard");
         } else {
-            // Mặc định đối với Sinh viên (ROLE_STUDENT) hoặc người dùng thường thì về Home
-            response.sendRedirect("/home"); // Có thể đổi lại url này nếu bạn có url trang chủ khác
+            // Mặc định đối với Sinh viên, Mentor hoặc Khách -> Về màn hình chính (Client Home)
+            response.sendRedirect("/home");
         }
     }
 }

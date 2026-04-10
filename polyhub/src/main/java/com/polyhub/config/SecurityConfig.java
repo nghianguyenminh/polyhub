@@ -26,9 +26,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
+                // Cấu hình các tài nguyên công khai, được phép truy cập không cần đăng nhập
                 .requestMatchers("/", "/home", "/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login").permitAll()
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "ADMIN_SUPER")
+                
+                // Chỉ "Quản trị viên" hoặc "Quản trị viên cấp cao" mới vào được route /admin/**
+                // Lưu ý: role ID trong DB nếu là "Admin" -> "ROLE_ADMIN". hasAnyAuthority() thường được khuyên dùng để tránh rắc rối tự động thêm tiền tố ROLE_
+                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ADMIN_SUPER", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ROLE_ADMIN_SYSTEM")
+                
+                // Các chức năng riêng tư yêu cầu đăng nhập đối với Sinh viên, Mentor...
                 .requestMatchers("/profile/**", "/saved").authenticated()
+                
+                // Cho phép mặc định các route còn lại (nên siết lại sau này)
                 .anyRequest().permitAll() 
             )
             .formLogin(login -> login
