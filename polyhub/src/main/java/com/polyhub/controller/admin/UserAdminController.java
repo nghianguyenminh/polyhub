@@ -28,13 +28,13 @@ public class UserAdminController {
     }
 
     @PostMapping("/toggle-lock/{id}")
-    public String toggleLock(@PathVariable Long id) {
+    public String toggleLock(@PathVariable String id) {
         userService.toggleLock(id);
         return "redirect:/admin/users";
     }
 
     @PostMapping("/approve-mentor/{id}")
-    public String approveMentor(@PathVariable Long id) {
+    public String approveMentor(@PathVariable String id) {
         userService.approveMentor(id);
         return "redirect:/admin/users";
     }

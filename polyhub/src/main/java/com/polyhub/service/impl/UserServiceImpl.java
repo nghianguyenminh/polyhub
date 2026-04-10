@@ -79,16 +79,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void toggleLock(Long id) {
+    public void toggleLock(String id) {
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
-            user.setEnabled(!user.isEnabled());
+            user.setActive(!user.getActive());
             userRepository.save(user);
         }
     }
 
     @Override
-    public void approveMentor(Long id) {
+    public void approveMentor(String id) {
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
             Role mentorRole = roleRepository.findById("MENTOR").orElse(null);

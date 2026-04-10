@@ -44,6 +44,8 @@ public class User implements Serializable {
     @Column(name = "created_at", updatable = false)
     private Date createdAt = new Date();
 
+    private Boolean wantsToBecomeMentor = false;
+
     // --- KẾT NỐI VỚI BẢNG ROLE ---
     @ManyToOne
     @JoinColumn(name = "role_id")

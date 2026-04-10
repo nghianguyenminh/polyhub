@@ -15,7 +15,7 @@ public interface UserService {
 
     List<User> getAllUsers();
 
-    void toggleLock(Long id);
+    void toggleLock(String id);
 
-    void approveMentor(Long id);
+    void approveMentor(String id);
 }
