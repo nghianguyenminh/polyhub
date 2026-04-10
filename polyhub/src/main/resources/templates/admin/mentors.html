@@ -235,7 +235,7 @@
                 <div class="kpi-card kpi-pending">
                     <div class="kpi-icon"><i class="bi bi-inbox"></i></div>
                     <div>
-                        <div class="kpi-value text-warning-emphasis">12</div>
+                        <div class="kpi-value text-warning-emphasis" th:text="${mentors.?[wantsToBecomeMentor == true].size()}">12</div>
                         <div class="kpi-label">Yêu cầu chờ duyệt</div>
                     </div>
                 </div>
@@ -244,7 +244,7 @@
                 <div class="kpi-card kpi-approved">
                     <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
                     <div>
-                        <div class="kpi-value">45</div>
+                        <div class="kpi-value" th:text="${mentors.?[wantsToBecomeMentor == false and role.id == 'MENTOR'].size()}">45</div>
                         <div class="kpi-label">Đã duyệt trong tuần</div>
                     </div>
                 </div>
@@ -253,7 +253,7 @@
                 <div class="kpi-card kpi-rate">
                     <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
                     <div>
-                        <div class="kpi-value">78%</div>
+                        <div class="kpi-value" th:text="${mentors.size() == 0 ? '0%' : (#numbers.formatDecimal(mentors.?[wantsToBecomeMentor == false and role.id == 'MENTOR'].size() * 100.0 / mentors.size(), 0, 0) + '%')}">78%</div>
                         <div class="kpi-label">Tỉ lệ chấp thuận</div>
                     </div>
                 </div>
@@ -318,14 +318,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Record 1: Pending -->
-                        <tr>
+                        <tr th:each="mentor : ${mentors}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Lê+Hoàng+Nam&background=random" class="table-avatar">
+                                    <img th:src="@{'/images/avatars/' + ${mentor.avatar}}" class="table-avatar">
                                     <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Lê Hoàng Nam</div>
-                                        <div class="text-muted" style="font-size: 12px;">PS23456</div>
+                                        <div class="fw-semibold text-dark" th:text="${mentor.fullname}"></div>
+                                        <div class="text-muted" style="font-size: 12px;" th:text="${mentor.username}"></div>
                                     </div>
                                 </div>
                             </td>
@@ -335,74 +334,23 @@
                                     <i class="bi bi-github"></i> Github Repo
                                 </a>
                             </td>
-                            <td class="text-muted">30/03/2026 09:15</td>
+                            <td class="text-muted" th:text="${#dates.format(mentor.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
                             <td>
-                                <span class="status-badge status-pending">
+                                <span th:if="${mentor.wantsToBecomeMentor}" class="status-badge status-pending">
                                     <span class="status-dot"></span> Chờ duyệt
                                 </span>
-                            </td>
-                            <td class="text-end" style="padding-right: 1.5rem;">
-                                <button class="btn btn-sm btn-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;" data-bs-toggle="offcanvas" data-bs-target="#mentorDetailOffcanvas">
-                                    Xem hồ sơ
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Record 2: Approved -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Trần+Thị+Bích&background=random" class="table-avatar">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Trần Thị Bích</div>
-                                        <div class="text-muted" style="font-size: 12px;">PS34567</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium text-dark">Thiết kế đồ họa</td>
-                            <td>
-                                <a href="#" class="evidence-link" target="_blank">
-                                    <i class="bi bi-image"></i> Behance Portfolio
-                                </a>
-                            </td>
-                            <td class="text-muted">29/03/2026 14:20</td>
-                            <td>
-                                <span class="status-badge status-approved">
+                                <span th:if="${!mentor.wantsToBecomeMentor and mentor.role.id == 'MENTOR'}" class="status-badge status-approved">
                                     <span class="status-dot"></span> Đã duyệt
                                 </span>
-                            </td>
-                            <td class="text-end" style="padding-right: 1.5rem;">
-                                <a href="/admin/mentors/detail" class="btn btn-sm btn-outline-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;">
-                                    Chi tiết
-                                </a>
-                            </td>
-                        </tr>
-
-                        <!-- Record 3: Rejected -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Phạm+Minh+Tuấn&background=random" class="table-avatar">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Phạm Minh Tuấn</div>
-                                        <div class="text-muted" style="font-size: 12px;">PS45678</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium text-dark">Lập trình Web</td>
-                            <td>
-                                <a href="#" class="evidence-link" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf"></i> Bảng điểm.pdf
-                                </a>
-                            </td>
-                            <td class="text-muted">28/03/2026 10:05</td>
-                            <td>
-                                <span class="status-badge status-rejected">
+                                <span th:if="${!mentor.wantsToBecomeMentor and mentor.role.id != 'MENTOR'}" class="status-badge status-rejected">
                                     <span class="status-dot"></span> Đã từ chối
                                 </span>
                             </td>
                             <td class="text-end" style="padding-right: 1.5rem;">
-                                <a href="/admin/mentors/detail" class="btn btn-sm btn-outline-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;">
+                                <button th:if="${mentor.wantsToBecomeMentor}" class="btn btn-sm btn-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;" data-bs-toggle="offcanvas" data-bs-target="#mentorDetailOffcanvas">
+                                    Xem hồ sơ
+                                </button>
+                                <a th:if="${!mentor.wantsToBecomeMentor}" href="/admin/mentors/detail" class="btn btn-sm btn-outline-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;">
                                     Chi tiết
                                 </a>
                             </td>
@@ -413,12 +361,11 @@
             
             <!-- Pagination -->
             <div class="p-3 border-top d-flex align-items-center justify-content-between">
-                <span class="text-muted" style="font-size: 13px;">Hiển thị 1 - 10 trong 12 yêu cầu</span>
+                <span class="text-muted" style="font-size: 13px;" th:text="|Hiển thị 1 - ${mentors.size()} trong ${mentors.size()} yêu cầu|"></span>
                 <nav aria-label="Page navigation">
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item disabled"><a class="page-link" href="#">Trang trước</a></li>
                         <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
                         <li class="page-item"><a class="page-link" href="#">Trang sau</a></li>
                     </ul>
                 </nav>
