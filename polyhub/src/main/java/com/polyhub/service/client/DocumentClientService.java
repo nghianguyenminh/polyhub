@@ -1,6 +1,7 @@
 package com.polyhub.service.client;
 
 import com.polyhub.entity.Category;
+import com.polyhub.entity.User;
 import com.polyhub.entity.Document;
 import com.polyhub.repository.CategoryRepository;
 import com.polyhub.repository.DocumentRepository;
@@ -25,7 +26,7 @@ public class DocumentClientService {
      * Upload tài liệu từ người dùng Client lên Cloudinary và lưu thông tin vào DB.
      */
     @Transactional
-    public Document shareDocument(String title, String description, Long categoryId, MultipartFile file) throws IOException {
+    public Document shareDocument(String title, String description, Long categoryId, MultipartFile file, User uploader) throws IOException {
         
         // 1. Kiểm tra Category có tồn tại
         Category category = categoryRepository.findById(categoryId)
@@ -53,6 +54,7 @@ public class DocumentClientService {
         document.setFileUrl(fileUrl);
         document.setFilePublicId(publicId);
         document.setFileSize(fileSize);
+        document.setUploader(uploader); // Bổ sung: Gán mác Sinh viên / Mentor đăng tài liệu
         document.setDownloadCount(0); // Ban đầu chưa ai tải
 
         return documentRepository.save(document);

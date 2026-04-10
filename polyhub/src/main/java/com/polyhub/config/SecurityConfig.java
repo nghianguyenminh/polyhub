@@ -53,6 +53,12 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout=true")
                 .permitAll()
             )
+            // Xử lý ném lỗi 403 mượt mà hơn thay vì hiển thị Whitelabel bằng cách Redirect họ về trang Home
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.sendRedirect("/home");
+                })
+            )
             .csrf(csrf -> csrf.disable()); // Tạm tắt CSRF để test đăng nhập cho dễ
 
         return http.build();
