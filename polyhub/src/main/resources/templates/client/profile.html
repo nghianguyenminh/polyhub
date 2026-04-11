@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" 
       th:replace="~{layouts/main_layout :: layout(~{this :: myCss}, ~{this :: myContent}, 'profile')}">
 <head>
@@ -16,10 +16,14 @@
         <div class="poly-card profile-header-card mb-3 overflow-hidden">
             <!-- Cover Image -->
             <div class="profile-cover position-relative">
-                <img src="https://i.pinimg.com/736x/24/4b/8e/244b8ea08a5ec264a8b2714e281e7e5c.jpg" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;">
-                <button class="btn btn-light position-absolute bottom-0 end-0 m-3 shadow-sm btn-edit-cover rounded-pill fw-medium px-3 py-1">
-                    <i class="bi bi-camera me-1"></i> Sửa ảnh bìa
-                </button>
+                <img th:src="${currentUser.coverImage != null and currentUser.coverImage.startsWith('http') ? currentUser.coverImage : '/admin/images/' + (currentUser.coverImage != null ? currentUser.coverImage : 'default-cover.jpg')}" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1579546929518-9e396f3cc809';">
+                
+                <form th:action="@{/profile/update-cover}" method="post" enctype="multipart/form-data" class="position-absolute bottom-0 end-0 m-3" id="coverForm">
+                    <label class="btn btn-light shadow-sm btn-edit-cover rounded-pill fw-medium px-3 py-1 mb-0 cursor-pointer">
+                        <i class="bi bi-camera me-1"></i> Sửa ảnh bìa
+                        <input type="file" name="coverFile" class="d-none" accept="image/*" onchange="document.getElementById('coverForm').submit();">
+                    </label>
+                </form>
             </div>
 
             <!-- Profile Info -->
@@ -27,10 +31,13 @@
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-end text-center text-md-start">
                     
                     <div class="avatar-wrapper position-relative z-2" style="margin-top: -65px; margin-bottom: 10px;">
-                        <img th:src="@{/images/{avatar}(avatar=${currentUser.avatar})}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;" onerror="this.onerror=null; this.src='/admin/images/default.png';">
-                        <button class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-camera-fill text-dark"></i>
-                        </button>
+                        <img th:src="${currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : '/admin/images/' + (currentUser.avatar != null ? currentUser.avatar : 'default.png')}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';">
+                        <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data" class="position-absolute bottom-0 end-0" id="avatarForm">
+                            <label class="btn btn-light rounded-circle shadow-sm p-2 btn-edit-avatar mb-0 cursor-pointer" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-camera-fill text-dark"></i>
+                                <input type="file" name="avatarFile" class="d-none" accept="image/*" onchange="document.getElementById('avatarForm').submit();">
+                            </label>
+                        </form>
                     </div>
 
                     <div class="flex-grow-1 ms-md-4 mb-3 mb-md-0 w-100">
@@ -108,8 +115,8 @@
                         <!-- Create post -->
                         <div class="poly-card p-3 mb-3">
                             <div class="d-flex align-items-center gap-2">
-                                <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" class="rounded-circle" width="40" height="40">
-                                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" placeholder="Bạn đang nghĩ gì, Nghĩa?" style="cursor: pointer; font-size: 14.5px;" readonly>
+                                <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
+                                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" th:placeholder="'Bạn đang nghĩ gì, ' + ${currentUser.fullname} + '?'" style="cursor: pointer; font-size: 14.5px;" readonly>
                             </div>
                             <div class="d-flex justify-content-between px-1 mt-3 border-top pt-2">
                                 <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
@@ -119,32 +126,42 @@
                         </div>
 
                         <!-- Posts List -->
-                        <div class="poly-card p-0 mb-3"> 
+                        <!-- Sử dụng Thymeleaf lấy Post từ Controller -->
+                        <div th:each="post : ${recentPosts}" class="poly-card p-0 mb-3"> 
                             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" class="rounded-circle" width="40" height="40">
+                                    <img th:src="${post.user != null and post.user.avatar != null and post.user.avatar.startsWith('http') ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;" alt="Avatar">
                                     <div style="line-height: 1.3;">
-                                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;">Nguyễn Minh Nghĩa</a>
-                                        <div class="text-muted" style="font-size: 13px;">Hôm qua lúc 19:30 • <i class="bi bi-globe-americas"></i></div>
+                                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                                        <div class="text-muted" style="font-size: 13px;">
+                                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
                             </div>
                             
                             <div class="px-3 pb-2">
-                                <p class="mb-0" style="font-size: 14.5px;">Vừa hoàn thành xong project cuối môn Java Spring Boot với những người đồng đội siêu cấp vũ trụ! Nỗ lực không ngừng nghỉ và đây là kết quả của tụi mình 💻🙌</p>
+                                <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
                             </div>
-                            <img src="https://i.pinimg.com/1200x/3d/c3/30/3dc3307c85634e1454e98b2334885e5d.jpg" class="img-fluid w-100 border-top border-bottom" style="max-height: 400px; object-fit: cover;" alt="Post img">
+                            
+                            <img th:if="${post.imageUrl != null}" th:src="${post.imageUrl}" class="img-fluid w-100 border-top border-bottom" style="max-height: 400px; object-fit: cover;" alt="Post img">
                             
                             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                                <div class="d-flex align-items-center"><i class="bi bi-heart-fill text-danger me-1"></i> 85</div>
-                                <div>12 Bình luận</div>
+                                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> 0</div>
+                                <div>0 Bình luận • 0 Chia sẻ</div>
                             </div>
                             <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top mx-3">
-                                <button class="btn-ghost flex-grow-1 py-1"><i class="bi bi-heart me-1"></i> Thích</button>
+                                <button class="btn-ghost flex-grow-1 py-1 btn-like"><i class="bi bi-heart me-1"></i> Thích</button>
                                 <button class="btn-ghost flex-grow-1 py-1"><i class="bi bi-chat me-1"></i> Bình luận</button>
                                 <button class="btn-ghost flex-grow-1 py-1"><i class="bi bi-share me-1"></i> Chia sẻ</button>
                             </div>
+                        </div>
+
+                        <!-- Nếu không có bài viết -->
+                        <div th:if="${#lists.isEmpty(recentPosts)}" class="poly-card p-4 text-center mt-3 text-muted">
+                            <i class="bi bi-journal-x fs-1 opacity-50"></i>
+                            <p class="mt-2 mb-0">Chưa có bài viết nào.</p>
                         </div>
 
                     </div>

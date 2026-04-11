@@ -1,8 +1,13 @@
 package com.polyhub.controller.client;
 
 import com.polyhub.entity.User;
+import com.polyhub.entity.Post;
+import com.polyhub.repository.PostRepository;
 import com.polyhub.repository.UserRepository;
+import com.polyhub.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,9 +15,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.security.Principal;
-import java.util.Date;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/profile")
@@ -23,6 +30,12 @@ public class ProfileController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private PostRepository postRepository;
 
     @GetMapping
     public String profile(Principal principal, Model model) {
@@ -34,6 +47,9 @@ public class ProfileController {
         if (user == null) {
             return "redirect:/login";
         }
+
+        Page<Post> posts = postRepository.findByUsernameOrderByCreatedAtDesc(principal.getName(), PageRequest.of(0, 10));
+        model.addAttribute("recentPosts", posts.getContent());
 
         model.addAttribute("currentUser", user);
         return "client/profile";
@@ -75,5 +91,41 @@ public class ProfileController {
             }
         }
         return "redirect:/profile#settings";
+    }
+
+    @PostMapping("/update-avatar")
+    public String updateAvatar(Principal principal, @RequestParam("avatarFile") MultipartFile file) {
+        if (principal != null && !file.isEmpty()) {
+            User user = userRepository.findById(principal.getName()).orElse(null);
+            if (user != null) {
+                try {
+                    Map<String, Object> uploadResult = fileStorageService.uploadImage(file, "polyhub_avatars");
+                    String imageUrl = (String) uploadResult.get("url");
+                    user.setAvatar(imageUrl);
+                    userRepository.save(user);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/update-cover")
+    public String updateCover(Principal principal, @RequestParam("coverFile") MultipartFile file) {
+        if (principal != null && !file.isEmpty()) {
+            User user = userRepository.findById(principal.getName()).orElse(null);
+            if (user != null) {
+                try {
+                    Map<String, Object> uploadResult = fileStorageService.uploadImage(file, "polyhub_covers");
+                    String imageUrl = (String) uploadResult.get("url");
+                    user.setCoverImage(imageUrl);
+                    userRepository.save(user);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return "redirect:/profile";
     }
 }
