@@ -39,6 +39,8 @@ public class User implements Serializable {
     // Ảnh bìa
     private String coverImage = "default-cover.jpg";
 
+    private String bio;
+
     private Boolean active = true; // Trạng thái hoạt động
 
     @Temporal(TemporalType.TIMESTAMP)
