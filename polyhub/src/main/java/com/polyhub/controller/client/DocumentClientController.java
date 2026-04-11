@@ -78,7 +78,8 @@ public class DocumentClientController {
             @RequestParam("description") String description,
             @RequestParam("categoryId") Long categoryId,
             @RequestParam("file") MultipartFile file,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            @ModelAttribute("currentUser") com.polyhub.entity.User currentUser) { // Lấy phiên đăng nhập hiện tại
 
         try {
             // Kiểm tra file rỗng trước khi load lên
@@ -87,8 +88,8 @@ public class DocumentClientController {
                 return "redirect:/documents";
             }
 
-            // Xử lý thông qua Service
-            documentClientService.shareDocument(title, description, categoryId, file);
+            // Xử lý thông qua Service, truyền thêm biến currentUser là uploader
+            documentClientService.shareDocument(title, description, categoryId, file, currentUser);
 
             // Cập nhật thông báo lên Client bằng Flash Attributes
             redirectAttributes.addFlashAttribute("success_msg", "Tải tài liệu thành công! Tài liệu của bạn đã được đưa lên hệ thống.");

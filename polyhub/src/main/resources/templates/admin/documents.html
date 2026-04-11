@@ -275,8 +275,12 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=User&background=random" class="owner-avatar">
-                                    <span class="text-dark fw-medium" style="font-size: 13px;">Học viên</span>
+                                    <img th:src="${doc.uploader?.avatar != null ? doc.uploader.avatar : 'https://ui-avatars.com/api/?name=User&background=random'}" 
+                                         class="owner-avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
+                                    <div style="line-height: 1.2;">
+                                        <span class="text-dark fw-medium d-block" style="font-size: 13px;" th:text="${doc.uploader?.fullname ?: 'Khuyết danh'}">Học viên</span>
+                                        <small class="text-muted" style="font-size: 11px;" th:text="${doc.uploader?.email ?: 'Không có email'}">Email</small>
+                                    </div>
                                 </div>
                             </td>
                             <td>
@@ -310,11 +314,11 @@
                                             </form>
                                         </li>
                                         
-                                        <li th:if="${doc.status.name() != 'HIDDEN'}">
-                                            <a class="dropdown-item item-warning fw-medium" href="#" data-bs-toggle="modal" th:attr="data-bs-target='#takedownModal' + ${doc.id}"><i class="bi bi-eye-slash-fill"></i> Gỡ / Ẩn (Soft Delete)</a>
+                                        <li th:if="${doc.status.name() != 'HIDDEN' and doc.status.name() != 'REJECTED'}">
+                                            <a class="dropdown-item item-warning fw-medium" href="#" data-bs-toggle="modal" th:attr="data-bs-target='#takedownModal' + ${doc.id}"><i class="bi bi-slash-circle-fill"></i> Từ Chối / Gỡ bài (Reject)</a>
                                         </li>
                                         
-                                        <li th:if="${doc.status.name() == 'HIDDEN'}">
+                                        <li th:if="${doc.status.name() == 'HIDDEN' or doc.status.name() == 'REJECTED'}">
                                             <form th:action="@{/admin/documents/{id}/restore(id=${doc.id})}" method="post" class="m-0">
                                                 <button type="submit" class="dropdown-item fw-medium" style="color: #0dcaf0;"><i class="bi bi-unlock-fill"></i> Mở khóa (Restore)</button>
                                             </form>
@@ -325,31 +329,51 @@
                                     </ul>
                                 </div>
                                 
-                                <!-- Modal Gỡ Tài Liệu -->
+                                <!-- Modal Từ chối / Gỡ Tài Liệu -->
                                 <div class="modal fade text-start" th:id="'takedownModal' + ${doc.id}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content" style="border-radius: 16px; border: none;">
                                             <form th:action="@{/admin/documents/{id}/takedown(id=${doc.id})}" method="post">
                                                 <div class="modal-header" style="background-color: #F9FAFB; border-radius: 16px 16px 0 0;">
-                                                    <h5 class="modal-title fw-bold" style="font-size: 1.1rem;"><i class="bi bi-eye-slash-fill text-danger me-2"></i> Gỡ Tài liệu</h5>
+                                                    <h5 class="modal-title fw-bold" style="font-size: 1.1rem;"><i class="bi bi-slash-circle-fill text-danger me-2"></i> Từ Chối / Gỡ Tài liệu</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <p class="text-muted" style="font-size: 14px;">Tài liệu <strong th:text="${doc.title}"></strong> sẽ bị ẩn khỏi cộng đồng.</p>
-                                                    <div class="mb-3">
-                                                        <label class="form-label" style="font-size: 13px;">Lý do (Bắt buộc)</label>
-                                                        <select name="reason" class="form-select form-select-sm mb-2" required>
-                                                            <option value="">-- Chọn lý do --</option>
-                                                            <option value="Vi phạm bản quyền">Vi phạm bản quyền</option>
-                                                            <option value="Sai môn học">Sai môn học</option>
-                                                            <option value="File lỗi / rác">File lỗi / rác</option>
-                                                            <option value="Khác">Lý do khác...</option>
-                                                        </select>
+                                                    <p class="text-muted" style="font-size: 14px;">Tài liệu <strong th:text="${doc.title}"></strong> của <strong th:text="${doc.uploader != null ? doc.uploader.fullname : 'Khuyết danh'}"></strong> sẽ bị từ chối phê duyệt.</p>
+                                                    <div class="mb-2">
+                                                        <label class="form-label fw-bold text-dark" style="font-size: 13px;">Chọn lý do từ chối (Email sẽ tự động gửi cho Sinh viên)</label>
+                                                        
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="radio" th:name="'reason_radio_' + ${doc.id}" th:id="'reason1_' + ${doc.id}" value="Nội dung vi phạm bản quyền hoặc tiêu chuẩn cộng đồng." required th:onchange="|toggleCustomReason(this, 'customReason_${doc.id}')|">
+                                                            <label class="form-check-label" th:for="'reason1_' + ${doc.id}" style="font-size: 14px;">Vi phạm bản quyền / Tiêu chuẩn cộng đồng</label>
+                                                        </div>
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="radio" th:name="'reason_radio_' + ${doc.id}" th:id="'reason2_' + ${doc.id}" value="Tài liệu đăng sai chuyên ngành học." th:onchange="|toggleCustomReason(this, 'customReason_${doc.id}')|">
+                                                            <label class="form-check-label" th:for="'reason2_' + ${doc.id}" style="font-size: 14px;">Tài liệu đăng sai chuyên ngành học</label>
+                                                        </div>
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="radio" th:name="'reason_radio_' + ${doc.id}" th:id="'reason3_' + ${doc.id}" value="Tập tin bị lỗi, không thể mở hoặc đọc được nội dung." th:onchange="|toggleCustomReason(this, 'customReason_${doc.id}')|">
+                                                            <label class="form-check-label" th:for="'reason3_' + ${doc.id}" style="font-size: 14px;">File lỗi / Không thể mở</label>
+                                                        </div>
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="radio" th:name="'reason_radio_' + ${doc.id}" th:id="'reason4_' + ${doc.id}" value="KHAC" th:onchange="|toggleCustomReason(this, 'customReason_${doc.id}')|">
+                                                            <label class="form-check-label" th:for="'reason4_' + ${doc.id}" style="font-size: 14px;">Lý do khác (Nhập tay)...</label>
+                                                        </div>
+                                                        
                                                     </div>
+                                                    
+                                                    <!-- Input để chứa lý do cuối cùng gửi về controller -->
+                                                    <input type="hidden" name="reason" th:id="'finalReason_' + ${doc.id}">
+                                                    
+                                                    <!-- Ô gõ lý do tuỳ chỉnh (ẩn mặc định) -->
+                                                    <div th:id="'customReason_' + ${doc.id}" class="mt-2 d-none">
+                                                        <textarea class="form-control form-control-sm" rows="2" placeholder="Gõ lý do chi tiết vào đây để gửi mail..." th:id="'customReasonInput_' + ${doc.id}" th:onkeyup="|updateFinalReason(this, 'finalReason_${doc.id}')|"></textarea>
+                                                    </div>
+                                                    
                                                 </div>
                                                 <div class="modal-footer bg-light" style="border-radius: 0 0 16px 16px;">
                                                     <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Hủy</button>
-                                                    <button type="submit" class="btn btn-danger btn-sm">Gỡ Tài liệu</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm" th:onclick="'prepareReasonSubmission(' + ${doc.id} + ')'"><i class="bi bi-send-fill me-1"></i> Báo Cáo & Tước quyền</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -420,6 +444,46 @@
     <!-- Scripts -->
     <th:block th:fragment="myJs">
         <script>
+            // JS Bổ sung: Hiển thị / Ẩn ô nhập lý do Tuỳ chỉnh
+            function toggleCustomReason(radioElement, customDivId) {
+                const customDiv = document.getElementById(customDivId);
+                const customInput = customDiv.querySelector('textarea');
+                
+                if (radioElement.value === 'KHAC') {
+                    customDiv.classList.remove('d-none');
+                    customInput.required = true; // Bắt buộc gõ nếu chọn KHÁC
+                } else {
+                    customDiv.classList.add('d-none');
+                    customInput.required = false; 
+                }
+            }
+
+            // Đồng bộ hoá nội dung text vào hidden input 
+            function updateFinalReason(textareaElement, finalInputId) {
+                document.getElementById(finalInputId).value = textareaElement.value;
+            }
+
+            // Khi submit form, gom reason
+            function prepareReasonSubmission(docId) {
+                const finalInput = document.getElementById('finalReason_' + docId);
+                const radioButtons = document.getElementsByName('reason_radio_' + docId);
+                let selectedRadioValue = "";
+                
+                for (let r of radioButtons) {
+                    if (r.checked) {
+                        selectedRadioValue = r.value;
+                        break;
+                    }
+                }
+                
+                if (selectedRadioValue === 'KHAC') {
+                    const customText = document.getElementById('customReasonInput_' + docId).value;
+                    finalInput.value = customText;
+                } else {
+                    finalInput.value = selectedRadioValue;
+                }
+            }
+            
             // Lắng nghe sự kiện click cho các item trong dropdown bộ lọc
             document.addEventListener("DOMContentLoaded", function() {
                 const filterForm = document.getElementById("filterForm");

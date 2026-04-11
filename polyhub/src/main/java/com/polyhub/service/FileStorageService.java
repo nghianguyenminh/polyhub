@@ -55,6 +55,19 @@ public class FileStorageService {
     }
 
     /**
+     * TẢI HÌNH ẢNH (AVATAR, ẢNH BÌA) LÊN CLOUDINARY
+     */
+    public Map<String, Object> uploadImage(MultipartFile file, String folder) throws IOException {
+        Map<String, Object> options = ObjectUtils.asMap(
+                "folder", folder,
+                "resource_type", "image"
+        );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+        return uploadResult;
+    }
+
+    /**
      * XÓA TÀI LIỆU
      * Hàm này dùng khi Admin hoặc User muốn xóa tài liệu đã được tải lên trước đó.
      * 
