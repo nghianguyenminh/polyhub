@@ -34,6 +34,12 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             @Param("categoryId") Long categoryId,
             Pageable pageable);
 
+    @Query("SELECT d.documentType, COUNT(d) FROM Document d WHERE d.status = 'APPROVED' AND d.documentType IS NOT NULL GROUP BY d.documentType")
+    List<Object[]> countApprovedByDocumentType();
+
+    @Query("SELECT c.id, COUNT(d) FROM Document d JOIN d.category c WHERE d.status = 'APPROVED' GROUP BY c.id")
+    List<Object[]> countApprovedByCategory();
+
     @Query("SELECT d.documentType, COUNT(d) FROM Document d WHERE d.documentType IS NOT NULL GROUP BY d.documentType")
     List<Object[]> countByDocumentType();
 
