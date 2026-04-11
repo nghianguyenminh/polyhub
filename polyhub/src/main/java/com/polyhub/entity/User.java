@@ -20,7 +20,7 @@ public class User implements Serializable {
     @Column(nullable = false)
     private String password;
 
-    @Column(columnDefinition = "nvarchar(100)", nullable = false)
+    @Column(columnDefinition = "VARCHAR(100)", nullable = false)
     private String fullname;
 
     @Column(unique = true, nullable = false)
@@ -39,7 +39,14 @@ public class User implements Serializable {
     // Ảnh bìa
     private String coverImage = "default-cover.jpg";
 
+    @Column(columnDefinition = "TEXT")
     private String bio;
+
+    @Column(columnDefinition = "VARCHAR(255)")
+    private String school;
+
+    @Column(columnDefinition = "VARCHAR(255)")
+    private String address;
 
     private Boolean active = true; // Trạng thái hoạt động
 
