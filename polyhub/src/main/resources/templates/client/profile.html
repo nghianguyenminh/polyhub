@@ -39,7 +39,7 @@
                         <img th:src="${user.avatar != null and user.avatar != 'default.png' ? user.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;">
                         
                         <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data" id="formUpdateAvatar">
-                            <label class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar mb-0" style="width: 36px; height: 36px; display: flex; align-items-center; justify-content: center; cursor: pointer;">
+                            <label class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar mb-0" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                                 <i class="bi bi-camera-fill text-dark"></i>
                                 <input type="file" name="avatarFile" accept="image/*" class="d-none" onchange="document.getElementById('formUpdateAvatar').submit();">
                             </label>
@@ -218,7 +218,7 @@
                                 <div class="mb-4">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Xác nhận mật khẩu mới</label>
                                     <div class="position-relative">
-                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu mới" name="confirmPassword">
+                                        <input type.password" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu mới" name="confirmPassword">
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-dark w-100 fw-semibold rounded-pill">Đổi mật khẩu</button>
