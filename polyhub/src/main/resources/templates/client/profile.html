@@ -14,14 +14,13 @@
         
         <!-- PROFILE HEADER -->
         <div class="poly-card profile-header-card mb-3 overflow-hidden">
-            <!-- Thông báo trạng thái cập nhật (thành công/lỗi) -->
+            <!-- Success/Error Messages -->
             <div th:if="${success}" class="alert alert-success m-3" role="alert" th:text="${success}"></div>
             <div th:if="${error}" class="alert alert-danger m-3" role="alert" th:text="${error}"></div>
 
-            <!-- Cover Image (Ảnh Bìa) -->
+            <!-- Cover Image -->
             <div class="profile-cover position-relative">
-                <!-- Hiển thị ảnh bìa từ Database. Nếu giá trị = default-cover.jpg, gán hiển thị ảnh cứng, ko thì lấy link URL cloudinary. -->
-                <img th:src="${currentUser.coverImage != null and currentUser.coverImage != 'default-cover.jpg' ? currentUser.coverImage : 'https://i.pinimg.com/736x/24/4b/8e/244b8ea08a5ec264a8b2714e281e7e5c.jpg'}" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;">
+                <img th:src="${user.coverImage != null and user.coverImage != 'default-cover.jpg' ? user.coverImage : 'https://i.pinimg.com/736x/24/4b/8e/244b8ea08a5ec264a8b2714e281e7e5c.jpg'}" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;">
                 
                 <form th:action="@{/profile/update-cover}" method="post" enctype="multipart/form-data" class="d-inline position-absolute bottom-0 end-0 m-3" id="formUpdateCover">
                     <label class="btn btn-light shadow-sm btn-edit-cover rounded-pill fw-medium px-3 py-1 mb-0" style="cursor: pointer;">
@@ -35,12 +34,12 @@
             <div class="profile-info px-4 pb-4 position-relative">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-end text-center text-md-start">
                     
-                    <!-- Avatar (Ảnh đại diện) -->
+                    <!-- Avatar -->
                     <div class="avatar-wrapper position-relative z-2" style="margin-top: -65px; margin-bottom: 10px;">
-                        <img th:src="${currentUser.avatar != null and currentUser.avatar != 'default.png' ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;">
+                        <img th:src="${user.avatar != null and user.avatar != 'default.png' ? user.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;">
                         
                         <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data" id="formUpdateAvatar">
-                            <label class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar mb-0" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <label class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar mb-0" style="width: 36px; height: 36px; display: flex; align-items-center; justify-content: center; cursor: pointer;">
                                 <i class="bi bi-camera-fill text-dark"></i>
                                 <input type="file" name="avatarFile" accept="image/*" class="d-none" onchange="document.getElementById('formUpdateAvatar').submit();">
                             </label>
@@ -49,22 +48,22 @@
 
                     <div class="flex-grow-1 ms-md-4 mb-3 mb-md-0 w-100">
                         <h2 class="mb-1 fw-bold d-flex justify-content-center justify-content-md-start align-items-center gap-2">
-                            <span th:text="${currentUser.fullname}">Nguyễn Minh Nghĩa</span> 
+                            <span th:text="${user.fullname}"></span> 
                             <i class="bi bi-check-circle-fill text-primary" style="font-size: 18px;"></i>
                         </h2>
                         <p class="text-muted mb-1 fw-medium" style="font-size: 15px;">
-                            @<span th:text="${currentUser.username}">nghianguyenminh</span> • <span th:text="${currentUser.role.name}">SV Ngành CNTT</span>
+                            @<span th:text="${user.username}"></span> • <span th:text="${user.role.name}"></span>
                         </p>
                         <p class="text-muted mb-0" style="font-size: 14px;"><strong>0</strong> người theo dõi • <strong>0</strong> Đang theo dõi</p>
                     </div>
 
                     <div class="d-flex gap-2 justify-content-center w-100 w-md-auto mb-2 mb-md-0">
                         <button class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm"><i class="bi bi-plus-lg me-1"></i> Thêm vào tin</button>
-                        <button class="btn btn-secondary bg-light border-0 rounded-pill px-4 fw-medium text-dark shadow-sm hover-bg-gray"><i class="bi bi-pencil me-1"></i> Chỉnh sửa</button>
+                        <a th:href="@{/profile#settings}" class="btn btn-secondary bg-light border-0 rounded-pill px-4 fw-medium text-dark shadow-sm hover-bg-gray"><i class="bi bi-pencil me-1"></i> Chỉnh sửa</a>
                     </div>
                 </div>
 
-                <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;">Code is poetry. Always seeking new challenges and learning new technologies! 🚀☕💻</p>
+                <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;" th:text="${user.bio}"></p>
             </div>
 
             <hr class="m-0 border-opacity-50">
@@ -82,7 +81,7 @@
 
         <div class="tab-content w-100" id="profileTabContent">
             
-            <!-- TABS: BÀI VIẾT -->
+            <!-- POSTS TAB -->
             <div class="tab-pane fade show active" id="posts" role="tabpanel" tabindex="0">
                 <div class="row">
                     <!-- Left Column: Intro -->
@@ -90,18 +89,18 @@
                         <div class="poly-card p-3 mb-3">
                             <h5 class="fw-bold mb-3 fs-6">Giới thiệu</h5>
                             <div class="d-flex align-items-center mb-2 text-muted" style="font-size: 14.5px;">
-                                <i class="bi bi-mortarboard-fill fs-5 me-2 w-20px text-center"></i> Sinh viên tại FPT Polytechnic
+                                <i class="bi bi-mortarboard-fill fs-5 me-2 w-20px text-center"></i> Sinh viên tại <span th:text="${user.school}"></span>
                             </div>
                             <div class="d-flex align-items-center mb-2 text-muted" style="font-size: 14.5px;">
-                                <i class="bi bi-geo-alt-fill fs-5 me-2 w-20px text-center"></i> Sống tại Hồ Chí Minh
+                                <i class="bi bi-geo-alt-fill fs-5 me-2 w-20px text-center"></i> Sống tại <span th:text="${user.address}"></span>
                             </div>
                             <div class="d-flex align-items-center mb-2 text-muted" style="font-size: 14.5px;">
-                                <i class="bi bi-envelope-fill fs-5 me-2 w-20px text-center"></i> nghianm@fpt.edu.vn
+                                <i class="bi bi-envelope-fill fs-5 me-2 w-20px text-center"></i> <span th:text="${user.email}"></span>
                             </div>
                             <div class="d-flex align-items-center mb-2 text-muted" style="font-size: 14.5px;">
-                                <i class="bi bi-link-45deg fs-5 me-2 w-20px text-center"></i> <a href="#" class="text-poly text-decoration-none">github.com/nghianguyenminh</a>
+                                <i class="bi bi-link-45deg fs-5 me-2 w-20px text-center"></i> <a th:href="${user.website}" class="text-poly text-decoration-none" th:text="${user.website}"></a>
                             </div>
-                            <button class="btn btn-light w-100 mt-2 rounded-pill fw-medium text-dark bg-secondary bg-opacity-10 border-0" style="font-size: 14.5px;">Chỉnh sửa chi tiết</button>
+                            <a th:href="@{/profile#account}" class="btn btn-light w-100 mt-2 rounded-pill fw-medium text-dark bg-secondary bg-opacity-10 border-0" style="font-size: 14.5px;">Chỉnh sửa chi tiết</a>
                         </div>
                         
                         <div class="poly-card p-3 mb-3">
@@ -122,8 +121,8 @@
                         <!-- Create post -->
                         <div class="poly-card p-3 mb-3">
                             <div class="d-flex align-items-center gap-2">
-                                <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" class="rounded-circle" width="40" height="40">
-                                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" placeholder="Bạn đang nghĩ gì, Nghĩa?" style="cursor: pointer; font-size: 14.5px;" readonly>
+                                <img th:src="${user.avatar != null and user.avatar != 'default.png' ? user.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="rounded-circle" width="40" height="40">
+                                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" th:placeholder="'Bạn đang nghĩ gì, ' + ${user.fullname} + ' ?'" style="cursor: pointer; font-size: 14.5px;" readonly>
                             </div>
                             <div class="d-flex justify-content-between px-1 mt-3 border-top pt-2">
                                 <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
@@ -133,26 +132,30 @@
                         </div>
 
                         <!-- Posts List -->
-                        <div class="poly-card p-0 mb-3"> 
+                        <div th:if="${posts.isEmpty()}" class="poly-card p-3 mb-3 text-center">
+                            <p>Chưa có bài đăng nào.</p>
+                        </div>
+
+                        <div th:each="post : ${posts}" class="poly-card p-0 mb-3"> 
                             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="https://i.pinimg.com/736x/26/b3/0a/26b30a7f16b20c714d782e60910788ce.jpg" class="rounded-circle" width="40" height="40">
+                                    <img th:src="${post.user.avatar != null and post.user.avatar != 'default.png' ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="rounded-circle" width="40" height="40">
                                     <div style="line-height: 1.3;">
-                                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;">Nguyễn Minh Nghĩa</a>
-                                        <div class="text-muted" style="font-size: 13px;">Hôm qua lúc 19:30 • <i class="bi bi-globe-americas"></i></div>
+                                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user.fullname}"></a>
+                                        <div class="text-muted" style="font-size: 13px;"><span th:text="${post.createdAt}"></span> • <i class="bi bi-globe-americas"></i></div>
                                     </div>
                                 </div>
                                 <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
                             </div>
                             
                             <div class="px-3 pb-2">
-                                <p class="mb-0" style="font-size: 14.5px;">Vừa hoàn thành xong project cuối môn Java Spring Boot với những người đồng đội siêu cấp vũ trụ! Nỗ lực không ngừng nghỉ và đây là kết quả của tụi mình 💻🙌</p>
+                                <p class="mb-0" style="font-size: 14.5px;" th:text="${post.content}"></p>
                             </div>
-                            <img src="https://i.pinimg.com/1200x/3d/c3/30/3dc3307c85634e1454e98b2334885e5d.jpg" class="img-fluid w-100 border-top border-bottom" style="max-height: 400px; object-fit: cover;" alt="Post img">
+                            <img th:if="${post.image}" th:src="${post.image}" class="img-fluid w-100 border-top border-bottom" style="max-height: 400px; object-fit: cover;" alt="Post img">
                             
                             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                                <div class="d-flex align-items-center"><i class="bi bi-heart-fill text-danger me-1"></i> 85</div>
-                                <div>12 Bình luận</div>
+                                <div class="d-flex align-items-center"><i class="bi bi-heart-fill text-danger me-1"></i> <span th:text="${post.likes}"></span></div>
+                                <div><span th:text="${post.comments}"></span> Bình luận</div>
                             </div>
                             <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top mx-3">
                                 <button class="btn-ghost flex-grow-1 py-1"><i class="bi bi-heart me-1"></i> Thích</button>
@@ -165,7 +168,7 @@
                 </div>
             </div>
 
-            <!-- TABS: CÀI ĐẶT -->
+            <!-- SETTINGS TAB -->
             <div class="tab-pane fade" id="settings" role="tabpanel" tabindex="0">
                 <div class="poly-card p-0 mb-4 overflow-hidden">
                     <div class="p-4 border-bottom bg-light bg-opacity-50">
@@ -178,49 +181,58 @@
                         <!-- Col Left: Update Info -->
                         <div class="col-md-6 border-end-md pe-md-4">
                             <h5 class="fw-bold fs-6 mb-3">Thông tin cá nhân</h5>
-                            <form>
+                            <form th:action="@{/profile/update-info}" method="post">
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Họ và Tên</label>
-                                    <input type="text" class="form-control form-control-poly" value="Nguyễn Minh Nghĩa" placeholder="Nhập họ tên...">
+                                    <input type="text" class="form-control form-control-poly" th:value="${user.fullname}" name="fullname">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mã Sinh Viên</label>
-                                    <input type="text" class="form-control form-control-poly bg-light" value="PS12345" readonly>
+                                    <input type="text" class="form-control form-control-poly bg-light" th:value="${user.username}" readonly>
                                     <small class="text-muted" style="font-size: 12px;"><i class="bi bi-info-circle me-1"></i>Mã SV không thể thay đổi</small>
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Email</label>
-                                    <input type="email" class="form-control form-control-poly" value="nghianm@fpt.edu.vn">
+                                    <input type="email" class="form-control form-control-poly" th:value="${user.email}" name="email">
                                 </div>
-                                <button type="button" class="btn btn-primary btn-poly w-100 fw-semibold rounded-pill">Cập nhật thông tin</button>
+                                <button type="submit" class="btn btn-primary btn-poly w-100 fw-semibold rounded-pill">Cập nhật thông tin</button>
                             </form>
                         </div>
 
                         <!-- Col Right: Change Password -->
                         <div class="col-md-6 ps-md-4">
                             <h5 class="fw-bold fs-6 mb-3">Đổi mật khẩu</h5>
-                            <form>
+                            <form th:action="@{/profile/change-password}" method="post">
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu hiện tại</label>
                                     <div class="position-relative">
-                                        <input type="password" class="form-control form-control-poly" placeholder="••••••••">
+                                        <input type="password" class="form-control form-control-poly" placeholder="••••••••" name="currentPassword">
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu mới</label>
                                     <div class="position-relative">
-                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập mật khẩu mới">
+                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập mật khẩu mới" name="newPassword">
                                     </div>
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Xác nhận mật khẩu mới</label>
                                     <div class="position-relative">
-                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu mới">
+                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu mới" name="confirmPassword">
                                     </div>
                                 </div>
-                                <button type="button" class="btn btn-dark w-100 fw-semibold rounded-pill">Đổi mật khẩu</button>
+                                <button type="submit" class="btn btn-dark w-100 fw-semibold rounded-pill">Đổi mật khẩu</button>
                             </form>
                         </div>
+                    </div>
+                </div>
+                 <div class="poly-card p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold fs-6 mb-1"><i class="bi bi-person-badge me-2"></i>Trở thành Mentor</h5>
+                            <p class="text-muted mb-0" style="font-size: 14px;">Chia sẻ kiến thức, hướng dẫn và truyền cảm hứng cho cộng đồng sinh viên.</p>
+                        </div>
+                        <a th:href="@{/settings#mentor}" class="btn btn-outline-primary rounded-pill px-4 fw-medium">Đăng ký ngay</a>
                     </div>
                 </div>
 
