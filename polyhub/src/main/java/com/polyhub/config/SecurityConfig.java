@@ -22,12 +22,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-<<<<<<< HEAD
                 // Cấu hình các tài nguyên công khai, được phép truy cập không cần đăng nhập
                 .requestMatchers("/", "/home", "/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login").permitAll()
                 
                 // Chỉ "Quản trị viên" hoặc "Quản trị viên cấp cao" mới vào được route /admin/**
-                // Lưu ý: role ID trong DB nếu là "Admin" -> "ROLE_ADMIN". hasAnyAuthority() thường được khuyên dùng để tránh rắc rối tự động thêm tiền tố ROLE_
                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN", "ROLE_ADMIN_SUPER", "ROLE_SUPER_ADMIN", "ROLE_SUPERADMIN", "ROLE_ADMIN_SYSTEM")
                 
                 // Các chức năng riêng tư yêu cầu đăng nhập đối với Sinh viên, Mentor...
@@ -35,14 +33,6 @@ public class SecurityConfig {
                 
                 // Cho phép mặc định các route còn lại (nên siết lại sau này)
                 .anyRequest().permitAll() 
-=======
-                // Cấp quyền tự do truy cập tài nguyên tĩnh, đăng ký và đăng nhập
-                .requestMatchers("/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login").permitAll()
-                // Phân quyền cho trang Quản trị: Chỉ những user có role SUPER_ADMIN hoặc ADMIN mới được phép truy cập
-                .requestMatchers("/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
-                // Bắt buộc đăng nhập cho các chức năng và trang chủ (/ và /home)
-                .anyRequest().authenticated() 
->>>>>>> origin/appmod/java-upgrade-20260406032344
             )
             .formLogin(login -> login
                 .loginPage("/login") 
