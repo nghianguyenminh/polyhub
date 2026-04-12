@@ -1,19 +1,28 @@
 package com.polyhub.controller.client;
 
-import com.polyhub.dto.request.RegisterRequest;
-import com.polyhub.service.UserService;
+import com.polyhub.entity.Role;
+import com.polyhub.entity.User;
+import com.polyhub.repository.RoleRepository;
+import com.polyhub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // Dùng để mã hóa mật khẩu
 
     @GetMapping("/login")
     public String login() {
@@ -21,25 +30,52 @@ public class AuthController {
     }
 
     @GetMapping("/register")
-    public String showRegisterForm(Model model) {
-        // Khởi tạo một đối tượng DTO rỗng để bind (gắn) với form trên HTML
-        model.addAttribute("registerRequest", new RegisterRequest());
+    public String register(Model model) {
+        // Gửi một đối tượng User rỗng sang form để binding dữ liệu
+        model.addAttribute("user", new User());
         return "client/register";
     }
 
     @PostMapping("/register")
-    public String processRegister(@ModelAttribute("registerRequest") RegisterRequest request, Model model) {
-        // Xử lý nghiệp vụ đăng ký nhận từ DTO
-        String result = userService.registerUser(request);
-
-        if (result.equals("success")) {
-            // Nếu thành công, chuyển hướng sang màn hình đăng nhập với tham số success ở query string
-            return "redirect:/login?registerSuccess=true";
-        } else {
-            // Nếu có lỗi (mật khẩu k khớp, trùng username...), đẩy lại đối tượng cùng thông báo lỗi về view register
-            model.addAttribute("registerRequest", request); // Giữ lại thông tin đã nhập cho ng dùng (trừ pass)
-            model.addAttribute("errorMessage", result);
+    public String processRegister(@ModelAttribute("user") User user, String confirmPassword, Model model) {
+        
+        // 1. Kiểm tra mật khẩu xác nhận
+        if (!user.getPassword().equals(confirmPassword)) {
+            model.addAttribute("error", "Mật khẩu xác nhận không khớp!");
             return "client/register";
         }
+
+        // 2. Kiểm tra tên đăng nhập (Mã sinh viên) đã tồn tại chưa
+        if (userRepository.existsById(user.getUsername())) {
+            model.addAttribute("error", "Mã sinh viên này đã được đăng ký!");
+            return "client/register";
+        }
+
+        // 3. Kiểm tra email đã được sử dụng chưa
+        if (userRepository.existsByEmail(user.getEmail())) {
+            model.addAttribute("error", "Email này đã được sử dụng!");
+            return "client/register";
+        }
+
+        // 4. Lấy Role "CLIENT" mặc định từ DB để gán cho User mới
+        Role clientRole = roleRepository.findById("CLIENT").orElse(null);
+        if (clientRole == null) {
+            // Nếu trong DB chưa có role CLIENT thì tạo mới luôn để tránh lỗi
+            clientRole = new Role("CLIENT", "Khách hàng");
+            roleRepository.save(clientRole);
+        }
+        
+        // 5. Gán các thông tin mặc định
+        user.setRole(clientRole); // Phân quyền client mặc định
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // Mã hóa mật khẩu
+        user.setAvatar("default.png"); // Ảnh đại diện mặc định
+        user.setActive(true); // Trạng thái hoạt động
+        user.setCreatedAt(java.time.LocalDateTime.now()); // Ngày tạo
+
+        // 6. Lưu user vào DB
+        userRepository.save(user);
+
+        // Chuyển hướng sang trang đăng nhập cùng với thông báo thành công
+        return "redirect:/login?success=true";
     }
 }

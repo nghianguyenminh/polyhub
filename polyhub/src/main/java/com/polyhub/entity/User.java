@@ -2,9 +2,16 @@ package com.polyhub.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.io.Serializable;
+<<<<<<< HEAD
 import java.util.Date;
 import java.util.List;
+=======
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+>>>>>>> origin/appmod/java-upgrade-20260406032344
 
 @Data
 @NoArgsConstructor
@@ -31,8 +38,11 @@ public class User implements Serializable {
 
     private Boolean gender = true; // True: Nam, False: Nữ
 
-    @Temporal(TemporalType.DATE)
-    private Date birthday;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthday;
+
+    @Column(columnDefinition = "nvarchar(100)")
+    private String major; // Chuyên ngành
 
     private String avatar = "default.png";
 
@@ -50,9 +60,8 @@ public class User implements Serializable {
 
     private Boolean active = true; // Trạng thái hoạt động
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", updatable = false)
-    private Date createdAt = new Date();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     private Boolean wantsToBecomeMentor = false;
 

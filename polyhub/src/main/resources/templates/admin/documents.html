@@ -419,20 +419,20 @@
                 <nav aria-label="Page navigation">
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item" th:classappend="${documentPage.first ? 'disabled' : ''}">
-                            <a class="page-link" th:href="@{/admin/documents(page=${documentPage.number - 1}, keyword=${keyword}, categoryId=${categoryId}, status=${status}, documentType=${documentType})}" tabindex="-1" aria-disabled="true">Trang trước</a>
+                            <a class="page-link" th:href="@{/admin/documents(page=${documentPage.number}, keyword=${keyword}, category_id=${categoryId}, status=${status}, document_type=${documentType})}" tabindex="-1" aria-disabled="true">Trang trước</a>
                         </li>
                         
-                        <li th:each="i : ${#numbers.sequence(0, documentPage.totalPages - 1)}" 
+                        <li th:if="${documentPage.totalPages > 0}" th:each="i : ${#numbers.sequence(1, documentPage.totalPages)}" 
                             class="page-item" 
-                            th:classappend="${documentPage.number == i ? 'active' : ''}"
-                            th:styleappend="${documentPage.number == i ? '--bs-pagination-active-bg: var(--admin-primary); --bs-pagination-active-border-color: var(--admin-primary);' : ''}">
-                            <a class="page-link" th:classappend="${documentPage.number != i ? 'text-dark' : ''}" 
-                               th:href="@{/admin/documents(page=${i}, keyword=${keyword}, categoryId=${categoryId}, status=${status}, documentType=${documentType})}" 
-                               th:text="${i + 1}">1</a>
+                            th:classappend="${documentPage.number + 1 == i ? 'active' : ''}"
+                            th:styleappend="${documentPage.number + 1 == i ? '--bs-pagination-active-bg: var(--admin-primary); --bs-pagination-active-border-color: var(--admin-primary);' : ''}">
+                            <a class="page-link" th:classappend="${documentPage.number + 1 != i ? 'text-dark' : ''}" 
+                               th:href="@{/admin/documents(page=${i}, keyword=${keyword}, category_id=${categoryId}, status=${status}, document_type=${documentType})}" 
+                               th:text="${i}">1</a>
                         </li>
 
                         <li class="page-item" th:classappend="${documentPage.last ? 'disabled' : ''}">
-                            <a class="page-link" th:classappend="${!documentPage.last ? 'text-dark' : ''}" th:href="@{/admin/documents(page=${documentPage.number + 1}, keyword=${keyword}, categoryId=${categoryId}, status=${status}, documentType=${documentType})}">Trang sau</a>
+                            <a class="page-link" th:classappend="${!documentPage.last ? 'text-dark' : ''}" th:href="@{/admin/documents(page=${documentPage.number + 2}, keyword=${keyword}, category_id=${categoryId}, status=${status}, document_type=${documentType})}">Trang sau</a>
                         </li>
                     </ul>
                 </nav>

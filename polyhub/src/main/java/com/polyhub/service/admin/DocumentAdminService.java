@@ -103,6 +103,7 @@ public class DocumentAdminService {
         try {
             Map<String, Object> usage = fileStorageService.getStorageUsage();
             if (usage != null && usage.containsKey("storage")) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> storageData = (Map<String, Object>) usage.get("storage");
                 
                 // Tránh NullPointerException do một số tài khoản Cloudinary không trả về 'usage'/'limit' 

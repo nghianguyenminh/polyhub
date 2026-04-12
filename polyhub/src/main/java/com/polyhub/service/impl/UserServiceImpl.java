@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
         newUser.setEmail(request.getEmail());
         
         // Các thông tin còn lại đã có giá trị mặc định trong Entity (active=true, avatar="default.png"...)
-        newUser.setCreatedAt(new Date()); 
+        newUser.setCreatedAt(java.time.LocalDateTime.now()); 
         
         // 6. Gán quyền Sinh viên cho User
         newUser.setRole(defaultRole);

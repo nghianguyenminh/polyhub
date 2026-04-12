@@ -9,7 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -46,7 +46,7 @@ public class DataSeeder implements CommandLineRunner {
             admin.setEmail("admin@polyhub.com");
             admin.setPhone("0987654321");
             admin.setGender(true);
-            admin.setBirthday(new Date());
+            admin.setBirthday(LocalDate.now());
             admin.setAvatar("default.png");
             admin.setActive(true);
             admin.setRole(adminRole);

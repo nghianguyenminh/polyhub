@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 @Controller
@@ -23,18 +24,46 @@ public class DocumentClientController {
     private final CategoryService categoryService; // Lấy danh mục hoạt động
 
     /**
-     * Màn hình danh sách Tài liệu bên Client
+     * Màn hình danh sách Tài liệu bên Client hỗ trợ filter, search, paging
      */
     @GetMapping
-    public String showDocumentsPage(Model model) {
+    public String showDocumentsPage(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "category_id", required = false) Long categoryId,
+            @RequestParam(value = "document_type", required = false) String documentType,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            Model model,
+            @ModelAttribute("currentUser") com.polyhub.entity.User currentUser) {
+        
         // Lấy chuyên ngành CHỈ ĐANG HOẠT ĐỘNG để làm Bộ lọc (Filter) và Selectbox (Upload)
         List<Category> categories = categoryService.getActiveCategoriesForDropdown();
         
-        // Lấy danh sách tài liệu mới đăng
-        List<Document> documents = documentClientService.getAllDocuments(); 
+        // Lấy danh sách tài liệu mới đăng theo page (8 dòng / trang)
+        int pageSize = 8;
+        Page<Document> documentPage = documentClientService.getDocumentsForClient(keyword, categoryId, documentType, page, pageSize); 
         
+        // Lấy danh sách ID document mà user đã lưu
+        java.util.Set<Long> savedDocIds = new java.util.HashSet<>();
+        if (currentUser != null) {
+            savedDocIds = documentClientService.getSavedDocumentIds(currentUser);
+        }
+
+        // Lấy số lượng tài liệu theo category và định dạng file
+        java.util.Map<Long, Long> categoryCounts = documentClientService.getApprovedCategoryCounts();
+        java.util.Map<String, Long> docTypeCounts = documentClientService.getApprovedDocumentTypeCounts();
+
         model.addAttribute("categories", categories);
-        model.addAttribute("documents", documents);
+        model.addAttribute("categoryCounts", categoryCounts);
+        model.addAttribute("docTypeCounts", docTypeCounts);
+        model.addAttribute("documentPage", documentPage); // truyền page object xuống view
+        model.addAttribute("savedDocIds", savedDocIds); // truyền danh sách ID đã lưu
+
+        
+        // Giữ nguyên các tham số filter để nạp lại vào giao diện (nếu cần đổi màu active hoặc map url param)
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categoryId", categoryId);
+        model.addAttribute("documentType", documentType);
+        model.addAttribute("currentPage", page);
 
         return "client/documents";
     }

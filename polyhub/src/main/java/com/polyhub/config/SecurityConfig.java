@@ -7,14 +7,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    @Autowired
-    private CustomAuthenticationSuccessHandler successHandler;
 
     // 1. Khai báo công cụ mã hóa mật khẩu BCrypt
     @Bean
@@ -26,6 +22,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
+<<<<<<< HEAD
                 // Cấu hình các tài nguyên công khai, được phép truy cập không cần đăng nhập
                 .requestMatchers("/", "/home", "/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login").permitAll()
                 
@@ -38,28 +35,35 @@ public class SecurityConfig {
                 
                 // Cho phép mặc định các route còn lại (nên siết lại sau này)
                 .anyRequest().permitAll() 
+=======
+                // Cấp quyền tự do truy cập tài nguyên tĩnh, đăng ký và đăng nhập
+                .requestMatchers("/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login").permitAll()
+                // Phân quyền cho trang Quản trị: Chỉ những user có role SUPER_ADMIN hoặc ADMIN mới được phép truy cập
+                .requestMatchers("/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                // Bắt buộc đăng nhập cho các chức năng và trang chủ (/ và /home)
+                .anyRequest().authenticated() 
+>>>>>>> origin/appmod/java-upgrade-20260406032344
             )
             .formLogin(login -> login
                 .loginPage("/login") 
-                .successHandler(successHandler) // Xử lý điều hướng thông minh sau đăng nhập dựa vào Role
+                // Cấu hình chuyển hướng theo Role sau khi đăng nhập thành công
+                .successHandler((request, response, authentication) -> {
+                    boolean isAdmin = authentication.getAuthorities().stream()
+                            .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN") || a.getAuthority().equals("ROLE_ADMIN"));
+                    if (isAdmin) {
+                        response.sendRedirect("/admin/dashboard");
+                    } else {
+                        response.sendRedirect("/");
+                    }
+                })
                 .permitAll()
-            )
-            .rememberMe(remember -> remember
-                .key("polyhubSecretKey") // Khóa bí mật mã hóa cookie
-                .tokenValiditySeconds(7 * 24 * 60 * 60) // Thời gian sống của cookie (7 ngày)
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
                 .permitAll()
             )
-            // Xử lý ném lỗi 403 mượt mà hơn thay vì hiển thị Whitelabel bằng cách Redirect họ về trang Home
-            .exceptionHandling(exception -> exception
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.sendRedirect("/home");
-                })
-            )
-            .csrf(csrf -> csrf.disable()); // Tạm tắt CSRF để test đăng nhập cho dễ
+            .csrf(csrf -> csrf.disable()); // Tạm tắt CSRF để test dễ dàng
 
         return http.build();
     }
