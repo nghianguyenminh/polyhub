@@ -1,24 +1,21 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.*;
-<<<<<<< HEAD
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.Date;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity
-@Table(name = "posts") // Changed to lowercase
-public class Post {
-=======
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "posts")
@@ -29,46 +26,24 @@ import java.time.LocalDateTime;
 @Builder
 public class Post {
 
->>>>>>> origin/appmod/java-upgrade-20260406032344
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-<<<<<<< HEAD
-    @Column(columnDefinition = "TEXT") // Changed for MySQL compatibility
-    private String content;
+  @Column(columnDefinition = "LONGTEXT")
+  private String content;
 
-    private String image;
+  @Column(length = 1000)
+  private String imageUrl;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at")
-    private Date createdAt = new Date();
+  @Column(length = 255)
+  private String imagePublicId;
 
-    private int likes;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "username", nullable = false)
+  private User user;
 
-    private int comments;
-
-    @ManyToOne
-    @JoinColumn(name = "username")
-    private User user;
-
+  @CreationTimestamp
+  @Column(updatable = false)
+  private LocalDateTime createdAt;
 }
-=======
-    @Column(columnDefinition = "LONGTEXT")
-    private String content;
-
-    @Column(length = 1000)
-    private String imageUrl;
-
-    @Column(length = 255)
-    private String imagePublicId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "username", nullable = false)
-    private User user;
-
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-}
->>>>>>> origin/appmod/java-upgrade-20260406032344

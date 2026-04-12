@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-    
+
     @Query("SELECT p FROM Post p ORDER BY p.createdAt DESC")
     Page<Post> findAllOrderByCreatedAtDesc(Pageable pageable);
 
