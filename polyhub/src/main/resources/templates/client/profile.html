@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" 
       th:replace="~{layouts/main_layout :: layout(~{this :: myCss}, ~{this :: myContent}, 'profile')}">
 <head>
@@ -14,19 +14,13 @@
         
         <!-- PROFILE HEADER -->
         <div class="poly-card profile-header-card mb-3 overflow-hidden">
-<<<<<<< HEAD
             <!-- Success/Error Messages -->
             <div th:if="${success}" class="alert alert-success m-3" role="alert" th:text="${success}"></div>
             <div th:if="${error}" class="alert alert-danger m-3" role="alert" th:text="${error}"></div>
 
             <!-- Cover Image -->
             <div class="profile-cover position-relative">
-                <img th:src="${user.coverImage != null and user.coverImage != 'default-cover.jpg' ? user.coverImage : 'https://i.pinimg.com/736x/24/4b/8e/244b8ea08a5ec264a8b2714e281e7e5c.jpg'}" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;">
-=======
-            <!-- Cover Image -->
-            <div class="profile-cover position-relative">
                 <img th:src="${currentUser.coverImage != null and currentUser.coverImage.startsWith('http') ? currentUser.coverImage : '/admin/images/' + (currentUser.coverImage != null ? currentUser.coverImage : 'default-cover.jpg')}" alt="Cover" class="w-100 object-fit-cover" style="height: 250px;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1579546929518-9e396f3cc809';">
->>>>>>> origin/appmod/java-upgrade-20260406032344
                 
                 <form th:action="@{/profile/update-cover}" method="post" enctype="multipart/form-data" class="position-absolute bottom-0 end-0 m-3" id="coverForm">
                     <label class="btn btn-light shadow-sm btn-edit-cover rounded-pill fw-medium px-3 py-1 mb-0 cursor-pointer">
@@ -40,19 +34,11 @@
             <div class="profile-info px-4 pb-4 position-relative">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-end text-center text-md-start">
                     
-<<<<<<< HEAD
                     <!-- Avatar -->
-                    <div class="avatar-wrapper position-relative z-2" style="margin-top: -65px; margin-bottom: 10px;">
-                        <img th:src="${user.avatar != null and user.avatar != 'default.png' ? user.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;">
-                        
-                        <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data" id="formUpdateAvatar">
-                            <label class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2 btn-edit-avatar mb-0" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-=======
                     <div class="avatar-wrapper position-relative z-2" style="margin-top: -65px; margin-bottom: 10px;">
                         <img th:src="${currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : '/admin/images/' + (currentUser.avatar != null ? currentUser.avatar : 'default.png')}" alt="Avatar" class="profile-avatar border border-4 border-white rounded-circle shadow-sm" width="130" height="130" style="object-fit: cover; background: #fff;" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';">
                         <form th:action="@{/profile/update-avatar}" method="post" enctype="multipart/form-data" class="position-absolute bottom-0 end-0" id="avatarForm">
                             <label class="btn btn-light rounded-circle shadow-sm p-2 btn-edit-avatar mb-0 cursor-pointer" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
->>>>>>> origin/appmod/java-upgrade-20260406032344
                                 <i class="bi bi-camera-fill text-dark"></i>
                                 <input type="file" name="avatarFile" class="d-none" accept="image/*" onchange="document.getElementById('avatarForm').submit();">
                             </label>
@@ -60,19 +46,10 @@
                     </div>
 
                     <div class="flex-grow-1 ms-md-4 mb-3 mb-md-0 w-100">
-<<<<<<< HEAD
-                        <h2 class="mb-1 fw-bold d-flex justify-content-center justify-content-md-start align-items-center gap-2">
-                            <span th:text="${user.fullname}"></span> 
-                            <i class="bi bi-check-circle-fill text-primary" style="font-size: 18px;"></i>
-                        </h2>
-                        <p class="text-muted mb-1 fw-medium" style="font-size: 15px;">
-                            @<span th:text="${user.username}"></span> • <span th:text="${user.role.name}"></span>
-=======
                         <h2 class="mb-1 fw-bold d-flex justify-content-center justify-content-md-start align-items-center gap-2" th:text="${currentUser.fullname}">Tên người dùng <i class="bi bi-check-circle-fill text-primary" style="font-size: 18px;"></i></h2>
                         <p class="text-muted mb-1 fw-medium" style="font-size: 15px;">
                              <span th:text="'@' + ${currentUser.username}"></span> 
                              <span th:if="${currentUser.major != null}" th:text="' • SV Ngành ' + ${currentUser.major}"></span>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                         </p>
                         <p class="text-muted mb-0" style="font-size: 14px;"><strong>0</strong> người theo dõi • <strong>0</strong> Đang theo dõi</p>
                     </div>
@@ -83,7 +60,7 @@
                     </div>
                 </div>
 
-                <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;" th:text="${user.bio}"></p>
+                <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;" th:text="${currentUser.bio}"></p>
             </div>
 
             <hr class="m-0 border-opacity-50">
@@ -109,17 +86,6 @@
                         <div class="poly-card p-3 mb-3">
                             <h5 class="fw-bold mb-3 fs-6">Giới thiệu</h5>
                             <div class="d-flex align-items-center mb-2 text-muted" style="font-size: 14.5px;">
-<<<<<<< HEAD
-                                <i class="bi bi-mortarboard-fill fs-5 me-2 w-20px text-center"></i> Sinh viên tại <span th:text="${user.school}"></span>
-                            </div>
-                            <div class="d-flex align-items-center mb-2 text-muted" style="font-size: 14.5px;">
-                                <i class="bi bi-geo-alt-fill fs-5 me-2 w-20px text-center"></i> Sống tại <span th:text="${user.address}"></span>
-                            </div>
-                            <div class="d-flex align-items-center mb-2 text-muted" style="font-size: 14.5px;">
-                                <i class="bi bi-envelope-fill fs-5 me-2 w-20px text-center"></i> <span th:text="${user.email}"></span>
-                            </div>
-                            <a th:href="@{/profile#account}" class="btn btn-light w-100 mt-2 rounded-pill fw-medium text-dark bg-secondary bg-opacity-10 border-0" style="font-size: 14.5px;">Chỉnh sửa chi tiết</a>
-=======
                                 <i class="bi bi-mortarboard-fill fs-5 me-2 w-20px text-center"></i> 
                                 <span th:if="${currentUser.major != null}" th:text="'Sinh viên ngành ' + ${currentUser.major}"></span>
                                 <span th:if="${currentUser.major == null}">Sinh viên tại FPT Polytechnic</span>
@@ -134,7 +100,6 @@
                                 <i class="bi bi-telephone-fill fs-5 me-2 w-20px text-center"></i> <span th:text="${currentUser.phone}"></span>
                             </div>
                             <button class="btn btn-light w-100 mt-2 rounded-pill fw-medium text-dark bg-secondary bg-opacity-10 border-0" style="font-size: 14.5px;">Chỉnh sửa chi tiết</button>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                         </div>
                         
                         <div class="poly-card p-3 mb-3">
@@ -155,13 +120,8 @@
                         <!-- Create post -->
                         <div class="poly-card p-3 mb-3">
                             <div class="d-flex align-items-center gap-2">
-<<<<<<< HEAD
-                                <img th:src="${user.avatar != null and user.avatar != 'default.png' ? user.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="rounded-circle" width="40" height="40">
-                                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" th:placeholder="'Bạn đang nghĩ gì, ' + ${user.fullname} + ' ?'" style="cursor: pointer; font-size: 14.5px;" readonly>
-=======
                                 <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
                                 <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" th:placeholder="'Bạn đang nghĩ gì, ' + ${currentUser.fullname} + '?'" style="cursor: pointer; font-size: 14.5px;" readonly>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                             </div>
                             <div class="d-flex justify-content-between px-1 mt-3 border-top pt-2">
                                 <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
@@ -171,19 +131,6 @@
                         </div>
 
                         <!-- Posts List -->
-<<<<<<< HEAD
-                        <div th:if="${posts.isEmpty()}" class="poly-card p-3 mb-3 text-center">
-                            <p>Chưa có bài đăng nào.</p>
-                        </div>
-
-                        <div th:each="post : ${posts}" class="poly-card p-0 mb-3"> 
-                            <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-2">
-                                    <img th:src="${post.user.avatar != null and post.user.avatar != 'default.png' ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="rounded-circle" width="40" height="40">
-                                    <div style="line-height: 1.3;">
-                                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user.fullname}"></a>
-                                        <div class="text-muted" style="font-size: 13px;"><span th:text="${post.createdAt}"></span> • <i class="bi bi-globe-americas"></i></div>
-=======
                         <!-- Sử dụng Thymeleaf lấy Post từ Controller -->
                         <div th:each="post : ${recentPosts}" class="poly-card p-0 mb-3"> 
                             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
@@ -194,22 +141,12 @@
                                         <div class="text-muted" style="font-size: 13px;">
                                             <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
                                         </div>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                                     </div>
                                 </div>
                                 <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
                             </div>
                             
                             <div class="px-3 pb-2">
-<<<<<<< HEAD
-                                <p class="mb-0" style="font-size: 14.5px;" th:text="${post.content}"></p>
-                            </div>
-                            <img th:if="${post.image}" th:src="${post.image}" class="img-fluid w-100 border-top border-bottom" style="max-height: 400px; object-fit: cover;" alt="Post img">
-                            
-                            <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                                <div class="d-flex align-items-center"><i class="bi bi-heart-fill text-danger me-1"></i> <span th:text="${post.likes}"></span></div>
-                                <div><span th:text="${post.comments}"></span> Bình luận</div>
-=======
                                 <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
                             </div>
                             
@@ -218,7 +155,6 @@
                             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
                                 <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> 0</div>
                                 <div>0 Bình luận • 0 Chia sẻ</div>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                             </div>
                             <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top mx-3">
                                 <button class="btn-ghost flex-grow-1 py-1 btn-like"><i class="bi bi-heart me-1"></i> Thích</button>
@@ -253,27 +189,15 @@
                             <form th:action="@{/profile/update-info}" method="post">
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Họ và Tên</label>
-<<<<<<< HEAD
-                                    <input type="text" class="form-control form-control-poly" th:value="${user.fullname}" name="fullname">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mã Sinh Viên</label>
-                                    <input type="text" class="form-control form-control-poly bg-light" th:value="${user.username}" readonly>
-=======
                                     <input type="text" name="fullname" class="form-control form-control-poly" th:value="${currentUser.fullname}" placeholder="Nhập họ tên...">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mã Sinh Viên</label>
                                     <input type="text" name="username" class="form-control form-control-poly bg-light" th:value="${currentUser.username}" readonly>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                                     <small class="text-muted" style="font-size: 12px;"><i class="bi bi-info-circle me-1"></i>Mã SV không thể thay đổi</small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Email</label>
-<<<<<<< HEAD
-                                    <input type="email" class="form-control form-control-poly" th:value="${user.email}" name="email">
-                                </div>
-=======
                                     <input type="email" name="email" class="form-control form-control-poly" th:value="${currentUser.email}">
                                 </div>
                                 <div class="mb-3">
@@ -291,7 +215,6 @@
                                         <option value="false" th:selected="${currentUser.gender == false}">Nữ</option>
                                     </select>
                                 </div>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                                 <button type="submit" class="btn btn-primary btn-poly w-100 fw-semibold rounded-pill">Cập nhật thông tin</button>
                             </form>
                         </div>
@@ -303,31 +226,19 @@
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu hiện tại</label>
                                     <div class="position-relative">
-<<<<<<< HEAD
-                                        <input type="password" class="form-control form-control-poly" placeholder="••••••••" name="currentPassword">
-=======
                                         <input type="password" name="currentPassword" class="form-control form-control-poly" placeholder="••••••••" required>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu mới</label>
                                     <div class="position-relative">
-<<<<<<< HEAD
-                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập mật khẩu mới" name="newPassword">
-=======
                                         <input type="password" name="newPassword" class="form-control form-control-poly" placeholder="Nhập mật khẩu mới" required>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                                     </div>
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Xác nhận mật khẩu mới</label>
                                     <div class="position-relative">
-<<<<<<< HEAD
-                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu mới" name="confirmPassword">
-=======
                                         <input type="password" name="confirmPassword" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu mới" required>
->>>>>>> origin/appmod/java-upgrade-20260406032344
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-dark w-100 fw-semibold rounded-pill">Đổi mật khẩu</button>
