@@ -10,219 +10,212 @@
 </head>
 <body>
 
-    <div th:fragment="myContent" class="poly-main-feed" style="max-width: 850px;">
+ <div th:fragment="myContent" class="poly-main-feed" style="max-width: 1000px; width: 100%;">
         
-        <div class="poly-card p-3 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="fw-bold mb-0 text-dark">Góc Tài liệu</h5>
-                    <div class="text-muted mt-1" style="font-size: 13px;">Kho tàng tri thức, đồ án và tài nguyên học tập</div>
+        <form th:action="@{/documents}" method="get" id="filterForm">
+            <div class="poly-card p-3 mb-4" style="background: linear-gradient(to right, #ffffff, #fffaf5);">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-dark">Thư viện Tài liệu</h5>
+                        <div class="text-muted" style="font-size: 13px;">Hơn 5,000+ tài liệu, đề thi, slide bài giảng được chia sẻ</div>
+                    </div>
+                    <button type="button" class="btn btn-poly-gradient fw-bold rounded-pill px-3 py-2 shadow-sm d-flex align-items-center" style="font-size: 13.5px;" data-bs-toggle="modal" data-bs-target="#uploadDocModal">
+                        <i class="bi bi-cloud-arrow-up-fill me-2 fs-5"></i> Chia sẻ tài liệu
+                    </button>
                 </div>
-                <button class="btn btn-poly-gradient btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm d-flex align-items-center">
-                    <i class="bi bi-cloud-arrow-up-fill me-2 fs-6"></i> Tải lên
-                </button>
-            </div>
-            
-            <div class="input-group mb-4 shadow-sm" style="border-radius: 50rem; border: 1px solid rgba(242, 113, 37, 0.2); background: white;">
-                <span class="input-group-text bg-transparent border-0 text-poly ps-4">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="text" class="form-control bg-transparent border-0 py-3 shadow-none" style="font-size: 14.5px;" placeholder="Tìm kiếm theo mã môn (vd: SOF3021), tên tài liệu, chủ đề...">
-                <button class="btn btn-poly-gradient px-4 fw-bold" style="border-radius: 0 50rem 50rem 0; z-index: 0;">Tìm kiếm</button>
+                
+                <div class="input-group mt-3 shadow-sm" style="border-radius: 50rem; border: 1px solid rgba(242, 113, 37, 0.2); background: white;">
+                    <span class="input-group-text bg-transparent border-0 text-poly ps-3 pe-2 py-2">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="keyword" th:value="${keyword}" class="form-control bg-transparent border-0 py-2 shadow-none" style="font-size: 13.5px;" placeholder="Tìm kiếm theo mã môn (vd: SOF3021), tên tài liệu, chuyên ngành...">
+                    <button type="submit" class="btn btn-poly-gradient px-4 fw-bold py-2" style="border-radius: 0 50rem 50rem 0; font-size: 13.5px;">Tìm kiếm</button>
+                </div>
             </div>
 
-            <div class="d-flex align-items-center gap-2 overflow-auto pb-1" style="scrollbar-width: none;">
-                <button class="filter-coursera shadow-sm border-secondary-subtle">
-                    <i class="bi bi-funnel"></i> Lọc
+            <div class="d-flex align-items-center gap-2 mb-4 overflow-visible">
+                <button type="button" onclick="window.location.href='/documents'" class="filter-coursera shadow-sm fw-bold text-dark">
+                    <i class="bi bi-arrow-clockwise"></i> Xoá lọc
                 </button>
                 <div class="vr mx-1 opacity-25"></div> 
                 
                 <div class="dropdown">
-                    <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Học kỳ <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
+                    <button class="filter-coursera dropdown-toggle" th:classappend="${categoryId != null ? 'bg-poly text-white border-poly' : ''}" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                        Chuyên ngành <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
                     </button>
-                    <ul class="dropdown-menu shadow-sm border-0" style="font-size: 14px;">
-                        <li><a class="dropdown-item" href="#">Học kỳ 1 - 3</a></li>
-                        <li><a class="dropdown-item" href="#">Học kỳ 4 - 6 (Chuyên ngành)</a></li>
-                        <li><a class="dropdown-item" href="#">Học kỳ 7 (Dự án tốt nghiệp)</a></li>
-                    </ul>
+                    <div class="dropdown-menu coursera-dropdown-menu shadow">
+                        <div class="coursera-filter-header">Chọn Chuyên ngành</div>
+                        <div class="coursera-filter-body">
+                            <div class="form-check custom-radio mb-2" th:each="category : ${categories}">
+                                <input class="form-check-input shadow-none" type="radio" name="category_id" th:id="'d_cn_' + ${category.id}" th:value="${category.id}" th:checked="${categoryId != null and categoryId == category.id}">
+                                <label class="form-check-label d-flex justify-content-between w-100" th:for="'d_cn_' + ${category.id}">
+                                    <span class="text-truncate" style="max-width: 85%;" th:text="${category.name}"></span>
+                                    <span class="text-muted" style="font-size: 11.5px;" th:text="${'(' + (categoryCounts.containsKey(category.id) ? categoryCounts.get(category.id) : 0) + ')'}"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="coursera-filter-footer">
+                            <button type="submit" class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
+                            <label class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" onclick="document.querySelectorAll('input[name=\'category_id\']').forEach(e => e.checked = false);" style="cursor: pointer; color: #6c757d !important;">Bỏ chọn</label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="dropdown">
-                    <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <button class="filter-coursera dropdown-toggle" th:classappend="${documentType != null ? 'bg-poly text-white border-poly' : ''}" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                         Loại tài liệu <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
                     </button>
-                    <ul class="dropdown-menu shadow-sm border-0" style="font-size: 14px;">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Slide / PDF</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-zip text-warning me-2"></i>Source Code (ZIP)</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-text text-primary me-2"></i>Đề thi / Bài tập</a></li>
-                    </ul>
+                    <div class="dropdown-menu coursera-dropdown-menu shadow">
+                        <div class="coursera-filter-header">Định dạng file</div>
+                        <div class="coursera-filter-body">
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="document_type" id="type-pdf" value="PDF" th:checked="${documentType == 'PDF'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="type-pdf">
+                                    <span>PDF</span> <span class="text-muted" style="font-size: 11.5px;" th:text="${'(' + (docTypeCounts.containsKey('PDF') ? docTypeCounts.get('PDF') : 0) + ')'}"></span>
+                                </label>
+                            </div>
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="document_type" id="type-word" value="WORD" th:checked="${documentType == 'WORD'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="type-word">
+                                    <span>Word (DOC/DOCX)</span> <span class="text-muted" style="font-size: 11.5px;" th:text="${'(' + (docTypeCounts.containsKey('WORD') ? docTypeCounts.get('WORD') : 0) + ')'}"></span>
+                                </label>
+                            </div>
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="document_type" id="type-excel" value="EXCEL" th:checked="${documentType == 'EXCEL'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="type-excel">
+                                    <span>Excel (XLS/XLSX)</span> <span class="text-muted" style="font-size: 11.5px;" th:text="${'(' + (docTypeCounts.containsKey('EXCEL') ? docTypeCounts.get('EXCEL') : 0) + ')'}"></span>
+                                </label>
+                            </div>
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="document_type" id="type-other" value="OTHER" th:checked="${documentType == 'OTHER'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="type-other">
+                                    <span>Khác</span> <span class="text-muted" style="font-size: 11.5px;" th:text="${'(' + (docTypeCounts.containsKey('OTHER') ? docTypeCounts.get('OTHER') : 0) + ')'}"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="coursera-filter-footer">
+                            <button type="submit" class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
+                            <label class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" onclick="document.querySelectorAll('input[name=\'document_type\']').forEach(e => e.checked = false);" style="cursor: pointer; color: #6c757d !important;">Bỏ chọn</label>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </form>
 
-        <ul class="nav nav-underline mb-3 border-bottom" id="docTabs" role="tablist" style="gap: 20px;">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold pb-2" id="discover-tab" data-bs-toggle="tab" data-bs-target="#discover-pane" type="button" role="tab">Khám phá</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link text-muted fw-medium pb-2" id="mydocs-tab" data-bs-toggle="tab" data-bs-target="#mydocs-pane" type="button" role="tab">Tủ sách của bạn (12)</button>
-            </li>
-        </ul>
+       
 
-        <div class="tab-content" id="docTabsContent">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3 mb-4">
             
-            <div class="tab-pane fade show active" id="discover-pane" role="tabpanel" tabindex="0">
-                
-                <div class="d-flex justify-content-between align-items-end mb-3 mt-2 px-1">
-                    <h6 class="fw-bold text-dark mb-0 fs-6">Tài liệu thịnh hành 🔥</h6>
-                </div>
-
-                <div class="row row-cols-1 row-cols-md-2 g-3 mb-5">
+            <div class="col" th:each="doc : ${documentPage.content}">
+                <div class="doc-card h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="doc-icon-box" 
+                             th:classappend="${doc.documentType == 'PDF' ? 'bg-danger-soft text-danger' : 
+                                            (doc.documentType == 'WORD' ? 'bg-primary-soft text-primary' : 
+                                            (doc.documentType == 'ZIP' ? 'bg-warning-soft text-warning' : 'bg-info-soft text-info'))}">
+                            <i class="bi" th:classappend="${doc.documentType == 'PDF' ? 'bi-file-earmark-pdf-fill' : 
+                                                         (doc.documentType == 'WORD' ? 'bi-file-earmark-word-fill' : 
+                                                         (doc.documentType == 'ZIP' ? 'bi-file-earmark-zip-fill' : 'bi-file-earmark-fill'))}"></i>
+                        </div>
+                        <form th:action="@{/saved/toggle}" method="POST" class="m-0">
+                            <input type="hidden" name="documentId" th:value="${doc.id}">
+                            <button type="submit" class="btn-icon-transparent" th:classappend="${savedDocIds != null and savedDocIds.contains(doc.id)} ? 'text-poly' : 'text-muted'">
+                                <i class="bi" th:classappend="${savedDocIds != null and savedDocIds.contains(doc.id)} ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
+                            </button>
+                        </form>
+                    </div>
                     
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-danger-soft text-danger">
-                                    <i class="bi bi-filetype-pdf"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">SOF3021</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Tài liệu hướng dẫn Spring Boot toàn tập (Kỳ 5)</h6>
-                            <div class="doc-meta mb-3">2.4 MB • Tải lên 2 ngày trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Tan+Dung&background=random" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Mr. Tấn Dũng</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-download me-1"></i> 1.2K</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark-fill text-poly me-1"></i> 340</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-cloud-arrow-down-fill text-poly"></i></button>
-                            </div>
+                    <div class="mb-2 flex-grow-1">
+                        <span class="badge bg-light text-dark border mb-2 fw-normal" th:text="${doc.category.name}">SOF3021</span>
+                        <h6 class="doc-title text-dark" th:text="${doc.title}">Tiêu đề tài liệu</h6>
+                    </div>
+                    
+                    <div class="doc-meta text-muted mb-3 d-flex align-items-center" th:if="${doc.uploader != null}">
+                        <img th:src="${doc.uploader.avatar != null && doc.uploader.avatar != 'default.png' ? doc.uploader.avatar : 'https://ui-avatars.com/api/?name='+doc.uploader.fullname+'&background=random'}" 
+                             class="rounded-circle me-2 object-fit-cover" width="22" height="22">
+                        <span class="text-truncate fw-medium text-dark" th:text="${doc.uploader.fullname}" style="font-size: 13px;">Sinh viên</span>
+                        <div class="ms-auto" th:if="${doc.uploader.role != null}">
+                            <span class="badge bg-poly-soft text-poly" style="font-size: 10.5px;" th:text="${doc.uploader.role.name}">Sinh viên</span>
                         </div>
                     </div>
-
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-warning-soft text-warning">
-                                    <i class="bi bi-file-earmark-zip-fill"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">PRO1121</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Source code mẫu Dự án 1: Website bán giày (Vue.js + API)</h6>
-                            <div class="doc-meta mb-3">15.8 MB • Tải lên 1 tuần trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Bao+Chau&background=random" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Bảo Châu</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-download me-1"></i> 856</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark me-1"></i> 120</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-cloud-arrow-down-fill text-poly"></i></button>
-                            </div>
-                        </div>
+                    <div class="doc-meta text-muted mb-3 d-flex align-items-center" th:unless="${doc.uploader != null}">
+                        <img src="https://ui-avatars.com/api/?name=PolyHub&background=random" class="rounded-circle me-2" width="22" height="22">
+                        <span class="text-truncate fw-medium" style="font-size: 13px;">Hệ thống</span>
                     </div>
-
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-primary-soft text-primary">
-                                    <i class="bi bi-filetype-docx"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">AGILE201</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Mẫu báo cáo tiến độ Scrum & Sprint Backlog (Chuẩn FPT)</h6>
-                            <div class="doc-meta mb-3">1.2 MB • Tải lên 3 tuần trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Mai+Anh&background=random" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Ms. Mai Anh</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-download me-1"></i> 540</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark me-1"></i> 89</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-cloud-arrow-down-fill text-poly"></i></button>
-                            </div>
-                        </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                        <div class="text-muted" style="font-size: 11.5px;"><i class="bi bi-download me-1"></i> <span th:text="${doc.downloadCount}">0</span></div>
+                        <a th:href="${doc.fileUrl}" target="_blank" class="btn btn-download btn-sm rounded-pill fw-bold">Tải về</a>
                     </div>
-
-                    <div class="col">
-                        <div class="doc-card p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="doc-icon-box bg-success-soft text-success">
-                                    <i class="bi bi-palette-fill"></i>
-                                </div>
-                                <span class="badge bg-light text-dark border fw-medium">UIUX101</span>
-                            </div>
-                            
-                            <h6 class="doc-title mt-2 mb-1">Template Figma App Mạng xã hội sinh viên (PolyHUB clone)</h6>
-                            <div class="doc-meta mb-3">Link • Tải lên 1 tháng trước</div>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=Minh+Nghia&background=F27125&color=fff" class="rounded-circle me-2" width="20" height="20">
-                                <span class="text-muted" style="font-size: 12px; font-weight: 500;">Bạn</span>
-                            </div>
-                            
-                            <hr class="my-2 opacity-10">
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="doc-stats">
-                                    <span class="me-3" title="Lượt tải"><i class="bi bi-box-arrow-up-right me-1"></i> 3.2K</span>
-                                    <span title="Lượt lưu"><i class="bi bi-bookmark-fill text-poly me-1"></i> 850</span>
-                                </div>
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm doc-btn-dl"><i class="bi bi-link-45deg text-poly fs-6"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <nav aria-label="Page navigation">
-                    <ul class="pagination poly-pagination justify-content-center mt-2 mb-5">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1"><i class="bi bi-chevron-left"></i></a>
-                        </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a>
-                        </li>
-                    </ul>
-                </nav>
-
-            </div>
-
-            <div class="tab-pane fade" id="mydocs-pane" role="tabpanel" tabindex="0">
-                <div class="text-center py-5">
-                    <i class="bi bi-journal-bookmark text-muted" style="font-size: 3rem; opacity: 0.5;"></i>
-                    <h6 class="mt-3 fw-bold text-dark">Tủ sách đang trống</h6>
-                    <p class="text-muted" style="font-size: 14px;">Hãy nhấn lưu các tài liệu hữu ích để đọc lại sau nhé.</p>
                 </div>
             </div>
 
         </div>
+
+        <nav aria-label="Page navigation" th:if="${documentPage.totalPages > 1}">
+            <ul class="pagination poly-pagination justify-content-center mt-4 mb-5">
+                <li class="page-item" th:classappend="${documentPage.number == 0 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/documents(keyword=${keyword}, category_id=${categoryId}, document_type=${documentType}, page=${documentPage.number})}" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                
+                <li class="page-item" th:each="i : ${#numbers.sequence(1, documentPage.totalPages)}" th:classappend="${documentPage.number + 1 == i ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/documents(keyword=${keyword}, category_id=${categoryId}, document_type=${documentType}, page=${i})}" th:text="${i}"></a>
+                </li>
+
+                <li class="page-item" th:classappend="${documentPage.number + 1 == documentPage.totalPages ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/documents(keyword=${keyword}, category_id=${categoryId}, document_type=${documentType}, page=${documentPage.number + 2})}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- MODAL UPLOAD TÀI LIỆU -->
+        <div class="modal fade" id="uploadDocModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 rounded-4 shadow">
+                    <div class="modal-header pb-2 border-0">
+                        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-cloud-arrow-up-fill text-poly me-2"></i>Chia sẻ Tài liệu mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <form th:action="@{/documents/upload}" method="post" enctype="multipart/form-data">
+                        <div class="modal-body pt-2">
+                            <div class="row g-3">
+                                
+                                <div class="col-md-12">
+                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Tên tài liệu / Tiêu đề <span class="text-danger">*</span></label>
+                                    <input type="text" name="title" class="form-control bg-light" placeholder="Ví dụ: Đề thi thử SOF3021, Slide Thuyết trình Agile..." required>
+                                </div>
+                                
+                                <div class="col-md-12">
+                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Mô tả ngắn</label>
+                                    <textarea name="description" class="form-control bg-light" rows="3" placeholder="Ghi chú thêm về nội dung tài liệu để mọi người dễ dàng tìm kiếm..."></textarea>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Chuyên ngành / Nhóm ngành <span class="text-danger">*</span></label>
+                                    <select name="categoryId" class="form-select bg-light" required>
+                                        <option value="" disabled selected>-- Chọn chuyên ngành --</option>
+                                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Tệp đính kèm <span class="text-danger">*</span></label>
+                                    <input type="file" name="file" class="form-control bg-light" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z">
+                                    <small class="text-muted" style="font-size: 11px;">Hỗ trợ: PDF, Word, Excel, PPT, ZIP, RAR.</small>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light fw-medium rounded-pill px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                            <button type="submit" class="btn btn-poly-gradient fw-bold rounded-pill px-4">Đăng tải lên</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 </body>

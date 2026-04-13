@@ -109,20 +109,7 @@
 }
 
 /* Style cho thanh filter kế thừa từ groups.css nhưng khai báo lại để độc lập file */
-.filter-coursera {
-    background-color: #ffffff;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    padding: 8px 18px;
-    border-radius: 50rem; /* Bo tròn hoàn toàn */
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-}
+
 .filter-coursera:hover, .filter-coursera:focus {
     background-color: #f8f9fa;
     border-color: #d2d5d6;
@@ -130,50 +117,3 @@
 }
 .filter-coursera::after { display: none; }
 
-/* =========================================
-   4. PHÂN TRANG (PAGINATION) HIỆN ĐẠI
-   ========================================= */
-.poly-pagination {
-    gap: 8px; /* Tạo khoảng cách giữa các nút */
-}
-
-.poly-pagination .page-link {
-    color: var(--text-muted);
-    border: none;
-    background-color: transparent;
-    border-radius: 50% !important; /* Tròn xoe như app mobile */
-    font-weight: 600;
-    width: 40px; 
-    height: 40px;
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Hiệu ứng trượt nhẹ lên khi hover */
-.poly-pagination .page-link:hover { 
-    background-color: var(--poly-primary-soft); 
-    color: var(--poly-primary);
-    transform: translateY(-2px);
-}
-
-/* Trạng thái đang chọn (Active) */
-.poly-pagination .page-item.active .page-link {
-    background: linear-gradient(135deg, var(--poly-primary), #FFC371);
-    color: white;
-    box-shadow: 0 4px 10px rgba(242, 113, 37, 0.3); /* Đổ bóng phát sáng cam */
-    transform: scale(1.05);
-}
-
-/* Trạng thái vô hiệu hóa (Disabled) */
-.poly-pagination .page-item.disabled .page-link {
-    opacity: 0.4;
-    background: transparent;
-    cursor: not-allowed;
-}
-
-/* Ẩn dấu outline focus mặc định của trình duyệt */
-.poly-pagination .page-link:focus {
-    box-shadow: none;
-}

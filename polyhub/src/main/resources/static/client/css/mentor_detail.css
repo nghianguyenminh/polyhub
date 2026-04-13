@@ -1,0 +1,77 @@
+.profile-header-card {
+    background-color: #fff;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.profile-header-card .nav-underline .nav-link {
+    color: #6c757d;
+    padding-bottom: 0.75rem;
+    border-bottom-width: 3px;
+    font-size: 15px;
+}
+
+.profile-header-card .nav-underline .nav-link.active {
+    color: var(--poly-primary) !important;
+    border-bottom-color: var(--poly-primary) !important;
+}
+
+.profile-header-card .nav-underline .nav-link:hover {
+    border-bottom-color: rgba(242, 113, 37, 0.4);
+}
+
+.poly-card {
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.timeline-dot {
+    margin-top: 3px;
+}
+
+.btn-poly-gradient {
+    background: linear-gradient(135deg, var(--poly-primary) 0%, var(--poly-secondary) 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-poly-gradient:hover {
+    background: linear-gradient(135deg, var(--poly-secondary) 0%, var(--poly-primary) 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(242, 113, 37, 0.4) !important;
+}
+
+.progress-bar.bg-poly {
+    background-color: var(--poly-primary) !important;
+}
+
+/* Add an active border or glow to avatars for fun UI details */
+.profile-header-card img.rounded-circle.shadow {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    transition: transform 0.3s ease;
+}
+.profile-header-card img.rounded-circle.shadow:hover {
+    transform: scale(1.03);
+}
+
+.text-poly {
+    color: var(--poly-primary) !important;
+}
+
+.bg-poly-soft {
+    background-color: rgba(242, 113, 37, 0.1);
+}
+
+/* Ensure project cards look like clickable components */
+#projects-tab-pane .poly-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#projects-tab-pane .poly-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}

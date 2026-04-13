@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'categories')}">
+<head>
+    <title>Danh mục Chuyên ngành - PolyHUB Admin</title>
+    
+    <th:block th:fragment="myCss">
+        <style>
+            .page-wrapper {
+                background-color: #ffffff;
+                border-radius: var(--border-radius-lg);
+                border: 1px solid var(--admin-border);
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+                padding: 1.5rem;
+                min-height: calc(100vh - 140px);
+            }
+            .major-code {
+                background-color: #F3F4F6;
+                color: #374151;
+                font-family: monospace;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+            }
+            .clean-table th { text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; color: #6B7280; font-weight: 700; border-bottom: 2px solid #E5E7EB; padding-bottom: 12px; }
+            .clean-table td { padding: 16px 8px; vertical-align: middle; border-bottom: 1px solid #F3F4F6; }
+            .clean-table tbody tr:hover { background-color: #F9FAFB; }
+        </style>
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Quản lý Chuyên ngành</h3>
+                <ol class="breadcrumb mb-1 text-uppercase text-muted mt-2" style="font-size: 11px; font-weight: 600;">
+                    <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Hệ thống</a></li>
+                    <li class="breadcrumb-item active">Danh mục</li>
+                </ol>
+            </div>
+            <button class="btn btn-theme btn-sm px-4 py-2 fw-medium rounded-pill" data-bs-toggle="modal" data-bs-target="#addMajorModal">
+                <i class="bi bi-plus-lg me-1"></i> Thêm Chuyên ngành
+            </button>
+        </div>
+
+        <div th:if="${success_msg}" class="alert alert-success fw-medium mb-4" th:text="${success_msg}"></div>
+        <div th:if="${error_msg}" class="alert alert-danger fw-medium mb-4" th:text="${error_msg}"></div>
+
+        <div class="page-wrapper">
+            <h6 class="fw-bold mb-3 pb-2 border-bottom">Danh sách các chuyên ngành đào tạo</h6>
+            
+            <div class="table-responsive">
+                <table class="table clean-table">
+                    <thead>
+                        <tr>
+                            <!-- <th style="width: 10%">ID</th> -->
+                            <th style="width: 15%">Mã (Code)</th>
+                            <th style="width: 40%">Tên Chuyên Ngành</th>
+                            <th style="width: 20%">Trạng thái</th>
+                            <th style="width: 15%" class="text-end">Tùy chọn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="major : ${majors}">
+                            <!-- <td class="text-muted fw-bold" th:text="${major.id}">1</td> -->
+                            <td><span class="major-code" th:text="${major.code}">IT</span></td>
+                            <td class="fw-semibold text-dark" th:text="${major.name}">Công nghệ Phần mềm</td>
+                            
+                            <!-- Nút chuyển đổi trạng thái -->
+                            <td>
+                                <form th:id="'toggleForm' + ${major.id}" th:action="@{/admin/categories/toggle-status/{id}(id=${major.id})}" method="post" class="m-0">
+                                    <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
+                                        <input class="form-check-input" type="checkbox" role="switch" 
+                                               th:id="'switch' + ${major.id}" 
+                                               th:checked="${major.isActive}" 
+                                               th:onchange="'document.getElementById(\'toggleForm' + ${major.id} + '\').submit()'">
+                                        
+                                        <label class="form-check-label fw-medium mb-0" 
+                                               th:for="'switch' + ${major.id}" 
+                                               th:text="${major.isActive ? 'Hoạt động' : 'Tạm ẩn'}"
+                                               th:classappend="${major.isActive ? 'text-success' : 'text-muted'}" 
+                                               style="font-size: 13px;">
+                                        </label>
+                                    </div>
+                                </form>
+                            </td>
+
+                            <td class="text-end">
+                                <!-- Sửa tên -->
+                                <button type="button" class="btn btn-sm btn-light rounded-2 text-primary" 
+                                        title="Chỉnh sửa tên"
+                                        th:data-id="${major.id}" 
+                                        th:data-name="${major.name}"
+                                        onclick="openEditModal(this.getAttribute('data-id'), this.getAttribute('data-name'))">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                
+                                <!-- Xóa -->
+                                <form th:action="@{/admin/categories/delete/{id}(id=${major.id})}" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa chuyên ngành này? Hành động này không thể hoàn tác.');">
+                                    <button type="submit" class="btn btn-sm btn-light rounded-2 text-danger ms-1" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${majors == null or majors.isEmpty()}">
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-2 d-block mb-3 opacity-50"></i>
+                                Hệ thống chưa có dữ liệu Chuyên ngành.<br>Bấm "Thêm Chuyên ngành" để khởi tạo dữ liệu mồi.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MODAL THÊM MỚI -->
+        <div class="modal fade" id="addMajorModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+              <div class="modal-header pb-2 border-0">
+                <h5 class="modal-title fw-bold text-dark">Thêm Chuyên ngành</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form th:action="@{/admin/categories/create}" method="post">
+                  <div class="modal-body pt-2">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Mã Chuyên Ngành (Unique, in hoa)</label>
+                        <input type="text" name="code" class="form-control" placeholder="Ví dụ: WEB, UDPM, BIZ" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Tên Hiển Thị</label>
+                        <input type="text" name="name" class="form-control" placeholder="Ví dụ: Lập trình Web" required>
+                    </div>
+                  </div>
+                  <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light fw-medium rounded-pill px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-theme fw-medium rounded-pill px-4">Tạo mới</button>
+                  </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL CẬP NHẬT -->
+        <div class="modal fade" id="editMajorModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+              <div class="modal-header pb-2 border-0">
+                <h5 class="modal-title fw-bold text-dark">Sửa tên Chuyên ngành</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <form id="editForm" method="post">
+                  <div class="modal-body pt-2">
+                    <div class="mb-4">
+                        <label class="form-label fw-medium text-muted mb-1" style="font-size: 13px;">Tên Hiển Thị Mới</label>
+                        <input type="text" name="name" id="editMajorName" class="form-control" required>
+                        <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i> Mã định danh (Code) không được phép sửa sau khi hệ thống đã sinh ra dữ liệu.</div>
+                    </div>
+                  </div>
+                  <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light fw-medium rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary fw-medium rounded-pill px-4">Lưu cập nhật</button>
+                  </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+    </div>
+
+    <th:block th:fragment="myJs">
+        <script>
+            // Bắt sự kiện Modal cập nhật
+            function openEditModal(id, currentName) {
+                document.getElementById('editForm').action = '/admin/categories/edit/' + id;
+                document.getElementById('editMajorName').value = currentName;
+                new bootstrap.Modal(document.getElementById('editMajorModal')).show();
+            }
+        </script>
+    </th:block>
+
+</body>
+</html>

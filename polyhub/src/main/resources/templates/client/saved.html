@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layouts/main_layout :: layout(~{this :: myCss}, ~{this :: myContent}, 'saved')}">
+<head>
+    <title>Mục đã lưu - PolyHUB</title>
+    
+    <th:block th:fragment="myCss">
+        <link rel="stylesheet" th:href="@{/client/css/saved.css}">
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent" class="poly-main-feed" style="max-width: 850px;">
+        
+        <div class="poly-card p-3 mb-4 border-0 shadow-sm" style="background-color: #fdfdfd;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="icon-box-lg bg-poly-soft text-poly rounded-circle">
+                    <i class="bi bi-bookmark-fill fs-3"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">Thư viện của bạn</h5>
+                    <div class="text-muted" style="font-size: 13.5px;">Nơi lưu trữ tất cả các bài viết hữu ích và tài liệu quý giá bạn đã sưu tầm.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 mb-4 overflow-visible">
+            <button class="filter-coursera shadow-sm fw-bold text-dark">
+                <i class="bi bi-sliders"></i> Lọc
+            </button>
+            <div class="vr mx-1 opacity-25"></div> 
+            
+            <div class="dropdown">
+                <button class="filter-coursera dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    Loại nội dung <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
+                </button>
+                <div class="dropdown-menu coursera-dropdown-menu shadow">
+                    <form th:action="@{/saved}" method="get" id="filterForm">
+                        <div class="coursera-filter-header">Chọn loại nội dung</div>
+                        <div class="coursera-filter-body">
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="type" id="s_type2" value="posts" th:checked="${type == 'posts'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="s_type2">
+                                    <span><i class="bi bi-file-earmark-richtext text-poly me-1"></i> Bài viết</span> <span class="text-muted" th:text="${'(' + totalSavedPosts + ')'}">(0)</span>
+                                </label>
+                            </div>
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="type" id="s_type3" value="documents" th:checked="${type == 'documents'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="s_type3">
+                                    <span><i class="bi bi-file-earmark-zip text-poly me-1"></i> Tài liệu</span> <span class="text-muted" th:text="${'(' + totalSavedDocs + ')'}">(0)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="coursera-filter-footer">
+                            <button type="submit" class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <a href="#" class="text-poly text-decoration-none fw-medium ms-auto" style="font-size: 13px;"><i class="bi bi-trash3 me-1"></i> Xóa tất cả mục đã lưu</a>
+        </div>
+
+        <div class="saved-items-list mb-5">
+            
+            <!-- Danh sách Bài viết đã lưu (Dự kiến / Sắp tới mới làm) -->
+            <div th:if="${type == 'posts'}">
+                <div class="alert alert-light text-center py-5 border-0">
+                    <i class="bi bi-tools text-poly fs-1 d-block mb-3"></i>
+                    <h6 class="fw-bold text-dark">Chức năng bài viết đang được xây dựng!</h6>
+                    <p class="text-muted mb-0">Tính năng lưu bài viết sẽ sớm ra mắt trong thời gian tới.</p>
+                </div>
+            </div>
+
+            <!-- Danh sách Tài liệu đã lưu -->
+            <div th:if="${type == 'documents'}">
+                <!-- Vòng lặp duyệt các tài liệu user đã lưu -->
+                <div class="poly-card p-0 mb-3 saved-item-wrapper" th:each="savedItem : ${savedDocsPage.content}">
+                    <div class="saved-status-bar text-muted">
+                        <i class="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu tài liệu này vào <span th:text="${#dates.format(savedItem.savedAt, 'dd/MM/yyyy HH:mm')}">Hôm nay</span>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-3 p-3">
+                        <div class="doc-icon-box rounded-3" 
+                             th:classappend="${savedItem.document.documentType == 'PDF' ? 'bg-danger-soft text-danger' : 
+                                            (savedItem.document.documentType == 'WORD' ? 'bg-primary-soft text-primary' : 
+                                            (savedItem.document.documentType == 'ZIP' ? 'bg-warning-soft text-warning' : 'bg-info-soft text-info'))}"
+                             style="width: 50px; height: 50px; font-size: 24px; display:flex; align-items:center; justify-content:center;">
+                            <i class="bi" th:classappend="${savedItem.document.documentType == 'PDF' ? 'bi-file-earmark-pdf-fill' : 
+                                                         (savedItem.document.documentType == 'WORD' ? 'bi-file-earmark-word-fill' : 
+                                                         (savedItem.document.documentType == 'ZIP' ? 'bi-file-earmark-zip-fill' : 'bi-file-earmark-fill'))}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="mb-1">
+                                <span class="badge bg-light text-dark border fw-normal" style="font-size: 11px;" th:text="${savedItem.document.category.name}">Chuyên ngành</span>
+                            </div>
+                            <h6 class="text-dark fw-bold mb-1" style="font-size: 14px; line-height: 1.4;" th:text="${savedItem.document.title}">Tiêu đề tài liệu</h6>
+                            <div class="text-muted" style="font-size: 12px;">Đăng bởi <span th:text="${savedItem.document.uploader != null ? savedItem.document.uploader.fullname : 'Hệ thống'}">Ẩn danh</span> • <span th:text="${savedItem.document.documentType}">PDF</span></div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 ms-auto">
+                            <!-- Nút Bỏ Lưu (submit qua POST) -->
+                            <form th:action="@{/saved/toggle}" method="POST" class="m-0">
+                                <input type="hidden" name="documentId" th:value="${savedItem.document.id}">
+                                <input type="hidden" name="redirectUrl" value="/saved?type=documents">
+                                <button type="submit" class="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-bookmark-x me-1"></i> Bỏ lưu</button>
+                            </form>
+                            <a th:href="${savedItem.document.fileUrl}" target="_blank" class="btn btn-sm btn-download fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-download me-1"></i> Tải về</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nếu không có tài liệu nào -->
+                <div th:if="${savedDocsPage.totalElements == 0}" class="text-center py-5">
+                    <i class="bi bi-bookmark-dash text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">Bạn chưa lưu tài liệu nào.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <nav aria-label="Page navigation" th:if="${type == 'documents' and savedDocsPage.totalPages > 1}">
+            <ul class="pagination poly-pagination justify-content-center mt-4 mb-5">
+                <li class="page-item" th:classappend="${savedDocsPage.number == 0 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${savedDocsPage.number})}" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                
+                <li class="page-item" th:each="i : ${#numbers.sequence(1, savedDocsPage.totalPages)}" th:classappend="${savedDocsPage.number + 1 == i ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${i})}" th:text="${i}"></a>
+                </li>
+
+                <li class="page-item" th:classappend="${savedDocsPage.number + 1 == savedDocsPage.totalPages ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${savedDocsPage.number + 2})}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layouts/main_layout :: layout(~{this :: myCss}, ~{this :: myContent}, 'mentors')}">
+<head>
+    <title>Chi tiết Mentor - PolyHUB</title>
+    
+    <th:block th:fragment="myCss">
+        <link rel="stylesheet" th:href="@{/client/css/mentor_detail.css}">
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent" class="poly-main-feed" style="max-width: 900px;">
+        
+        <!-- Header / Cover Section -->
+        <div class="poly-card overflow-hidden mb-4 border-0 shadow-sm rounded-4 position-relative profile-header-card">
+            <div class="mentor-cover" style="background-image: url('https://images.unsplash.com/photo-1550439062-609e1531270e?q=80&w=1000'); height: 220px; background-size: cover; background-position: center;">
+            </div>
+            
+            <div class="px-4 pb-4 position-relative bg-white pt-2">
+                <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end" style="margin-top: -70px;">
+                    <img src="https://ui-avatars.com/api/?name=Tan+Dung&background=random" class="rounded-circle border border-4 border-white shadow bg-white" width="140" height="140" style="object-fit: cover; z-index: 10;">
+                    
+                    <div class="ms-md-4 mt-3 mt-md-0 flex-grow-1 text-center text-md-start z-index-1" style="margin-bottom: 10px;">
+                        <h3 class="fw-bold mb-1 text-dark d-flex align-items-center justify-content-center justify-content-md-start">
+                            Mr. Tấn Dũng <i class="bi bi-patch-check-fill text-primary ms-2 fs-5" title="Chuyên gia được xác thực"></i>
+                        </h3>
+                        <p class="text-muted mb-2 fw-medium"><i class="bi bi-briefcase-fill me-1 text-secondary"></i> Senior Backend Engineer & Giảng viên FPT Polytechnic</p>
+                    </div>
+
+                    <div class="ms-md-auto mt-4 mt-md-0 d-flex gap-2 w-100 flex-column flex-md-row" style="max-width: 300px;">
+                        <button class="btn btn-outline-primary fw-bold rounded-pill px-4 py-2 flex-grow-1 shadow-sm d-flex align-items-center justify-content-center">
+                            <i class="bi bi-chat-dots-fill me-2"></i> Nhắn tin
+                        </button>
+                        <button class="btn btn-poly-gradient fw-bold rounded-pill px-4 py-2 flex-grow-1 shadow-sm d-flex align-items-center justify-content-center">
+                            <i class="bi bi-person-plus-fill me-2 fs-5"></i> Theo dõi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column -->
+            <div class="col-lg-8">
+                <div class="poly-card p-4 mb-4 rounded-4 shadow-sm border-0">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-person-lines-fill text-poly me-2"></i> Giới thiệu</h5>
+                            <p class="text-secondary" style="line-height: 1.7;">
+                                Chào các bạn, mình là Tấn Dũng — hiện đang làm Technical Lead cho một startup công nghệ tại TP.HCM và là giảng viên chuyên ngành Công nghệ Phần mềm tại FPT Polytechnic.
+                                <br><br>
+                                Mình có hơn 5 năm kinh nghiệm làm việc với các hệ thống phân tán, Microservices và thiết kế kiến trúc Backend (Java/Spring Boot, Node.js). 
+                                Rất vui khi được đồng hành, định hướng và Review Code cho các đồ án tốt nghiệp của các bạn sinh viên. Tiêu chí của mình là "Code sạch, Tư duy logic, Thực chiến 100%".
+                            </p>
+                        </div>
+
+                        <div class="poly-card p-4 mb-4 rounded-4 shadow-sm border-0">
+                            <h5 class="fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-briefcase-fill text-poly me-2"></i> Kinh nghiệm làm việc</h5>
+                            
+                            <div class="experience-item d-flex mb-4 position-relative">
+                                <div class="timeline-dot bg-poly rounded-circle mt-1 me-3" style="width: 12px; height: 12px;"></div>
+                                <div class="timeline-line position-absolute bg-light" style="width: 2px; height: 100%; left: 5px; top: 15px; z-index: -1;"></div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Technical Lead</h6>
+                                    <div class="text-poly fw-medium" style="font-size: 13px;">Tiki Corp <span class="text-muted ms-2 fw-normal">2023 - Hiện tại</span></div>
+                                    <p class="text-secondary mt-2 mb-0" style="font-size: 14px;">Quản lý team 15 kỹ sư Backend. Tối ưu hệ thống chịu tải cao, thiết kế giải pháp Microservices bằng Spring Cloud.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="experience-item d-flex mb-4 position-relative">
+                                <div class="timeline-dot bg-secondary rounded-circle mt-1 me-3" style="width: 12px; height: 12px;"></div>
+                                <div class="timeline-line position-absolute bg-light" style="width: 2px; height: 100%; left: 5px; top: 15px; z-index: -1;"></div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Giảng viên / Mentor</h6>
+                                    <div class="text-poly fw-medium" style="font-size: 13px;">Cao đẳng FPT Polytechnic <span class="text-muted ms-2 fw-normal">2021 - Hiện tại</span></div>
+                                    <p class="text-secondary mt-2 mb-0" style="font-size: 14px;">Hướng dẫn đồ án tốt nghiệp khóa thiết kế website, lập trình Java Spring Boot, Review source code sinh viên.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="experience-item d-flex">
+                                <div class="timeline-dot bg-secondary rounded-circle mt-1 me-3" style="width: 12px; height: 12px;"></div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Backend Developer</h6>
+                                    <div class="text-poly fw-medium" style="font-size: 13px;">VNG Corporation <span class="text-muted ms-2 fw-normal">2019 - 2021</span></div>
+                                    <p class="text-secondary mt-2 mb-0" style="font-size: 14px;">Tham gia xây dựng nền tảng thanh toán điện tử, tích hợp API đối tác thứ 3, Database Sharding với MySQL.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-lg-4">
+                        <div class="poly-card p-4 rounded-4 shadow-sm border-0 mb-4">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge-fill text-warning me-2"></i> Kỹ năng & Chuyên môn</h6>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                    <span class="fw-medium text-dark">Java / Spring Boot</span>
+                                    <span class="text-muted">95%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-poly" role="progressbar" style="width: 95%" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                    <span class="fw-medium text-dark">Microservices Architecture</span>
+                                    <span class="text-muted">90%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                    <span class="fw-medium text-dark">MySQL / PostgreSQL</span>
+                                    <span class="text-muted">85%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                    <span class="fw-medium text-dark">Docker / Kubernetes</span>
+                                    <span class="text-muted">80%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-secondary" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            
+                            <h6 class="fw-bold mb-3 mt-3"><i class="bi bi-tags-fill text-success me-2"></i> Công nghệ phổ biến</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-light text-dark border fw-normal px-2 py-1">Redis</span>
+                                <span class="badge bg-light text-dark border fw-normal px-2 py-1">RabbitMQ</span>
+                                <span class="badge bg-light text-dark border fw-normal px-2 py-1">AWS</span>
+                                <span class="badge bg-light text-dark border fw-normal px-2 py-1">Git</span>
+                                <span class="badge bg-light text-dark border fw-normal px-2 py-1">Node.js</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+    </div>
+
+</body>
+</html>

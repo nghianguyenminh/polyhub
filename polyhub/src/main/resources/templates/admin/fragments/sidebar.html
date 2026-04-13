@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <aside th:fragment="sidebar(activeMenu)" class="admin-sidebar" id="sidebar">
+        
+        <div class="sidebar-brand d-flex align-items-center justify-content-center">
+            <a href="/admin/dashboard" class="text-decoration-none d-flex align-items-center gap-2">
+                <img src="https://i.pinimg.com/736x/3c/07/40/3c0740017fa1c2ca4b529179ef1ffb08.jpg" alt="PolyAdmin Logo" width="38" height="38" class="rounded-3 shadow-sm object-fit-cover">
+                <span class="brand-text fw-bold fs-4 mb-0" style="letter-spacing: -0.5px; line-height: 1;">PolyAdmin</span>
+            </a>
+        </div>
+
+        <div class="sidebar-menu mt-2">
+            <div class="menu-title">Tổng quan</div>
+            
+            <a href="/admin/dashboard" class="menu-item" th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span class="menu-text">Bảng điều khiển</span>
+            </a>
+
+            <div class="menu-title">Quản lý dữ liệu</div>
+            
+            <a href="/admin/users" class="menu-item" th:classappend="${activeMenu == 'users'} ? 'active' : ''">
+                <i class="bi bi-people-fill"></i>
+                <span class="menu-text">Người dùng</span>
+            </a>
+            
+            <a href="/admin/mentors" class="menu-item" th:classappend="${activeMenu == 'mentors'} ? 'active' : ''">
+                <i class="bi bi-award-fill"></i>
+                <span class="menu-text">Phê duyệt Mentor</span>
+                <span class="badge bg-danger rounded-pill ms-auto" style="font-size: 10px;">5</span>
+            </a>
+            
+            <a href="/admin/groups" class="menu-item" th:classappend="${activeMenu == 'groups'} ? 'active' : ''">
+                <i class="bi bi-collection-fill"></i>
+                <span class="menu-text">Nhóm học tập</span>
+            </a>
+
+            <a href="/admin/documents" class="menu-item" th:classappend="${activeMenu == 'documents'} ? 'active' : ''">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                <span class="menu-text">Kho Tài liệu</span>
+            </a>
+
+            <a href="/admin/reports" class="menu-item" th:classappend="${activeMenu == 'reports'} ? 'active' : ''">
+                <i class="bi bi-shield-fill-exclamation"></i>
+                <span class="menu-text">Xử lý Báo cáo</span>
+                <span class="badge bg-danger rounded-pill ms-auto" style="font-size: 10px;">42</span>
+            </a>
+
+            <div class="menu-title mt-3">Hệ thống</div>
+
+            <a href="/admin/categories" class="menu-item" th:classappend="${activeMenu == 'categories'} ? 'active' : ''">
+                <i class="bi bi-tags-fill"></i>
+                <span class="menu-text">Cài đặt Danh mục</span>
+            </a>
+        </div>
+    </aside>
+</body>
+</html>

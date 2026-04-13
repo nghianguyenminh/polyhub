@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'users')}">
+<head>
+    <title>Quản lý Người dùng - PolyHUB Admin</title>
+    
+    <th:block th:fragment="myCss">
+        <style>
+            .table-avatar {
+                width: 36px;
+                height: 36px;
+                object-fit: cover;
+                border-radius: 50%;
+            }
+            .role-badge {
+                padding: 0.35em 0.65em;
+                font-size: 0.75em;
+                font-weight: 600;
+                border-radius: 6px;
+            }
+            .role-student { background-color: #F3F4F6; color: #4B5563; }
+            .role-mentor { background-color: var(--admin-primary-soft); color: var(--admin-primary); }
+            .role-admin { background-color: #FEF3C7; color: #B45309; }
+
+            .status-badge {
+                padding: 0.35em 0.65em;
+                font-size: 0.75em;
+                font-weight: 600;
+                border-radius: 6px;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .status-active { background-color: #DEF7EC; color: #03543F; }
+            .status-banned { background-color: #FDE8E8; color: #9B1C1C; }
+            .status-dot {
+                width: 6px; height: 6px; border-radius: 50%;
+            }
+            .status-active .status-dot { background-color: #057A55; }
+            .status-banned .status-dot { background-color: #C81E1E; }
+
+            .filter-card {
+                background: #fff;
+                border-radius: var(--border-radius-lg);
+                border: 1px solid var(--admin-border);
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .search-input-wrapper {
+                position: relative;
+            }
+            .search-input-wrapper i {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #9CA3AF;
+            }
+            .search-input-wrapper input {
+                padding-left: 40px;
+                background-color: #F9FAFB;
+                border: 1px solid #D1D5DB;
+                border-radius: 8px;
+                font-size: 13.5px;
+            }
+            .search-input-wrapper input:focus {
+                background-color: #ffffff;
+                border-color: var(--admin-primary);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+            .form-select-custom {
+                background-color: #F9FAFB;
+                border: 1px solid #D1D5DB;
+                border-radius: 8px;
+                font-size: 13.5px;
+                color: #4B5563;
+            }
+            .form-select-custom:focus {
+                border-color: var(--admin-primary);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+            
+            /* Custom Select by Dropdown */
+            .bs-select-mock {
+                background-color: #F9FAFB;
+                border: 1px solid #D1D5DB;
+                border-radius: 8px;
+                font-size: 13.5px;
+                color: #4B5563;
+                padding: 8px 16px;
+                min-width: 150px;
+                transition: all 0.2s;
+            }
+            .bs-select-mock:hover, .bs-select-mock.show {
+                background-color: #ffffff;
+                border-color: var(--admin-primary);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+                color: var(--admin-text-main);
+            }
+
+            /* Custom Scrollbar for Dropdown Menu */
+            .dropdown-menu {
+                border-radius: 8px;
+                border: 1px solid var(--admin-border);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                font-size: 13.5px;
+                padding: 6px;
+            }
+            .dropdown-item {
+                padding: 8px 12px;
+                color: var(--admin-text-main);
+                border-radius: 6px;
+                margin-bottom: 2px;
+                font-weight: 500;
+            }
+            .dropdown-item:hover {
+                background-color: #F3F4F6;
+            }
+            .dropdown-item:active, .dropdown-item.active {
+                background-color: var(--admin-primary-soft);
+                color: var(--admin-primary);
+            }
+            .dropdown-item.text-danger:hover {
+                background-color: #FDE8E8;
+            }
+            
+            .table-container {
+                border: 1px solid var(--admin-border);
+                border-radius: var(--border-radius-lg);
+                overflow: hidden;
+                background-color: #ffffff;
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent">
+        <!-- 1. Header & Tác vụ tổng -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 text-uppercase text-muted" style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Quản lý dữ liệu</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Người dùng</li>
+                    </ol>
+                </nav>
+                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Quản lý Người dùng</h3>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-export btn-sm rounded-pill px-3 py-2 fw-medium d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-spreadsheet fs-6"></i> Xuất Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Bộ điều khiển Dữ liệu -->
+        <div class="filter-card">
+            <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-4 col-lg-5">
+                    <div class="search-input-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" placeholder="Tìm kiếm theo tên, email, mssv...">
+                    </div>
+                </div>
+                <div class="col-12 col-md-8 col-lg-7">
+                    <div class="d-flex gap-2 flex-wrap justify-content-md-end">
+                        
+                        <div class="dropdown d-inline-block">
+                            <button class="bs-select-mock d-flex justify-content-between align-items-center w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span>Tất cả Vai trò</span>
+                                <i class="bi bi-chevron-down ms-3" style="font-size: 11px;"></i>
+                            </button>
+                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
+                                <li><a class="dropdown-item active" href="#">Tất cả Vai trò</a></li>
+                                <li><a class="dropdown-item" href="#">Sinh viên</a></li>
+                                <li><a class="dropdown-item" href="#">Mentor</a></li>
+                                <li><a class="dropdown-item" href="#">Quản trị viên</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="dropdown d-inline-block">
+                            <button class="bs-select-mock d-flex justify-content-between align-items-center w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span>Tất cả Trạng thái</span>
+                                <i class="bi bi-chevron-down ms-3" style="font-size: 11px;"></i>
+                            </button>
+                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
+                                <li><a class="dropdown-item active" href="#">Tất cả Trạng thái</a></li>
+                                <li><a class="dropdown-item" href="#">Hoạt động</a></li>
+                                <li><a class="dropdown-item" href="#">Bị khóa</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="dropdown d-inline-block">
+                            <button class="bs-select-mock d-flex justify-content-between align-items-center w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 120px;">
+                                <span>Mới nhất</span>
+                                <i class="bi bi-chevron-down ms-3" style="font-size: 11px;"></i>
+                            </button>
+                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
+                                <li><a class="dropdown-item active" href="#">Mới nhất</a></li>
+                                <li><a class="dropdown-item" href="#">Cũ nhất</a></li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Bảng Dữ liệu Trung tâm & Pagination -->
+        <div class="table-container mb-4">
+            <div class="table-responsive">
+                <table class="table table-hover admin-table mb-0 align-middle" style="font-size: 13.5px;">
+                    <thead class="table-light">
+                        <tr>
+                            
+                            <th scope="col">Người dùng</th>
+                            <th scope="col">Mã Sinh Viên</th>
+                            <th scope="col">Vai trò</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Ngày tham gia</th>
+                            <th scope="col" class="text-end" style="padding-right: 1.25rem;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dòng 1: Student -->
+                        <tr>
+                          
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=random" class="table-avatar">
+                                    <div style="line-height: 1.4;">
+                                        <div class="fw-semibold text-dark">Nguyễn Văn A</div>
+                                        <div class="text-muted" style="font-size: 12px;">nguyenvena@fpt.edu.vn</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-muted fw-medium">PS12345</td>
+                            <td><span class="role-badge role-student">Sinh viên</span></td>
+                            <td>
+                                <span class="status-badge status-active">
+                                    <span class="status-dot"></span> Hoạt động
+                                </span>
+                            </td>
+                            <td class="text-muted">15/03/2026</td>
+                            <td class="text-end" style="padding-right: 1.25rem;">
+                                <a href="/admin/users/detail" class="btn btn-sm btn-light border text-muted fw-medium d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-size: 12.5px;">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 2: Mentor -->
+                        <tr>
+                           
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="https://ui-avatars.com/api/?name=Lưu+Châu&background=4F46E5&color=fff" class="table-avatar">
+                                    <div style="line-height: 1.4;">
+                                        <div class="fw-semibold text-dark">Lưu Phan Bảo Châu</div>
+                                        <div class="text-muted" style="font-size: 12px;">chaultp@fpt.edu.vn</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-muted fw-medium">PS54321</td>
+                            <td><span class="role-badge role-mentor">Mentor</span></td>
+                            <td>
+                                <span class="status-badge status-active">
+                                    <span class="status-dot"></span> Hoạt động
+                                </span>
+                            </td>
+                            <td class="text-muted">10/03/2026</td>
+                            <td class="text-end" style="padding-right: 1.25rem;">
+                                <a href="/admin/users/detail" class="btn btn-sm btn-light border text-muted fw-medium d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-size: 12.5px;">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 3: Banned User -->
+                        <tr style="background-color: #FDFBFB;">
+                           
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="https://ui-avatars.com/api/?name=Lê+Văn+C&background=e5e7eb&color=6b7280" class="table-avatar" style="opacity: 0.6;">
+                                    <div style="line-height: 1.4;">
+                                        <div class="fw-semibold text-muted text-decoration-line-through">Lê Văn C</div>
+                                        <div class="text-muted" style="font-size: 12px;">clev@fpt.edu.vn</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-muted fw-medium">PS99999</td>
+                            <td><span class="role-badge role-student">Sinh viên</span></td>
+                            <td>
+                                <span class="status-badge status-banned">
+                                    <span class="status-dot"></span> Đã khóa
+                                </span>
+                            </td>
+                            <td class="text-muted">01/01/2026</td>
+                            <td class="text-end" style="padding-right: 1.25rem;">
+                                <a href="/admin/users/detail" class="btn btn-sm btn-light border text-muted fw-medium d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-size: 12.5px;">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination Footer -->
+            <div class="d-flex justify-content-between align-items-center p-3 border-top" style="background-color: #fcfcfc;">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size: 13px;">Hiển thị</span>
+                    <select class="form-select form-select-sm" style="width: 70px; font-size: 13px; border-radius: 6px;">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span class="text-muted" style="font-size: 13px;">dòng</span>
+                </div>
+                
+                <span class="text-muted" style="font-size: 13px;">Hiển thị 1 đến 3 của 2,510 người dùng</span>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link shadow-none" style="border-radius: 6px 0 0 6px;" href="#" tabindex="-1" aria-disabled="true">Trang trước</a>
+                        </li>
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link shadow-none" style="background-color: var(--admin-primary); border-color: var(--admin-primary);" href="#">1</a>
+                        </li>
+                        <li class="page-item"><a class="page-link shadow-none text-dark" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link shadow-none text-dark" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link shadow-none text-dark" style="border-radius: 0 6px 6px 0;" href="#">Trang tiếp</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Bỏ các Modals theo yêu cầu hệ thống -->
+        
+    </div>
+
+    <th:block th:fragment="myJs">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Xử lý logic chọn Checkbox "Select All"
+                const selectAll = document.getElementById('selectAll');
+                const userCheckboxes = document.querySelectorAll('.user-checkbox');
+                
+                if(selectAll) {
+                    selectAll.addEventListener('change', function() {
+                        userCheckboxes.forEach(checkbox => {
+                            checkbox.checked = selectAll.checked;
+                        });
+                    });
+                }
+                
+                userCheckboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const allChecked = Array.from(userCheckboxes).every(c => c.checked);
+                        const noneChecked = Array.from(userCheckboxes).every(c => !c.checked);
+                        if(selectAll) {
+                            selectAll.checked = allChecked;
+                            selectAll.indeterminate = !allChecked && !noneChecked;
+                        }
+                    });
+                });
+            });
+        </script>
+    </th:block>
+
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'users')}">
+<head>
+    <title>Chi tiết Người dùng - PolyHUB Admin</title>
+    
+    <th:block th:fragment="myCss">
+        <style>
+            /* Profile Header */
+            .profile-header {
+                background: #fff;
+                border-radius: var(--border-radius-lg);
+                border: 1px solid var(--admin-border);
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                overflow: hidden;
+                margin-bottom: 1.5rem;
+                position: relative;
+            }
+            .profile-cover {
+                height: 160px;
+                background: linear-gradient(135deg, var(--admin-primary), #A78BFA);
+                position: relative;
+            }
+            .profile-avatar-container {
+                position: relative;
+                margin-top: -60px;
+                padding: 0 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+            }
+            .profile-avatar-wrapper {
+                background: #fff;
+                padding: 4px;
+                border-radius: 50%;
+                display: inline-block;
+            }
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                object-fit: cover;
+                border-radius: 50%;
+            }
+            .profile-action-btn {
+                margin-bottom: 20px;
+            }
+
+            /* Info Cards */
+            .info-card {
+                background: #fff;
+                border-radius: var(--border-radius-lg);
+                border: 1px solid var(--admin-border);
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                padding: 1.5rem;
+            }
+
+            .info-label {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--admin-text-muted);
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+            .info-value {
+                font-size: 14.5px;
+                color: var(--admin-text-main);
+                font-weight: 500;
+                margin-bottom: 16px;
+            }
+
+            /* Stats block */
+            .stat-box {
+                background-color: #F9FAFB;
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: center;
+                border: 1px solid var(--admin-border);
+            }
+            .stat-number {
+                font-size: 24px;
+                font-weight: 700;
+                color: var(--admin-primary);
+                margin-bottom: 2px;
+                line-height: 1;
+            }
+            .stat-text {
+                font-size: 12px;
+                color: var(--admin-text-muted);
+                font-weight: 500;
+            }
+
+            /* Badges */
+            .role-badge {
+                padding: 0.35em 0.8em;
+                font-size: 0.8em;
+                font-weight: 600;
+                border-radius: 6px;
+                background-color: var(--admin-primary-soft); 
+                color: var(--admin-primary);
+            }
+            .status-badge {
+                padding: 0.35em 0.8em;
+                font-size: 0.8em;
+                font-weight: 600;
+                border-radius: 6px;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background-color: #DEF7EC; 
+                color: #03543F;
+            }
+            .status-dot {
+                width: 6px; height: 6px; border-radius: 50%;
+                background-color: #057A55;
+            }
+
+            /* Activity Timeline */
+            .timeline {
+                position: relative;
+                padding-left: 20px;
+            }
+            .timeline::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 2px;
+                background-color: #E5E7EB;
+            }
+            .timeline-item {
+                position: relative;
+                margin-bottom: 1.5rem;
+            }
+            .timeline-item::before {
+                content: '';
+                position: absolute;
+                top: 4px;
+                left: -25px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background-color: var(--admin-primary);
+                border: 2px solid #fff;
+            }
+            .timeline-date {
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--admin-text-muted);
+                margin-bottom: 2px;
+            }
+            .timeline-content {
+                font-size: 13.5px;
+                color: var(--admin-text-main);
+            }
+
+            /* Custom Radio Cards cho Phân quyền */
+            .role-radio-card {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 16px;
+                border: 1px solid var(--admin-border);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                margin-bottom: 12px;
+                background-color: #ffffff;
+            }
+            .role-radio-card:hover:not(.disabled) {
+                background-color: var(--admin-primary-soft);
+                border-color: var(--admin-primary);
+            }
+            .role-radio-input {
+                width: 18px;
+                height: 18px;
+                accent-color: var(--admin-primary);
+                cursor: pointer;
+            }
+            .role-radio-card.active {
+                background-color: var(--admin-primary-soft);
+                border-color: var(--admin-primary);
+                box-shadow: 0 0 0 1px var(--admin-primary);
+            }
+            .role-radio-card.disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                background-color: #F9FAFB;
+            }
+            .role-limit-text {
+                font-size: 11.5px;
+                font-weight: 500;
+            }
+
+        </style>
+    </th:block>
+</head>
+<body>
+
+    <div th:fragment="myContent">
+        <!-- 1. Header Breadcrumb -->
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 text-uppercase text-muted" style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
+                    <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="/admin/users" class="text-decoration-none text-muted">Người dùng</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Bảo Châu</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Hồ sơ Người dùng</h3>
+        </div>
+
+        <!-- 2. Profile Header (Cover & Main Info) -->
+        <div class="profile-header">
+            <div class="profile-cover"></div>
+            <div class="profile-avatar-container">
+                <div class="d-flex align-items-end gap-3" style="margin-bottom: 20px;">
+                    <div class="profile-avatar-wrapper shadow-sm">
+                        <img src="https://ui-avatars.com/api/?name=Lưu+Châu&background=4F46E5&color=fff&size=200" alt="Avatar" class="profile-avatar">
+                    </div>
+                    <div class="pb-2">
+                        <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                            Lưu Phan Bảo Châu
+                            <i class="bi bi-patch-check-fill text-primary" style="font-size: 18px;" data-bs-toggle="tooltip" title="Đã xác thực"></i>
+                        </h4>
+                        <div class="text-muted" style="font-size: 14px;">chaultp@fpt.edu.vn • <span class="fw-medium">PS54321</span></div>
+                    </div>
+                </div>
+                <!-- Nút Khóa tài khoản nổi bật -->
+                <div class="profile-action-btn">
+                    <button class="btn btn-danger fw-medium d-inline-flex align-items-center gap-2 shadow-sm" style="border-radius: 8px; padding: 8px 16px;" data-bs-toggle="modal" data-bs-target="#banUserModal">
+                        <i class="bi bi-slash-circle fs-5"></i>
+                        <span>Khóa tài khoản</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="px-4 pb-4 mt-2 d-flex gap-2">
+                <span class="role-badge">Mentor</span>
+                <span class="status-badge"><span class="status-dot"></span> Đang hoạt động</span>
+            </div>
+        </div>
+
+        <!-- 3. Chi tiết & Thống kê -->
+        <div class="row g-4 mb-4">
+            
+            <!-- Cột trái: Thông tin cá nhân -->
+            <div class="col-12 col-xl-4">
+                <div class="info-card">
+                    <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-vcard text-primary fs-5"></i> Thông tin cơ bản
+                    </h6>
+                    
+                    <div class="info-label">Chuyên ngành</div>
+                    <div class="info-value">Ứng dụng phần mềm</div>
+
+                    <div class="info-label">Kỹ năng cốt lõi</div>
+                    <div class="info-value">Java / Spring Boot, SQL, Hệ thống</div>
+
+                    <div class="info-label">Ngày tham gia</div>
+                    <div class="info-value">10/03/2026 (2 tuần trước)</div>
+
+                    <div class="info-label">Lần đăng nhập cuối</div>
+                    <div class="info-value mb-0">Hôm nay, lúc 09:41 AM</div>
+                </div>
+
+                <!-- KHU VỰC PHÂN QUYỀN (CHỈ HIỂN THỊ VỚI SUPER ADMIN) -->
+                <div class="info-card mt-4 border-primary" style="box-shadow: 0 4px 15px -3px rgba(79, 70, 229, 0.1); height: auto;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 d-flex align-items-center gap-2 text-primary">
+                            <i class="bi bi-shield-lock-fill fs-5"></i> Cấp quyền Hệ thống
+                        </h6>
+                    </div>
+                    <div class="alert alert-primary p-2 mb-3 d-flex align-items-center gap-2" style="font-size: 12px; border-radius: 8px;">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>Tính năng này chỉ hiển thị với <strong>Super Admin</strong>.</span>
+                    </div>
+
+                    <form>
+                        <!-- Role: User / Mentor -->
+                        <label class="role-radio-card active">
+                            <input type="radio" name="roleOption" class="role-radio-input" checked>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold text-dark" style="font-size: 13.5px;">Người dùng thường</div>
+                                <div class="text-muted" style="font-size: 11.5px;">Quyền hạn thông thường (Sinh viên / Mentor)</div>
+                            </div>
+                        </label>
+
+                        <!-- Role: User Admin -->
+                        <label class="role-radio-card disabled">
+                            <input type="radio" name="roleOption" class="role-radio-input" disabled>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-semibold text-dark" style="font-size: 13.5px;">Admin Quản lý Người dùng</div>
+                                    <span class="badge bg-danger rounded-pill role-limit-text">Đầy: 2/2</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 11.5px;">Kiểm duyệt, khóa/mở khóa tài khoản user</div>
+                            </div>
+                        </label>
+
+                        <!-- Role: Content Admin -->
+                        <label class="role-radio-card">
+                            <input type="radio" name="roleOption" class="role-radio-input">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-semibold text-dark" style="font-size: 13.5px;">Admin Quản lý Nội dung</div>
+                                    <span class="badge bg-success rounded-pill role-limit-text">Đã cấp: 1/2</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 11.5px;">Kiểm duyệt tài liệu, báo cáo đen, bài viết</div>
+                            </div>
+                        </label>
+
+                        <button type="button" class="btn btn-poly-gradient w-100 fw-medium mt-2" style="border-radius: 8px;">
+                            Cập nhật Vai trò
+                        </button>
+                    </form>
+                </div>
+                <!-- KẾT THÚC KHU VỰC PHÂN QUYỀN -->
+
+            </div>
+
+            <!-- Cột phải: Thống kê & Hoạt động -->
+            <div class="col-12 col-xl-8">
+                <div class="info-card">
+                    <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart-line text-primary fs-5"></i> Tổng quan hoạt động
+                    </h6>
+                    
+                    <!-- Stats Grid -->
+                    <div class="row g-3 mb-5">
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number">12</div>
+                                <div class="stat-text">Nhóm đã tham gia</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number">45</div>
+                                <div class="stat-text">Tài liệu chia sẻ</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-success">98%</div>
+                                <div class="stat-text">Tỉ lệ phản hồi</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box" style="background-color: #FDF2F8; border-color: #FCE7F3;">
+                                <div class="stat-number text-danger">0</div>
+                                <div class="stat-text text-danger">Lần vi phạm</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary fs-5"></i> Hoạt động gần đây
+                    </h6>
+                    <div class="timeline mt-3">
+                        <div class="timeline-item">
+                            <div class="timeline-date">Hôm nay, 10:30 AM</div>
+                            <div class="timeline-content">Tải lên tài liệu <a href="#" class="text-decoration-none fw-medium">"Hướng dẫn Spring Boot MSA"</a> trong nhóm Java Elite.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">Hôm qua, 15:45 PM</div>
+                            <div class="timeline-content">Tham gia tư vấn cho sinh viên mã <strong>PS12345</strong>.</div>
+                        </div>
+                        <div class="timeline-item" style="margin-bottom: 0;">
+                            <div class="timeline-date">26/03/2026</div>
+                            <div class="timeline-content">Được hệ thống xét duyệt lên vai trò <span class="badge bg-primary-soft text-primary">Mentor</span>.</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Xác nhận Khóa -->
+        <div class="modal fade" id="banUserModal" tabindex="-1" aria-labelledby="banUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content" style="border-radius: var(--border-radius-lg); border: none;">
+                    <div class="modal-body text-center p-4">
+                        <div class="icon-box-lg rounded-circle mx-auto mb-3 text-danger" style="background-color: #FDE8E8; width: 64px; height: 64px;">
+                            <i class="bi bi-exclamation-triangle fs-2"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Khóa tài khoản Lưu Phan Bảo Châu?</h5>
+                        <p class="text-muted mb-4" style="font-size: 13.5px;">Sau khi khóa, người dùng sẽ bị đăng xuất lập tức và không thể truy cập lại hệ thống. Hãy điền lý do vi phạm.</p>
+                        
+                        <div class="text-start mb-4">
+                            <label class="form-label fw-medium text-dark" style="font-size: 13px;">Lý do khóa tài khoản <span class="text-danger">*</span></label>
+                            <textarea class="form-control" rows="3" placeholder="Ví dụ: Đăng tải nội dung spam, vi phạm chuẩn mực cộng đồng..." style="border-radius: 8px; font-size: 13px;"></textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light border w-50 fw-medium" style="border-radius: 8px;" data-bs-dismiss="modal">Hủy bỏ</button>
+                            <button type="button" class="btn btn-danger w-50 fw-medium" style="border-radius: 8px;">Xác nhận khóa</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <th:block th:fragment="myJs">
+        <script>
+            // Init tooltips
+            document.addEventListener('DOMContentLoaded', function () {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                });
+
+                // Logic JS chuyển đổi Active class cho Radio Cards
+                var radioCards = document.querySelectorAll('.role-radio-card:not(.disabled)');
+                radioCards.forEach(function(card) {
+                    var input = card.querySelector('input[type="radio"]');
+                    input.addEventListener('change', function() {
+                        document.querySelectorAll('.role-radio-card').forEach(c => c.classList.remove('active'));
+                        if(this.checked) {
+                            card.classList.add('active');
+                        }
+                    });
+                });
+            });
+        </script>
+    </th:block>
+
+</body>
+</html>
