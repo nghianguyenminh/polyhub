@@ -1,35 +1,47 @@
 package com.polyhub.controller.client;
 
 import com.polyhub.entity.User;
-import com.polyhub.service.CategoryService;
-import com.polyhub.service.UserService;
-import lombok.RequiredArgsConstructor;
+import com.polyhub.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import java.security.Principal;
 
 @Controller
-@RequiredArgsConstructor
 public class MentorController {
 
-    private final CategoryService categoryService;
-    private final UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
-    @GetMapping("/mentors")
-    public String index(Model model) {
-        model.addAttribute("categories", categoryService.getActiveCategoriesForDropdown());
-        List<User> mentors = userService.findByRole("MENTOR");
-        model.addAttribute("mentors", mentors);
-        return "client/mentors"; // Mở file src/main/resources/templates/client/mentors.html
-    }
+    @PostMapping("/mentor/register")
+    public String registerMentor(
+            @RequestParam("mentorMajor") String mentorMajor,
+            @RequestParam("mentorReason") String mentorReason,
+            @RequestParam("evidenceLink") String evidenceLink,
+            Principal principal,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
 
-    @GetMapping("/mentors/{id}")
-    public String detail(@PathVariable("id") String id, Model model) {
-        User mentor = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid mentor Id:" + id));
-        model.addAttribute("mentor", mentor);
-        return "client/mentor_detail"; // Mở file src/main/resources/templates/client/mentor_detail.html
+        User user = userRepository.findById(principal.getName()).orElse(null);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        user.setMentorMajor(mentorMajor);
+        user.setMentorReason(mentorReason);
+        user.setEvidenceLink(evidenceLink);
+        user.setWantsToBecomeMentor(true);
+        user.setRejectionReason(null); // Clear previous rejection reason on re-application
+
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("success", "Đơn đăng ký mentor của bạn đã được gửi thành công và đang chờ xét duyệt!");
+        return "redirect:/settings/mentor";
     }
 }

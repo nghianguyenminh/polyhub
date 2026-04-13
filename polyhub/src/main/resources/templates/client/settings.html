@@ -12,6 +12,18 @@
 
 <div th:fragment="myContent" class="settings-container w-100 mx-auto" style="max-width: 950px; padding: 20px 0;">
 
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong th:text="${success}"></strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong th:text="${error}"></strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <h2 class="fw-bold mb-4 px-2 px-md-0"><i class="bi bi-gear-fill me-2 text-poly"></i>Cài đặt & Quyền riêng tư</h2>
 
     <div class="row g-4">
@@ -271,10 +283,46 @@
                         <h4 class="fw-bold mb-1">Trở thành Mentor</h4>
                         <p class="text-muted mb-4" style="font-size: 14.5px;">Chia sẻ kiến thức và kinh nghiệm của bạn với cộng đồng PolyHUB.</p>
 
-                        <div class="alert alert-info">
-                            <h5 class="alert-heading"><i class="bi bi-info-circle-fill"></i> Thông báo</h5>
-                            <p>Chức năng đăng ký mentor đang được phát triển. Vui lòng quay lại sau!</p>
+                        <!-- Check Mentor Status -->
+                        <div th:if="${currentUser.wantsToBecomeMentor}">
+                            <div class="alert alert-warning">
+                                <h5 class="alert-heading"><i class="bi bi-clock-history me-2"></i>Chờ xét duyệt</h5>
+                                <p>Đơn đăng ký của bạn đang được xem xét. Chúng tôi sẽ thông báo cho bạn khi có kết quả.</p>
+                            </div>
                         </div>
+
+                        <div th:if="${currentUser.rejectionReason != null}">
+                            <div class="alert alert-danger">
+                                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Đơn bị từ chối</h5>
+                                <p>Rất tiếc, đơn đăng ký của bạn đã bị từ chối. Lý do: <strong th:text="${currentUser.rejectionReason}"></strong></p>
+                                <p>Vui lòng xem lại các yêu cầu và nộp lại đơn đăng ký của bạn.</p>
+                            </div>
+                        </div>
+
+                        <!-- Registration Form -->
+                        <form th:action="@{/mentor/register}" method="post" th:if="${!currentUser.wantsToBecomeMentor or currentUser.rejectionReason != null}">
+                            <div class="mb-3">
+                                <label for="mentorMajor" class="form-label fw-medium">Chuyên ngành bạn muốn hướng dẫn</label>
+                                <input type="text" class="form-control form-control-poly" id="mentorMajor" name="mentorMajor" required th:value="${currentUser.mentorMajor}">
+                                <small class="text-muted">Ví dụ: Phát triển Web, Thiết kế đồ họa, Marketing...</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="mentorReason" class="form-label fw-medium">Tại sao bạn muốn trở thành Mentor?</label>
+                                <textarea class="form-control form-control-poly" id="mentorReason" name="mentorReason" rows="4" required th:text="${currentUser.mentorReason}"></textarea>
+                                <small class="text-muted">Hãy chia sẻ về kinh nghiệm, kỹ năng và mong muốn giúp đỡ của bạn.</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="evidenceLink" class="form-label fw-medium">Link bằng chứng/Portfolio</label>
+                                <input type="url" class="form-control form-control-poly" id="evidenceLink" name="evidenceLink" required th:value="${currentUser.evidenceLink}">
+                                <small class="text-muted">Cung cấp link đến CV, portfolio, hoặc các dự án bạn đã thực hiện.</small>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary btn-poly fw-semibold px-4 rounded-pill">Gửi đơn đăng ký</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -287,12 +335,8 @@
 <th:block th:fragment="myScript">
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            var activeSection = "[[${activeSection}]]";
-            var triggerEl = document.querySelector('.settings-nav a[href$="/' + activeSection + '"]');
-            if (triggerEl) {
-                var tab = new bootstrap.Tab(triggerEl);
-                tab.show();
-            }
+            // Your existing script for tab navigation can go here if needed,
+            // but the Thymeleaf classappend should handle the active state.
         });
     </script>
 </th:block>
