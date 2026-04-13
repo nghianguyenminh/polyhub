@@ -25,6 +25,9 @@
                 <p class="auth-subtitle">Tham gia cộng đồng PolyHUB ngay hôm nay</p>
             </div>
 
+            <div th:if="${error}" class="alert-custom alert-error">
+                <i class="bi bi-exclamation-circle-fill"></i> <span th:text="${error}"></span>
+            </div>
             <div th:if="${param.error}" class="alert-custom alert-error">
                 <i class="bi bi-exclamation-circle-fill"></i> Có lỗi xảy ra trong quá trình đăng ký!
             </div>
@@ -32,29 +35,31 @@
                 <i class="bi bi-check-circle-fill"></i> Đăng ký thành công! Hãy đăng nhập.
             </div>
 
-            <form th:action="@{/register}" method="post">
+            <form th:action="@{/register}" method="post" th:object="${user}">
                 <div class="row">
                     <div class="col-md-6 form-group">
                         <label class="form-label" for="fullname">Họ và tên</label>
                         <div class="input-wrapper">
                             <i class="bi bi-person-badge input-icon"></i>
-                            <input type="text" class="form-control-custom" id="fullname" name="fullname" placeholder="Nhập họ và tên" required autofocus>
+                            <input type="text" class="form-control-custom" id="fullname" name="fullname" th:field="*{fullname}" placeholder="Nhập họ và tên" required autofocus>
                         </div>
                     </div>
                     <div class="col-md-6 form-group">
-                        <label class="form-label" for="studentId">Mã sinh viên</label>
+                        <label class="form-label" for="username">Mã sinh viên (Tên đăng nhập)</label>
                         <div class="input-wrapper">
                             <i class="bi bi-card-text input-icon"></i>
-                            <input type="text" class="form-control-custom" id="studentId" name="studentId" placeholder="VD: PS12345" required>
+                            <input type="text" class="form-control-custom" id="username" name="username" th:field="*{username}" placeholder="VD: PS12345" required>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="email">Địa chỉ Email</label>
-                    <div class="input-wrapper">
-                        <i class="bi bi-envelope input-icon"></i>
-                        <input type="email" class="form-control-custom" id="email" name="email" placeholder="Nhập địa chỉ email" required>
+                <div class="row">
+                    <div class="col-12 form-group">
+                        <label class="form-label" for="email">Địa chỉ Email</label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-envelope input-icon"></i>
+                            <input type="email" class="form-control-custom" id="email" name="email" th:field="*{email}" placeholder="VD: email@fpt.edu.vn" required>
+                        </div>
                     </div>
                 </div>
 
@@ -63,7 +68,7 @@
                         <label class="form-label" for="password">Mật khẩu</label>
                         <div class="input-wrapper">
                             <i class="bi bi-lock input-icon"></i>
-                            <input type="password" class="form-control-custom pe-5" id="password" name="password" placeholder="••••••••" required>
+                            <input type="password" class="form-control-custom pe-5" id="password" name="password" th:field="*{password}" placeholder="••••••••" required>
                             <button type="button" class="btn-toggle-pass toggle-pw" data-target="#password">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -73,6 +78,7 @@
                         <label class="form-label" for="confirmPassword">Xác nhận mật khẩu</label>
                         <div class="input-wrapper">
                             <i class="bi bi-shield-lock input-icon"></i>
+                            <!-- confirm password is not a field in User entity -->
                             <input type="password" class="form-control-custom pe-5" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required>
                             <button type="button" class="btn-toggle-pass toggle-pw" data-target="#confirmPassword">
                                 <i class="bi bi-eye"></i>

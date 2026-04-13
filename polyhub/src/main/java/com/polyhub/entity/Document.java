@@ -2,6 +2,8 @@ package com.polyhub.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import java.time.LocalDateTime;
 
 @Entity
@@ -53,7 +55,14 @@ public class Document {
     // Liên kết với Chuyên Ngành (Category) ManyToOne
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private Category category;
+
+    // Bổ sung: Liên kết với Người dùng upload (Sinh viên/Mentor)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uploader_id", nullable = true) // Cứ mở nullable để không chết các data DB cũ
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User uploader;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

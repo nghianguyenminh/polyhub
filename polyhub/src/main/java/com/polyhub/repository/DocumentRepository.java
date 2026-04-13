@@ -1,4 +1,4 @@
-﻿package com.polyhub.repository;
+package com.polyhub.repository;
 
 import com.polyhub.entity.Document;
 import com.polyhub.entity.DocumentStatus;
@@ -33,6 +33,12 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             @Param("keyword") String keyword,
             @Param("categoryId") Long categoryId,
             Pageable pageable);
+
+    @Query("SELECT d.documentType, COUNT(d) FROM Document d WHERE d.status = 'APPROVED' AND d.documentType IS NOT NULL GROUP BY d.documentType")
+    List<Object[]> countApprovedByDocumentType();
+
+    @Query("SELECT c.id, COUNT(d) FROM Document d JOIN d.category c WHERE d.status = 'APPROVED' GROUP BY c.id")
+    List<Object[]> countApprovedByCategory();
 
     @Query("SELECT d.documentType, COUNT(d) FROM Document d WHERE d.documentType IS NOT NULL GROUP BY d.documentType")
     List<Object[]> countByDocumentType();
