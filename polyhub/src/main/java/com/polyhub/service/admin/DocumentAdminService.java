@@ -1,5 +1,7 @@
 package com.polyhub.service.admin;
 
+import com.polyhub.entity.User;
+import com.polyhub.service.EmailService;
 import com.polyhub.entity.Document;
 import com.polyhub.entity.DocumentStatus;
 import com.polyhub.repository.DocumentRepository;
@@ -21,6 +23,8 @@ public class DocumentAdminService {
 
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
+    private final EmailService emailService; // Thêm EmailService
+
 
     // Filter, Sort and Pagination
     public Page<Document> getDocuments(String keyword, Long categoryId, DocumentStatus status, String documentType, int page, int size) {
@@ -42,12 +46,18 @@ public class DocumentAdminService {
         documentRepository.save(doc);
     }
 
-    // Từ chối / Gỡ tài liệu (Soft delete)
+    // Từ chối / Gỡ tài liệu
     public void rejectOrTakedownDocument(Long id, String reason) {
         Document doc = getDocumentById(id);
-        doc.setStatus(DocumentStatus.HIDDEN);
+        doc.setStatus(DocumentStatus.REJECTED); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
         doc.setRejectionReason(reason);
         documentRepository.save(doc);
+
+        // Bổ sung: Gửi Email cho Uploader (Nếu có người tải lên)
+        User uploader = doc.getUploader();
+        if (uploader != null && uploader.getEmail() != null) {
+            emailService.sendRejectionEmail(uploader.getEmail(), uploader.getFullname(), doc.getTitle(), reason);
+        }
     }
 
     // Phục hồi / Mở khóa tài liệu
