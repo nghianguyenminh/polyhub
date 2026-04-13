@@ -48,7 +48,7 @@ public class ProfileController {
       return "redirect:/login";
     }
 
-    Page<Post> posts = postRepository.findByUsernameOrderByCreatedAtDesc(
+    Page<Post> posts = postRepository.findByUser_UsernameOrderByCreatedAtDesc(
       principal.getName(),
       PageRequest.of(0, 10)
     );

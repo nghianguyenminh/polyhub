@@ -91,24 +91,24 @@
                                 <div class="row g-3 mb-3">
                                     <div class="col-sm-6">
                                         <label class="form-label fw-medium text-dark" style="font-size: 14px;">Họ và Tên</label>
-                                        <input type="text" class="form-control form-control-poly" value="Nguyễn Minh Nghĩa">
+                                        <input type="text" class="form-control form-control-poly" th:value="${currentUser.fullname}">
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mã Sinh Viên</label>
-                                        <input type="text" class="form-control form-control-poly bg-light" value="PS12345" readonly>
+                                        <input type="text" class="form-control form-control-poly bg-light" th:value="${currentUser.username}" readonly>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Điện thoại</label>
-                                    <input type="text" class="form-control form-control-poly" placeholder="Nhập số điện thoại">
+                                    <input type="text" class="form-control form-control-poly" placeholder="Nhập số điện thoại" th:value="${currentUser.phone}">
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Email liên hệ</label>
-                                    <input type="email" class="form-control form-control-poly" value="nghianm@fpt.edu.vn">
+                                    <input type="email" class="form-control form-control-poly" th:value="${currentUser.email}">
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Giới thiệu ngắn (Tiểu sử)</label>
-                                    <textarea class="form-control form-control-poly" rows="3" placeholder="Viết gì đó về bản thân bạn...">Code is poetry. Always seeking new challenges and learning new technologies! 🚀☕💻</textarea>
+                                    <textarea class="form-control form-control-poly" rows="3" placeholder="Viết gì đó về bản thân bạn..." th:text="${currentUser.bio}"></textarea>
                                 </div>
                                 <div class="d-flex justify-content-end">
                                     <button type="button" class="btn btn-primary btn-poly fw-semibold px-4 rounded-pill">Lưu thay đổi</button>
@@ -248,7 +248,7 @@
                                 </div>
                                 <div class="theme-option text-center">
                                     <div class="border rounded p-2 mb-2 shadow-sm cursor-pointer" style="width: 100px; height: 70px; background: #1f2937;">
-                                        <div class="w-100 bg-secondary bg-opacity-25 rounded mb-1" style="height: 15px;"></div>
+                                        <.div class="w-100 bg-secondary bg-opacity-25 rounded mb-1" style="height: 15px;"></.div>
                                         <div class="w-75 bg-secondary bg-opacity-25 rounded" style="height: 30px;"></div>
                                     </div>
                                     <span class="fw-medium" style="font-size: 14px;">Giao diện Tối</span>
