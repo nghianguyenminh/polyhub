@@ -71,7 +71,7 @@
                     <button class="nav-link active" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab" aria-selected="true">Bài viết</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-selected="false">Cài đặt & Bảo mật</button>
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-selected="false">Cài đặt</button>
                 </li>
             </ul>
         </div>
@@ -178,13 +178,12 @@
                 <div class="poly-card p-0 mb-4 overflow-hidden">
                     <div class="p-4 border-bottom bg-light bg-opacity-50">
                         <h4 class="mb-1 fw-bold fs-5"><i class="bi bi-gear-fill text-poly me-2"></i>Cài đặt tài khoản</h4>
-                        <p class="text-muted mb-0 fs-6">Quản lý thông tin cá nhân và bảo mật tài khoản của bạn</p>
+                        <p class="text-muted mb-0 fs-6">Quản lý thông tin cá nhân của bạn</p>
                     </div>
 
-                    <div class="p-4 row g-4">
+                    <div class="p-4">
                         
-                        <!-- Col Left: Update Info -->
-                        <div class="col-md-6 border-end-md pe-md-4">
+                        <div class="col-md-12">
                             <h5 class="fw-bold fs-6 mb-3">Thông tin cá nhân</h5>
                             <form th:action="@{/profile/update-info}" method="post">
                                 <div class="mb-3">
@@ -216,32 +215,6 @@
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-poly w-100 fw-semibold rounded-pill">Cập nhật thông tin</button>
-                            </form>
-                        </div>
-
-                        <!-- Col Right: Change Password -->
-                        <div class="col-md-6 ps-md-4">
-                            <h5 class="fw-bold fs-6 mb-3">Đổi mật khẩu</h5>
-                            <form th:action="@{/profile/change-password}" method="post">
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu hiện tại</label>
-                                    <div class="position-relative">
-                                        <input type="password" name="currentPassword" class="form-control form-control-poly" placeholder="••••••••" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu mới</label>
-                                    <div class="position-relative">
-                                        <input type="password" name="newPassword" class="form-control form-control-poly" placeholder="Nhập mật khẩu mới" required>
-                                    </div>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Xác nhận mật khẩu mới</label>
-                                    <div class="position-relative">
-                                        <input type="password" name="confirmPassword" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu mới" required>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-dark w-100 fw-semibold rounded-pill">Đổi mật khẩu</button>
                             </form>
                         </div>
                     </div>
