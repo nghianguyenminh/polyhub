@@ -55,43 +55,58 @@ public class ProfileController {
         return "client/profile";
     }
 
-    @PostMapping("/update-info")
-    public String updateInfo(Principal principal, 
-                             @RequestParam("fullname") String fullname,
-                             @RequestParam("email") String email,
-                             @RequestParam("phone") String phone,
-                             @RequestParam("birthday") @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd") java.time.LocalDate birthday,
-                             @RequestParam("gender") Boolean gender) {
-        if (principal != null) {
-            User user = userRepository.findById(principal.getName()).orElse(null);
-            if (user != null) {
-                user.setFullname(fullname);
-                user.setEmail(email);
-                user.setPhone(phone);
-                user.setBirthday(birthday);
-                user.setGender(gender);
-                userRepository.save(user);
-            }
+@PostMapping("/update-info")
+public String updateInfo(Principal principal, 
+                         @RequestParam("fullname") String fullname,
+                         @RequestParam("email") String email,
+                         @RequestParam(value = "phone", required = false) String phone,
+                         @RequestParam(value = "birthday", required = false) @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd") java.time.LocalDate birthday,
+                         @RequestParam("gender") Boolean gender) {
+    if (principal != null) {
+        User user = userRepository.findById(principal.getName()).orElse(null);
+        if (user != null) {
+            user.setFullname(fullname);
+            user.setEmail(email);
+            user.setPhone(phone);
+            user.setBirthday(birthday);
+            user.setGender(gender);
+            userRepository.save(user);
         }
-        return "redirect:/profile#settings";
     }
+    return "redirect:/profile#settings";
+}
 
     @PostMapping("/change-password")
-    public String changePassword(Principal principal, 
-                                 @RequestParam("currentPassword") String currentPassword,
-                                 @RequestParam("newPassword") String newPassword,
-                                 @RequestParam("confirmPassword") String confirmPassword) {
-        if (principal != null) {
-            User user = userRepository.findById(principal.getName()).orElse(null);
-            if (user != null) {
-                if (passwordEncoder.matches(currentPassword, user.getPassword()) && newPassword.equals(confirmPassword)) {
-                    user.setPassword(passwordEncoder.encode(newPassword));
-                    userRepository.save(user);
-                }
+public String changePassword(Principal principal,
+                             @RequestParam("currentPassword") String currentPassword,
+                             @RequestParam("newPassword") String newPassword,
+                             @RequestParam("confirmPassword") String confirmPassword,
+                             org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+    if (principal != null) {
+        User user = userRepository.findById(principal.getName()).orElse(null);
+        if (user != null) {
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                redirectAttributes.addFlashAttribute("error", "Mật khẩu hiện tại không chính xác!");
+                return "redirect:/profile#settings";
             }
+
+            if (!newPassword.equals(confirmPassword)) {
+                redirectAttributes.addFlashAttribute("error", "Xác nhận mật khẩu mới không khớp!");
+                return "redirect:/profile#settings";
+            }
+
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                redirectAttributes.addFlashAttribute("error", "Mật khẩu mới không được trùng với mật khẩu cũ!");
+                return "redirect:/profile#settings";
+            }
+
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công!");
         }
-        return "redirect:/profile#settings";
     }
+    return "redirect:/profile#settings";
+}
 
     @PostMapping("/update-avatar")
     public String updateAvatar(Principal principal, @RequestParam("avatarFile") MultipartFile file) {
