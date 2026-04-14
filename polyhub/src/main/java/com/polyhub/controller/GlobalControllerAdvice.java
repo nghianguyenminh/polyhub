@@ -19,8 +19,8 @@ public class GlobalControllerAdvice {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() 
                 && !authentication.getPrincipal().equals("anonymousUser")) {
-            String username = authentication.getName(); // Lưu ý đây là username trong UserDetails
-            return userRepository.findById(username).orElse(null);
+            String username = authentication.getName();
+            return userRepository.findByUsernameOrEmail(username, username).orElse(null);
         }
         return null;
     }
