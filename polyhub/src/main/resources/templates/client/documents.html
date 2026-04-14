@@ -116,7 +116,7 @@
                             <i class="bi" th:classappend="${doc.documentType == 'PDF' ? 'bi-file-earmark-pdf-fill' : 
                                                          (doc.documentType == 'WORD' ? 'bi-file-earmark-word-fill' : 
                                                          (doc.documentType == 'ZIP' ? 'bi-file-earmark-zip-fill' : 'bi-file-earmark-fill'))}"></i>
-                        </div>
+                        </div> 
                         <form th:action="@{/saved/toggle}" method="POST" class="m-0">
                             <input type="hidden" name="documentId" th:value="${doc.id}">
                             <button type="submit" class="btn-icon-transparent" th:classappend="${savedDocIds != null and savedDocIds.contains(doc.id)} ? 'text-poly' : 'text-muted'">
