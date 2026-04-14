@@ -43,14 +43,27 @@ public class AdminController {
     }
 
     @GetMapping("/mentors")
-    public String mentors(Model model) {
-        List<MentorRequest> requests = mentorRequestRepository.findAll();
+    public String mentors(@RequestParam(defaultValue = "1") int page,
+                          @RequestParam(required = false, defaultValue="ALL") String status,
+                          Model model) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page - 1, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        org.springframework.data.domain.Page<MentorRequest> reqPage;
+
+        if ("ALL".equalsIgnoreCase(status)) {
+            reqPage = mentorRequestRepository.findAll(pageable);
+        } else {
+            RequestStatus reqStatus = RequestStatus.valueOf(status.toUpperCase());
+            reqPage = mentorRequestRepository.findByStatus(reqStatus, pageable);
+        }
         
-        long pendingCount = requests.stream().filter(r -> r.getStatus() == RequestStatus.PENDING).count();
-        long approvedCount = requests.stream().filter(r -> r.getStatus() == RequestStatus.APPROVED).count();
-        long rejectedCount = requests.stream().filter(r -> r.getStatus() == RequestStatus.REJECTED).count();
+        long pendingCount = mentorRequestRepository.countByStatus(RequestStatus.PENDING);
+        long approvedCount = mentorRequestRepository.countByStatus(RequestStatus.APPROVED);
+        long rejectedCount = mentorRequestRepository.countByStatus(RequestStatus.REJECTED);
         
-        model.addAttribute("requests", requests);
+        model.addAttribute("requests", reqPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", reqPage.getTotalPages());
+        model.addAttribute("currentStatus", status);
         model.addAttribute("pendingCount", pendingCount);
         model.addAttribute("approvedCount", approvedCount);
         model.addAttribute("rejectedCount", rejectedCount);
@@ -96,6 +109,31 @@ public class AdminController {
             emailService.sendMentorRejectionEmail(request.getEmail(), request.getFullname(), reason);
 
             redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối yêu cầu trở thành Mentor.");
+        }
+        return "redirect:/admin/mentors";
+    }
+
+    @PostMapping("/mentors/{id}/revoke")
+    public String revokeMentor(@PathVariable Long id, @RequestParam(value="reason", required=true) String reason, RedirectAttributes redirectAttributes) {
+        MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
+        if (request != null && request.getStatus() == RequestStatus.APPROVED) {
+            request.setStatus(RequestStatus.REVOKED);
+            request.setRejectionReason(reason);
+            mentorRequestRepository.save(request);
+
+            User user = request.getUser();
+            if (user != null) {
+                Role role = roleRepository.findById("CLIENT").orElse(null);
+                if (role != null) {
+                    user.setRole(role);
+                    userRepository.save(user); // Cập nhật role về Sinh viên
+                }
+            }
+
+            // Gửi email báo tước quyền
+            emailService.sendMentorRevokeEmail(request.getEmail(), request.getFullname(), reason);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Đã tước quyền Mentor và đưa tài khoản về vai trò Sinh viên.");
         }
         return "redirect:/admin/mentors";
     }
