@@ -84,7 +84,7 @@
         </div>
 
         <!-- Feed list: Sử dụng Thymeleaf lấy Post từ Controller -->
-        <div th:each="post : ${recentPosts}" class="poly-card p-0 mt-3"> 
+        <div th:each="post : ${recentPosts}" class="poly-card p-0 mt-3" th:data-post-id="${post.id}"> 
             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
                     <img th:src="${post.user != null and post.user.avatar != null and post.user.avatar.startsWith('http') ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;" alt="Avatar">
@@ -98,49 +98,53 @@
                 <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
             </div>
             
-            <div class="px-3 pb-2">
+            <div class="px-3 pb-2 mt-2">
                 <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
+                <img th:if="${post.imageUrl != null}" th:src="${post.imageUrl}" class="img-fluid w-100 rounded mt-2" style="max-height: 550px; object-fit: cover;" alt="Post img">
             </div>
             
-            <img th:if="${post.imageUrl != null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
-            
             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> 0</div>
-                <div>0 Bình luận • 0 Chia sẻ</div>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-heart text-danger me-1"></i> 
+                    <span th:id="'like-count-' + ${post.id}">0</span>
+                </div>
+                <div>
+                    <span th:id="'comment-count-' + ${post.id}">0</span> Bình luận • 
+                    <span th:id="'share-count-' + ${post.id}">0</span> Chia sẻ
+                </div>
             </div>
 
             <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top">
-                <button class="btn-ghost flex-grow-1 btn-like">
-                    <i class="bi bi-heart me-1 fs-5"></i> Thích
+                <button class="btn-ghost flex-grow-1" th:onclick="'toggleLike(' + ${post.id} + ')'">
+                    <i th:id="'like-icon-' + ${post.id}" class="bi bi-heart me-1 fs-5"></i> Thích
                 </button>
-                <button class="btn-ghost flex-grow-1">
+                <button class="btn-ghost flex-grow-1" type="button" data-bs-toggle="collapse" th:data-bs-target="'#commentSection-' + ${post.id}">
                     <i class="bi bi-chat-fill me-1 fs-5"></i> Bình luận
                 </button>
-                <button class="btn-ghost flex-grow-1">
+                <button class="btn-ghost flex-grow-1" th:onclick="'sharePost(' + ${post.id} + ')'">
                     <i class="bi bi-share-fill me-1 fs-5"></i> Chia sẻ
                 </button>
             </div>
+            
+            <!-- Khu vực Bình luận (Mặc định ẩn, xổ ra khi bấm nút Bình luận) -->
+            <div class="collapse px-3 pb-3" th:id="'commentSection-' + ${post.id}">
+                <div class="d-flex gap-2">
+                    <img th:src="${currentUser != null and currentUser.avatar != null ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="rounded-circle border" width="32" height="32" style="object-fit: cover;">
+                    <div class="input-group">
+                        <input type="text" class="form-control rounded-pill bg-light border-0" th:id="'comment-input-' + ${post.id}" placeholder="Viết bình luận công khai...">
+                        <button class="btn text-primary fw-bold" th:onclick="'submitComment(' + ${post.id} + ')'"><i class="bi bi-send-fill"></i></button>
+                    </div>
+                </div>
+                <!-- Vùng chứa danh sách comment -->
+                <div th:id="'comment-list-' + ${post.id}" class="mt-3 d-flex flex-column gap-2" style="font-size: 14px;"></div>
+            </div>
         </div>
+
+        <!-- Nhúng script tương tác (Thả tim, bình luận, share) -->
+        <script th:src="@{/client/js/interactions.js}"></script>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const likeBtns = document.querySelectorAll('.btn-like');
-                likeBtns.forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        this.classList.toggle('text-danger');
-                        const icon = this.querySelector('i');
-                        if (icon.classList.contains('bi-heart')) {
-                            icon.classList.replace('bi-heart', 'bi-heart-fill');
-                            icon.style.transform = 'scale(1.3)';
-                            setTimeout(() => icon.style.transform = 'scale(1)', 200);
-                        } else {
-                            icon.classList.replace('bi-heart-fill', 'bi-heart');
-                            this.classList.remove('text-danger');
-                        }
-                        icon.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                    });
-                });
-            });
 
             // Handle Image Preview
             function previewImage(event) {

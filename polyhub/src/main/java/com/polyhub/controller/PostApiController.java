@@ -44,4 +44,29 @@ public class PostApiController {
             return ResponseEntity.badRequest().body("Đã xảy ra lỗi khi đăng bài: " + e.getMessage());
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePost(@PathVariable Long id) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+                return ResponseEntity.status(401).body("Yêu cầu đăng nhập");
+            }
+            
+            Post post = postService.getPostById(id).orElse(null);
+            if (post == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            // Xóa bài viết (Quyền thuộc sở hữu bài viết)
+            if (!post.getUser().getUsername().equals(authentication.getName())) {
+                return ResponseEntity.status(403).body("Không có quyền xóa bài viết của người khác");
+            }
+
+            postService.deletePost(id);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Lỗi khi xóa bài: " + e.getMessage());
+        }
+    }
 }
