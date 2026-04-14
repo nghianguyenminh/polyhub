@@ -68,10 +68,12 @@ public class AdminController {
             User user = request.getUser();
             if (user != null) {
                 Role role = roleRepository.findById("MENTOR").orElse(null);
-                if (role != null) {
-                    user.setRole(role);
-                    userRepository.save(user); // Cập nhật role trong CSDL ngay
+                if (role == null) {
+                    role = new Role("MENTOR", "Giảng viên / Mentor");
+                    roleRepository.save(role);
                 }
+                user.setRole(role);
+                userRepository.save(user); // Cập nhật role trong CSDL ngay
             }
 
             // Gửi email chúc mừng (phê duyệt Mentor)

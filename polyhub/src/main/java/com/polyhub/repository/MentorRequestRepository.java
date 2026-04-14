@@ -11,6 +11,9 @@ import java.util.Optional;
 public interface MentorRequestRepository extends JpaRepository<MentorRequest, Long> {
     Optional<MentorRequest> findByUser(User user);
     
+    // Fetch all requests with specific status
+    java.util.List<MentorRequest> findByStatus(com.polyhub.entity.RequestStatus status);
+    
     // Check if user already has a pending or approved request
     boolean existsByUserAndStatusNot(User user, com.polyhub.entity.RequestStatus status);
 }
