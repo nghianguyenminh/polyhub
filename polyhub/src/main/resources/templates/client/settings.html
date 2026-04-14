@@ -77,7 +77,8 @@
                         <div class="poly-card p-4">
                             <h4 class="fw-bold mb-1">Thông tin cá nhân</h4>
                             <p class="text-muted mb-4" style="font-size: 14.5px;">Quản lý thông tin định danh của bạn trên hệ thống PolyHUB.</p>
-                            
+                            <div th:if="${success}" class="alert alert-success py-2 mb-3" style="font-size: 14px;" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger py-2 mb-3" style="font-size: 14px;" th:text="${error}"></div>
 <form th:action="@{/settings/update-account}" method="post">
     <div class="row g-3 mb-3">
         <div class="col-sm-6">
@@ -104,20 +105,20 @@
     <div class="row g-3 mb-4">
         <div class="col-sm-6">
             <label class="form-label fw-medium text-dark" style="font-size: 14px;">Ngày sinh</label>
-            <input type="date" name="birthday" class="form-control form-control-poly">
+            <input type="date" name="birthday" class="form-control form-control-poly" th:value="${currentUser.birthday != null ? #temporals.format(currentUser.birthday, 'yyyy-MM-dd') : ''}">
         </div>
         <div class="col-sm-6">
             <label class="form-label fw-medium text-dark" style="font-size: 14px;">Giới tính</label>
             <select class="form-select form-control-poly" name="gender">
-                <option value="true">Nam</option>
-                <option value="false">Nữ</option>
+                <option value="true" th:selected="${currentUser.gender == true}">Nam</option>
+                <option value="false" th:selected="${currentUser.gender == false}">Nữ</option>
             </select>
         </div>
     </div>
 
     <div class="mb-4">
         <label class="form-label fw-medium text-dark" style="font-size: 14px;">Giới thiệu ngắn (Tiểu sử)</label>
-        <textarea name="bio" class="form-control form-control-poly" rows="3" placeholder="Viết gì đó về bản thân bạn..."></textarea>
+        <textarea name="bio" class="form-control form-control-poly" rows="3" placeholder="Viết gì đó về bản thân bạn..." th:text="${currentUser.bio}"></textarea>
     </div>
     
     <div class="d-flex justify-content-end">
@@ -133,25 +134,28 @@
                             <h4 class="fw-bold mb-1">Đổi mật khẩu</h4>
                             <p class="text-muted mb-4" style="font-size: 14.5px;">Đảm bảo tài khoản của bạn đang sử dụng mật khẩu mạnh và an toàn.</p>
                             
-                            <form>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu hiện tại</label>
-                                    <input type="password" class="form-control form-control-poly" placeholder="Tối thiểu 8 ký tự">
-                                </div>
-                                <div class="row g-3 mb-4">
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu mới</label>
-                                        <input type="password" class="form-control form-control-poly" placeholder="Mật khẩu mới">
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Xác nhận mật khẩu</label>
-                                        <input type="password" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu">
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn btn-dark fw-semibold px-4 rounded-pill shadow-sm">Cập nhật mật khẩu</button>
-                                </div>
-                            </form>
+                            <div th:if="${pwdError}" class="alert alert-danger py-2 mb-3" style="font-size: 14px;" th:text="${pwdError}"></div>
+<div th:if="${pwdSuccess}" class="alert alert-success py-2 mb-3" style="font-size: 14px;" th:text="${pwdSuccess}"></div>
+
+<form th:action="@{/settings/change-password}" method="post">
+    <div class="mb-3">
+        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu hiện tại</label>
+        <input type="password" name="currentPassword" class="form-control form-control-poly" placeholder="Tối thiểu 8 ký tự" required>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mật khẩu mới</label>
+            <input type="password" name="newPassword" class="form-control form-control-poly" placeholder="Mật khẩu mới" required>
+        </div>
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Xác nhận mật khẩu</label>
+            <input type="password" name="confirmPassword" class="form-control form-control-poly" placeholder="Nhập lại mật khẩu" required>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-dark fw-semibold px-4 rounded-pill shadow-sm">Cập nhật mật khẩu</button>
+    </div>
+</form>
                         </div>
 
                         <div class="poly-card p-4">

@@ -50,17 +50,8 @@ public class User implements Serializable {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Thêm biến này vào danh sách các thuộc tính
-@Column(columnDefinition = "NVARCHAR(500)") // Hỗ trợ tiếng Việt và độ dài dài hơn một chút
-private String bio;
-
-// Thêm 2 hàm này xuống dưới cùng (nếu bạn không dùng Lombok)
-public String getBio() {
-    return bio;
-}
-
-public void setBio(String bio) {
-    this.bio = bio;
-}
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String bio;
 
     // --- KẾT NỐI VỚI BẢNG ROLE ---
     @ManyToOne
