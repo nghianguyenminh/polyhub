@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" 
       th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'mentors')}">
 <head>
@@ -7,592 +7,249 @@
     <th:block th:fragment="myCss">
         <style>
             /* KPI Cards */
-            .kpi-card {
-                background: #fff;
-                border-radius: var(--border-radius-lg);
-                border: 1px solid var(--admin-border);
-                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-                padding: 1.25rem;
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                transition: transform 0.2s;
-            }
-            .kpi-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            }
-            .kpi-icon {
-                width: 48px;
-                height: 48px;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.5rem;
-                flex-shrink: 0;
-            }
+            .kpi-card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; }
+            .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
             .kpi-pending .kpi-icon { background-color: #FEF3C7; color: #D97706; }
             .kpi-approved .kpi-icon { background-color: #DEF7EC; color: #057A55; }
-            .kpi-rate .kpi-icon { background-color: var(--admin-primary-soft); color: var(--admin-primary); }
-            
-            .kpi-value {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: var(--admin-text-main);
-                line-height: 1.2;
-            }
-            .kpi-label {
-                font-size: 0.85rem;
-                color: var(--admin-text-muted);
-                font-weight: 500;
-            }
+            .kpi-rate .kpi-icon { background-color: #fce8e8; color: #c81e1e; }
+            .kpi-value { font-size: 1.5rem; font-weight: 700; color: #111827; }
+            .kpi-label { font-size: 0.85rem; color: #6b7280; font-weight: 500; }
 
-            /* Filters */
-            .filter-card {
-                background: #fff;
-                border-radius: var(--border-radius-lg);
-                border: 1px solid var(--admin-border);
-                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-                padding: 1.25rem;
-                margin-bottom: 1.5rem;
-            }
-            .search-input-wrapper { position: relative; }
-            .search-input-wrapper i {
-                position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9CA3AF;
-            }
-            .search-input-wrapper input {
-                padding-left: 40px; background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 13.5px;
-            }
-            .search-input-wrapper input:focus {
-                background-color: #ffffff; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-            }
-            .bs-select-mock {
-                background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 13.5px; color: #4B5563; padding: 8px 16px; min-width: 150px; transition: all 0.2s;
-            }
-            .bs-select-mock:hover, .bs-select-mock.show {
-                background-color: #ffffff; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); color: var(--admin-text-main);
-            }
-            .dropdown-menu {
-                border-radius: 8px; border: 1px solid var(--admin-border); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); font-size: 13.5px; padding: 6px;
-            }
-            .dropdown-item {
-                padding: 8px 12px; color: var(--admin-text-main); border-radius: 6px; margin-bottom: 2px; font-weight: 500;
-            }
-            .dropdown-item:hover { background-color: #F3F4F6; }
-            .dropdown-item:active, .dropdown-item.active { background-color: var(--admin-primary-soft); color: var(--admin-primary); }
-
-            /* Table Styles */
-            .table-container {
-                border: 1px solid var(--admin-border); border-radius: var(--border-radius-lg); overflow: hidden; background-color: #ffffff; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            }
-            .table-avatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; }
-            .status-badge {
-                padding: 0.35em 0.65em; font-size: 0.75em; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;
-            }
+            .table-container { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: #ffffff; }
+            .status-badge { padding: 0.35em 0.65em; font-size: 0.75em; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; }
             .status-pending { background-color: #FEF3C7; color: #92400E; }
             .status-approved { background-color: #DEF7EC; color: #03543F; }
             .status-rejected { background-color: #FDE8E8; color: #9B1C1C; }
-            
             .status-dot { width: 6px; height: 6px; border-radius: 50%; }
             .status-pending .status-dot { background-color: #D97706; }
             .status-approved .status-dot { background-color: #057A55; }
             .status-rejected .status-dot { background-color: #C81E1E; }
-
-            .evidence-link {
-                display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background-color: #F3F4F6; border-radius: 6px; color: #4B5563; font-weight: 500; text-decoration: none; transition: all 0.2s; font-size: 13px;
-            }
-            .evidence-link:hover { background-color: var(--admin-primary-soft); color: var(--admin-primary); }
-
-            /* Custom Theme Buttons & Pagination */
-            .btn-theme {
-                background-color: var(--admin-primary); border-color: var(--admin-primary); color: #fff;
-            }
-            .btn-theme:hover, .btn-theme:focus { background-color: #4338ca; border-color: #4338ca; color: #fff; box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25); }
-            .btn-outline-theme {
-                color: var(--admin-primary); border-color: var(--admin-primary); background-color: transparent;
-            }
-            .btn-outline-theme:hover { background-color: var(--admin-primary); color: #fff; }
-            .pagination .page-item.active .page-link {
-                background-color: var(--admin-primary); border-color: var(--admin-primary); color: #fff;
-            }
-            .pagination .page-link { color: var(--admin-text-main); }
-            .pagination .page-link:focus { box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25); color: var(--admin-primary); }
-            .pagination .page-link:hover { color: var(--admin-primary); background-color: #F3F4F6; }
-
-            /* Offcanvas Special Styling */
-            .offcanvas-end {
-                width: 480px;
-                border-left: 1px solid var(--admin-border);
-            }
-            .offcanvas-header {
-                border-bottom: 1px solid var(--admin-border);
-                background-color: #f8fafc;
-            }
-            .offcanvas-body {
-                padding: 1.5rem;
-            }
+            .evidence-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background-color: #F3F4F6; border-radius: 6px; color: #4B5563; font-weight: 500; text-decoration: none; font-size: 13px; }
+            .evidence-link:hover { background-color: #e0e7ff; color: #4f46e5; }
             
-            .oc-section-title {
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                font-weight: 700;
-                color: #6B7280;
-                margin-bottom: 1rem;
-            }
-            .info-box {
-                background-color: #F9FAFB;
-                border-radius: 8px;
-                padding: 1rem;
-                border: 1px solid #E5E7EB;
-                margin-bottom: 1.5rem;
-            }
-            .info-row {
-                display: flex;
-                margin-bottom: 0.75rem;
-            }
-            .info-row:last-child { margin-bottom: 0; }
-            .info-label {
-                width: 120px;
-                color: #6B7280;
-                font-size: 0.85rem;
-                font-weight: 500;
-            }
-            .info-value {
-                flex: 1;
-                color: #111827;
-                font-size: 0.9rem;
-                font-weight: 600;
-            }
-            
-            .skill-tag {
-                background-color: var(--admin-primary-soft);
-                color: var(--admin-primary);
-                padding: 4px 10px;
-                border-radius: 100px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                display: inline-block;
-                margin: 0 4px 4px 0;
-            }
-
-            .reason-box {
-                background-color: #F9FAFB;
-                border-left: 3px solid var(--admin-primary);
-                padding: 1rem;
-                font-size: 0.9rem;
-                color: #374151;
-                font-style: italic;
-                line-height: 1.5;
-                margin-bottom: 1.5rem;
-                border-radius: 0 8px 8px 0;
-            }
-
-            .action-area {
-                background-color: #ffffff;
-                border-top: 1px solid var(--admin-border);
-                padding: 1.25rem 1.5rem;
-            }
-
-            .reject-reason-wrap {
-                display: none;
-                margin-bottom: 1rem;
-                animation: fadeIn 0.3s ease;
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-5px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
+            .offcanvas-end { width: 480px; border-left: 1px solid #e5e7eb; }
+            .info-box, .reason-box { background-color: #F9FAFB; border-radius: 8px; padding: 1rem; border: 1px solid #E5E7EB; margin-bottom: 1.5rem; }
+            .reason-box { border-left: 3px solid #4f46e5; border-radius: 0 8px 8px 0; }
+            .oc-section-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #6B7280; margin-bottom: 1rem; }
+            .info-row { display: flex; margin-bottom: 0.75rem; }
+            .info-label { width: 120px; color: #6B7280; font-size: 0.85rem; font-weight: 500; }
+            .info-value { flex: 1; color: #111827; font-size: 0.9rem; font-weight: 600; }
+            .action-area { background-color: #ffffff; border-top: 1px solid #e5e7eb; padding: 1.25rem 1.5rem; }
         </style>
     </th:block>
 </head>
 <body>
 
-    <div th:fragment="myContent">
-        <!-- 1. Header & Tác vụ tổng -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+<div th:fragment="myContent">
+    
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Phê duyệt Mentor</h3>
+        </div>
+    </div>
+
+    <!-- 2. KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="kpi-card kpi-pending">
+                <div class="kpi-icon"><i class="bi bi-inbox"></i></div>
+                <div>
+                    <div class="kpi-value text-warning-emphasis" th:text="${pendingCount}">0</div>
+                    <div class="kpi-label">Yêu cầu chờ duyệt</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card kpi-approved">
+                <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
+                <div>
+                    <div class="kpi-value" th:text="${approvedCount}">0</div>
+                    <div class="kpi-label">Đã duyệt</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card kpi-rate">
+                <div class="kpi-icon"><i class="bi bi-x-circle"></i></div>
+                <div>
+                    <div class="kpi-value" th:text="${rejectedCount}">0</div>
+                    <div class="kpi-label">Đã từ chối</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Data Table -->
+    <div class="table-container mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover admin-table mb-0 align-middle" style="font-size: 13.5px;">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-4">Ứng viên</th>
+                        <th scope="col">CCCD</th>
+                        <th scope="col">Minh chứng CV</th>
+                        <th scope="col">Ngày gửi</th>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col" class="text-end" style="padding-right: 1.5rem;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="req : ${requests}">
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="line-height: 1.4;">
+                                    <div class="fw-semibold text-dark" th:text="${req.fullname}">Tên</div>
+                                    <div class="text-muted" style="font-size: 12px;" th:text="${req.email}">Email</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="fw-medium text-dark" th:text="${req.cccdNumber}">CCCD</td>
+                        <td>
+                            <a th:href="${req.cvFile}" class="evidence-link" target="_blank">
+                                <i class="bi bi-file-earmark-pdf"></i> Xem CV
+                            </a>
+                        </td>
+                        <td class="text-muted" th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy HH:mm')}">Date</td>
+                        <td>
+                            <span th:if="${req.status.name() == 'PENDING'}" class="status-badge status-pending">
+                                <span class="status-dot"></span> Chờ duyệt
+                            </span>
+                            <span th:if="${req.status.name() == 'APPROVED'}" class="status-badge status-approved">
+                                <span class="status-dot"></span> Đã duyệt
+                            </span>
+                            <span th:if="${req.status.name() == 'REJECTED'}" class="status-badge status-rejected">
+                                <span class="status-dot"></span> Đã từ chối
+                            </span>
+                        </td>
+                        <td class="text-end" style="padding-right: 1.5rem;">
+                            <button th:if="${req.status.name() == 'PENDING'}" class="btn btn-sm btn-primary rounded-pill px-3 py-1" data-bs-toggle="offcanvas" th:attr="data-bs-target='#offcanvas_' + ${req.id}">
+                                Cần duyệt
+                            </button>
+                            <button th:if="${req.status.name() != 'PENDING'}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" data-bs-toggle="offcanvas" th:attr="data-bs-target='#offcanvas_' + ${req.id}">
+                                Xem chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(requests)}">
+                        <td colspan="6" class="text-center py-4 text-muted">Chưa có dữ liệu đăng ký Mentor nào.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Offcanvas Details (Loop) -->
+    <div th:each="req : ${requests}" class="offcanvas offcanvas-end" tabindex="-1" th:id="'offcanvas_' + ${req.id}">
+        <div class="offcanvas-header p-4">
             <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1 text-uppercase text-muted" style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
-                        <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
-                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Xét duyệt</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Phê duyệt Mentor</li>
-                    </ol>
-                </nav>
-                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Phê duyệt Mentor</h3>
+                <h5 class="offcanvas-title fw-bold mb-1" th:text="${req.fullname}">Tên</h5>
+                <span class="badge text-bg-light border" th:text="${req.user.username}">Username</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-medium d-flex align-items-center gap-2">
-                    <i class="bi bi-arrow-clockwise"></i> Làm mới
-                </button>
-            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-
-        <!-- 2. KPI Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-md-4">
-                <div class="kpi-card kpi-pending">
-                    <div class="kpi-icon"><i class="bi bi-inbox"></i></div>
-                    <div>
-                        <div class="kpi-value text-warning-emphasis">12</div>
-                        <div class="kpi-label">Yêu cầu chờ duyệt</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="kpi-card kpi-approved">
-                    <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
-                    <div>
-                        <div class="kpi-value">45</div>
-                        <div class="kpi-label">Đã duyệt trong tuần</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="kpi-card kpi-rate">
-                    <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
-                    <div>
-                        <div class="kpi-value">78%</div>
-                        <div class="kpi-label">Tỉ lệ chấp thuận</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Bộ lọc & Tìm kiếm -->
-        <div class="filter-card">
-            <div class="row g-3 align-items-center">
-                <div class="col-12 col-md-4 col-lg-5">
-                    <div class="search-input-wrapper">
-                        <i class="bi bi-search"></i>
-                        <input type="text" class="form-control" placeholder="Tìm theo tên hoặc MSSV...">
-                    </div>
-                </div>
-                <div class="col-12 col-md-8 col-lg-7">
-                    <div class="d-flex gap-2 flex-wrap justify-content-md-end">
-                        
-                        <div class="dropdown d-inline-block">
-                            <button class="bs-select-mock d-flex justify-content-between align-items-center w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span>Chờ duyệt</span>
-                                <i class="bi bi-chevron-down ms-3" style="font-size: 11px;"></i>
-                            </button>
-                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#">Tất cả Trạng thái</a></li>
-                                <li><a class="dropdown-item active" href="#">Chờ duyệt</a></li>
-                                <li><a class="dropdown-item" href="#">Đã duyệt</a></li>
-                                <li><a class="dropdown-item" href="#">Đã từ chối</a></li>
-                            </ul>
+        
+        <div class="offcanvas-body d-flex flex-column p-0">
+            <div class="flex-grow-1 p-4" style="overflow-y: auto;">
+                <div class="mb-4">
+                    <div class="oc-section-title">Thông tin cá nhân</div>
+                    <div class="info-box">
+                        <div class="info-row">
+                            <div class="info-label">Họ và tên</div><div class="info-value" th:text="${req.fullname}"></div>
                         </div>
-                        
-                        <div class="dropdown d-inline-block">
-                            <button class="bs-select-mock d-flex justify-content-between align-items-center w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span>Tất cả Ngành học</span>
-                                <i class="bi bi-chevron-down ms-3" style="font-size: 11px;"></i>
-                            </button>
-                            <ul class="dropdown-menu shadow-sm dropdown-menu-end">
-                                <li><a class="dropdown-item active" href="#">Tất cả Ngành học</a></li>
-                                <li><a class="dropdown-item" href="#">Ứng dụng phần mềm</a></li>
-                                <li><a class="dropdown-item" href="#">Thiết kế đồ họa</a></li>
-                                <li><a class="dropdown-item" href="#">Digital Marketing</a></li>
-                                <li><a class="dropdown-item" href="#">Lập trình Web</a></li>
-                            </ul>
+                        <div class="info-row">
+                            <div class="info-label">Email</div><div class="info-value text-primary" th:text="${req.email}"></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">SĐT</div><div class="info-value" th:text="${req.phone}"></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">CCCD</div><div class="info-value" th:text="${req.cccdNumber}"></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Ngày sinh</div><div class="info-value" th:text="${#temporals.format(req.birthday, 'dd/MM/yyyy')}"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 4. Data Table -->
-        <div class="table-container mb-4">
-            <div class="table-responsive">
-                <table class="table table-hover admin-table mb-0 align-middle" style="font-size: 13.5px;">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col" class="ps-4">Ứng viên</th>
-                            <th scope="col">Chuyên ngành ứng tuyển</th>
-                            <th scope="col">Minh chứng</th>
-                            <th scope="col">Ngày gửi</th>
-                            <th scope="col">Trạng thái</th>
-                            <th scope="col" class="text-end" style="padding-right: 1.5rem;">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Record 1: Pending -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Lê+Hoàng+Nam&background=random" class="table-avatar">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Lê Hoàng Nam</div>
-                                        <div class="text-muted" style="font-size: 12px;">PS23456</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium text-dark">Ứng dụng phần mềm</td>
-                            <td>
-                                <a href="#" class="evidence-link" target="_blank">
-                                    <i class="bi bi-github"></i> Github Repo
-                                </a>
-                            </td>
-                            <td class="text-muted">30/03/2026 09:15</td>
-                            <td>
-                                <span class="status-badge status-pending">
-                                    <span class="status-dot"></span> Chờ duyệt
-                                </span>
-                            </td>
-                            <td class="text-end" style="padding-right: 1.5rem;">
-                                <button class="btn btn-sm btn-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;" data-bs-toggle="offcanvas" data-bs-target="#mentorDetailOffcanvas">
-                                    Xem hồ sơ
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Record 2: Approved -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Trần+Thị+Bích&background=random" class="table-avatar">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Trần Thị Bích</div>
-                                        <div class="text-muted" style="font-size: 12px;">PS34567</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium text-dark">Thiết kế đồ họa</td>
-                            <td>
-                                <a href="#" class="evidence-link" target="_blank">
-                                    <i class="bi bi-image"></i> Behance Portfolio
-                                </a>
-                            </td>
-                            <td class="text-muted">29/03/2026 14:20</td>
-                            <td>
-                                <span class="status-badge status-approved">
-                                    <span class="status-dot"></span> Đã duyệt
-                                </span>
-                            </td>
-                            <td class="text-end" style="padding-right: 1.5rem;">
-                                <a href="/admin/mentors/detail" class="btn btn-sm btn-outline-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;">
-                                    Chi tiết
-                                </a>
-                            </td>
-                        </tr>
-
-                        <!-- Record 3: Rejected -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Phạm+Minh+Tuấn&background=random" class="table-avatar">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Phạm Minh Tuấn</div>
-                                        <div class="text-muted" style="font-size: 12px;">PS45678</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium text-dark">Lập trình Web</td>
-                            <td>
-                                <a href="#" class="evidence-link" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf"></i> Bảng điểm.pdf
-                                </a>
-                            </td>
-                            <td class="text-muted">28/03/2026 10:05</td>
-                            <td>
-                                <span class="status-badge status-rejected">
-                                    <span class="status-dot"></span> Đã từ chối
-                                </span>
-                            </td>
-                            <td class="text-end" style="padding-right: 1.5rem;">
-                                <a href="/admin/mentors/detail" class="btn btn-sm btn-outline-theme rounded-pill px-3 py-1" style="font-size: 12.5px; font-weight: 500;">
-                                    Chi tiết
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Pagination -->
-            <div class="p-3 border-top d-flex align-items-center justify-content-between">
-                <span class="text-muted" style="font-size: 13px;">Hiển thị 1 - 10 trong 12 yêu cầu</span>
-                <nav aria-label="Page navigation">
-                    <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item disabled"><a class="page-link" href="#">Trang trước</a></li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">Trang sau</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-
-        <!-- 5. Offcanvas Chi Tiết Hồ Sơ (Ticket Form) -->
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="mentorDetailOffcanvas" aria-labelledby="mentorDetailOffcanvasLabel">
-            <div class="offcanvas-header p-4">
-                <div class="d-flex align-items-center gap-3">
-                    <img src="https://ui-avatars.com/api/?name=Lê+Hoàng+Nam&background=random" style="width: 48px; border-radius: 50%;">
-                    <div>
-                        <h5 class="offcanvas-title fw-bold mb-1" id="mentorDetailOffcanvasLabel" style="font-size: 1.1rem;">Lê Hoàng Nam</h5>
-                        <span class="badge" style="background-color: #F3F4F6; color: #4B5563;">Sinh viên</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            
-            <div class="offcanvas-body d-flex flex-column p-0">
-                <div class="flex-grow-1 p-4" style="overflow-y: auto;">
-                    <!-- Phần 1: Thông tin Read-only -->
-                    <div class="mb-4">
-                        <div class="oc-section-title">Thông tin ứng tuyển</div>
-                        <div class="info-box">
-                            <div class="info-row">
-                                <div class="info-label">Mã sinh viên</div>
-                                <div class="info-value">PS23456</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">Chuyên ngành</div>
-                                <div class="info-value text-primary">Ứng dụng phần mềm</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">GPA hiện tại</div>
-                                <div class="info-value">8.5 / 10</div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">Ngày nộp đơn</div>
-                                <div class="info-value">30/03/2026 - 09:15 AM</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="oc-section-title">Kỹ năng Chuyên môn</div>
-                        <div>
-                            <span class="skill-tag">#Java</span>
-                            <span class="skill-tag">#Spring_Boot</span>
-                            <span class="skill-tag">#SQL_Server</span>
-                            <span class="skill-tag">#ReactJS</span>
-                            <span class="skill-tag">#Git</span>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="oc-section-title">Lý do & Giới thiệu bản thân</div>
-                        <div class="reason-box">
-                            "Em đã có kinh nghiệm làm việc thực tế với dự án Java Spring Boot tại kỳ thực tập doanh nghiệp. Em muốn ứng tuyển vị trí Mentor để hỗ trợ các bạn khóa dưới nắm vững kiến thức nền tảng, đồng thời rèn luyện thêm kỹ năng sư phạm và làm việc nhóm của mình."
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="oc-section-title">Hồ sơ đính kèm (Evidence)</div>
-                        <a href="#" class="evidence-link w-100 justify-content-center py-2 border">
-                            <i class="bi bi-github fs-5"></i>
-                            <span>Xem Github Repository cá nhân của ứng viên</span>
-                        </a>
-                    </div>
+                <div class="mb-4">
+                    <div class="oc-section-title">Giới thiệu bản thân</div>
+                    <div class="reason-box" style="border-left-color: #10b981;" th:text="${req.introduction}"></div>
                 </div>
 
-                <!-- Phần 2: Khu vực Quyết định -->
-                <div class="action-area">
-                    <!-- Validation Reject Box (Hidden by default) -->
-                    <div class="reject-reason-wrap" id="rejectReasonBox">
-                        <label class="form-label fw-semibold text-danger" style="font-size: 13.5px;">Vui lòng nhập lý do từ chối <span class="text-danger">*</span></label>
-                        <textarea class="form-control" rows="3" placeholder="Ví dụ: Bảng điểm chưa đạt yêu cầu, thiếu minh chứng..." id="rejectReasonInput" style="font-size: 13.5px;"></textarea>
-                        <div class="d-flex justify-content-end gap-2 mt-2">
-                            <button type="button" class="btn btn-sm btn-light" id="btnCancelReject">Hủy bỏ</button>
-                            <button type="button" class="btn btn-sm btn-danger px-4" id="btnConfirmReject">Xác nhận Từ chối</button>
-                        </div>
-                    </div>
+                <div class="mb-4">
+                    <div class="oc-section-title">Lý do ứng tuyển</div>
+                    <div class="reason-box" th:text="${req.motivation}"></div>
+                </div>
+                
+                <div th:if="${req.status.name() == 'REJECTED'}" class="mb-4">
+                    <div class="oc-section-title text-danger">Lý do từ chối (Từ Admin)</div>
+                    <div class="reason-box" style="border-left-color: #ef4444; background: #fef2f2;" th:text="${req.rejectionReason}"></div>
+                </div>
 
-                    <!-- Action Buttons -->
-                    <div class="row g-2" id="actionButtonsGroup">
-                        <div class="col-6">
-                            <button type="button" class="btn btn-outline-danger w-100 fw-medium d-flex align-items-center justify-content-center gap-2" id="btnTriggerReject" style="height: 42px;">
-                                <i class="bi bi-x-circle"></i> Từ chối
-                            </button>
-                        </div>
-                        <div class="col-6">
-                            <button type="button" class="btn btn-success w-100 fw-medium d-flex align-items-center justify-content-center gap-2" id="btnApprove" style="height: 42px; background-color: #057A55; border-color: #057A55;">
+                <div class="mb-4">
+                    <div class="oc-section-title">Hồ sơ đính kèm (Quy định bắt buộc)</div>
+                    <a th:href="${req.cvFile}" target="_blank" class="evidence-link mb-2 w-100 justify-content-center py-2 border">
+                        <i class="bi bi-file-earmark-person fs-5"></i> Xem CV ứng viên
+                    </a>
+                    <a th:if="${req.certificateFile != null}" th:href="${req.certificateFile}" target="_blank" class="evidence-link mb-2 w-100 justify-content-center py-2 border">
+                        <i class="bi bi-image fs-5"></i> Xem Chứng chỉ đính kèm
+                    </a>
+                    <a th:if="${req.degreeFile != null}" th:href="${req.degreeFile}" target="_blank" class="evidence-link w-100 justify-content-center py-2 border">
+                        <i class="bi bi-image fs-5"></i> Xem Bằng cấp đính kèm
+                    </a>
+                </div>
+            </div>
+
+            <!-- Action Area cho PENDING -->
+            <div th:if="${req.status.name() == 'PENDING'}" class="action-area">
+                <form th:action="@{/admin/mentors/{id}/reject(id=${req.id})}" method="post" class="mb-3 d-none" th:id="'rejectForm_' + ${req.id}">
+                    <label class="form-label fw-semibold text-danger">Lý do từ chối <span class="text-danger">*</span></label>
+                    <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Nhập lý do từ chối..." required></textarea>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-light" th:onclick="'hideRejectForm(' + ${req.id} + ')'">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-danger px-4">Xác nhận Từ chối</button>
+                    </div>
+                </form>
+
+                <div class="row g-2" th:id="'actionButtonsGroup_' + ${req.id}">
+                    <div class="col-6">
+                        <button type="button" class="btn btn-outline-danger w-100 fw-medium" th:onclick="'showRejectForm(' + ${req.id} + ')'">
+                            <i class="bi bi-x-circle"></i> Từ chối
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <form th:action="@{/admin/mentors/{id}/approve(id=${req.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-success w-100 fw-medium" onclick="return confirm('Xác nhận CẤP QUYỀN MENTOR cho người dùng này?');">
                                 <i class="bi bi-check-circle"></i> Phê duyệt
                             </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
     
-    <th:block th:fragment="myJs">
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // UI Logic cho khu vực quyết định trong Offcanvas
-                const btnTriggerReject = document.getElementById('btnTriggerReject');
-                const btnApprove = document.getElementById('btnApprove');
-                const actionButtonsGroup = document.getElementById('actionButtonsGroup');
-                const rejectReasonBox = document.getElementById('rejectReasonBox');
-                const btnCancelReject = document.getElementById('btnCancelReject');
-                const btnConfirmReject = document.getElementById('btnConfirmReject');
-                const rejectReasonInput = document.getElementById('rejectReasonInput');
-
-                if(btnTriggerReject) {
-                    // Khi bấm từ chối, ẩn 2 nút to, hiện ô nhập lý do
-                    btnTriggerReject.addEventListener('click', function() {
-                        actionButtonsGroup.style.display = 'none';
-                        rejectReasonBox.style.display = 'block';
-                        rejectReasonInput.focus();
-                    });
-                }
-
-                if(btnCancelReject) {
-                    // Khi bấm hủy nhập lý do, quay lại giao diện 2 nút
-                    btnCancelReject.addEventListener('click', function() {
-                        rejectReasonBox.style.display = 'none';
-                        actionButtonsGroup.style.display = 'flex';
-                        rejectReasonInput.value = ''; // clear text
-                    });
-                }
-
-                if(btnConfirmReject) {
-                    // Xử lý gửi lý do từ chối (Backend call sẽ ở đây)
-                    btnConfirmReject.addEventListener('click', function() {
-                        const reason = rejectReasonInput.value.trim();
-                        if(!reason) {
-                            alert("Bắt buộc phải nhập lý do từ chối để sinh viên có thể khắc phục.");
-                            rejectReasonInput.focus();
-                            return;
-                        }
-                        // Thêm logic gọi API (Fetch/Ajax) ở đây để Update trạng thái
-                        alert("Đã từ chối đơn ứng tuyển. Lý do: " + reason);
-                        
-                        // Đóng offcanvas
-                        var offcanvasEl = document.getElementById('mentorDetailOffcanvas');
-                        var offcanvasIn = bootstrap.Offcanvas.getInstance(offcanvasEl);
-                        offcanvasIn.hide();
-                        
-                        // Reset lại UI offcanvas cho lần mở sau
-                        setTimeout(() => {
-                            rejectReasonBox.style.display = 'none';
-                            actionButtonsGroup.style.display = 'flex';
-                            rejectReasonInput.value = '';
-                        }, 500);
-                    });
-                }
-
-                if(btnApprove) {
-                    // Xử lý nút phê duyệt (Backend call sẽ ở đây)
-                    btnApprove.addEventListener('click', function() {
-                        if(confirm('Bạn có chắc chắn phê duyệt ứng viên này trở thành Mentor? Phân quyền sẽ tự động nâng cấp.')) {
-                            // Thêm logic gọi API (Fetch/Ajax) ở đây để Update trạng thái
-
-                            alert("Đã phê duyệt thành công! Sinh viên nay là Mentor.");
-                            
-                            // Đóng offcanvas
-                            var offcanvasEl = document.getElementById('mentorDetailOffcanvas');
-                            var offcanvasIn = bootstrap.Offcanvas.getInstance(offcanvasEl);
-                            offcanvasIn.hide();
-                        }
-                    });
-                }
-            });
-        </script>
-    </th:block>
+<th:block th:fragment="myJs">
+    <script>
+        function showRejectForm(id) {
+            document.getElementById('actionButtonsGroup_' + id).classList.add('d-none');
+            document.getElementById('rejectForm_' + id).classList.remove('d-none');
+        }
+        function hideRejectForm(id) {
+            document.getElementById('rejectForm_' + id).classList.add('d-none');
+            document.getElementById('actionButtonsGroup_' + id).classList.remove('d-none');
+        }
+    </script>
+</th:block>
 </body>
 </html>
