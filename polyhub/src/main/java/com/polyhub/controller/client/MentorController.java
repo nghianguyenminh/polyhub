@@ -10,9 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
 import java.security.Principal;
-import java.util.Map;
 
 @Controller
 public class MentorController {
@@ -36,16 +34,23 @@ public class MentorController {
         }
 
         String username = principal.getName();
-        User user = userRepository.findByUsername(username).orElse(null);
+        // FIX: Use findByUsernameOrEmail as defined in the repository
+        User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
 
         if (user == null) {
+            // User not found, which shouldn't happen if they are logged in.
             return "redirect:/login";
         }
 
+        // Check if a file was actually uploaded
+        if (evidenceFile.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn một tệp để tải lên.");
+            return "redirect:/settings";
+        }
+
         try {
-            // Upload file to Cloudinary
-            Map uploadResult = cloudinaryService.uploadFile(evidenceFile, "mentor_applications");
-            String evidenceUrl = (String) uploadResult.get("url");
+            // FIX: Assign the result of uploadFile (a String) directly to the variable
+            String evidenceUrl = cloudinaryService.uploadFile(evidenceFile, "mentor_applications");
 
             // Update user's mentor registration info
             user.setMentorMajor(mentorMajor);
@@ -57,7 +62,7 @@ public class MentorController {
 
             redirectAttributes.addFlashAttribute("successMessage", "Đơn đăng ký của bạn đã được gửi thành công! Vui lòng chờ quản trị viên xét duyệt.");
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tải lên tệp. Vui lòng thử lại.");
         }
