@@ -300,7 +300,7 @@
                         </div>
 
                         <!-- Registration Form -->
-                        <form th:action="@{/mentor/register}" method="post" th:if="${!currentUser.wantsToBecomeMentor or currentUser.rejectionReason != null}">
+                        <form th:action="@{/mentor/register}" method="post" enctype="multipart/form-data" th:if="${!currentUser.wantsToBecomeMentor or currentUser.rejectionReason != null}">
                             <div class="mb-3">
                                 <label for="mentorMajor" class="form-label fw-medium">Chuyên ngành bạn muốn hướng dẫn</label>
                                 <input type="text" class="form-control form-control-poly" id="mentorMajor" name="mentorMajor" required th:value="${currentUser.mentorMajor}">
@@ -314,9 +314,9 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="evidenceLink" class="form-label fw-medium">Link bằng chứng/Portfolio</label>
-                                <input type="url" class="form-control form-control-poly" id="evidenceLink" name="evidenceLink" required th:value="${currentUser.evidenceLink}">
-                                <small class="text-muted">Cung cấp link đến CV, portfolio, hoặc các dự án bạn đã thực hiện.</small>
+                                <label for="evidenceFile" class="form-label fw-medium">Bằng chứng/Portfolio</label>
+                                <input type="file" class="form-control form-control-poly" id="evidenceFile" name="evidenceFile" required accept=".pdf,.doc,.docx,image/*">
+                                <small class="text-muted">Tải lên CV, portfolio, hoặc các bằng chứng khác (PDF, DOC, hình ảnh).</small>
                             </div>
 
                             <div class="d-flex justify-content-end">
