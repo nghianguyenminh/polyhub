@@ -31,6 +31,7 @@ public class MentorController {
     @GetMapping("/mentors")
     public String index(Model model) {
         model.addAttribute("categories", categoryService.getActiveCategoriesForDropdown());
+        model.addAttribute("approvedMentors", mentorRequestRepository.findByStatus(RequestStatus.APPROVED));
         return "client/mentors"; // Mở file src/main/resources/templates/client/mentors.html
     }
 
