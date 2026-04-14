@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.util.Map;
 
 @Controller
 public class MentorController {
@@ -22,34 +24,44 @@ public class MentorController {
     private CloudinaryService cloudinaryService;
 
     @PostMapping("/mentor/register")
-    public String registerMentor(
+    public String becomeMentor(
+            Principal principal,
             @RequestParam("mentorMajor") String mentorMajor,
             @RequestParam("mentorReason") String mentorReason,
             @RequestParam("evidenceFile") MultipartFile evidenceFile,
-            Principal principal,
-            RedirectAttributes redirectAttributes
-    ) {
+            RedirectAttributes redirectAttributes) {
+
         if (principal == null) {
             return "redirect:/login";
         }
 
-        User user = userRepository.findById(principal.getName()).orElse(null);
+        String username = principal.getName();
+        User user = userRepository.findByUsername(username).orElse(null);
+
         if (user == null) {
             return "redirect:/login";
         }
 
-        // Upload the file to Cloudinary
-        String evidenceUrl = cloudinaryService.uploadFile(evidenceFile, "mentor_applications");
+        try {
+            // Upload file to Cloudinary
+            Map uploadResult = cloudinaryService.uploadFile(evidenceFile, "mentor_applications");
+            String evidenceUrl = (String) uploadResult.get("url");
 
-        user.setMentorMajor(mentorMajor);
-        user.setMentorReason(mentorReason);
-        user.setEvidenceLink(evidenceUrl);
-        user.setWantsToBecomeMentor(true);
-        user.setRejectionReason(null); // Clear previous rejection reason on re-application
+            // Update user's mentor registration info
+            user.setMentorMajor(mentorMajor);
+            user.setMentorReason(mentorReason);
+            user.setEvidenceLink(evidenceUrl); // Save the Cloudinary URL
+            user.setWantsToBecomeMentor(true);
+            user.setRejectionReason(null); // Clear any previous rejection reason
+            userRepository.save(user);
 
-        userRepository.save(user);
+            redirectAttributes.addFlashAttribute("successMessage", "Đơn đăng ký của bạn đã được gửi thành công! Vui lòng chờ quản trị viên xét duyệt.");
 
-        redirectAttributes.addFlashAttribute("success", "Đơn đăng ký mentor của bạn đã được gửi thành công và đang chờ xét duyệt!");
-        return "redirect:/settings/mentor";
+        } catch (IOException e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi tải lên tệp. Vui lòng thử lại.");
+        }
+
+        return "redirect:/settings";
     }
 }
