@@ -1,24 +1,16 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "posts")
+import java.time.LocalDateTime;
+
+@Document(collection = "posts")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,24 +18,19 @@ import org.hibernate.annotations.CreationTimestamp;
 @Builder
 public class Post {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    private String id;
 
-  @Column(columnDefinition = "LONGTEXT")
-  private String content;
+    private String content;
 
-  @Column(length = 1000)
-  private String imageUrl;
+    private String imageUrl;
 
-  @Column(length = 255)
-  private String imagePublicId;
+    private String imagePublicId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "username", nullable = false)
-  private User user;
+    private String userId;
 
-  @CreationTimestamp
-  @Column(updatable = false)
-  private LocalDateTime createdAt;
+    private LocalDateTime createdAt;
+
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

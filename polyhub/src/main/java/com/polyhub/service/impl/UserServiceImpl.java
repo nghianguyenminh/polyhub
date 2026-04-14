@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void toggleLock(String id) {
+    public void toggleLock(Long id) {
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
             user.setActive(!user.getActive());
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void approveMentor(String id) {
+    public void approveMentor(Long id) {
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
             Role mentorRole = roleRepository.findById("MENTOR").orElse(null);
@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void rejectMentor(String id, String reason) {
+    public void rejectMentor(Long id, String reason) {
         userRepository.findById(id).ifPresent(user -> {
             user.setWantsToBecomeMentor(false);
             user.setRejectionReason(reason); // Save the reason for rejection
@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> findById(String id) {
+    public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
 

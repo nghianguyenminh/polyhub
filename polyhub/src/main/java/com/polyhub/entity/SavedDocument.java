@@ -1,33 +1,27 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
-import java.util.Date;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "Saved_Documents")
+@Document(collection = "saved_documents")
 public class SavedDocument implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     // Mapping tới User (Ai đã lưu)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String userId;
 
     // Mapping tới Document (Tài liệu nào được lưu)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id", nullable = false)
-    private Document document;
+    private String documentId;
 
     // Thời gian lưu
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "saved_at", updatable = false)
-    private Date savedAt = new Date();
+    private LocalDateTime savedAt;
 }

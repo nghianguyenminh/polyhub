@@ -3,7 +3,6 @@ package com.polyhub.service.admin;
 import com.polyhub.entity.User;
 import com.polyhub.service.EmailService;
 import com.polyhub.entity.Document;
-import com.polyhub.entity.DocumentStatus;
 import com.polyhub.repository.DocumentRepository;
 import com.polyhub.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,29 +27,39 @@ public class DocumentAdminService {
 
 
     // Filter, Sort and Pagination
-    public Page<Document> getDocuments(String keyword, Long categoryId, DocumentStatus status, String documentType, int page, int size) {
+    public Page<Document> getDocuments(String keyword, String categoryId, String status, String documentType, int page, int size) {
         // Mặc định sắp xếp mới nhất lên đầu
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return documentRepository.searchAndFilterDocuments(status, documentType, keyword, categoryId, pageRequest);
+        if (status != null && documentType != null && keyword != null && categoryId != null) {
+            return documentRepository.findByStatusAndDocumentTypeAndTitleContainingIgnoreCaseAndCategoryId(status, documentType, keyword, categoryId, pageRequest);
+        } else if (status != null && documentType != null && keyword != null) {
+            return documentRepository.findByStatusAndDocumentTypeAndTitleContainingIgnoreCase(status, documentType, keyword, pageRequest);
+        } else if (status != null && keyword != null && categoryId != null) {
+            return documentRepository.findByStatusAndTitleContainingIgnoreCaseAndCategoryId(status, keyword, categoryId, pageRequest);
+        } else if (status != null && keyword != null) {
+            return documentRepository.findByStatusAndTitleContainingIgnoreCase(status, keyword, pageRequest);
+        } else {
+            return documentRepository.findAll(pageRequest);
+        }
     }
 
-    public Document getDocumentById(Long id) {
+    public Document getDocumentById(String id) {
         return documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu ID: " + id));
     }
 
     // Duyệt tài liệu
-    public void approveDocument(Long id) {
+    public void approveDocument(String id) {
         Document doc = getDocumentById(id);
-        doc.setStatus(DocumentStatus.APPROVED);
+        doc.setStatus("APPROVED");
         doc.setRejectionReason(null);
         documentRepository.save(doc);
     }
 
     // Từ chối / Gỡ tài liệu
-    public void rejectOrTakedownDocument(Long id, String reason) {
+    public void rejectOrTakedownDocument(String id, String reason) {
         Document doc = getDocumentById(id);
-        doc.setStatus(DocumentStatus.REJECTED); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
+        doc.setStatus("REJECTED"); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
         doc.setRejectionReason(reason);
         documentRepository.save(doc);
 
@@ -61,17 +71,17 @@ public class DocumentAdminService {
     }
 
     // Phục hồi / Mở khóa tài liệu
-    public void restoreDocument(Long id) {
+    public void restoreDocument(String id) {
         Document doc = getDocumentById(id);
-        doc.setStatus(DocumentStatus.APPROVED);
+        doc.setStatus("APPROVED");
         doc.setRejectionReason(null);
         documentRepository.save(doc);
     }
 
     // Xóa vật lý (Hard delete: Xóa Cloudinary & DB)
-    public void hardDeleteDocument(Long id) {
+    public void hardDeleteDocument(String id) {
         Document doc = getDocumentById(id);
-        
+
         try {
             // 1. Xóa file trên Cloudinary
             if (doc.getFilePublicId() != null && !doc.getFilePublicId().isEmpty()) {
@@ -81,7 +91,7 @@ public class DocumentAdminService {
             // In log nhưng vẫn tiếp tục xóa trong DB để tránh dữ liệu rác
             e.printStackTrace();
         }
-        
+
         // 2. Xóa khỏi database
         documentRepository.delete(doc);
     }
@@ -90,10 +100,10 @@ public class DocumentAdminService {
     public Map<String, Object> getDocumentStats() {
         Map<String, Object> stats = new HashMap<>();
         long total = documentRepository.count();
-        long pending = documentRepository.findByStatus(DocumentStatus.PENDING).size();
-        long approved = documentRepository.findByStatus(DocumentStatus.APPROVED).size();
-        long hidden = documentRepository.findByStatus(DocumentStatus.HIDDEN).size();
-        
+        long pending = documentRepository.countByStatus("PENDING");
+        long approved = documentRepository.countByStatus("APPROVED");
+        long hidden = documentRepository.countByStatus("HIDDEN");
+
         stats.put("total", total);
         stats.put("pending", pending);
         stats.put("approved", approved);
@@ -105,11 +115,11 @@ public class DocumentAdminService {
             if (usage != null && usage.containsKey("storage")) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> storageData = (Map<String, Object>) usage.get("storage");
-                
-                // Tránh NullPointerException do một số tài khoản Cloudinary không trả về 'usage'/'limit' 
+
+                // Tránh NullPointerException do một số tài khoản Cloudinary không trả về 'usage'/'limit'
                 Object usageObj = storageData.get("usage");
                 Object limitObj = storageData.get("limit");
-                
+
                 long usageBytes = usageObj != null ? Long.parseLong(usageObj.toString()) : 0L;
                 long limitBytes = limitObj != null ? Long.parseLong(limitObj.toString()) : 0L;
 
@@ -121,14 +131,14 @@ public class DocumentAdminService {
                 if (limitBytes == 0L) {
                     limitBytes = 10L * 1024 * 1024 * 1024;
                 }
-                
+
                 // Quy đổi sang GB / MB
                 double usageGb = usageBytes / 1024.0 / 1024.0 / 1024.0;
                 double limitGb = limitBytes / 1024.0 / 1024.0 / 1024.0;
-                
+
                 // Calculate percentage
                 double percent = limitBytes > 0 ? (double) usageBytes / limitBytes * 100 : 0;
-                
+
                 stats.put("cloudinaryUsage", usageBytes);
                 stats.put("cloudinaryLimit", limitBytes);
                 stats.put("cloudinaryUsageGb", String.format(Locale.US, "%.2f", usageGb));
@@ -156,7 +166,7 @@ public class DocumentAdminService {
 
     private void handleStorageFallback(Map<String, Object> stats) {
         long usageBytes = getStorageFromDB();
-        long limitBytes = 10L * 1024 * 1024 * 1024; // Mặc định 10GB 
+        long limitBytes = 10L * 1024 * 1024 * 1024; // Mặc định 10GB
 
         double usageGb = usageBytes / 1024.0 / 1024.0 / 1024.0;
         double limitGb = limitBytes / 1024.0 / 1024.0 / 1024.0;
@@ -172,14 +182,26 @@ public class DocumentAdminService {
     }
 
     public List<Object[]> getDocumentTypeStats() {
-        return documentRepository.countByDocumentType();
+        return documentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(Document::getDocumentType, Collectors.counting()))
+                .entrySet().stream()
+                .map(entry -> new Object[]{entry.getKey(), entry.getValue()})
+                .collect(Collectors.toList());
     }
 
     public List<Object[]> getCategoryStats() {
-        return documentRepository.countByCategory();
+        return documentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(Document::getCategoryId, Collectors.counting()))
+                .entrySet().stream()
+                .map(entry -> new Object[]{entry.getKey(), entry.getValue()})
+                .collect(Collectors.toList());
     }
 
     public List<Object[]> getStatusStats() {
-        return documentRepository.countByStatus();
+        return documentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(Document::getStatus, Collectors.counting()))
+                .entrySet().stream()
+                .map(entry -> new Object[]{entry.getKey(), entry.getValue()})
+                .collect(Collectors.toList());
     }
 }

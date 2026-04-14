@@ -1,19 +1,18 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "Roles")
+@Document(collection = "roles")
 public class Role implements Serializable {
     @Id
-    @Column(length = 20)
     private String id; // Ví dụ: ADMIN_SUPER, STUDENT, MENTOR...
 
-    @Column(columnDefinition = "nvarchar(50)", nullable = false)
     private String name; // Ví dụ: Quản trị viên cấp cao, Sinh viên...
 }

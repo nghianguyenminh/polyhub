@@ -1,13 +1,11 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "documents")
+@Document(collection = "documents")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,25 +14,19 @@ import java.time.LocalDateTime;
 public class Document {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
     private String description;
 
     // Loại file trích xuất (PDF, WORD, EXCEL) - Hỗ trợ lọc Dropdown bên Client
-    @Column(length = 20)
     private String documentType; 
 
     // URL tài liệu trên Cloudinary
-    @Column(nullable = false, length = 1000)
     private String fileUrl;
 
     // Public ID dùng để xóa file trên Cloudinary khi cần thiết
-    @Column(length = 255)
     private String filePublicId;
 
     // Dung lượng file (tính bằng byte)
@@ -44,31 +36,19 @@ public class Document {
     @Builder.Default
     private Integer downloadCount = 0;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
     @Builder.Default
     private DocumentStatus status = DocumentStatus.PENDING;
 
-    @Column(columnDefinition = "TEXT")
     private String rejectionReason;
 
     // Liên kết với Chuyên Ngành (Category) ManyToOne
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    @NotFound(action = NotFoundAction.IGNORE)
-    private Category category;
+    private String categoryId;
 
     // Bổ sung: Liên kết với Người dùng upload (Sinh viên/Mentor)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uploader_id", nullable = true) // Cứ mở nullable để không chết các data DB cũ
-    @NotFound(action = NotFoundAction.IGNORE)
-    private User uploader;
+    private String uploaderId;
 
-    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

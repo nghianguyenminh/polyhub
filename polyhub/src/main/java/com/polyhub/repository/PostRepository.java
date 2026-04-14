@@ -3,16 +3,14 @@ package com.polyhub.repository;
 import com.polyhub.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends MongoRepository<Post, String> {
 
-    Page<Post> findByUser_UsernameOrderByCreatedAtDesc(String username, Pageable pageable);
+    Page<Post> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
 
-    @Query("SELECT p FROM Post p ORDER BY p.createdAt DESC")
-    Page<Post> findAllOrderByCreatedAtDesc(Pageable pageable);
+    Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
 }
