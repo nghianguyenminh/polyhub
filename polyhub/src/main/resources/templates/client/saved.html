@@ -35,31 +35,26 @@
                     Loại nội dung <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
                 </button>
                 <div class="dropdown-menu coursera-dropdown-menu shadow">
-                    <div class="coursera-filter-header">Chọn loại nội dung</div>
-                    <div class="coursera-filter-body">
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="s_type1" checked>
-                            <label class="form-check-label d-flex justify-content-between w-100 fw-medium" for="s_type1">
-                                <span>Tất cả</span> <span class="text-muted">(24)</span>
-                            </label>
+                    <form th:action="@{/saved}" method="get" id="filterForm">
+                        <div class="coursera-filter-header">Chọn loại nội dung</div>
+                        <div class="coursera-filter-body">
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="type" id="s_type2" value="posts" th:checked="${type == 'posts'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="s_type2">
+                                    <span><i class="bi bi-file-earmark-richtext text-poly me-1"></i> Bài viết</span> <span class="text-muted" th:text="${'(' + totalSavedPosts + ')'}">(0)</span>
+                                </label>
+                            </div>
+                            <div class="form-check custom-radio mb-2">
+                                <input class="form-check-input shadow-none" type="radio" name="type" id="s_type3" value="documents" th:checked="${type == 'documents'}">
+                                <label class="form-check-label d-flex justify-content-between w-100" for="s_type3">
+                                    <span><i class="bi bi-file-earmark-zip text-poly me-1"></i> Tài liệu</span> <span class="text-muted" th:text="${'(' + totalSavedDocs + ')'}">(0)</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="s_type2">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="s_type2">
-                                <span><i class="bi bi-file-earmark-richtext text-poly me-1"></i> Bài viết</span> <span class="text-muted">(12)</span>
-                            </label>
+                        <div class="coursera-filter-footer">
+                            <button type="submit" class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
                         </div>
-                        <div class="form-check custom-checkbox mb-2">
-                            <input class="form-check-input shadow-none" type="checkbox" id="s_type3">
-                            <label class="form-check-label d-flex justify-content-between w-100" for="s_type3">
-                                <span><i class="bi bi-file-earmark-zip text-poly me-1"></i> Tài liệu</span> <span class="text-muted">(12)</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="coursera-filter-footer">
-                        <button class="btn btn-poly-gradient btn-sm rounded-pill px-4 fw-bold">Áp dụng</button>
-                        <button class="btn btn-link btn-sm text-muted text-decoration-none fw-medium" style="color: #6c757d !important;">Xóa lọc</button>
-                    </div>
+                    </form>
                 </div>
             </div>
 
@@ -68,89 +63,74 @@
 
         <div class="saved-items-list mb-5">
             
-            <div class="poly-card p-0 mb-3 saved-item-wrapper">
-                <div class="saved-status-bar text-muted">
-                    <i class="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu bài viết này vào 2 giờ trước
-                </div>
-                
-                <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-2">
-                        <img src="https://ui-avatars.com/api/?name=Bao+Chau&background=random" class="rounded-circle" width="40" height="40">
-                        <div style="line-height: 1.3;">
-                            <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;">Lưu Phan Bảo Châu</a>
-                            <div class="text-muted" style="font-size: 13px;">2 giờ trước • <i class="bi bi-globe-americas"></i></div>
-                        </div>
-                    </div>
-                    <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
-                </div>
-                <div class="px-3 pb-2">
-                    <p class="mb-0 text-dark" style="font-size: 14px; line-height: 1.5;">Giao diện Mentors và Documents mới update xịn xò quá mọi người ơi! Mượt mà, đồng bộ mà filter Coursera style bấm thích thật sự. <a href="#" class="text-poly text-decoration-none">#PolyHUB #UIUX</a></p>
-                </div>
-                
-                <div class="d-flex justify-content-end gap-2 px-3 py-2 border-top bg-light" style="border-radius: 0 0 12px 12px;">
-                    <button class="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-bookmark-x me-1"></i> Bỏ lưu</button>
-                    <button class="btn btn-sm btn-poly-gradient fw-bold rounded-pill px-3 btn-action-saved">Xem bài viết</button>
+            <!-- Danh sách Bài viết đã lưu (Dự kiến / Sắp tới mới làm) -->
+            <div th:if="${type == 'posts'}">
+                <div class="alert alert-light text-center py-5 border-0">
+                    <i class="bi bi-tools text-poly fs-1 d-block mb-3"></i>
+                    <h6 class="fw-bold text-dark">Chức năng bài viết đang được xây dựng!</h6>
+                    <p class="text-muted mb-0">Tính năng lưu bài viết sẽ sớm ra mắt trong thời gian tới.</p>
                 </div>
             </div>
 
-            <div class="poly-card p-0 mb-3 saved-item-wrapper">
-                <div class="saved-status-bar text-muted">
-                    <i class="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu tài liệu này vào Hôm qua
-                </div>
-                
-                <div class="d-flex align-items-center gap-3 p-3">
-                    <div class="doc-icon-box bg-danger-soft text-danger rounded-3" style="width: 50px; height: 50px; font-size: 24px; display:flex; align-items:center; justify-content:center;">
-                        <i class="bi bi-file-earmark-pdf-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="mb-1">
-                            <span class="badge bg-light text-dark border fw-normal" style="font-size: 11px;">SOF3021</span>
-                        </div>
-                        <h6 class="text-dark fw-bold mb-1" style="font-size: 14px; line-height: 1.4;">Bộ đề thi PE môn Java 5 (Spring Boot) - Kèm giải chi tiết</h6>
-                        <div class="text-muted" style="font-size: 12px;">Đăng bởi Tấn Dũng • 2.4 MB • PPTX</div>
+            <!-- Danh sách Tài liệu đã lưu -->
+            <div th:if="${type == 'documents'}">
+                <!-- Vòng lặp duyệt các tài liệu user đã lưu -->
+                <div class="poly-card p-0 mb-3 saved-item-wrapper" th:each="savedItem : ${savedDocsPage.content}">
+                    <div class="saved-status-bar text-muted">
+                        <i class="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu tài liệu này vào <span th:text="${#dates.format(savedItem.savedAt, 'dd/MM/yyyy HH:mm')}">Hôm nay</span>
                     </div>
                     
-                    <div class="d-flex gap-2 ms-auto">
-                        <button class="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-bookmark-x me-1"></i> Bỏ lưu</button>
-                        <button class="btn btn-sm btn-download fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-download me-1"></i> Tải về</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="poly-card p-0 mb-3 saved-item-wrapper">
-                <div class="saved-status-bar text-muted">
-                    <i class="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu tài liệu này vào 3 ngày trước
-                </div>
-                <div class="d-flex align-items-center gap-3 p-3">
-                    <div class="doc-icon-box bg-warning-soft text-warning rounded-3" style="width: 50px; height: 50px; font-size: 24px; display:flex; align-items:center; justify-content:center;">
-                        <i class="bi bi-file-earmark-zip-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="mb-1">
-                            <span class="badge bg-light text-dark border fw-normal" style="font-size: 11px;">Dự án Mẫu</span>
+                    <div class="d-flex align-items-center gap-3 p-3">
+                        <div class="doc-icon-box rounded-3" 
+                             th:classappend="${savedItem.document.documentType == 'PDF' ? 'bg-danger-soft text-danger' : 
+                                            (savedItem.document.documentType == 'WORD' ? 'bg-primary-soft text-primary' : 
+                                            (savedItem.document.documentType == 'ZIP' ? 'bg-warning-soft text-warning' : 'bg-info-soft text-info'))}"
+                             style="width: 50px; height: 50px; font-size: 24px; display:flex; align-items:center; justify-content:center;">
+                            <i class="bi" th:classappend="${savedItem.document.documentType == 'PDF' ? 'bi-file-earmark-pdf-fill' : 
+                                                         (savedItem.document.documentType == 'WORD' ? 'bi-file-earmark-word-fill' : 
+                                                         (savedItem.document.documentType == 'ZIP' ? 'bi-file-earmark-zip-fill' : 'bi-file-earmark-fill'))}"></i>
                         </div>
-                        <h6 class="text-dark fw-bold mb-1" style="font-size: 14px; line-height: 1.4;">Source Code J4Video Full Tính Năng + Database SQL</h6>
-                        <div class="text-muted" style="font-size: 12px;">Đăng bởi Bảo Châu • 15 MB • ZIP</div>
+                        <div class="flex-grow-1">
+                            <div class="mb-1">
+                                <span class="badge bg-light text-dark border fw-normal" style="font-size: 11px;" th:text="${savedItem.document.category.name}">Chuyên ngành</span>
+                            </div>
+                            <h6 class="text-dark fw-bold mb-1" style="font-size: 14px; line-height: 1.4;" th:text="${savedItem.document.title}">Tiêu đề tài liệu</h6>
+                            <div class="text-muted" style="font-size: 12px;">Đăng bởi <span th:text="${savedItem.document.uploader != null ? savedItem.document.uploader.fullname : 'Hệ thống'}">Ẩn danh</span> • <span th:text="${savedItem.document.documentType}">PDF</span></div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 ms-auto">
+                            <!-- Nút Bỏ Lưu (submit qua POST) -->
+                            <form th:action="@{/saved/toggle}" method="POST" class="m-0">
+                                <input type="hidden" name="documentId" th:value="${savedItem.document.id}">
+                                <input type="hidden" name="redirectUrl" value="/saved?type=documents">
+                                <button type="submit" class="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-bookmark-x me-1"></i> Bỏ lưu</button>
+                            </form>
+                            <a th:href="${savedItem.document.fileUrl}" target="_blank" class="btn btn-sm btn-download fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-download me-1"></i> Tải về</a>
+                        </div>
                     </div>
-                    <div class="d-flex gap-2 ms-auto">
-                        <button class="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-bookmark-x me-1"></i> Bỏ lưu</button>
-                        <button class="btn btn-sm btn-download fw-bold rounded-pill px-3 btn-action-saved"><i class="bi bi-download me-1"></i> Tải về</button>
-                    </div>
+                </div>
+
+                <!-- Nếu không có tài liệu nào -->
+                <div th:if="${savedDocsPage.totalElements == 0}" class="text-center py-5">
+                    <i class="bi bi-bookmark-dash text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">Bạn chưa lưu tài liệu nào.</p>
                 </div>
             </div>
 
         </div>
 
-        <nav aria-label="Page navigation">
+        <nav aria-label="Page navigation" th:if="${type == 'documents' and savedDocsPage.totalPages > 1}">
             <ul class="pagination poly-pagination justify-content-center mt-4 mb-5">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i></a>
+                <li class="page-item" th:classappend="${savedDocsPage.number == 0 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${savedDocsPage.number})}" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i></a>
                 </li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a>
+                
+                <li class="page-item" th:each="i : ${#numbers.sequence(1, savedDocsPage.totalPages)}" th:classappend="${savedDocsPage.number + 1 == i ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${i})}" th:text="${i}"></a>
+                </li>
+
+                <li class="page-item" th:classappend="${savedDocsPage.number + 1 == savedDocsPage.totalPages ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${savedDocsPage.number + 2})}"><i class="bi bi-chevron-right"></i></a>
                 </li>
             </ul>
         </nav>

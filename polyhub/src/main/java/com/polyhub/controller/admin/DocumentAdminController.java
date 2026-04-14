@@ -74,7 +74,7 @@ public class DocumentAdminController {
                                    RedirectAttributes redirectAttributes) {
         try {
             documentAdminService.rejectOrTakedownDocument(id, reason);
-            redirectAttributes.addFlashAttribute("warningMessage", "Đã gỡ/ẩn tài liệu kèm lý do: " + reason);
+            redirectAttributes.addFlashAttribute("warningMessage", "Đã từ chối/gỡ tài liệu kèm lý do: " + reason + " và đã gửi Email thông báo.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }

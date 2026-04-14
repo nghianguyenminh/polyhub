@@ -54,40 +54,11 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 form-group">
+                    <div class="col-12 form-group">
                         <label class="form-label" for="email">Địa chỉ Email</label>
                         <div class="input-wrapper">
                             <i class="bi bi-envelope input-icon"></i>
                             <input type="email" class="form-control-custom" id="email" name="email" th:field="*{email}" placeholder="VD: email@fpt.edu.vn" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label class="form-label" for="phone">Số điện thoại</label>
-                        <div class="input-wrapper">
-                            <i class="bi bi-telephone input-icon"></i>
-                            <input type="tel" class="form-control-custom" id="phone" name="phone" th:field="*{phone}" placeholder="VD: 0987654321" required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 form-group">
-                        <label class="form-label" for="birthday">Ngày sinh</label>
-                        <div class="input-wrapper">
-                            <input type="date" class="form-control-custom" id="birthday" name="birthday" th:field="*{birthday}" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label class="form-label d-block">Giới tính</label>
-                        <div class="d-flex align-items-center mt-2">
-                            <div class="form-check me-3">
-                                <input class="form-check-input" type="radio" name="gender" id="genderMale" value="true" th:field="*{gender}" checked>
-                                <label class="form-check-label" for="genderMale">Nam</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="false" th:field="*{gender}">
-                                <label class="form-check-label" for="genderFemale">Nữ</label>
-                            </div>
                         </div>
                     </div>
                 </div>
