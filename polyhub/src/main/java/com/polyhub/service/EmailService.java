@@ -51,4 +51,64 @@ public class EmailService {
             // Vì chạy nền Async, ko ném exception chết App, chỉ log lỗi ở Console
         }
     }
+
+    @Async
+    public void sendMentorRejectionEmail(String toEmail, String fullname, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu đăng ký Mentor bị từ chối");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #e02424; text-align: center;\">Yêu Cầu Mentor Bị Từ Chối</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Cảm ơn bạn đã gửi yêu cầu đăng ký trở thành Mentor trên hệ thống PolyHUB.</p>"
+                    + "<p>Rất tiếc, sau khi xem xét hồ sơ, chúng tôi chưa thể phê duyệt yêu cầu của bạn tại thời điểm này vì lý do sau:</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Bạn hoàn toàn có thể cải thiện và gửi yêu cầu đăng ký lại sau.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendMentorApprovalEmail(String toEmail, String fullname) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Chúc mừng! Bạn đã trở thành Mentor");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #057A55; text-align: center;\">Xác Nhận Cấp Quyền Mentor</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Hồ sơ đăng ký của bạn đã được ban quản trị PolyHUB xem xét và <strong>phê duyệt thành công!</strong></p>"
+                    + "<p>Từ giờ bạn đã chính thức có quyền Mentor. Bạn có thể bắt đầu hỗ trợ các thành viên khác, cũng như tiếp cận các tính năng dành riêng cho trải nghiệm giảng dạy, kết nối của mình.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
 }

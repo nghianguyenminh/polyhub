@@ -18,9 +18,9 @@
                     <h5 class="fw-bold mb-1 text-dark">Kết nối Mentor</h5>
                     <div class="text-muted" style="font-size: 13px;">Tìm kiếm chuyên gia để định hướng và hỗ trợ dự án của bạn</div>
                 </div>
-                <button class="btn btn-poly-gradient fw-bold rounded-pill px-3 py-2 shadow-sm d-flex align-items-center" style="font-size: 13.5px;">
+                <a th:href="@{/mentors/register}" class="btn btn-poly-gradient fw-bold rounded-pill px-3 py-2 shadow-sm d-flex align-items-center text-decoration-none text-white" style="font-size: 13.5px;">
                     Trở thành Mentor
-                </button>
+                </a>
             </div>
             
             <div class="input-group mt-3 shadow-sm" style="border-radius: 50rem; border: 1px solid rgba(242, 113, 37, 0.2); background: white;">
@@ -68,40 +68,56 @@
 
         <div class="row row-cols-1 row-cols-md-2 g-3 mb-5">
             
+<<<<<<< HEAD
             <div class="col" th:each="mentor : ${mentors}">
+=======
+            <div class="col" th:each="req : ${approvedMentors}">
+>>>>>>> origin/appmod/java-upgrade-20260406032344
                 <div class="mentor-profile-card">
                     <div class="mentor-card-cover" th:style="'background-image: url(' + @{/img/cover/} + ${mentor.coverImage} + ');'"></div>
                     
                     <div class="mentor-card-body">
                         <div class="d-flex justify-content-between align-items-start">
+<<<<<<< HEAD
                             <img th:src="@{/img/avatar/} + ${mentor.avatar}" class="mentor-card-avatar">
+=======
+                            <img th:src="${req.user.avatar != null ? req.user.avatar : 'https://ui-avatars.com/api/?name=' + req.fullname + '&background=random'}" class="mentor-card-avatar">
+>>>>>>> origin/appmod/java-upgrade-20260406032344
                             <div class="mentor-rating mt-2 shadow-sm">
-                                <i class="bi bi-star-fill text-warning"></i> 5.0 <span class="text-muted fw-normal">(42)</span>
+                                <i class="bi bi-star-fill text-warning"></i> 5.0 <span class="text-muted fw-normal">(0)</span>
                             </div>
                         </div>
                         
                         <div class="mt-2 mb-3">
                             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
+<<<<<<< HEAD
                                 <span th:text="${mentor.fullname}"></span> <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực"></i>
+=======
+                                <span th:text="${req.fullname}">N/A</span>
+                                <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực" style="background: -webkit-linear-gradient(45deg, #f27121, #e94057); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+>>>>>>> origin/appmod/java-upgrade-20260406032344
                             </h5>
-                            <div class="text-muted" style="font-size: 13px; font-weight: 500;">Giảng viên / Chuyên gia Backend</div>
+                            <div class="text-muted" style="font-size: 13px; font-weight: 500;" th:text="${req.introduction}">Introduction</div>
                         </div>
                         
-                        <p class="mentor-bio">"Hơn 5 năm kinh nghiệm thực chiến với các hệ thống Microservices. Nhận hướng dẫn đồ án tốt nghiệp mảng Java/Spring."</p>
+                        <p class="mentor-bio" th:text="${req.motivation}">"Motivation string here..."</p>
                         
                         <div class="d-flex flex-wrap gap-1 mb-3">
-                            <span class="mentor-tag">Spring Boot</span>
-                            <span class="mentor-tag">Microservices</span>
-                            <span class="mentor-tag">MySQL</span>
+                            <span class="mentor-tag">Mentor</span>
+                            <span class="mentor-tag">Polyhub</span>
                         </div>
                         
                         <div class="d-flex justify-content-between text-muted mb-3" style="font-size: 12.5px; font-weight: 500;">
-                            <div><i class="bi bi-people-fill me-1"></i> 128 Mentee</div>
-                            <div><i class="bi bi-journal-check me-1"></i> 15 Dự án</div>
+                            <div><i class="bi bi-people-fill me-1"></i> 0 Mentee</div>
+                            <div><i class="bi bi-journal-check me-1"></i> 0 Dự án</div>
                         </div>
                         
                         <div class="d-flex gap-2 mt-auto">
+<<<<<<< HEAD
                             <a th:href="@{/mentors/} + ${mentor.username}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
+=======
+                            <a th:href="@{'/profile?username=' + ${req.user.username}}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
+>>>>>>> origin/appmod/java-upgrade-20260406032344
                             <button class="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action"><i class="bi bi-chat-dots-fill me-1"></i> Nhắn tin</button>
                         </div>
                     </div>
