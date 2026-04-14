@@ -55,6 +55,18 @@
         <div>
             <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Phê duyệt Mentor</h3>
         </div>
+        <div class="d-flex gap-2 align-items-center">
+            <form th:action="@{/admin/mentors}" method="get" class="d-flex align-items-center gap-2">
+                <label for="statusFilter" class="ms-2 mb-0 fw-medium">Trạng thái:</label>
+                <select name="status" id="statusFilter" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <option value="ALL" th:selected="${currentStatus == 'ALL'}">Tất cả</option>
+                    <option value="PENDING" th:selected="${currentStatus == 'PENDING'}">Chờ duyệt</option>
+                    <option value="APPROVED" th:selected="${currentStatus == 'APPROVED'}">Đã duyệt</option>
+                    <option value="REJECTED" th:selected="${currentStatus == 'REJECTED'}">Đã từ chối</option>
+                    <option value="REVOKED" th:selected="${currentStatus == 'REVOKED'}">Bị tước quyền</option>
+                </select>
+            </form>
+        </div>
     </div>
 
     <!-- 2. KPI Cards -->
@@ -120,7 +132,7 @@
                         </td>
                         <td class="text-muted" th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy HH:mm')}">Date</td>
                         <td>
-                            <span th:if="${req.status.name() == 'PENDING'}" class="status-badge status-pending">
+            <span th:if="${req.status.name() == 'PENDING'}" class="status-badge status-pending">
                                 <span class="status-dot"></span> Chờ duyệt
                             </span>
                             <span th:if="${req.status.name() == 'APPROVED'}" class="status-badge status-approved">
@@ -128,6 +140,9 @@
                             </span>
                             <span th:if="${req.status.name() == 'REJECTED'}" class="status-badge status-rejected">
                                 <span class="status-dot"></span> Đã từ chối
+                            </span>
+                            <span th:if="${req.status.name() == 'REVOKED'}" class="status-badge status-rejected" style="background-color: #f3f4f6; color: #4b5563;">
+                                <span class="status-dot" style="background-color: #6b7280;"></span> Bị tước quyền
                             </span>
                         </td>
                         <td class="text-end" style="padding-right: 1.5rem;">
@@ -146,6 +161,22 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}" aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/mentors(page=${currentPage - 1}, status=${currentStatus})}">Trước</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}"
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link" th:href="@{/admin/mentors(page=${i}, status=${currentStatus})}" th:text="${i}"></a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/mentors(page=${currentPage + 1}, status=${currentStatus})}">Sau</a>
+            </li>
+        </ul>
+    </nav>
 
     <!-- Offcanvas Details (Loop) -->
     <div th:each="req : ${requests}" class="offcanvas offcanvas-end" tabindex="-1" th:id="'offcanvas_' + ${req.id}">
@@ -190,8 +221,8 @@
                     <div class="reason-box" th:text="${req.motivation}"></div>
                 </div>
                 
-                <div th:if="${req.status.name() == 'REJECTED'}" class="mb-4">
-                    <div class="oc-section-title text-danger">Lý do từ chối (Từ Admin)</div>
+                <div th:if="${req.status.name() == 'REJECTED' or req.status.name() == 'REVOKED'}" class="mb-4">
+                    <div class="oc-section-title text-danger">Lý do bị từ chối / tước quyền (Từ Admin)</div>
                     <div class="reason-box" style="border-left-color: #ef4444; background: #fef2f2;" th:text="${req.rejectionReason}"></div>
                 </div>
 
@@ -235,6 +266,26 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Action Area cho APPROVED (Tước quyền) -->
+            <div th:if="${req.status.name() == 'APPROVED'}" class="action-area">
+                <form th:action="@{/admin/mentors/{id}/revoke(id=${req.id})}" method="post" class="mb-3 d-none" th:id="'revokeForm_' + ${req.id}">
+                    <label class="form-label fw-semibold text-danger">Lý do tước quyền <span class="text-danger">*</span></label>
+                    <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Nhập lý do thu hồi quyền Mentor..." required></textarea>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-light" th:onclick="'hideRevokeForm(' + ${req.id} + ')'">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-danger px-4">Xác nhận Tước quyền</button>
+                    </div>
+                </form>
+
+                <div class="row g-2" th:id="'revokeButtonsGroup_' + ${req.id}">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-danger text-white w-100 fw-medium" th:onclick="'showRevokeForm(' + ${req.id} + ')'">
+                            <i class="bi bi-shield-x"></i> Tước quyền Mentor
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -248,6 +299,14 @@
         function hideRejectForm(id) {
             document.getElementById('rejectForm_' + id).classList.add('d-none');
             document.getElementById('actionButtonsGroup_' + id).classList.remove('d-none');
+        }
+        function showRevokeForm(id) {
+            document.getElementById('revokeButtonsGroup_' + id).classList.add('d-none');
+            document.getElementById('revokeForm_' + id).classList.remove('d-none');
+        }
+        function hideRevokeForm(id) {
+            document.getElementById('revokeForm_' + id).classList.add('d-none');
+            document.getElementById('revokeButtonsGroup_' + id).classList.remove('d-none');
         }
     </script>
 </th:block>

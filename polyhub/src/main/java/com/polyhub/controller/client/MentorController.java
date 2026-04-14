@@ -29,9 +29,22 @@ public class MentorController {
     private final FileStorageService fileStorageService;
 
     @GetMapping("/mentors")
-    public String index(Model model) {
+    public String index(Model model, 
+                        @RequestParam(defaultValue = "1") int page,
+                        @RequestParam(defaultValue = "newest") String sort) {
+        // Phân trang 4 mentor/trang (2 dòng x 2 cột)
+        org.springframework.data.domain.Sort.Direction direction = "oldest".equalsIgnoreCase(sort) ?
+                 org.springframework.data.domain.Sort.Direction.ASC : org.springframework.data.domain.Sort.Direction.DESC;
+                 
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page - 1, 4, org.springframework.data.domain.Sort.by(direction, "createdAt"));
+        
+        org.springframework.data.domain.Page<MentorRequest> mentorPage = mentorRequestRepository.findByStatus(RequestStatus.APPROVED, pageable);
+        
         model.addAttribute("categories", categoryService.getActiveCategoriesForDropdown());
-        model.addAttribute("approvedMentors", mentorRequestRepository.findByStatus(RequestStatus.APPROVED));
+        model.addAttribute("approvedMentors", mentorPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", mentorPage.getTotalPages());
+        model.addAttribute("currentSort", sort);
         return "client/mentors"; // Mở file src/main/resources/templates/client/mentors.html
     }
 
@@ -48,7 +61,8 @@ public class MentorController {
         }
         
         // Kiểm tra user có đơn đăng ký đang chờ hoặc đã duyệt chưa
-        if (mentorRequestRepository.existsByUserAndStatusNot(currentUser, RequestStatus.REJECTED)) {
+        MentorRequest existingRequest = mentorRequestRepository.findByUser(currentUser).orElse(null);
+        if (existingRequest != null && (existingRequest.getStatus() == RequestStatus.PENDING || existingRequest.getStatus() == RequestStatus.APPROVED)) {
             redirectAttributes.addFlashAttribute("error", "Bạn đã có một yêu cầu đăng ký đang được xử lý hoặc đã được duyệt.");
             return "redirect:/mentors";
         }
@@ -78,7 +92,15 @@ public class MentorController {
 
         try {
             LocalDate birthday = LocalDate.parse(birthdayStr);
-            MentorRequest request = new MentorRequest();
+            // Cập nhật lại request cũ thay vì tạo mới để tránh Spam Row trong CS dữ liệu
+            MentorRequest request = mentorRequestRepository.findByUser(currentUser).orElse(new MentorRequest());
+            
+            // Re-check để chặn user Submit nhiều tab cùng lúc
+            if (request.getId() != null && (request.getStatus() == RequestStatus.PENDING || request.getStatus() == RequestStatus.APPROVED)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn đã có yêu cầu đăng ký đang xử lý.");
+                return "redirect:/mentors";
+            }
+
             request.setUser(currentUser);
             request.setFullname(fullname);
             request.setCccdNumber(cccdNumber);
@@ -88,12 +110,13 @@ public class MentorController {
             request.setIntroduction(introduction);
             request.setMotivation(motivation);
             request.setStatus(RequestStatus.PENDING);
+            request.setRejectionReason(null); // Reset lại lý do từ chối cũ
 
             // Upload CV (Bắt buộc)
-            if (!cvFile.isEmpty()) {
+            if (cvFile != null && !cvFile.isEmpty()) {
                 Map<String, Object> uploadResult = fileStorageService.uploadFile(cvFile);
                 request.setCvFile(uploadResult.get("url").toString());
-            } else {
+            } else if (request.getCvFile() == null || request.getCvFile().isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Vui lòng đính kèm CV nộp hồ sơ.");
                 return "redirect:/mentors/register";
             }

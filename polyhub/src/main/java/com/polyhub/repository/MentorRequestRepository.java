@@ -14,6 +14,9 @@ public interface MentorRequestRepository extends JpaRepository<MentorRequest, Lo
     // Fetch all requests with specific status
     java.util.List<MentorRequest> findByStatus(com.polyhub.entity.RequestStatus status);
     
+    org.springframework.data.domain.Page<MentorRequest> findByStatus(com.polyhub.entity.RequestStatus status, org.springframework.data.domain.Pageable pageable);
+    long countByStatus(com.polyhub.entity.RequestStatus status);
+    
     // Check if user already has a pending or approved request
     boolean existsByUserAndStatusNot(User user, com.polyhub.entity.RequestStatus status);
 }
