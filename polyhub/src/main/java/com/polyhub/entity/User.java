@@ -1,72 +1,61 @@
 package com.polyhub.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "users")
-public class User implements Serializable {
+@Entity
+@Table(name = "users")
+public class User {
 
     @Id
-    private String username; // Tên đăng nhập (ID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private String fullname;
 
+    @Column(nullable = false, unique = true)
     private String email;
 
-    private String phone;
+    @Column(nullable = false)
+    private Boolean active = true;
 
-    private Boolean gender = true; // True: Nam, False: Nữ
-
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private LocalDate birthday;
-
-    private String major; // Chuyên ngành
-
+    @Column(nullable = false)
     private String avatar = "default.png";
 
-    // Ảnh bìa
-    private String coverImage = "default-cover.jpg";
-
-    private String bio;
-
-    private String school;
-
-    private String address;
-
-    private Boolean active = true; // Trạng thái hoạt động
-
+    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false)
     private Boolean wantsToBecomeMentor = false;
 
+    @Column(name = "mentor_major")
     private String mentorMajor;
 
-    private Double gpa;
-
-    private String rejectionReason;
-
+    @Column(name = "mentor_reason", columnDefinition = "TEXT")
     private String mentorReason;
 
-    private List<String> mentorSkills;
-
+    @Column(name = "evidence_link")
     private String evidenceLink;
 
-    private String evidenceName;
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
 
-    // --- KẾT NỐI VỚI BẢNG ROLE ---
-    private String roleId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
 }

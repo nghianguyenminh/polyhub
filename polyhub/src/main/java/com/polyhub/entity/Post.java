@@ -1,36 +1,39 @@
 package com.polyhub.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document(collection = "posts")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "posts")
 public class Post {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    private String imageUrl;
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private String imagePublicId;
+    private String imageUrl; // URL to the image
 
-    private String userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    private LocalDateTime createdAt;
-
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    // Constructor for creating a post with content, image, and user
+    public Post(String content, String imageUrl, User user) {
+        this.content = content;
+        this.imageUrl = imageUrl;
+        this.user = user;
+    }
 }

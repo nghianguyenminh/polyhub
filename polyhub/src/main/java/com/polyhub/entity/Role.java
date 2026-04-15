@@ -1,18 +1,24 @@
 package com.polyhub.entity;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.io.Serializable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "roles")
-public class Role implements Serializable {
-    @Id
-    private String id; // Ví dụ: ADMIN_SUPER, STUDENT, MENTOR...
+@Entity
+@Table(name = "roles")
+public class Role {
 
-    private String name; // Ví dụ: Quản trị viên cấp cao, Sinh viên...
+    @Id
+    private String id; // e.g., "ADMIN", "STUDENT", "MENTOR"
+
+    @Column(nullable = false)
+    private String name;
+
 }

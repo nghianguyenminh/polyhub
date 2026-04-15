@@ -1,33 +1,26 @@
 package com.polyhub.entity;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Document(collection = "categories") // Danh mục Chuyên ngành
-@Getter
-@Setter
+import java.util.List;
+
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "categories")
 public class Category {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    // Ví dụ: IT, GRAPHIC, BIZ
-    private String code;
-
-    // Ví dụ: Công nghệ thông tin, Thiết kế đồ họa
+    @Column(nullable = false, unique = true)
     private String name;
 
-    // Trạng thái hoạt động: true = đang dùng, false = tạm ẩn
-    @Builder.Default
-    private boolean isActive = true;
-
-    private LocalDateTime createdAt;
-
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents;
 }

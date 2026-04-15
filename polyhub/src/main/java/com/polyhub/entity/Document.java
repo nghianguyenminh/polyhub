@@ -1,54 +1,53 @@
 package com.polyhub.entity;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
-@Document(collection = "documents")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "documents")
 public class Document {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Loại file trích xuất (PDF, WORD, EXCEL) - Hỗ trợ lọc Dropdown bên Client
-    private String documentType; 
-
-    // URL tài liệu trên Cloudinary
+    @Column(nullable = false)
     private String fileUrl;
 
-    // Public ID dùng để xóa file trên Cloudinary khi cần thiết
-    private String filePublicId;
+    private String thumbnailUrl;
 
-    // Dung lượng file (tính bằng byte)
-    private Long fileSize;
+    private String documentType; // e.g., "ASSIGNMENT", "TUTORIAL"
 
-    // Số lượt tải xuống
-    @Builder.Default
-    private Integer downloadCount = 0;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
-    @Builder.Default
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User uploader;
+
+    @Enumerated(EnumType.STRING)
     private DocumentStatus status = DocumentStatus.PENDING;
 
-    private String rejectionReason;
+    private String hiddenReason;
 
-    // Liên kết với Chuyên Ngành (Category) ManyToOne
-    private String categoryId;
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Bổ sung: Liên kết với Người dùng upload (Sinh viên/Mentor)
-    private String uploaderId;
+    private LocalDateTime approvedAt;
 
-    private LocalDateTime createdAt;
-
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime hiddenAt;
 }
