@@ -10,19 +10,19 @@ public interface UserService {
     /**
      * Xử lý đăng ký tài khoản người dùng mới.
      * @param request dữ liệu được gửi từ form đăng ký
-     * @return String: Thông báo kết quả ("success" nếu thành công, hoặc các lỗi cụ thể như "Trùng username")
+     * @return User: The newly created user
      */
-    String registerUser(RegisterRequest request);
+    User registerNewUser(RegisterRequest request);
 
     List<User> getAllUsers();
 
-    void toggleLock(String id);
+    void toggleLock(Long id);
 
-    void approveMentor(String id);
+    void approveMentor(Long id);
 
-    void rejectMentor(String id, String reason);
+    void rejectMentor(Long id, String reason);
 
-    Optional<User> findById(String id);
+    Optional<User> findById(Long id);
 
     List<User> findByRole(String role);
 }
