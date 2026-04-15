@@ -22,7 +22,7 @@ public class MentorRequest implements Serializable {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "username", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
     @Column(columnDefinition = "nvarchar(100)", nullable = false)
