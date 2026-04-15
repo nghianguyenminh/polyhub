@@ -30,7 +30,7 @@ public class SettingsController {
     if (principal == null) {
       return "redirect:/login";
     }
-    User user = userRepository.findById(principal.getName()).orElse(null);
+    User user = userRepository.findByUsername(principal.getName()).orElse(null);
     model.addAttribute("currentUser", user);
 
     model.addAttribute(
@@ -53,7 +53,7 @@ public class SettingsController {
       return "redirect:/login";
     }
 
-    User user = userRepository.findById(principal.getName()).orElse(null);
+    User user = userRepository.findByUsername(principal.getName()).orElse(null);
 
     if (user != null) {
       user.setWantsToBecomeMentor(true);

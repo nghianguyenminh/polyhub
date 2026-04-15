@@ -38,7 +38,7 @@ public class HomeController {
     model.addAttribute("recentPosts", posts.getContent());
 
     if (principal != null) {
-      User user = userRepository.findById(principal.getName()).orElse(null);
+      User user = userRepository.findByUsername(principal.getName()).orElse(null);
       if (user != null) {
         model.addAttribute("currentUser", user);
 
@@ -62,7 +62,7 @@ public class HomeController {
     @RequestParam("major") String major
   ) {
     if (principal != null) {
-      User user = userRepository.findById(principal.getName()).orElse(null);
+      User user = userRepository.findByUsername(principal.getName()).orElse(null);
       if (user != null) {
         user.setMajor(major);
         userRepository.save(user);

@@ -43,7 +43,7 @@ public class ProfileController {
       return "redirect:/login";
     }
 
-    User user = userRepository.findById(principal.getName()).orElse(null);
+    User user = userRepository.findByUsername(principal.getName()).orElse(null);
     if (user == null) {
       return "redirect:/login";
     }
@@ -71,7 +71,7 @@ public class ProfileController {
     RedirectAttributes redirectAttributes
   ) {
     if (principal != null) {
-      User user = userRepository.findById(principal.getName()).orElse(null);
+      User user = userRepository.findByUsername(principal.getName()).orElse(null);
       if (user != null) {
         user.setFullname(fullname);
         user.setEmail(email);
@@ -97,7 +97,7 @@ public class ProfileController {
     RedirectAttributes redirectAttributes
   ) {
     if (principal != null) {
-      User user = userRepository.findById(principal.getName()).orElse(null);
+      User user = userRepository.findByUsername(principal.getName()).orElse(null);
       if (user != null) {
         if (passwordEncoder.matches(currentPassword, user.getPassword())) {
           if (newPassword.equals(confirmPassword)) {
@@ -131,7 +131,7 @@ public class ProfileController {
     RedirectAttributes redirectAttributes
   ) {
     if (principal != null && !file.isEmpty()) {
-      User user = userRepository.findById(principal.getName()).orElse(null);
+      User user = userRepository.findByUsername(principal.getName()).orElse(null);
       if (user != null) {
         try {
           Map<String, Object> uploadResult = fileStorageService.uploadImage(
@@ -166,7 +166,7 @@ public class ProfileController {
     RedirectAttributes redirectAttributes
   ) {
     if (principal != null && !file.isEmpty()) {
-      User user = userRepository.findById(principal.getName()).orElse(null);
+      User user = userRepository.findByUsername(principal.getName()).orElse(null);
       if (user != null) {
         try {
           Map<String, Object> uploadResult = fileStorageService.uploadImage(

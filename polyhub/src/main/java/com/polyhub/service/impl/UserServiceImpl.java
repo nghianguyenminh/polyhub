@@ -27,20 +27,20 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public String registerUser(RegisterRequest request) {
+    public User registerNewUser(RegisterRequest request) {
         // 1. Kiểm tra xác nhận mật khẩu (password confirmation)
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return "Mật khẩu xác nhận không khớp.";
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp.");
         }
 
         // 2. Kiểm tra tên đăng nhập (username) đã tồn tại chưa
         if (userRepository.existsByUsername(request.getUsername())) {
-            return "Tên đăng nhập đã tồn tại trong hệ thống.";
+            throw new IllegalArgumentException("Tên đăng nhập đã tồn tại trong hệ thống.");
         }
 
         // 3. Kiểm tra email đã được sử dụng chưa
         if (userRepository.existsByEmail(request.getEmail())) {
-            return "Email này đã được sử dụng.";
+            throw new IllegalArgumentException("Email này đã được sử dụng.");
         }
 
         // 4. Lấy vai trò mặc định (Sinh viên). Bạn cần đảm bảo ID tương ứng tồn tại trong DB, ví dụ id là "STUDENT" hay "SINH_VIEN".
@@ -69,9 +69,8 @@ public class UserServiceImpl implements UserService {
         newUser.setRole(defaultRole);
 
         // 7. Lưu vào cơ sở dữ liệu
-        userRepository.save(newUser);
+        return userRepository.save(newUser);
 
-        return "success"; // Trả về text báo hiệu thành công
     }
 
     @Override

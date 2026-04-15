@@ -4,7 +4,9 @@ import com.polyhub.entity.Post;
 import com.polyhub.entity.User;
 import com.polyhub.repository.PostRepository;
 import com.polyhub.repository.UserRepository;
+import com.polyhub.service.FileStorageService;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,7 @@ public class PostService {
   public Post createPost(String content, MultipartFile image, String username)
     throws IOException {
     User user = userRepository
-      .findById(username)
+      .findByUsername(username)
       .orElseGet(() -> {
         User newUser = new User();
         newUser.setUsername(username);
@@ -35,7 +37,7 @@ public class PostService {
     String imagePublicId = null;
 
     if (image != null && !image.isEmpty()) {
-      Map<String, Object> uploadResult = fileStorageService.uploadFile(image);
+      Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");
       imageUrl = (String) uploadResult.get("url");
       imagePublicId = (String) uploadResult.get("public_id");
     }
@@ -46,7 +48,7 @@ public class PostService {
       imageUrl,
       imagePublicId,
       user,
-      null
+      LocalDateTime.now()
     );
 
     return postRepository.save(post);

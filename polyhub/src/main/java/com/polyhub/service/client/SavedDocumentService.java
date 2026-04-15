@@ -5,6 +5,7 @@ import com.polyhub.entity.SavedDocument;
 import com.polyhub.entity.User;
 import com.polyhub.repository.DocumentRepository;
 import com.polyhub.repository.SavedDocumentRepository;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -50,7 +51,7 @@ public class SavedDocumentService {
             SavedDocument savedDocument = new SavedDocument();
             savedDocument.setUser(user);
             savedDocument.setDocument(document);
-            savedDocument.setSavedAt(new Date());
+            savedDocument.setSavedAt(LocalDateTime.now());
             savedDocumentRepository.save(savedDocument);
             return true; // Returns status "saved"
         }
