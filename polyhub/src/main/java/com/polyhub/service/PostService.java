@@ -39,8 +39,7 @@ public class PostService {
     if (image != null && !image.isEmpty()) {
       Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");
       imageUrl = (String) uploadResult.get("url");
-      imagePublicId = (String) uploadResult.get("public_id
-      ");
+      imagePublicId = (String) uploadResult.get("public_id");
     }
 
     Post post = new Post();
