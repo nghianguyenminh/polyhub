@@ -19,7 +19,7 @@ public class CloudinaryService {
     String folderName
   ) {
     try {
-      Map uploadResult = cloudinary
+      Map<String, Object> uploadResult = cloudinary
         .uploader()
         .upload(
           file.getBytes(),

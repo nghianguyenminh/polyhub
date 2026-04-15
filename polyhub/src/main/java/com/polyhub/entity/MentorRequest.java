@@ -1,21 +1,16 @@
 package com.polyhub.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "Mentor_Requests")
-public class MentorRequest implements Serializable {
+public class MentorRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
