@@ -1,43 +1,37 @@
  package com.polyhub.controller.client;
 
+import com.polyhub.entity.MentorRequest;
 import com.polyhub.entity.User;
+import com.polyhub.entity.RequestStatus;
+import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.UserRepository;
+import com.polyhub.service.CategoryService;
 import com.polyhub.service.CloudinaryService;
+import com.polyhub.service.FileStorageService;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-<<<<<<< HEAD
-=======
 import org.springframework.web.bind.annotation.ModelAttribute;
->>>>>>> origin/appmod/java-upgrade-20260406032344
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-<<<<<<< HEAD
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-=======
-import com.polyhub.entity.MentorRequest;
-import com.polyhub.entity.User;
-import com.polyhub.entity.RequestStatus;
-import com.polyhub.repository.MentorRequestRepository;
-import com.polyhub.service.CategoryService;
-import com.polyhub.service.FileStorageService;
-import lombok.RequiredArgsConstructor;
->>>>>>> origin/appmod/java-upgrade-20260406032344
-
-import java.time.LocalDate;
-import java.util.Map;
-
 @Controller
+@RequiredArgsConstructor
 public class MentorController {
-<<<<<<< HEAD
+
+    private final CategoryService categoryService;
+    private final MentorRequestRepository mentorRequestRepository;
+    private final FileStorageService fileStorageService;
 
     @Autowired
     private UserRepository userRepository;
@@ -46,13 +40,13 @@ public class MentorController {
     private CloudinaryService cloudinaryService;
 
     @GetMapping("/mentors")
-    public String mentorPage(Model model) {
-        // Find users who have the MENTOR role
+    public String index(Model model) {
+        model.addAttribute("categories", categoryService.getActiveCategoriesForDropdown());
+        model.addAttribute("approvedMentors", mentorRequestRepository.findByStatus(RequestStatus.APPROVED));
         List<User> mentors = userRepository.findByRole_Id("MENTOR");
         model.addAttribute("mentors", mentors);
         return "client/mentors";
     }
-
 
     @GetMapping("/mentor-detail")
     public String mentorDetail(@RequestParam("id") Long id, Model model) {
@@ -63,65 +57,6 @@ public class MentorController {
         }
         model.addAttribute("mentor", mentor);
         return "client/mentor_detail";
-    }
-
-    @PostMapping("/mentor/register")
-    public String handleMentorRegistration(@RequestParam("mentorMajor") String mentorMajor,
-                                           @RequestParam("mentorReason") String mentorReason,
-                                           @RequestParam(value = "evidenceFile", required = false) MultipartFile evidenceFile,
-                                           RedirectAttributes redirectAttributes) {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/login";
-        }
-
-        String username = authentication.getName();
-        Optional<User> userOptional = userRepository.findByUsernameOrEmail(username, username);
-
-        if (userOptional.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng.");
-            return "redirect:/settings";
-        }
-
-        User userToUpdate = userOptional.get();
-
-        try {
-            // Update text-based info first
-            userToUpdate.setMentorMajor(mentorMajor);
-            userToUpdate.setMentorReason(mentorReason);
-            userToUpdate.setWantsToBecomeMentor(true);
-            userToUpdate.setRejectionReason(null); // Clear any previous rejection reason
-
-            // Check if a file was uploaded
-            if (evidenceFile != null && !evidenceFile.isEmpty()) {
-                // Upload to Cloudinary
-                Map uploadResult = cloudinaryService.uploadFile(evidenceFile);
-                String evidenceUrl = (String) uploadResult.get("url");
-                userToUpdate.setEvidenceLink(evidenceUrl); // Save the Cloudinary URL
-            }
-
-            userRepository.save(userToUpdate);
-
-            redirectAttributes.addFlashAttribute("successMessage", "Đơn đăng ký của bạn đã được gửi thành công! Vui lòng chờ quản trị viên xét duyệt.");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi xảy ra trong quá trình xử lý. Vui lòng thử lại.");
-        }
-
-        return "redirect:/settings";
-=======
-    
-    private final CategoryService categoryService;
-    private final MentorRequestRepository mentorRequestRepository;
-    private final FileStorageService fileStorageService;
-
-    @GetMapping("/mentors")
-    public String index(Model model) {
-        model.addAttribute("categories", categoryService.getActiveCategoriesForDropdown());
-        model.addAttribute("approvedMentors", mentorRequestRepository.findByStatus(RequestStatus.APPROVED));
-        return "client/mentors"; // Mở file src/main/resources/templates/client/mentors.html
     }
 
     @GetMapping("/mentors/register")
@@ -137,7 +72,7 @@ public class MentorController {
         }
         
         // Kiểm tra user có đơn đăng ký đang chờ hoặc đã duyệt chưa
-        if (mentorRequestRepository.existsByUserAndStatusNot(currentUser, RequestStatus.REJECTED)) {
+        if (mentorRequestRepository.existsByUserAndStatusNot(currentUser, MentorRequestStatus.REJECTED)) {
             redirectAttributes.addFlashAttribute("error", "Bạn đã có một yêu cầu đăng ký đang được xử lý hoặc đã được duyệt.");
             return "redirect:/mentors";
         }
@@ -176,11 +111,11 @@ public class MentorController {
             request.setBirthday(birthday);
             request.setIntroduction(introduction);
             request.setMotivation(motivation);
-            request.setStatus(RequestStatus.PENDING);
+            request.setStatus(MentorRequestStatus.PENDING);
 
             // Upload CV (Bắt buộc)
             if (!cvFile.isEmpty()) {
-                Map<String, Object> uploadResult = fileStorageService.uploadFile(cvFile);
+                Map<String, Object> uploadResult = fileStorageService.uploadFile(cvFile, "mentor");
                 request.setCvFile(uploadResult.get("url").toString());
             } else {
                 redirectAttributes.addFlashAttribute("error", "Vui lòng đính kèm CV nộp hồ sơ.");
@@ -189,13 +124,13 @@ public class MentorController {
 
             // Upload Chứng chỉ (Optional)
             if (certificateFile != null && !certificateFile.isEmpty()) {
-                Map<String, Object> certResult = fileStorageService.uploadFile(certificateFile);
+                Map<String, Object> certResult = fileStorageService.uploadFile(certificateFile, "mentor");
                 request.setCertificateFile(certResult.get("url").toString());
             }
 
             // Upload Bằng cấp (Optional)
             if (degreeFile != null && !degreeFile.isEmpty()) {
-                Map<String, Object> degreeResult = fileStorageService.uploadFile(degreeFile);
+                Map<String, Object> degreeResult = fileStorageService.uploadFile(degreeFile, "mentor");
                 request.setDegreeFile(degreeResult.get("url").toString());
             }
 
@@ -208,11 +143,5 @@ public class MentorController {
             redirectAttributes.addFlashAttribute("error", "Đã xảy ra lỗi trong quá trình đẩy hồ sơ: " + e.getMessage());
             return "redirect:/mentors/register";
         }
-    }
-
-    @GetMapping("/mentors/{id}")
-    public String detail() {
-        return "client/mentor_detail"; // Mở file src/main/resources/templates/client/mentor_detail.html
->>>>>>> origin/appmod/java-upgrade-20260406032344
     }
 }
