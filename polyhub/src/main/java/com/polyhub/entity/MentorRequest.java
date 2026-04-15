@@ -4,54 +4,73 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "mentor_requests")
-public class MentorRequest {
+@Table(name = "Mentor_Requests")
+public class MentorRequest implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "username", nullable = false)
     private User user;
 
-    @Column(name = "mentor_major")
-    private String mentorMajor;
+    @Column(columnDefinition = "nvarchar(100)", nullable = false)
+    private String fullname;
 
-    @Column(name = "mentor_reason", columnDefinition = "TEXT")
-    private String mentorReason;
+    @Column(nullable = false)
+    private String email;
 
-    @Column(name = "evidence_link")
-    private String evidenceLink;
+    @Column(length = 15)
+    private String phone;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthday;
+
+    @Column(name = "cccd_number", length = 20, nullable = false)
+    private String cccdNumber;
+
+    @Column(columnDefinition = "nvarchar(1500)", nullable = false)
+    private String introduction;
+
+    @Column(columnDefinition = "nvarchar(1500)", nullable = false)
+    private String motivation;
+
+    @Column(name = "cv_file", nullable = false)
+    private String cvFile;
+
+    @Column(name = "certificate_file")
+    private String certificateFile;
+
+    @Column(name = "degree_file")
+    private String degreeFile;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
+    @Column(nullable = false)
     private MentorRequestStatus status = MentorRequestStatus.PENDING;
 
-    @Column(name = "rejection_reason")
+    @Column(name = "rejection_reason", columnDefinition = "nvarchar(1000)")
     private String rejectionReason;
 
-    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate

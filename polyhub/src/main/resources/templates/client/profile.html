@@ -41,7 +41,12 @@
                     </div>
 
                     <div class="flex-grow-1 ms-md-4 mb-3 mb-md-0 w-100">
-                        <h2 class="mb-1 fw-bold d-flex justify-content-center justify-content-md-start align-items-center gap-2" th:text="${currentUser.fullname}">Tên người dùng <i class="bi bi-check-circle-fill text-primary" style="font-size: 18px;"></i></h2>
+                        <h2 class="mb-1 fw-bold d-flex justify-content-center justify-content-md-start align-items-center gap-2">
+                            <span th:text="${currentUser.fullname}">Tên người dùng</span>
+                            <th:block th:if="${currentUser.role != null}">
+                                <i th:if="${currentUser.role.id == 'MENTOR'}" class="bi bi-patch-check-fill" style="background: -webkit-linear-gradient(45deg, #f27121, #e94057); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 22px;" title="Mentor đã xác thực"></i>
+                            </th:block>
+                        </h2>
                         <p class="text-muted mb-1 fw-medium" style="font-size: 15px;">
                              <span th:text="'@' + ${currentUser.username}"></span> 
                              <span th:if="${currentUser.major != null}" th:text="' • SV Ngành ' + ${currentUser.major}"></span>
