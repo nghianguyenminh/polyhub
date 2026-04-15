@@ -54,7 +54,7 @@ public class AdminController {
     @PostMapping("/mentors/{id}/approve")
     public String approveMentor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            userService.approveMentor(id.toString());
+            userService.approveMentor(id);
             redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt yêu cầu trở thành Mentor.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi phê duyệt mentor.");
@@ -66,7 +66,7 @@ public class AdminController {
     public String rejectMentor(@PathVariable Long id, @RequestParam(value = "reason", required = false) String reason,
             RedirectAttributes redirectAttributes) {
         try {
-            userService.rejectMentor(id.toString(), reason);
+            userService.rejectMentor(id, reason);
             redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối yêu cầu trở thành Mentor.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi từ chối mentor.");
