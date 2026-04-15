@@ -25,6 +25,8 @@ public class Post {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private String imageUrl; // URL to the image
+    
+    private String imagePublicId; // Public ID for Cloudinary
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
