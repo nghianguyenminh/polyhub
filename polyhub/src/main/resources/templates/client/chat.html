@@ -26,59 +26,53 @@
             </div>
 
             <div class="chat-list overflow-y-auto">
-                <div class="chat-item active d-flex gap-3 p-3">
-                    <img src="https://i.pravatar.cc/150?u=1" class="rounded-circle" width="48" height="48">
+                <a th:each="user : ${allUsers}" th:href="@{/chat(userId=${user.username})}" th:if="${user.username != currentUser.username}" 
+                   class="chat-item d-flex gap-3 p-3 text-decoration-none text-dark"
+                   th:classappend="${targetUser != null and targetUser.username == user.username ? 'active bg-light' : ''}">
+                    <img th:src="${user.avatar != null ? user.avatar : 'https://ui-avatars.com/api/?name=' + user.fullname}" class="rounded-circle shadow-sm" width="48" height="48">
                     <div class="flex-grow-1 overflow-hidden">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold text-truncate">Phạm Kha Nam</h6>
-                            <span class="text-muted small">12ph</span>
+                            <h6 class="mb-0 fw-bold text-truncate" th:text="${user.fullname}">Tên người dùng</h6>
+                            <span class="text-muted small"></span>
                         </div>
-                        <p class="mb-0 text-muted small text-truncate">Bạn: Dạ em cảm ơn thầy ạ.</p>
+                        <p class="mb-0 text-muted small text-truncate">Nhấn để trò chuyện</p>
                     </div>
-                </div>
-                </div>
+                </a>
+            </div>
         </aside>
 
         <main class="chat-main d-flex flex-column">
+            <!-- Header Nhóm Chat / Cá nhân -->
             <header class="chat-header border-bottom p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
-                    <img src="https://i.pravatar.cc/150?u=group" class="rounded" width="35" height="35">
+                    <img th:src="${targetUser != null ? (targetUser.avatar != null ? targetUser.avatar : 'https://ui-avatars.com/api/?name=' + targetUser.fullname) : 'https://i.pravatar.cc/150?u=group'}" class="rounded-circle shadow-sm" width="40" height="40">
                     <div>
-                        <h6 class="mb-0 fw-bold">Nhóm lập trình game (unity) Nâng cao</h6>
-                        <span class="text-success small"><i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Online</span>
+                        <h6 class="mb-0 fw-bold" th:text="${targetUser != null ? targetUser.fullname : 'Vui lòng chọn người để trò chuyện'}">Nhóm lập trình game (unity) Nâng cao</h6>
+                        <span th:if="${targetUser != null}" class="text-success small"><i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Online</span>
                     </div>
                 </div>
             </header>
 
-            <div class="chat-messages p-4 flex-grow-1 overflow-y-auto bg-light-subtle">
-                <div class="alert alert-light border-0 shadow-sm mb-4 small" style="border-radius: 12px;">
-                    <p class="fw-bold mb-1">Một số mẹo nè:</p>
-                    <ol class="mb-0 ps-3">
-                        <li>Nếu mesh vỡ (Normals) -> Dùng recalculate normals...</li>
-                        <li>Nếu model quá to, quá nhỏ... -> Dùng apply scale & rotation...</li>
-                    </ol>
-                </div>
-
-                <div class="d-flex gap-2 mb-4">
-                    <img src="https://i.pravatar.cc/150?u=2" class="rounded-circle" width="32" height="32">
-                    <div class="msg-content received">
-                        Công đức vô lượng anh ơi <33
-                    </div>
-                </div>
-
-                <div class="d-flex flex-row-reverse gap-2 mb-4">
-                    <div class="msg-content sent">
-                        Ai chà, bữa giờ em cũng bị cái mesh vỡ, giờ mới biết là có thể dùng recalculate, cám ơn anh nhaa
-                    </div>
+            <!-- Vùng hiển thị tin nhắn -->
+            <div id="chatMessages" class="chat-messages p-4 flex-grow-1 overflow-y-auto bg-light-subtle">
+                <div th:if="${targetUser == null}" class="text-center text-muted mt-5">
+                    <i class="bi bi-chat-dots-fill fs-1"></i>
+                    <p class="mt-2">Chọn một người trong danh sách để bắt đầu trò chuyện</p>
                 </div>
             </div>
 
-            <footer class="chat-footer p-3 border-top">
-                <div class="input-group align-items-center bg-light rounded-pill px-3">
+            <!-- Vùng nhập tin nhắn -->
+            <footer class="chat-footer p-3 border-top" th:if="${targetUser != null}">
+                <form id="chatForm" class="input-group align-items-center bg-light rounded-pill px-3">
                     <i class="bi bi-paperclip fs-5 text-muted cursor-pointer"></i>
-                    <input type="text" class="form-control border-0 bg-transparent shadow-none" placeholder="Nhắn tin">
-                    <i class="bi bi-send-fill text-poly cursor-pointer"></i>
-                </div>
+                    <input type="text" id="messageInput" class="form-control border-0 bg-transparent shadow-none" placeholder="Nhắn tin..." autocomplete="off" required>
+                    <button type="submit" class="btn btn-link p-0 border-0 shadow-none"><i class="bi bi-send-fill text-poly fs-5 cursor-pointer"></i></button>
+                    
+                    <!-- Dữ liệu ngầm cho Javascript -->
+                    <input type="hidden" id="roomId" th:value="${roomId}">
+                    <input type="hidden" id="currentUserId" th:value="${currentUser.username}">
+                    <input type="hidden" id="targetUserAvatar" th:value="${targetUser.avatar != null ? targetUser.avatar : 'https://ui-avatars.com/api/?name=' + targetUser.fullname}">
+                </form>
             </footer>
         </main>
 
@@ -121,5 +115,126 @@
             </div>
         </aside>
     </div>
+
+    <!-- STOMP & SockJS for Real-time Chat -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script>
+        let stompClient = null;
+        
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const roomIdElem = document.getElementById('roomId');
+            const roomId = roomIdElem ? roomIdElem.value : null;
+            const currentUserIdElem = document.getElementById('currentUserId');
+            const currentUserId = currentUserIdElem ? currentUserIdElem.value : null;
+            const targetAvatarElem = document.getElementById('targetUserAvatar');
+            const targetAvatar = targetAvatarElem ? targetAvatarElem.value : 'https://i.pravatar.cc/150?u=group';
+            const chatMessages = document.getElementById('chatMessages');
+            const chatForm = document.getElementById('chatForm');
+            const messageInput = document.getElementById('messageInput');
+
+            function connect() {
+                if (!roomId) return; // Nếu chưa chọn người chat thì không connect
+                
+                // Gọi API lấy lịch sử tin nhắn GET /api/chat/history
+                fetch(`/api/chat/history?roomId=${roomId}`)
+                    .then(response => response.json())
+                    .then(messages => {
+                        chatMessages.innerHTML = ''; // Xoá thông báo default chờ chọn người chat
+                        if(messages.length === 0) {
+                            chatMessages.innerHTML = '<div class="text-center text-muted mt-5 small">Chưa có tin nhắn. Hãy chào nhau đi! 👋</div>';
+                        } else {
+                            messages.forEach(msg => displayMessage(msg));
+                            scrollToBottom();
+                        }
+                    });
+
+                // Kết nối WebSocket
+                const socket = new SockJS('/ws-chat');
+                stompClient = Stomp.over(socket);
+                stompClient.connect({}, function (frame) {
+                    console.log('STOMP Connected: ' + frame);
+                    // Đăng ký nhận tin nhắn từ phòng chat này
+                    stompClient.subscribe(`/topic/chat/${roomId}`, function (messageOutput) {
+                        displayMessage(JSON.parse(messageOutput.body));
+                        scrollToBottom();
+                    });
+                });
+            }
+
+            function displayMessage(message) {
+                // Xoá dòng "Chưa có tin nhắn" nếu có
+                const emptyMsg = chatMessages.querySelector('.text-muted.mt-5');
+                if(emptyMsg) emptyMsg.remove();
+                
+                // Đảm bảo so sánh chuỗi ID
+                const isSent = message.senderId === currentUserId;
+                const messageDiv = document.createElement('div');
+                
+                let timeStr = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                if(isNaN(new Date(message.timestamp).getTime())) {
+                    timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                }
+                
+                if (isSent) {
+                    messageDiv.className = 'd-flex flex-row-reverse gap-2 mb-4';
+                    messageDiv.innerHTML = `
+                        <div>
+                            <div class="msg-content sent">
+                                ${message.content}
+                            </div>
+                            <div class="small text-muted mt-1 text-end" style="font-size: 10px;">
+                                ${timeStr}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    messageDiv.className = 'd-flex gap-2 mb-4';
+                    messageDiv.innerHTML = `
+                        <img src="${targetAvatar}" class="rounded-circle" width="32" height="32">
+                        <div>
+                            <div class="msg-content received">
+                                ${message.content}
+                            </div>
+                            <div class="small text-muted mt-1" style="font-size: 10px;">
+                                ${timeStr}
+                            </div>
+                        </div>
+                    `;
+                }
+                chatMessages.appendChild(messageDiv);
+            }
+
+            function sendMessage(event) {
+                event.preventDefault();
+                const content = messageInput.value.trim();
+                
+                if (content && stompClient) {
+                    const chatMessage = {
+                        roomId: roomId,
+                        senderId: currentUserId, // Username
+                        content: content,
+                        isRead: false,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Gửi tin nhắn lên Server qua STOMP Destination
+                    stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                    messageInput.value = ''; // Reset input
+                }
+            }
+
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            if(chatForm) {
+                chatForm.addEventListener('submit', sendMessage);
+            }
+
+            // Gọi connect khi trang đã load xong
+            connect();
+        });
+    </script>
 </body>
 </html>

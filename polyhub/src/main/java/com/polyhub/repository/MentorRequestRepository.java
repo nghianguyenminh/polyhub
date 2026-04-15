@@ -19,4 +19,7 @@ public interface MentorRequestRepository extends JpaRepository<MentorRequest, Lo
     
     // Check if user already has a pending or approved request
     boolean existsByUserAndStatusNot(User user, com.polyhub.entity.RequestStatus status);
+    // Thêm các hàm tìm kiếm theo tên hoặc email hoặc cccd
+    @org.springframework.data.jpa.repository.Query("SELECT m FROM MentorRequest m WHERE m.status = :status AND (LOWER(m.fullname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.introduction) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    org.springframework.data.domain.Page<MentorRequest> findByStatusAndKeyword(@org.springframework.data.repository.query.Param("status") com.polyhub.entity.RequestStatus status, @org.springframework.data.repository.query.Param("keyword") String keyword, org.springframework.data.domain.Pageable pageable);
 }
