@@ -39,6 +39,21 @@ public class MentorRequest implements Serializable {
 
     @Column(name = "cccd_number", length = 20, nullable = false)
     private String cccdNumber;
+    
+    @Column(columnDefinition = "nvarchar(255)")
+    private String specialized;
+
+    @Column(columnDefinition = "nvarchar(1500)")
+    private String description;
+    
+    @Column(columnDefinition = "nvarchar(255)")
+    private String facebookLink;
+
+    @Column(columnDefinition = "nvarchar(255)")
+    private String zaloLink;
+
+    @Column(columnDefinition = "nvarchar(255)")
+    private String githubLink;
 
     @Column(columnDefinition = "nvarchar(1500)", nullable = false)
     private String introduction;
@@ -51,6 +66,12 @@ public class MentorRequest implements Serializable {
 
     @Column(name = "certificate_file")
     private String certificateFile;
+    
+    @Column(name = "certificate1")
+    private String certificate1;
+    
+    @Column(name = "certificate2")
+    private String certificate2;
 
     @Column(name = "degree_file")
     private String degreeFile;

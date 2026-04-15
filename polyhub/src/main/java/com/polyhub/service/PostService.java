@@ -42,14 +42,12 @@ public class PostService {
       imagePublicId = (String) uploadResult.get("public_id");
     }
 
-    Post post = new Post(
-      null,
-      content,
-      imageUrl,
-      imagePublicId,
-      user,
-      LocalDateTime.now()
-    );
+    Post post = new Post();
+    post.setContent(content);
+    post.setImageUrl(imageUrl);
+    post.setImagePublicId(imagePublicId);
+    post.setUser(user);
+    post.setCreatedAt(LocalDateTime.now());
 
     return postRepository.save(post);
   }

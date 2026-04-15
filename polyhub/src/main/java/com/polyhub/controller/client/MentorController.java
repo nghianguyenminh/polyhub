@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -31,7 +32,9 @@ public class MentorController {
 
   @GetMapping("/mentors")
   public String mentors(Model model) {
-    List<MentorRequest> mentors = mentorRequestRepository.findByStatus(MentorRequestStatus.APPROVED);
+    List<MentorRequest> mentors = mentorRequestRepository.findByStatus(
+      MentorRequestStatus.APPROVED
+    );
     model.addAttribute("mentors", mentors);
     return "client/mentors";
   }
@@ -50,13 +53,14 @@ public class MentorController {
     User user = userRepository.findByUsername(principal.getName()).orElse(null);
     model.addAttribute("user", user);
 
-    MentorRequest mentorRequest = mentorRequestRepository.findByUser(user);
-    if (mentorRequest == null) {
-      mentorRequest = new MentorRequest();
-      mentorRequest.setUser(user);
-      mentorRequest.setStatus(MentorRequestStatus.PENDING);
-      mentorRequestRepository.save(mentorRequest);
-    }
+    MentorRequest mentorRequest = mentorRequestRepository
+      .findByUser(user)
+      .orElseGet(() -> {
+        MentorRequest newMentorRequest = new MentorRequest();
+        newMentorRequest.setUser(user);
+        newMentorRequest.setStatus(MentorRequestStatus.PENDING);
+        return mentorRequestRepository.save(newMentorRequest);
+      });
 
     model.addAttribute("mentorRequest", mentorRequest);
     return "client/mentor_register";
@@ -64,42 +68,45 @@ public class MentorController {
 
   @PostMapping("/mentor/register")
   public String mentorRegister(
-      Model model,
-      Principal principal,
-      @RequestParam("specialized") String specialized,
-      @RequestParam("description") String description,
-      @RequestParam("facebookLink") String facebookLink,
-      @RequestParam("zaloLink") String zaloLink,
-      @RequestParam("githubLink") String githubLink,
-      @RequestParam("cv") MultipartFile cv,
-      @RequestParam("certificate1") MultipartFile certificate1,
-      @RequestParam("certificate2") MultipartFile certificate2)
-      throws IOException {
+    Model model,
+    Principal principal,
+    @RequestParam("specialized") String specialized,
+    @RequestParam("description") String description,
+    @RequestParam("facebookLink") String facebookLink,
+    @RequestParam("zaloLink") String zaloLink,
+    @RequestParam("githubLink") String githubLink,
+    @RequestParam("cv") MultipartFile cv,
+    @RequestParam("certificate1") MultipartFile certificate1,
+    @RequestParam("certificate2") MultipartFile certificate2
+  ) throws IOException {
     User user = userRepository.findByUsername(principal.getName()).orElse(null);
     if (user != null) {
-      MentorRequest mentorRequest = mentorRequestRepository.findByUser(user);
-      if (mentorRequest == null) {
-        mentorRequest = new MentorRequest();
-        mentorRequest.setUser(user);
-      }
+      MentorRequest mentorRequest = mentorRequestRepository
+        .findByUser(user)
+        .orElseGet(() -> {
+          MentorRequest newMentorRequest = new MentorRequest();
+          newMentorRequest.setUser(user);
+          return newMentorRequest;
+        });
+
       mentorRequest.setSpecialized(specialized);
       mentorRequest.setDescription(description);
       mentorRequest.setFacebookLink(facebookLink);
       mentorRequest.setZaloLink(zaloLink);
       mentorRequest.setGithubLink(githubLink);
       mentorRequest.setStatus(MentorRequestStatus.PENDING);
-      mentorRequest.setCreateAt(new Date());
+      mentorRequest.setCreatedAt(new Date());
 
-      if (!cv.isEmpty()) {
+      if (cv != null && !cv.isEmpty()) {
         String cvUrl = fileStorageService.uploadFile(cv);
-        mentorRequest.setCv(cvUrl);
+        mentorRequest.setCvFile(cvUrl);
       }
 
-      if (!certificate1.isEmpty()) {
+      if (certificate1 != null && !certificate1.isEmpty()) {
         String certificate1Url = fileStorageService.uploadFile(certificate1);
         mentorRequest.setCertificate1(certificate1Url);
       }
-      if (!certificate2.isEmpty()) {
+      if (certificate2 != null && !certificate2.isEmpty()) {
         String certificate2Url = fileStorageService.uploadFile(certificate2);
         mentorRequest.setCertificate2(certificate2Url);
       }
