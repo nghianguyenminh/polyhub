@@ -27,9 +27,9 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         // 1. Tạo quyền Super Admin (Nếu chưa có)
-        Role adminRole = roleRepository.findById(1L).orElseGet(() -> {
+        Role adminRole = roleRepository.findById("SUPER_ADMIN").orElseGet(() -> {
             Role role = new Role();
-            role.setId(1L);
+            role.setId("SUPER_ADMIN");
             role.setName("Quản trị viên cấp cao");
             return roleRepository.save(role);
         });

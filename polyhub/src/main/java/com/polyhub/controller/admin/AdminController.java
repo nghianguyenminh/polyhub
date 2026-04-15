@@ -2,18 +2,16 @@ package com.polyhub.controller.admin;
 
 import com.polyhub.entity.MentorRequest;
 import com.polyhub.entity.MentorRequestStatus;
-import com.polyhub.entity.Role;
-import com.polyhub.entity.User;
 import com.polyhub.repository.MentorRequestRepository;
-import com.polyhub.repository.RoleRepository;
-import com.polyhub.repository.UserRepository;
-import com.polyhub.service.EmailService;
 import com.polyhub.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -24,13 +22,10 @@ import java.util.List;
 public class AdminController {
 
     private final MentorRequestRepository mentorRequestRepository;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final EmailService emailService;
     private final UserService userService;
 
     // Map cả 2 đường dẫn /admin và /admin/dashboard về chung 1 trang
-    @GetMapping({"", "/", "/dashboard"})
+    @GetMapping({ "", "/", "/dashboard" })
     public String dashboard() {
         return "admin/dashboard"; // Mở file templates/admin/dashboard.html
     }
@@ -58,42 +53,23 @@ public class AdminController {
 
     @PostMapping("/mentors/{id}/approve")
     public String approveMentor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
-        if (request != null && request.getStatus() == MentorRequestStatus.PENDING) {
-            request.setStatus(MentorRequestStatus.APPROVED);
-            mentorRequestRepository.save(request);
-
-            User user = request.getUser();
-            if (user != null) {
-                Role role = roleRepository.findById(2L).orElse(null);
-                if (role == null) {
-                    role = new Role(2L, "Mentor");
-                    roleRepository.save(role);
-                }
-                user.setRole(role);
-                userRepository.save(user); // Cập nhật role trong CSDL ngay
-            }
-
-            // Gửi email chúc mừng (phê duyệt Mentor)
-            emailService.sendMentorApprovalEmail(request.getEmail(), request.getFullname());
-
+        try {
+            userService.approveMentor(id);
             redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt yêu cầu trở thành Mentor.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi phê duyệt mentor.");
         }
         return "redirect:/admin/mentors";
     }
 
     @PostMapping("/mentors/{id}/reject")
-    public String rejectMentor(@PathVariable Long id, @RequestParam(value = "reason", required = false) String reason, RedirectAttributes redirectAttributes) {
-        MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
-        if (request != null && request.getStatus() == MentorRequestStatus.PENDING) {
-            request.setStatus(MentorRequestStatus.REJECTED);
-            request.setRejectionReason(reason);
-            mentorRequestRepository.save(request);
-
-            // Gửi email từ chối có reason
-            emailService.sendMentorRejectionEmail(request.getEmail(), request.getFullname(), reason);
-
+    public String rejectMentor(@PathVariable Long id, @RequestParam(value = "reason", required = false) String reason,
+            RedirectAttributes redirectAttributes) {
+        try {
+            userService.rejectMentor(id, reason);
             redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối yêu cầu trở thành Mentor.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi từ chối mentor.");
         }
         return "redirect:/admin/mentors";
     }
