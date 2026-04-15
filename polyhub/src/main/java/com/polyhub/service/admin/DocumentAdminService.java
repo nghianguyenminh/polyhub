@@ -1,9 +1,10 @@
 package com.polyhub.service.admin;
 
-import com.polyhub.entity.User;
-import com.polyhub.service.EmailService;
 import com.polyhub.entity.Document;
+import com.polyhub.entity.DocumentStatus;
+import com.polyhub.entity.User;
 import com.polyhub.repository.DocumentRepository;
+import com.polyhub.service.EmailService;
 import com.polyhub.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,10 +12,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +28,7 @@ public class DocumentAdminService {
 
 
     // Filter, Sort and Pagination
-    public Page<Document> getDocuments(String keyword, String categoryId, String status, String documentType, int page, int size) {
+    public Page<Document> getDocuments(String keyword, Long categoryId, DocumentStatus status, String documentType, int page, int size) {
         // Mặc định sắp xếp mới nhất lên đầu
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         if (status != null && documentType != null && keyword != null && categoryId != null) {
@@ -43,23 +44,23 @@ public class DocumentAdminService {
         }
     }
 
-    public Document getDocumentById(String id) {
+    public Document getDocumentById(Long id) {
         return documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu ID: " + id));
     }
 
     // Duyệt tài liệu
-    public void approveDocument(String id) {
+    public void approveDocument(Long id) {
         Document doc = getDocumentById(id);
-        doc.setStatus("APPROVED");
+        doc.setStatus(DocumentStatus.APPROVED);
         doc.setRejectionReason(null);
         documentRepository.save(doc);
     }
 
     // Từ chối / Gỡ tài liệu
-    public void rejectOrTakedownDocument(String id, String reason) {
+    public void rejectOrTakedownDocument(Long id, String reason) {
         Document doc = getDocumentById(id);
-        doc.setStatus("REJECTED"); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
+        doc.setStatus(DocumentStatus.REJECTED); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
         doc.setRejectionReason(reason);
         documentRepository.save(doc);
 
@@ -71,15 +72,15 @@ public class DocumentAdminService {
     }
 
     // Phục hồi / Mở khóa tài liệu
-    public void restoreDocument(String id) {
+    public void restoreDocument(Long id) {
         Document doc = getDocumentById(id);
-        doc.setStatus("APPROVED");
+        doc.setStatus(DocumentStatus.APPROVED);
         doc.setRejectionReason(null);
         documentRepository.save(doc);
     }
 
     // Xóa vật lý (Hard delete: Xóa Cloudinary & DB)
-    public void hardDeleteDocument(String id) {
+    public void hardDeleteDocument(Long id) {
         Document doc = getDocumentById(id);
 
         try {
@@ -100,9 +101,9 @@ public class DocumentAdminService {
     public Map<String, Object> getDocumentStats() {
         Map<String, Object> stats = new HashMap<>();
         long total = documentRepository.count();
-        long pending = documentRepository.countByStatus("PENDING");
-        long approved = documentRepository.countByStatus("APPROVED");
-        long hidden = documentRepository.countByStatus("HIDDEN");
+        long pending = documentRepository.countByStatus(DocumentStatus.PENDING);
+        long approved = documentRepository.countByStatus(DocumentStatus.APPROVED);
+        long hidden = documentRepository.countByStatus(DocumentStatus.HIDDEN);
 
         stats.put("total", total);
         stats.put("pending", pending);
@@ -191,7 +192,7 @@ public class DocumentAdminService {
 
     public List<Object[]> getCategoryStats() {
         return documentRepository.findAll().stream()
-                .collect(Collectors.groupingBy(Document::getCategoryId, Collectors.counting()))
+                .collect(Collectors.groupingBy(d -> d.getCategory().getId(), Collectors.counting()))
                 .entrySet().stream()
                 .map(entry -> new Object[]{entry.getKey(), entry.getValue()})
                 .collect(Collectors.toList());

@@ -1,30 +1,20 @@
 package com.polyhub.controller.admin;
 
-<<<<<<< HEAD
-import com.polyhub.entity.User;
-import com.polyhub.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-=======
 import com.polyhub.entity.MentorRequest;
-import com.polyhub.entity.RequestStatus;
+import com.polyhub.entity.MentorRequestStatus;
 import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
 import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.EmailService;
+import com.polyhub.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
->>>>>>> origin/appmod/java-upgrade-20260406032344
 
 import java.util.List;
 
@@ -33,15 +23,11 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController {
 
-<<<<<<< HEAD
-    @Autowired
-    private UserService userService;
-=======
     private final MentorRequestRepository mentorRequestRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmailService emailService;
->>>>>>> origin/appmod/java-upgrade-20260406032344
+    private final UserService userService;
 
     // Map cả 2 đường dẫn /admin và /admin/dashboard về chung 1 trang
     @GetMapping({"", "/", "/dashboard"})
@@ -56,38 +42,32 @@ public class AdminController {
 
     @GetMapping("/mentors")
     public String mentors(Model model) {
-<<<<<<< HEAD
-        List<User> mentors = userService.findByRole("MENTOR");
-        model.addAttribute("mentors", mentors);
-        return "admin/mentors";
-=======
         List<MentorRequest> requests = mentorRequestRepository.findAll();
-        
-        long pendingCount = requests.stream().filter(r -> r.getStatus() == RequestStatus.PENDING).count();
-        long approvedCount = requests.stream().filter(r -> r.getStatus() == RequestStatus.APPROVED).count();
-        long rejectedCount = requests.stream().filter(r -> r.getStatus() == RequestStatus.REJECTED).count();
-        
+
+        long pendingCount = requests.stream().filter(r -> r.getStatus() == MentorRequestStatus.PENDING).count();
+        long approvedCount = requests.stream().filter(r -> r.getStatus() == MentorRequestStatus.APPROVED).count();
+        long rejectedCount = requests.stream().filter(r -> r.getStatus() == MentorRequestStatus.REJECTED).count();
+
         model.addAttribute("requests", requests);
         model.addAttribute("pendingCount", pendingCount);
         model.addAttribute("approvedCount", approvedCount);
         model.addAttribute("rejectedCount", rejectedCount);
-        
-        return "admin/mentors"; 
->>>>>>> origin/appmod/java-upgrade-20260406032344
+
+        return "admin/mentors";
     }
 
     @PostMapping("/mentors/{id}/approve")
     public String approveMentor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
-        if (request != null && request.getStatus() == RequestStatus.PENDING) {
-            request.setStatus(RequestStatus.APPROVED);
+        if (request != null && request.getStatus() == MentorRequestStatus.PENDING) {
+            request.setStatus(MentorRequestStatus.APPROVED);
             mentorRequestRepository.save(request);
 
             User user = request.getUser();
             if (user != null) {
-                Role role = roleRepository.findById("MENTOR").orElse(null);
+                Role role = roleRepository.findById(2L).orElse(null);
                 if (role == null) {
-                    role = new Role("MENTOR", "Giảng viên / Mentor");
+                    role = new Role(2L, "Mentor");
                     roleRepository.save(role);
                 }
                 user.setRole(role);
@@ -103,10 +83,10 @@ public class AdminController {
     }
 
     @PostMapping("/mentors/{id}/reject")
-    public String rejectMentor(@PathVariable Long id, @RequestParam(value="reason", required=false) String reason, RedirectAttributes redirectAttributes) {
+    public String rejectMentor(@PathVariable Long id, @RequestParam(value = "reason", required = false) String reason, RedirectAttributes redirectAttributes) {
         MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
-        if (request != null && request.getStatus() == RequestStatus.PENDING) {
-            request.setStatus(RequestStatus.REJECTED);
+        if (request != null && request.getStatus() == MentorRequestStatus.PENDING) {
+            request.setStatus(MentorRequestStatus.REJECTED);
             request.setRejectionReason(reason);
             mentorRequestRepository.save(request);
 
@@ -132,6 +112,5 @@ public class AdminController {
     public String reports() {
         return "admin/reports";
     }
-
 
 }

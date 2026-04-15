@@ -42,7 +42,13 @@ public class Document {
     @Enumerated(EnumType.STRING)
     private DocumentStatus status = DocumentStatus.PENDING;
 
-    private String hiddenReason;
+    private String rejectionReason;
+
+    private String filePublicId;
+
+    private Long fileSize;
+
+    private int downloadCount = 0;
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -30,11 +31,21 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    private String phone;
+
+    private LocalDate birthday;
+
+    private Boolean gender;
+
+    private String major;
+
     @Column(nullable = false)
     private Boolean active = true;
 
     @Column(nullable = false)
     private String avatar = "default.png";
+
+    private String coverImage = "default.png";
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

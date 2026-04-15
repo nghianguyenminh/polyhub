@@ -25,23 +25,23 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        
+
         // 1. Tạo quyền Super Admin (Nếu chưa có)
-        Role adminRole = roleRepository.findById("SUPER_ADMIN").orElseGet(() -> {
+        Role adminRole = roleRepository.findById(1L).orElseGet(() -> {
             Role role = new Role();
-            role.setId("SUPER_ADMIN");
+            role.setId(1L);
             role.setName("Quản trị viên cấp cao");
             return roleRepository.save(role);
         });
 
         // 2. Tạo tài khoản Admin (Nếu chưa có)
-        if (!userRepository.existsById("admin")) {
+        if (userRepository.count() == 0) {
             User admin = new User();
             admin.setUsername("admin"); // Username đăng nhập
-            
+
             // QUAN TRỌNG: Mật khẩu "123456" được băm trước khi lưu
-            admin.setPassword(passwordEncoder.encode("123456")); 
-            
+            admin.setPassword(passwordEncoder.encode("123456"));
+
             admin.setFullname("Hệ thống Admin PolyHUB");
             admin.setEmail("admin@polyhub.com");
             admin.setPhone("0987654321");

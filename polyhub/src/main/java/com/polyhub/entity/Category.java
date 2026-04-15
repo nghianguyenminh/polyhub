@@ -19,7 +19,12 @@ public class Category {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    private String code;
+
+    @Column(nullable = false)
     private String name;
+
+    private boolean active = true;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents;

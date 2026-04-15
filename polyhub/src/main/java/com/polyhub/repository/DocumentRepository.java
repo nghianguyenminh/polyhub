@@ -14,13 +14,23 @@ import java.util.List;
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
+    long countByStatus(DocumentStatus status);
+
+    Page<Document> findByStatusAndDocumentTypeAndTitleContainingIgnoreCaseAndCategoryId(DocumentStatus status, String documentType, String keyword, Long categoryId, Pageable pageable);
+
+    Page<Document> findByStatusAndDocumentTypeAndTitleContainingIgnoreCase(DocumentStatus status, String documentType, String keyword, Pageable pageable);
+
+    Page<Document> findByStatusAndTitleContainingIgnoreCaseAndCategoryId(DocumentStatus status, String keyword, Long categoryId, Pageable pageable);
+
+    Page<Document> findByStatusAndTitleContainingIgnoreCase(DocumentStatus status, String keyword, Pageable pageable);
+
     List<Document> findByStatus(DocumentStatus status);
 
     @Query("SELECT d FROM Document d " +
-           "WHERE (:status IS NULL OR d.status = :status) " +
-           "AND (:documentType IS NULL OR d.documentType = :documentType) " +
-           "AND (:keyword IS NULL OR d.title LIKE %:keyword%) " +
-           "AND (:categoryId IS NULL OR d.category.id = :categoryId)")
+            "WHERE (:status IS NULL OR d.status = :status) " +
+            "AND (:documentType IS NULL OR d.documentType = :documentType) " +
+            "AND (:keyword IS NULL OR d.title LIKE %:keyword%) " +
+            "AND (:categoryId IS NULL OR d.category.id = :categoryId)")
     Page<Document> searchAndFilterDocuments(@Param("status") DocumentStatus status,
                                             @Param("documentType") String documentType,
                                             @Param("keyword") String keyword,

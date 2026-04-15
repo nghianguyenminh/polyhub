@@ -69,7 +69,7 @@ public class DocumentAdminController {
     }
 
     @PostMapping("/{id}/takedown")
-    public String takedownDocument(@PathVariable Long id, 
+    public String takedownDocument(@PathVariable Long id,
                                    @RequestParam("reason") String reason,
                                    RedirectAttributes redirectAttributes) {
         try {
@@ -96,9 +96,9 @@ public class DocumentAdminController {
     public String restoreDocument(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             documentAdminService.restoreDocument(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Ph?c h?i th�nh c�ng! T�i li?u d� hi?n th? l?i tr�n trang ch?.");
+            redirectAttributes.addFlashAttribute("successMessage", "Phục hồi thành công! Tài liệu đã hiển thị lại trên trang chủ.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "L?i: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/documents";
     }
