@@ -80,22 +80,6 @@ public class MentorRequest implements Serializable {
     @Column(nullable = false)
     private MentorRequestStatus status = MentorRequestStatus.PENDING;
 
-    @Column(name = "rejection_reason", columnDefinition = "nvarchar(1000)")
-    private String rejectionReason;
-
-    @Column(name = "created_at", updatable = false)
+    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

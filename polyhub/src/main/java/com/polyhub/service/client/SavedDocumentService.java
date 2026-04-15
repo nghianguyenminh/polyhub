@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -27,7 +26,7 @@ public class SavedDocumentService {
      * Lấy danh sách các tài liệu đã lưu của người dùng có tuỳ chỉnh phân trang.
      */
     public Page<SavedDocument> getSavedDocumentsByUser(User user, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         return savedDocumentRepository.findByUserOrderBySavedAtDesc(user, pageable);
     }
 

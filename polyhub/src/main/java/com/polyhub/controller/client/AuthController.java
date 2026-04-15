@@ -31,7 +31,7 @@ public class AuthController {
     @PostMapping("/register")
     public String processRegister(@ModelAttribute("user") RegisterRequest registerRequest, RedirectAttributes redirectAttributes) {
         try {
-            User registeredUser = userService.registerNewUser(registerRequest);
+            userService.registerNewUser(registerRequest);
             redirectAttributes.addFlashAttribute("successMessage", "Đăng ký thành công!");
             return "redirect:/login";
         } catch (Exception e) {

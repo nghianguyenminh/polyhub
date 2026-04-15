@@ -29,13 +29,7 @@ public class Post {
     private String imagePublicId; // Public ID for Cloudinary
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Constructor for creating a post with content, image, and user
-    public Post(String content, String imageUrl, User user) {
-        this.content = content;
-        this.imageUrl = imageUrl;
-        this.user = user;
-    }
 }

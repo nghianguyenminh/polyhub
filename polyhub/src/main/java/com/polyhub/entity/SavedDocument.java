@@ -28,4 +28,5 @@ public class SavedDocument {
 
     @Column(nullable = false)
     private LocalDateTime savedAt = LocalDateTime.now();
+
 }
