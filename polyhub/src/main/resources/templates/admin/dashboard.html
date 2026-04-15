@@ -32,7 +32,7 @@
                     </div>
                     <div>
                         <div class="text-muted fw-medium" style="font-size: 13px;">Tổng người dùng</div>
-                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);">2,510</h4>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${totalUsers}"></h4>
                         <div class="stat-indicator text-success" style="font-size: 11px;"><i class="bi bi-arrow-up"></i> 15% <span class="text-muted">vs hôm qua</span></div>
                     </div>
                 </div>
@@ -58,7 +58,7 @@
                     </div>
                     <div>
                         <div class="text-muted fw-medium" style="font-size: 13px;">Mentor chờ duyệt</div>
-                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);">5</h4>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${pendingMentorRequests}"></h4>
                         <div class="stat-indicator text-danger" style="font-size: 11px;">Hôm nay mới có</div>
                     </div>
                 </div>
@@ -126,42 +126,23 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr th:each="request : ${pendingRequestsList}">
                                     <td class="text-center align-middle"><input class="form-check-input shadow-none" type="checkbox"></td>
                                     <td class="align-middle">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="https://ui-avatars.com/api/?name=Lưu+Châu&background=random" class="rounded-circle" width="30" height="30">
+                                            <img th:src="@{'/api/v1/files/' + ${request.user.avatar}}" class="rounded-circle" width="30" height="30">
                                             <div style="line-height: 1.2;">
-                                                <div class="fw-semibold text-dark">Lưu Phan Bảo Châu</div>
-                                                <div class="text-muted" style="font-size: 11px;">chaultp@fpt.edu.vn</div>
+                                                <div class="fw-semibold text-dark" th:text="${request.user.fullName}"></div>
+                                                <div class="text-muted" style="font-size: 11px;" th:text="${request.user.email}"></div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="align-middle fw-medium text-dark">Ứng dụng phần mềm</td>
-                                    <td class="align-middle">Java / Spring Boot, SQL</td>
-                                    <td class="align-middle text-muted">2 giờ trước</td>
+                                    <td class="align-middle fw-medium text-dark" th:text="${request.specialized}"></td>
+                                    <td class="align-middle" th:text="${request.skills}"></td>
+                                    <td class="align-middle text-muted" th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy')}"></td>
                                     <td class="align-middle">
-                                        <button class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</button>
-                                        <button class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-center align-middle"><input class="form-check-input shadow-none" type="checkbox"></td>
-                                    <td class="align-middle">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <img src="https://ui-avatars.com/api/?name=Anh+Khoa&background=random" class="rounded-circle" width="30" height="30">
-                                            <div style="line-height: 1.2;">
-                                                <div class="fw-semibold text-dark">Lương Anh Khoa</div>
-                                                <div class="text-muted" style="font-size: 11px;">khoala@fpt.edu.vn</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle fw-medium text-dark">Thiết kế đồ họa</td>
-                                    <td class="align-middle">UI/UX, Figma</td>
-                                    <td class="align-middle text-muted">Hôm qua</td>
-                                    <td class="align-middle">
-                                        <button class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</button>
-                                        <button class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</button>
+                                        <a th:href="@{/admin/mentors/{id}/approve(id=${request.id})}" class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</a>
+                                        <a th:href="@{/admin/mentors/{id}/detail(id=${request.id})}" class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</a>
                                     </td>
                                 </tr>
                             </tbody>

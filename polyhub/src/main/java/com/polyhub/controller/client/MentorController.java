@@ -8,7 +8,7 @@ import com.polyhub.repository.UserRepository;
 import com.polyhub.service.FileStorageService;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,20 +95,20 @@ public class MentorController {
       mentorRequest.setZaloLink(zaloLink);
       mentorRequest.setGithubLink(githubLink);
       mentorRequest.setStatus(MentorRequestStatus.PENDING);
-      mentorRequest.setCreatedAt(new Date());
+      mentorRequest.setCreatedAt(LocalDateTime.now());
 
       if (cv != null && !cv.isEmpty()) {
-        String cvUrl = fileStorageService.uploadFile(cv);
-        mentorRequest.setCvFile(cvUrl);
+        Map<String, Object> cvUploadResult = fileStorageService.uploadImage(cv, "polyhub_cvs");
+        mentorRequest.setCvFile((String) cvUploadResult.get("url"));
       }
 
       if (certificate1 != null && !certificate1.isEmpty()) {
-        String certificate1Url = fileStorageService.uploadFile(certificate1);
-        mentorRequest.setCertificate1(certificate1Url);
+        Map<String, Object> certificate1UploadResult = fileStorageService.uploadImage(certificate1, "polyhub_certificates");
+        mentorRequest.setCertificate1((String) certificate1UploadResult.get("url"));
       }
       if (certificate2 != null && !certificate2.isEmpty()) {
-        String certificate2Url = fileStorageService.uploadFile(certificate2);
-        mentorRequest.setCertificate2(certificate2Url);
+        Map<String, Object> certificate2UploadResult = fileStorageService.uploadImage(certificate2, "polyhub_certificates");
+        mentorRequest.setCertificate2((String) certificate2UploadResult.get("url"));
       }
       mentorRequestRepository.save(mentorRequest);
     }
