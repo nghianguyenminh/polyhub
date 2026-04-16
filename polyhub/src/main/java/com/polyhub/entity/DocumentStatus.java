@@ -1,8 +1,7 @@
 package com.polyhub.entity;
 
 public enum DocumentStatus {
-    PENDING,
-    APPROVED,
-    REJECTED,
-    HIDDEN
+    PENDING,    // Chờ duyệt
+    APPROVED,   // Đã duyệt
+    REJECTED    // Bị từ chối
 }

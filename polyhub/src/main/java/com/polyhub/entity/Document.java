@@ -32,7 +32,7 @@ public class Document {
 
     @Column
     private String thumbnailUrl;
-    
+
     @Column
     private String fileType;
 
@@ -47,8 +47,8 @@ public class Document {
     @Column(nullable = false)
     private LocalDateTime uploadedAt = LocalDateTime.now();
 
-    @Column(nullable = false)
-    private boolean approved = false;
+    @Enumerated(EnumType.STRING)
+    private DocumentStatus status = DocumentStatus.PENDING;
 
     private String slug;
 
