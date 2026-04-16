@@ -6,7 +6,7 @@ import com.polyhub.service.CategoryService;
 import com.polyhub.service.client.DocumentClientService;
 import java.io.IOException;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,20 +20,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/documents")
+@RequiredArgsConstructor
 public class DocumentClientController {
 
   private final DocumentClientService documentClientService;
-  private final CategoryService categoryService;
+  private final CategoryService categoryService; // Lấy danh mục hoạt động
 
-  @Autowired
-  public DocumentClientController(
-    DocumentClientService documentClientService,
-    CategoryService categoryService
-  ) {
-    this.documentClientService = documentClientService;
-    this.categoryService = categoryService;
-  }
-
+  /**
+   * Màn hình danh sách Tài liệu bên Client hỗ trợ filter, search, paging
+   */
   @GetMapping
   public String showDocumentsPage(
     @RequestParam(value = "keyword", required = false) String keyword,
@@ -42,7 +37,10 @@ public class DocumentClientController {
     Model model,
     @ModelAttribute("currentUser") com.polyhub.entity.User currentUser
   ) {
+    // Lấy chuyên ngành CHỈ ĐANG HOẠT ĐỘNG để làm Bộ lọc (Filter) và Selectbox (Upload)
     List<Category> categories = categoryService.getActiveCategoriesForDropdown();
+
+    // Lấy danh sách tài liệu mới đăng theo page (8 dòng / trang)
     int pageSize = 8;
     Page<Document> documentPage = documentClientService.getDocumentsForClient(
       keyword,
@@ -50,19 +48,29 @@ public class DocumentClientController {
       page,
       pageSize
     );
+
+    // Lấy danh sách ID document mà user đã lưu
     java.util.Set<Long> savedDocIds = new java.util.HashSet<>();
     if (currentUser != null) {
       savedDocIds = documentClientService.getSavedDocumentIds(currentUser);
     }
+
     model.addAttribute("categories", categories);
-    model.addAttribute("documentPage", documentPage);
-    model.addAttribute("savedDocIds", savedDocIds);
+    model.addAttribute("documentPage", documentPage); // truyền page object xuống view
+    model.addAttribute("savedDocIds", savedDocIds); // truyền danh sách ID đã lưu
+
+    // Giữ nguyên các tham số filter để nạp lại vào giao diện (nếu cần đổi màu active hoặc map url param)
     model.addAttribute("keyword", keyword);
     model.addAttribute("categoryId", categoryId);
     model.addAttribute("currentPage", page);
+
     return "client/documents";
   }
 
+  /**
+   * Hành động: Nút Chia Sẻ Tài Liệu
+   * Upload File lên hệ thống và gửi thông báo
+   */
   @PostMapping("/upload")
   public String uploadDocument(
     @RequestParam("title") String title,
@@ -71,8 +79,9 @@ public class DocumentClientController {
     @RequestParam("file") MultipartFile file,
     RedirectAttributes redirectAttributes,
     @ModelAttribute("currentUser") com.polyhub.entity.User currentUser
-  ) {
+  ) { // Lấy phiên đăng nhập hiện tại
     try {
+      // Kiểm tra file rỗng trước khi load lên
       if (file.isEmpty()) {
         redirectAttributes.addFlashAttribute(
           "error_msg",
@@ -80,6 +89,8 @@ public class DocumentClientController {
         );
         return "redirect:/documents";
       }
+
+      // Xử lý thông qua Service, truyền thêm biến currentUser là uploader
       documentClientService.shareDocument(
         title,
         description,
@@ -87,6 +98,8 @@ public class DocumentClientController {
         file,
         currentUser
       );
+
+      // Cập nhật thông báo lên Client bằng Flash Attributes
       redirectAttributes.addFlashAttribute(
         "success_msg",
         "Tải tài liệu thành công! Tài liệu của bạn đã được đưa lên hệ thống."
@@ -99,6 +112,7 @@ public class DocumentClientController {
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute("error_msg", e.getMessage());
     }
-    return "redirect:/documents";
+
+    return "redirect:/documents"; // Load lại trang Document (cùng form với file HTML bên Client)
   }
 }
