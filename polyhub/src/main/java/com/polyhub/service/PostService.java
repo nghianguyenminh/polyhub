@@ -44,11 +44,23 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public java.util.Optional<Post> getPostById(Long id) {
-        return postRepository.findById(id);
-    }
 
-    public void deletePost(Long id) {
-        postRepository.deleteById(id);
+    // --- Tính năng Share bài viết ---
+    public Post sharePost(Long originalPostId, String content, String username) {
+        User user = userRepository.findById(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        Post originalPost = postRepository.findById(originalPostId)
+                .orElseThrow(() -> new RuntimeException("Bài viết gốc không tồn tại"));
+
+        // Chống lồng quá sâu: Nếu bài gốc đã là 1 bài share, thì móc thẳng tới bài rễ (root post)
+        Post rootPost = originalPost.getSharedPost() != null ? originalPost.getSharedPost() : originalPost;
+
+        Post sharedPost = new Post();
+        sharedPost.setContent(content); // Lời tựa người dùng thêm vào
+        sharedPost.setUser(user);
+        sharedPost.setSharedPost(rootPost);
+
+        return postRepository.save(sharedPost);
     }
 }

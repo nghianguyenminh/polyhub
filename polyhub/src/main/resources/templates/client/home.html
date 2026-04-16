@@ -84,7 +84,7 @@
         </div>
 
         <!-- Feed list: Sử dụng Thymeleaf lấy Post từ Controller -->
-        <div th:each="post : ${recentPosts}" class="poly-card p-0 mt-3" th:data-post-id="${post.id}"> 
+        <div th:each="post : ${recentPosts}" class="poly-card p-0 mt-3"> 
             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
                     <img th:src="${post.user != null and post.user.avatar != null and post.user.avatar.startsWith('http') ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;" alt="Avatar">
@@ -98,53 +98,164 @@
                 <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
             </div>
             
-            <div class="px-3 pb-2 mt-2">
+            <div class="px-3 pb-2">
                 <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
-                <img th:if="${post.imageUrl != null}" th:src="${post.imageUrl}" class="img-fluid w-100 rounded mt-2" style="max-height: 550px; object-fit: cover;" alt="Post img">
+            </div>
+            
+            <img th:if="${post.imageUrl != null and post.sharedPost == null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
+            
+            <!-- KIỂM TRA NẾU ĐÂY LÀ BÀI SHARE -> HIỂN THỊ BOX LỒNG NHAU -->
+            <div th:if="${post.sharedPost != null}" class="border rounded mx-3 mb-2 overflow-hidden pointer-box">
+                <!-- Header của bài gốc -->
+                <div class="p-2 d-flex align-items-center bg-light border-bottom">
+                    <img th:src="${post.sharedPost.user != null and post.sharedPost.user.avatar != null and post.sharedPost.user.avatar.startsWith('http') ? post.sharedPost.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border me-2" width="30" height="30" style="object-fit: cover;">
+                    <div style="line-height: 1.2;">
+                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 13.5px;" th:text="${post.sharedPost.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                        <div class="text-muted" style="font-size: 12px;">
+                            <span th:text="${#temporals.format(post.sharedPost.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- Content bài gốc -->
+                <div class="p-2" th:if="${post.sharedPost.content != null and !post.sharedPost.content.isEmpty()}">
+                    <p class="mb-0" style="font-size: 13.5px; white-space: pre-wrap;" th:text="${post.sharedPost.content}">Nội dung gốc</p>
+                </div>
+                <!-- Image bài gốc -->
+                <img th:if="${post.sharedPost.imageUrl != null}" th:src="${post.sharedPost.imageUrl}" class="img-fluid w-100 border-top" style="max-height: 400px; object-fit: cover;">
             </div>
             
             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-heart text-danger me-1"></i> 
-                    <span th:id="'like-count-' + ${post.id}">0</span>
-                </div>
-                <div>
-                    <span th:id="'comment-count-' + ${post.id}">0</span> Bình luận • 
-                    <span th:id="'share-count-' + ${post.id}">0</span> Chia sẻ
-                </div>
+                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> <span th:text="${#lists.size(post.comments)}">0</span></div>
+                <div><span th:text="${#lists.size(post.comments)}">0</span> Bình luận • <span th:text="${#lists.size(post.shares)}">0</span> Chia sẻ</div>
             </div>
 
             <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top">
-                <button class="btn-ghost flex-grow-1" th:onclick="'toggleLike(' + ${post.id} + ')'">
-                    <i th:id="'like-icon-' + ${post.id}" class="bi bi-heart me-1 fs-5"></i> Thích
+                <button class="btn-ghost flex-grow-1 btn-like">
+                    <i class="bi bi-heart me-1 fs-5"></i> Thích
                 </button>
-                <button class="btn-ghost flex-grow-1" type="button" data-bs-toggle="collapse" th:data-bs-target="'#commentSection-' + ${post.id}">
+                <button class="btn-ghost flex-grow-1" th:onclick="'toggleCommentSection(' + ${post.id} + ')'">
                     <i class="bi bi-chat-fill me-1 fs-5"></i> Bình luận
                 </button>
-                <button class="btn-ghost flex-grow-1" th:onclick="'sharePost(' + ${post.id} + ')'">
+                <button class="btn-ghost flex-grow-1" th:onclick="'openShareModal(' + ${post.id} + ')'">
                     <i class="bi bi-share-fill me-1 fs-5"></i> Chia sẻ
                 </button>
             </div>
             
-            <!-- Khu vực Bình luận (Mặc định ẩn, xổ ra khi bấm nút Bình luận) -->
-            <div class="collapse px-3 pb-3" th:id="'commentSection-' + ${post.id}">
-                <div class="d-flex gap-2">
-                    <img th:src="${currentUser != null and currentUser.avatar != null ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="rounded-circle border" width="32" height="32" style="object-fit: cover;">
-                    <div class="input-group">
-                        <input type="text" class="form-control rounded-pill bg-light border-0" th:id="'comment-input-' + ${post.id}" placeholder="Viết bình luận công khai...">
-                        <button class="btn text-primary fw-bold" th:onclick="'submitComment(' + ${post.id} + ')'"><i class="bi bi-send-fill"></i></button>
+            <!-- Vùng chứa Bình Luận (Mặc định ẩn) -->
+            <div th:id="'comment-section-' + ${post.id}" class="px-3 pb-3 d-none border-top pt-2" style="background-color: #f8f9fa; border-radius: 0 0 10px 10px;">
+                <!-- Box render các bình luận (AJAX sẽ load dữ liệu vào đây) -->
+                <div th:id="'comment-list-' + ${post.id}" class="mb-3 d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Element bình luận mẫu sẽ được render bằng JS -->
+                    <div class="text-center text-muted py-2" style="font-size: 13px;">
+                        <i class="spinner-border spinner-border-sm me-1"></i> Đang tải bình luận...
                     </div>
                 </div>
-                <!-- Vùng chứa danh sách comment -->
-                <div th:id="'comment-list-' + ${post.id}" class="mt-3 d-flex flex-column gap-2" style="font-size: 14px;"></div>
+
+                <!-- Ô nhập bình luận mới -->
+                <div class="d-flex align-items-start gap-2 mt-2">
+                    <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="32" height="32" style="object-fit: cover;">
+                    <div class="flex-grow-1 position-relative">
+                        <textarea th:id="'comment-input-' + ${post.id}" class="form-control border-secondary rounded-4 bg-white pe-5" rows="1" placeholder="Viết bình luận..." style="font-size: 14px; resize: none; overflow: hidden; min-height: 38px; line-height: 1.5; padding-top: 8px;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" th:onkeypress="'if(event.key === \'Enter\' && !event.shiftKey) { event.preventDefault(); submitComment(' + ${post.id} + '); }'"></textarea>
+                        <button type="button" class="btn btn-link text-primary position-absolute p-0" style="right: 12px; bottom: 8px; text-decoration: none;" th:onclick="'submitComment(' + ${post.id} + ')'" title="Gửi">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Nhúng script tương tác (Thả tim, bình luận, share) -->
-        <script th:src="@{/client/js/interactions.js}"></script>
-
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                const likeBtns = document.querySelectorAll('.btn-like');
+                likeBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        this.classList.toggle('text-danger');
+                        const icon = this.querySelector('i');
+                        if (icon.classList.contains('bi-heart')) {
+                            icon.classList.replace('bi-heart', 'bi-heart-fill');
+                            icon.style.transform = 'scale(1.3)';
+                            setTimeout(() => icon.style.transform = 'scale(1)', 200);
+                        } else {
+                            icon.classList.replace('bi-heart-fill', 'bi-heart');
+                            this.classList.remove('text-danger');
+                        }
+                        icon.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    });
+                });
+            });
+
+            /* =======================================================
+               === PHASE 4: TÍNH NĂNG CHIA SẺ BÀI VIẾT (SHARE) ===
+               ======================================================= */
+            let currentSharePostId = null;
+
+            // Hàm mở Modal gõ trạng thái chia sẻ
+            function openShareModal(postId) {
+                currentSharePostId = postId;
+                // Nếu chưa có Modal HTML trong trang, tạo nó ngầm để bớt phình code 
+                if(!document.getElementById('sharePostModal')) {
+                    const modalHtml = `
+                        <div class="modal fade" id="sharePostModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="modal-title fw-bold w-100 text-center">Chia sẻ bài viết</h5>
+                                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; right: 15px;"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <textarea id="share-post-caption" class="form-control border-0 px-0 shadow-none fs-5" rows="2" placeholder="Hãy nói gì đó về nội dung này..." style="resize:none; outline:none;"></textarea>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-primary w-100 fw-bold" onclick="execSharePost()" id="btn-submit-share">Chia sẻ ngay</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                }
+                
+                const bsModal = new bootstrap.Modal(document.getElementById('sharePostModal'));
+                bsModal.show();
+            }
+
+            // Hành động ấn nút Chia sẻ
+            async function execSharePost() {
+                if(!currentSharePostId) return;
+
+                const caption = document.getElementById('share-post-caption').value.trim();
+                const btn = document.getElementById('btn-submit-share');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i> Đang chia sẻ...';
+
+                try {
+                    const res = await fetch(`/api/posts/${currentSharePostId}/share`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: caption })
+                    });
+                    
+                    if(res.ok) {
+                        const modalEl = document.getElementById('sharePostModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        modalInstance.hide();
+                        
+                        document.getElementById('share-post-caption').value = '';
+                        // Do luồng Chia sẻ yêu cầu Render bọc nguyên 1 cục Post mớ => Đẩy reload nhẹ cho chắc CSDL thay vì Build nguyên cục DOM to đùng.
+                        window.location.reload(); 
+                    } else if (res.status === 401) {
+                        alert("Theo tác gọi API từ chối: Vui lòng đăng nhập hệ thống để sử dụng tính năng.");
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi chia sẻ: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng khi chia sẻ bài viết!");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Chia sẻ ngay';
+                }
+            }
 
             // Handle Image Preview
             function previewImage(event) {
@@ -288,6 +399,175 @@
                     btnSubmit.disabled = false;
                     btnSubmit.innerText = originalText;
                 }
+            }
+
+            /* =======================================================
+               === PHASE 3: AJAX XỬ LÝ CHỨC NĂNG BÌNH LUẬN (COMMENT) ===
+               ======================================================= */
+            
+            let replyingToMap = {}; // Biến toàn cục giúp lưu tạm trạng thái đang Reply cho bình luận cha nào
+
+            // 1. Mở/Đóng phần bình luận của một bài viết
+            function toggleCommentSection(postId) {
+                const section = document.getElementById('comment-section-' + postId);
+                if (section.classList.contains('d-none')) {
+                    section.classList.remove('d-none');
+                    loadComments(postId); // Gọi API Fetch Bình luận bằng JSON
+                    
+                    // Focus chuột ngay vào ô nhập để người dùng gõ
+                    setTimeout(() => {
+                        document.getElementById('comment-input-' + postId).focus();
+                    }, 100);
+                } else {
+                    section.classList.add('d-none');
+                }
+            }
+
+            // 2. Fetch danh sách bình luận từ Spring Boot RESTful API
+            async function loadComments(postId) {
+                const commentList = document.getElementById('comment-list-' + postId);
+                commentList.innerHTML = `<div class="text-center text-muted py-2" style="font-size: 13px;"><i class="spinner-border spinner-border-sm me-1"></i> Đang tải bình luận...</div>`;
+
+                try {
+                    const response = await fetch(`/api/comments/${postId}`);
+                    if (!response.ok) throw new Error('Network lỗi không lấy được bình luận');
+                    
+                    const comments = await response.json();
+                    renderComments(postId, comments);
+                    
+                } catch (error) {
+                    console.error('Error fetching comments:', error);
+                    commentList.innerHTML = `<div class="text-center text-danger small py-2">Lỗi kết nối tải bình luận, vui lòng thử lại!</div>`;
+                }
+            }
+
+            // 3. Render giao diện các bình luận bằng HTML Injection (Render đệ quy danh sách)
+            function renderComments(postId, comments) {
+                const commentList = document.getElementById('comment-list-' + postId);
+                commentList.innerHTML = ''; 
+
+                if(comments.length === 0) {
+                    commentList.innerHTML = `<div class="text-center text-muted py-3" style="font-size: 13.5px;" id="no-comment-msg-${postId}">Chưa có bình luận nào. Hãy là người trao yêu thương đầu tiên!</div>`;
+                    return;
+                }
+
+                comments.forEach(comment => {
+                    const html = generateCommentHtml(comment, false, postId);
+                    commentList.insertAdjacentHTML('beforeend', html);
+                });
+            }
+
+            // Hàm tạo Single Comment Block HTML (Hỗ trợ Render Đệ Quy cho cấu trúc con - Cấp 1, Cấp 2...)
+            function generateCommentHtml(c, isReply, postId) {
+                const avt = (c.avatar && c.avatar.startsWith('http')) ? c.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                
+                const dateObj = new Date(c.createdAt);
+                const timeString = `${dateObj.toLocaleDateString('vi-VN')} ${dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}`;
+                
+                let renderReplies = '';
+                // Nếu comment có chứa vòng đời đệ quy con thì đâm thẳng vào code tiếp
+                if(c.replies && c.replies.length > 0) {
+                    c.replies.forEach(rep => {
+                        renderReplies += generateCommentHtml(rep, true, postId);
+                    });
+                }
+
+                return `
+                    <div class="d-flex align-items-start gap-2 ${isReply ? 'ms-4 mt-2 border-start ps-2 border-2' : 'mt-1'}" id="comment-item-${c.id}">
+                        <img src="${avt}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="rounded-circle border mt-1" width="${isReply ? 24 : 32}" height="${isReply ? 24 : 32}" style="object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <div class="bg-white rounded-4 px-3 py-2 border shadow-sm" style="display: inline-block; max-width: 100%;">
+                                <div class="fw-bold" style="font-size: ${isReply ? 12 : 13.5}px;">${c.fullname}</div>
+                                <div style="font-size: ${isReply ? 13 : 14}px; white-space: pre-wrap; line-height: 1.4; color: #1c1e21;">${c.content}</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 text-muted mt-1 px-2" style="font-size: 11.5px; font-weight: 500;">
+                                <span class="cursor-pointer" style="cursor:pointer;" onclick="alert('Tính năng Like Comment đang được nâng cấp')">Thích</span>
+                                <span class="cursor-pointer" style="cursor:pointer;" onclick="focusReply(${postId}, ${c.id}, '${c.fullname}')">Phản hồi</span>
+                                <span class="fw-normal" style="font-size: 11px;">${timeString}</span>
+                            </div>
+                            
+                            <!-- Box render các replies (Đệ quy gắn vào ngọn này) -->
+                            <div id="reply-list-${c.id}" class="d-flex flex-column w-100">
+                                ${renderReplies}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 4. Bắn HTTP POST Lên CSDL để Save Comment và Trả Mới Về Tức Thì
+            async function submitComment(postId) {
+                const inputEle = document.getElementById('comment-input-' + postId);
+                const content = inputEle.value.trim();
+                
+                if (!content) return;
+
+                // Lấy ID cha nếu đang rơi vào luồng Trả lời
+                const parentId = replyingToMap[postId] || null;
+
+                const payload = {
+                    content: content,
+                    postId: postId,
+                    parentId: parentId
+                };
+
+                inputEle.disabled = true;
+
+                try {
+                    const response = await fetch('/api/comments', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const newCommentDTO = await response.json();
+                        
+                        // Xóa tin nhắn chuẩn bị cho lần gõ sau
+                        inputEle.value = '';
+                        inputEle.style.height = '38px'; 
+                        replyingToMap[postId] = null; 
+
+                        // Tắt chữ "Chưa có bình luận nào"
+                        const noCmtMsg = document.getElementById('no-comment-msg-' + postId);
+                        if(noCmtMsg) noCmtMsg.remove();
+
+                        // Nếu là bắn trả lời thì dí HTML ngọn vào cành cha
+                        if(parentId) {
+                            const targetReplyList = document.getElementById('reply-list-' + parentId);
+                            if(targetReplyList) {
+                                targetReplyList.insertAdjacentHTML('beforeend', generateCommentHtml(newCommentDTO, true, postId));
+                            }
+                        } else {
+                            // Cành cha thì mọc dưới luồng gốc bảng to
+                            const listEle = document.getElementById('comment-list-' + postId);
+                            listEle.insertAdjacentHTML('beforeend', generateCommentHtml(newCommentDTO, false, postId));
+                        }
+
+                        // Cuộn Auto trượt thanh cuốn xuống kịch đáy hộp chat Comment
+                        const scrollDiv = document.getElementById('comment-list-' + postId);
+                        scrollDiv.scrollTop = scrollDiv.scrollHeight;
+
+                    } else {
+                        const err = await response.text();
+                        alert("Không thể gửi bình luận: " + err);
+                    }
+                } catch (error) {
+                    console.error('Submit error:', error);
+                    alert("Kết nối mạng yếu, không gửi được bình luận hiện tại.");
+                } finally {
+                    inputEle.disabled = false;
+                    inputEle.focus();
+                }
+            }
+
+            // 5. Nút Bấm Phản hồi (Mention Auto Fill)
+            function focusReply(postId, commentId, authorName) {
+                replyingToMap[postId] = commentId; // Neo node đang bị trỏ tới bằng Object Memory
+                const inputArea = document.getElementById('comment-input-' + postId);
+                inputArea.value = `@${authorName} : `; // Mention tên
+                inputArea.focus();
+                inputArea.style.height = inputArea.scrollHeight + 'px';
             }
         </script>
 

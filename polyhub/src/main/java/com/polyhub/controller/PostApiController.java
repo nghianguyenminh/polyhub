@@ -12,6 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostApiController {
@@ -19,6 +21,7 @@ public class PostApiController {
     @Autowired
     private PostService postService;
 
+    // ... createPost
     @PostMapping("/create")
     public ResponseEntity<?> createPost(
             @RequestParam("content") String content,
@@ -45,28 +48,29 @@ public class PostApiController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable Long id) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
-                return ResponseEntity.status(401).body("Yêu cầu đăng nhập");
-            }
-            
-            Post post = postService.getPostById(id).orElse(null);
-            if (post == null) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            // Xóa bài viết (Quyền thuộc sở hữu bài viết)
-            if (!post.getUser().getUsername().equals(authentication.getName())) {
-                return ResponseEntity.status(403).body("Không có quyền xóa bài viết của người khác");
-            }
+    // --- API Chia sẻ bài viết (Share) ---
+    @PostMapping("/{postId}/share")
+    public ResponseEntity<?> sharePost(@PathVariable Long postId, @RequestBody Map<String, String> requestBody, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Vui lòng đăng nhập để thực hiện chức năng này.");
+        }
 
-            postService.deletePost(id);
-            return ResponseEntity.ok(Map.of("success", true));
+        try {
+            String username = principal.getName();
+            String caption = requestBody.get("content"); // Nội dung chú thích thêm
+
+            Post newSharedPost = postService.sharePost(postId, caption, username);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Đã chia sẻ bài viết lên trang cá nhân!");
+            // Trả về một ID để test, tránh bóc tách Entity trực tiếp gây lỗi Jackson Đệ quy
+            response.put("sharedPostId", newSharedPost.getId());
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Lỗi khi xóa bài: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
