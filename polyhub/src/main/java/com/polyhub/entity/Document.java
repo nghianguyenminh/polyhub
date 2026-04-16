@@ -21,39 +21,32 @@ public class Document {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
+
+    @Column(nullable = false)
+    private String fileName;
 
     @Column(nullable = false)
     private String fileUrl;
 
+    @Column(nullable = false)
     private String thumbnailUrl;
-
-    private String documentType; // e.g., "ASSIGNMENT", "TUTORIAL"
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User uploader;
-
-    @Enumerated(EnumType.STRING)
-    private DocumentStatus status = DocumentStatus.PENDING;
-
-    private String rejectionReason;
-
-    private String filePublicId;
-
-    private Long fileSize;
-
-    private int downloadCount = 0;
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime uploadedAt = LocalDateTime.now();
 
-    private LocalDateTime approvedAt;
+    @Column(nullable = false)
+    private boolean approved = false;
 
-    private LocalDateTime hiddenAt;
+    private String slug;
+
 }
