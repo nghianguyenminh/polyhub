@@ -33,7 +33,6 @@ public class DocumentClientController {
   public String showDocumentsPage(
     @RequestParam(value = "keyword", required = false) String keyword,
     @RequestParam(value = "category_id", required = false) Long categoryId,
-    @RequestParam(value = "documentType", required = false) String documentType,
     @RequestParam(value = "page", defaultValue = "1") int page,
     Model model,
     @ModelAttribute("currentUser") com.polyhub.entity.User currentUser
@@ -46,7 +45,6 @@ public class DocumentClientController {
     Page<Document> documentPage = documentClientService.getDocumentsForClient(
       keyword,
       categoryId,
-      documentType, // documentType
       page,
       pageSize
     );
