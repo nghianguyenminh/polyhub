@@ -49,6 +49,7 @@ public class FileStorageService {
     return cloudinary.uploader().upload(file.getBytes(), options);
   }
 
+  @SuppressWarnings("unchecked")
   public void deleteFile(String publicId) throws IOException {
     Map<String, Object> options = ObjectUtils.asMap(
       "invalidate",
