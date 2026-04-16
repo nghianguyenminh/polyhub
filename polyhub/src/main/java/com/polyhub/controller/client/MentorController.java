@@ -32,9 +32,7 @@ public class MentorController {
 
   @GetMapping("/mentors")
   public String mentors(Model model) {
-    List<MentorRequest> mentors = mentorRequestRepository.findByStatus(
-      MentorRequestStatus.APPROVED
-    );
+    List<User> mentors = userRepository.findByRole_Name("MENTOR");
     model.addAttribute("mentors", mentors);
     return "client/mentors";
   }
@@ -53,16 +51,6 @@ public class MentorController {
     User user = userRepository.findByUsername(principal.getName()).orElse(null);
     model.addAttribute("user", user);
 
-    MentorRequest mentorRequest = mentorRequestRepository
-      .findByUser(user)
-      .orElseGet(() -> {
-        MentorRequest newMentorRequest = new MentorRequest();
-        newMentorRequest.setUser(user);
-        newMentorRequest.setStatus(MentorRequestStatus.PENDING);
-        return mentorRequestRepository.save(newMentorRequest);
-      });
-
-    model.addAttribute("mentorRequest", mentorRequest);
     return "client/mentor_register";
   }
 
@@ -70,47 +58,18 @@ public class MentorController {
   public String mentorRegister(
     Model model,
     Principal principal,
-    @RequestParam("specialized") String specialized,
-    @RequestParam("description") String description,
-    @RequestParam("facebookLink") String facebookLink,
-    @RequestParam("zaloLink") String zaloLink,
-    @RequestParam("githubLink") String githubLink,
-    @RequestParam("cv") MultipartFile cv,
-    @RequestParam("certificate1") MultipartFile certificate1,
-    @RequestParam("certificate2") MultipartFile certificate2
+    @RequestParam("mentorMajor") String mentorMajor,
+    @RequestParam("mentorReason") String mentorReason,
+    @RequestParam("evidenceLink") String evidenceLink,
+    @RequestParam("cv") MultipartFile cv
   ) throws IOException {
     User user = userRepository.findByUsername(principal.getName()).orElse(null);
     if (user != null) {
-      MentorRequest mentorRequest = mentorRequestRepository
-        .findByUser(user)
-        .orElseGet(() -> {
-          MentorRequest newMentorRequest = new MentorRequest();
-          newMentorRequest.setUser(user);
-          return newMentorRequest;
-        });
-
-      mentorRequest.setSpecialized(specialized);
-      mentorRequest.setDescription(description);
-      mentorRequest.setFacebookLink(facebookLink);
-      mentorRequest.setZaloLink(zaloLink);
-      mentorRequest.setGithubLink(githubLink);
-      mentorRequest.setStatus(MentorRequestStatus.PENDING);
-      mentorRequest.setCreatedAt(LocalDateTime.now());
-
-      if (cv != null && !cv.isEmpty()) {
-        Map<String, Object> cvUploadResult = fileStorageService.uploadImage(cv, "polyhub_cvs");
-        mentorRequest.setCvFile((String) cvUploadResult.get("url"));
-      }
-
-      if (certificate1 != null && !certificate1.isEmpty()) {
-        Map<String, Object> certificate1UploadResult = fileStorageService.uploadImage(certificate1, "polyhub_certificates");
-        mentorRequest.setCertificate1((String) certificate1UploadResult.get("url"));
-      }
-      if (certificate2 != null && !certificate2.isEmpty()) {
-        Map<String, Object> certificate2UploadResult = fileStorageService.uploadImage(certificate2, "polyhub_certificates");
-        mentorRequest.setCertificate2((String) certificate2UploadResult.get("url"));
-      }
-      mentorRequestRepository.save(mentorRequest);
+      user.setMentorMajor(mentorMajor);
+      user.setMentorReason(mentorReason);
+      user.setEvidenceLink(evidenceLink);
+      user.setWantsToBecomeMentor(true);
+      userRepository.save(user);
     }
 
     return "redirect:/mentor/register";

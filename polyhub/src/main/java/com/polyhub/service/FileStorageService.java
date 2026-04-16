@@ -12,6 +12,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FileStorageService {
 
     // Inject đối tượng Cloudinary chúng ta đã cấu hình ở CloudinaryConfig

@@ -34,18 +34,15 @@ public class PostService {
       });
 
     String imageUrl = null;
-    String imagePublicId = null;
 
     if (image != null && !image.isEmpty()) {
       Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");
       imageUrl = (String) uploadResult.get("url");
-      imagePublicId = (String) uploadResult.get("public_id");
     }
 
     Post post = new Post();
     post.setContent(content);
     post.setImageUrl(imageUrl);
-    post.setImagePublicId(imagePublicId);
     post.setUser(user);
     post.setCreatedAt(LocalDateTime.now());
 

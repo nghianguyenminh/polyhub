@@ -14,7 +14,8 @@ public class CloudinaryService {
 
   private final Cloudinary cloudinary;
 
-  public Map<String, Object> uploadFile(
+  @SuppressWarnings("rawtypes")
+  public Map uploadFile(
     MultipartFile file,
     String folderName
   ) {

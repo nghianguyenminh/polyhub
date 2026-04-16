@@ -1,8 +1,6 @@
 package com.polyhub.service.admin;
 
 import com.polyhub.entity.Document;
-import com.polyhub.entity.DocumentStatus;
-import com.polyhub.entity.User;
 import com.polyhub.repository.DocumentRepository;
 import com.polyhub.service.EmailService;
 import com.polyhub.service.FileStorageService;
@@ -28,17 +26,13 @@ public class DocumentAdminService {
 
 
     // Filter, Sort and Pagination
-    public Page<Document> getDocuments(String keyword, Long categoryId, DocumentStatus status, String documentType, int page, int size) {
+    public Page<Document> getDocuments(String keyword, Long categoryId, int page, int size) {
         // Mặc định sắp xếp mới nhất lên đầu
-        PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        if (status != null && documentType != null && keyword != null && categoryId != null) {
-            return documentRepository.findByStatusAndDocumentTypeAndTitleContainingIgnoreCaseAndCategoryId(status, documentType, keyword, categoryId, pageRequest);
-        } else if (status != null && documentType != null && keyword != null) {
-            return documentRepository.findByStatusAndDocumentTypeAndTitleContainingIgnoreCase(status, documentType, keyword, pageRequest);
-        } else if (status != null && keyword != null && categoryId != null) {
-            return documentRepository.findByStatusAndTitleContainingIgnoreCaseAndCategoryId(status, keyword, categoryId, pageRequest);
-        } else if (status != null && keyword != null) {
-            return documentRepository.findByStatusAndTitleContainingIgnoreCase(status, keyword, pageRequest);
+        PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "uploadedAt"));
+        if (keyword != null && categoryId != null) {
+            return documentRepository.findByTitleContainingIgnoreCaseAndCategoryId(keyword, categoryId, pageRequest);
+        } else if (keyword != null) {
+            return documentRepository.findByTitleContainingIgnoreCase(keyword, pageRequest);
         } else {
             return documentRepository.findAll(pageRequest);
         }
@@ -52,30 +46,26 @@ public class DocumentAdminService {
     // Duyệt tài liệu
     public void approveDocument(Long id) {
         Document doc = getDocumentById(id);
-        doc.setStatus(DocumentStatus.APPROVED);
-        doc.setRejectionReason(null);
+        doc.setApproved(true);
         documentRepository.save(doc);
     }
 
     // Từ chối / Gỡ tài liệu
     public void rejectOrTakedownDocument(Long id, String reason) {
         Document doc = getDocumentById(id);
-        doc.setStatus(DocumentStatus.REJECTED); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
-        doc.setRejectionReason(reason);
+        doc.setApproved(false);
         documentRepository.save(doc);
 
         // Bổ sung: Gửi Email cho Uploader (Nếu có người tải lên)
-        User uploader = doc.getUploader();
-        if (uploader != null && uploader.getEmail() != null) {
-            emailService.sendRejectionEmail(uploader.getEmail(), uploader.getFullname(), doc.getTitle(), reason);
+        if (doc.getUser() != null && doc.getUser().getEmail() != null) {
+            emailService.sendRejectionEmail(doc.getUser().getEmail(), doc.getUser().getFullname(), doc.getTitle(), reason);
         }
     }
 
     // Phục hồi / Mở khóa tài liệu
     public void restoreDocument(Long id) {
         Document doc = getDocumentById(id);
-        doc.setStatus(DocumentStatus.APPROVED);
-        doc.setRejectionReason(null);
+        doc.setApproved(true);
         documentRepository.save(doc);
     }
 
@@ -85,8 +75,8 @@ public class DocumentAdminService {
 
         try {
             // 1. Xóa file trên Cloudinary
-            if (doc.getFilePublicId() != null && !doc.getFilePublicId().isEmpty()) {
-                fileStorageService.deleteFile(doc.getFilePublicId());
+            if (doc.getFileUrl() != null && !doc.getFileUrl().isEmpty()) {
+                fileStorageService.deleteFile(doc.getFileUrl());
             }
         } catch (Exception e) {
             // In log nhưng vẫn tiếp tục xóa trong DB để tránh dữ liệu rác
@@ -101,94 +91,16 @@ public class DocumentAdminService {
     public Map<String, Object> getDocumentStats() {
         Map<String, Object> stats = new HashMap<>();
         long total = documentRepository.count();
-        long pending = documentRepository.countByStatus(DocumentStatus.PENDING);
-        long approved = documentRepository.countByStatus(DocumentStatus.APPROVED);
-        long hidden = documentRepository.countByStatus(DocumentStatus.HIDDEN);
+        long approved = documentRepository.countByApproved(true);
+        long pending = total - approved;
 
         stats.put("total", total);
         stats.put("pending", pending);
         stats.put("approved", approved);
-        stats.put("hidden", hidden);
-
-        // Lấy dung lượng storage thực tế từ Cloudinary
-        try {
-            Map<String, Object> usage = fileStorageService.getStorageUsage();
-            if (usage != null && usage.containsKey("storage")) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> storageData = (Map<String, Object>) usage.get("storage");
-
-                // Tránh NullPointerException do một số tài khoản Cloudinary không trả về 'usage'/'limit'
-                Object usageObj = storageData.get("usage");
-                Object limitObj = storageData.get("limit");
-
-                long usageBytes = usageObj != null ? Long.parseLong(usageObj.toString()) : 0L;
-                long limitBytes = limitObj != null ? Long.parseLong(limitObj.toString()) : 0L;
-
-                // Nếu không có usage, fallback tính từ DB
-                if (usageBytes == 0L) {
-                    usageBytes = getStorageFromDB();
-                }
-                // Nếu Cloudinary không cho biết giới hạn (VD Free plan có lúc không trả), gán tạm 10GB làm mốc
-                if (limitBytes == 0L) {
-                    limitBytes = 10L * 1024 * 1024 * 1024;
-                }
-
-                // Quy đổi sang GB / MB
-                double usageGb = usageBytes / 1024.0 / 1024.0 / 1024.0;
-                double limitGb = limitBytes / 1024.0 / 1024.0 / 1024.0;
-
-                // Calculate percentage
-                double percent = limitBytes > 0 ? (double) usageBytes / limitBytes * 100 : 0;
-
-                stats.put("cloudinaryUsage", usageBytes);
-                stats.put("cloudinaryLimit", limitBytes);
-                stats.put("cloudinaryUsageGb", String.format(Locale.US, "%.2f", usageGb));
-                stats.put("cloudinaryLimitGb", String.format(Locale.US, "%.2f", limitGb));
-                stats.put("cloudinaryPercent", String.format(Locale.US, "%.1f", percent));
-                // Xóa flag lỗi để hiển thị UI
-                stats.remove("cloudinaryError");
-            } else {
-                handleStorageFallback(stats);
-            }
-        } catch (Exception e) {
-            System.err.println("Lấy dung lượng Storage Cloudinary thất bại: " + e.getMessage());
-            handleStorageFallback(stats);
-        }
 
         return stats;
     }
 
-    private long getStorageFromDB() {
-        return documentRepository.findAll().stream()
-                .filter(d -> d.getFileSize() != null)
-                .mapToLong(Document::getFileSize)
-                .sum();
-    }
-
-    private void handleStorageFallback(Map<String, Object> stats) {
-        long usageBytes = getStorageFromDB();
-        long limitBytes = 10L * 1024 * 1024 * 1024; // Mặc định 10GB
-
-        double usageGb = usageBytes / 1024.0 / 1024.0 / 1024.0;
-        double limitGb = limitBytes / 1024.0 / 1024.0 / 1024.0;
-        double percent = limitBytes > 0 ? (double) usageBytes / limitBytes * 100 : 0;
-
-        stats.put("cloudinaryUsage", usageBytes);
-        stats.put("cloudinaryLimit", limitBytes);
-        stats.put("cloudinaryUsageGb", String.format(Locale.US, "%.2f", usageGb));
-        stats.put("cloudinaryLimitGb", String.format(Locale.US, "%.2f", limitGb));
-        stats.put("cloudinaryPercent", String.format(Locale.US, "%.1f", percent));
-        // Xóa lỗi để giao diện hiển thị dữ liệu tạm (Không làm vỡ layout)
-        stats.remove("cloudinaryError");
-    }
-
-    public List<Object[]> getDocumentTypeStats() {
-        return documentRepository.findAll().stream()
-                .collect(Collectors.groupingBy(Document::getDocumentType, Collectors.counting()))
-                .entrySet().stream()
-                .map(entry -> new Object[]{entry.getKey(), entry.getValue()})
-                .collect(Collectors.toList());
-    }
 
     public List<Object[]> getCategoryStats() {
         return documentRepository.findAll().stream()
@@ -198,11 +110,4 @@ public class DocumentAdminService {
                 .collect(Collectors.toList());
     }
 
-    public List<Object[]> getStatusStats() {
-        return documentRepository.findAll().stream()
-                .collect(Collectors.groupingBy(Document::getStatus, Collectors.counting()))
-                .entrySet().stream()
-                .map(entry -> new Object[]{entry.getKey(), entry.getValue()})
-                .collect(Collectors.toList());
-    }
 }
