@@ -1,21 +1,38 @@
-package com.polyhub.controller.client;
+ package com.polyhub.controller.client;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.polyhub.entity.MentorRequest;
+import com.polyhub.entity.User;
+import com.polyhub.entity.RequestStatus;
+import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.service.CategoryService;
+import com.polyhub.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
 public class MentorController {
     
     private final CategoryService categoryService;
+    private final MentorRequestRepository mentorRequestRepository;
+    private final FileStorageService fileStorageService;
 
     @GetMapping("/mentors")
     public String index(Model model, 
                         @RequestParam(defaultValue = "1") int page,
-                        @RequestParam(defaultValue = "newest") String sort) {
+                        @RequestParam(defaultValue = "newest") String sort,
+                        @RequestParam(required = false) String keyword) {
         // Phân trang 4 mentor/trang (2 dòng x 2 cột)
         org.springframework.data.domain.Sort.Direction direction = "oldest".equalsIgnoreCase(sort) ?
                  org.springframework.data.domain.Sort.Direction.ASC : org.springframework.data.domain.Sort.Direction.DESC;
@@ -36,7 +53,7 @@ public class MentorController {
         model.addAttribute("totalPages", mentorPage.getTotalPages());
         model.addAttribute("currentSort", sort);
         return "client/mentors"; // Mở file src/main/resources/templates/client/mentors.html
-    }s
+    }
 
     @GetMapping("/mentors/register")
     public String registerForm(@ModelAttribute("currentUser") User currentUser, Model model, RedirectAttributes redirectAttributes) {
@@ -141,6 +158,6 @@ public class MentorController {
             return "redirect:/mentors";
         }
         model.addAttribute("mentor", mentor);
-        return "client/mentor_detail"; // Mở file src/main/resources/templates/client/mentor_detail.html
+        return "client/mentor_detail"; 
     }
 }
