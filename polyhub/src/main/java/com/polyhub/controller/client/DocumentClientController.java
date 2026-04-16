@@ -6,7 +6,7 @@ import com.polyhub.service.CategoryService;
 import com.polyhub.service.client.DocumentClientService;
 import java.io.IOException;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,19 +20,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/documents")
+@RequiredArgsConstructor
 public class DocumentClientController {
 
   private final DocumentClientService documentClientService;
   private final CategoryService categoryService;
-
-  @Autowired
-  public DocumentClientController(
-    DocumentClientService documentClientService,
-    CategoryService categoryService
-  ) {
-    this.documentClientService = documentClientService;
-    this.categoryService = categoryService;
-  }
 
   @GetMapping
   public String showDocumentsPage(
@@ -44,6 +36,7 @@ public class DocumentClientController {
   ) {
     List<Category> categories = categoryService.getActiveCategoriesForDropdown();
     int pageSize = 8;
+    // Corrected method call with 4 arguments
     Page<Document> documentPage = documentClientService.getDocumentsForClient(
       keyword,
       categoryId,
@@ -60,6 +53,7 @@ public class DocumentClientController {
     model.addAttribute("keyword", keyword);
     model.addAttribute("categoryId", categoryId);
     model.addAttribute("currentPage", page);
+    // Removed calls to non-existent methods
     return "client/documents";
   }
 
