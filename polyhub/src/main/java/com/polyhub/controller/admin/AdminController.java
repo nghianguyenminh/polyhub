@@ -1,8 +1,6 @@
 package com.polyhub.controller.admin;
 
-import com.polyhub.entity.MentorRequest;
-import com.polyhub.entity.MentorRequestStatus;
-import com.polyhub.repository.MentorRequestRepository;
+import com.polyhub.entity.User;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.UserService;
 import java.util.List;
@@ -22,36 +20,31 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin")
 public class AdminController {
 
-  private final MentorRequestRepository mentorRequestRepository;
   private final UserService userService;
   private final UserRepository userRepository;
 
-  // Map cả 2 đường dẫn /admin và /admin/dashboard về chung 1 trang
-  @GetMapping({"", "/", "/dashboard"})
+  @GetMapping({"","/", "/dashboard"})
   public String dashboard(Model model) {
-    List<MentorRequest> requests = mentorRequestRepository.findAll();
+    List<User> users = userRepository.findAll();
 
-    List<MentorRequest> pendingRequests = requests
+    List<User> pendingMentors = users
       .stream()
-      .filter(r -> r.getStatus() == MentorRequestStatus.PENDING)
+      .filter(User::getWantsToBecomeMentor)
+      .filter(u -> u.getRole().getName().equals("USER")) // Chỉ lấy user thường
       .collect(Collectors.toList());
 
-    long approvedCount = requests
+    long approvedMentorCount = users
       .stream()
-      .filter(r -> r.getStatus() == MentorRequestStatus.APPROVED)
-      .count();
-    long rejectedCount = requests
-      .stream()
-      .filter(r -> r.getStatus() == MentorRequestStatus.REJECTED)
+      .filter(u -> "MENTOR".equals(u.getRole().getName()))
       .count();
 
-    model.addAttribute("pendingMentorRequests", pendingRequests.size());
-    model.addAttribute("approvedMentorRequests", approvedCount);
-    model.addAttribute("rejectedMentorRequests", rejectedCount);
+    model.addAttribute("pendingMentorRequests", pendingMentors.size());
+    model.addAttribute("approvedMentorRequests", approvedMentorCount);
+    model.addAttribute("rejectedMentorRequests", 0); // Sẽ cần thêm logic để đếm số mentor bị từ chối
     model.addAttribute("totalUsers", userRepository.count());
-    model.addAttribute("pendingRequestsList", pendingRequests);
+    model.addAttribute("pendingRequestsList", pendingMentors);
 
-    return "admin/dashboard"; // Mở file templates/admin/dashboard.html
+    return "admin/dashboard";
   }
 
   @GetMapping("/users/detail")
@@ -61,25 +54,21 @@ public class AdminController {
 
   @GetMapping("/mentors")
   public String mentors(Model model) {
-    List<MentorRequest> requests = mentorRequestRepository.findAll();
+    List<User> users = userRepository.findAll();
+    
+    List<User> pendingMentors = users.stream()
+        .filter(u -> u.getWantsToBecomeMentor() && "USER".equals(u.getRole().getName()))
+        .collect(Collectors.toList());
 
-    long pendingCount = requests
-      .stream()
-      .filter(r -> r.getStatus() == MentorRequestStatus.PENDING)
-      .count();
-    long approvedCount = requests
-      .stream()
-      .filter(r -> r.getStatus() == MentorRequestStatus.APPROVED)
-      .count();
-    long rejectedCount = requests
-      .stream()
-      .filter(r -> r.getStatus() == MentorRequestStatus.REJECTED)
-      .count();
+    List<User> approvedMentors = users.stream()
+        .filter(u -> "MENTOR".equals(u.getRole().getName()))
+        .collect(Collectors.toList());
 
-    model.addAttribute("requests", requests);
-    model.addAttribute("pendingCount", pendingCount);
-    model.addAttribute("approvedCount", approvedCount);
-    model.addAttribute("rejectedCount", rejectedCount);
+    model.addAttribute("requests", pendingMentors); // Gửi danh sách user muốn làm mentor
+    model.addAttribute("approvedMentors", approvedMentors);
+    model.addAttribute("pendingCount", pendingMentors.size());
+    model.addAttribute("approvedCount", approvedMentors.size());
+    model.addAttribute("rejectedCount", 0);
 
     return "admin/mentors";
   }
@@ -98,7 +87,7 @@ public class AdminController {
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute(
         "errorMessage",
-        "Lỗi khi phê duyệt mentor."
+        "Lỗi khi phê duyệt mentor: " + e.getMessage()
       );
     }
     return "redirect:/admin/mentors";
@@ -119,7 +108,7 @@ public class AdminController {
     } catch (Exception e) {
       redirectAttributes.addFlashAttribute(
         "errorMessage",
-        "Lỗi khi từ chối mentor."
+        "Lỗi khi từ chối mentor: " + e.getMessage()
       );
     }
     return "redirect:/admin/mentors";

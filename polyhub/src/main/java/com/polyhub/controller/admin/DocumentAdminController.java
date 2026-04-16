@@ -2,7 +2,6 @@ package com.polyhub.controller.admin;
 
 import com.polyhub.entity.Category;
 import com.polyhub.entity.Document;
-import com.polyhub.entity.DocumentStatus;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.admin.DocumentAdminService;
 import lombok.RequiredArgsConstructor;
@@ -27,32 +26,24 @@ public class DocumentAdminController {
     public String index(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "category_id", required = false) Long categoryId,
-            @RequestParam(value = "status", required = false) DocumentStatus status,
-            @RequestParam(value = "document_type", required = false) String documentType,
             @RequestParam(value = "page", defaultValue = "1") int page,
             Model model) {
 
         int size = 5; // Cập nhật số lượng tài liệu hiển thị trên một trang thành 5
-        Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page, size);
+        Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, page, size);
         List<Category> categories = categoryService.getAllCategoriesForAdmin();
         Map<String, Object> stats = documentAdminService.getDocumentStats();
 
         // Get filter stats
-        List<Object[]> typeStats = documentAdminService.getDocumentTypeStats();
         List<Object[]> categoryStats = documentAdminService.getCategoryStats();
-        List<Object[]> statusStats = documentAdminService.getStatusStats();
 
         model.addAttribute("documentPage", documentPage);
         model.addAttribute("categories", categories);
         model.addAttribute("keyword", keyword);
         model.addAttribute("categoryId", categoryId);
-        model.addAttribute("status", status);
-        model.addAttribute("documentType", documentType);
         model.addAttribute("currentPage", page);
         model.addAttribute("stats", stats);
-        model.addAttribute("typeStats", typeStats);
         model.addAttribute("categoryStats", categoryStats);
-        model.addAttribute("statusStats", statusStats);
 
         return "admin/documents";
     }

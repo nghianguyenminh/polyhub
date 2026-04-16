@@ -30,7 +30,6 @@ public class DocumentClientController {
     public String showDocumentsPage(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "category_id", required = false) Long categoryId,
-            @RequestParam(value = "document_type", required = false) String documentType,
             @RequestParam(value = "page", defaultValue = "1") int page,
             Model model,
             @ModelAttribute("currentUser") com.polyhub.entity.User currentUser) {
@@ -40,7 +39,7 @@ public class DocumentClientController {
         
         // Lấy danh sách tài liệu mới đăng theo page (8 dòng / trang)
         int pageSize = 8;
-        Page<Document> documentPage = documentClientService.getDocumentsForClient(keyword, categoryId, documentType, page, pageSize); 
+        Page<Document> documentPage = documentClientService.getDocumentsForClient(keyword, categoryId, page, pageSize); 
         
         // Lấy danh sách ID document mà user đã lưu
         java.util.Set<Long> savedDocIds = new java.util.HashSet<>();
@@ -48,13 +47,7 @@ public class DocumentClientController {
             savedDocIds = documentClientService.getSavedDocumentIds(currentUser);
         }
 
-        // Lấy số lượng tài liệu theo category và định dạng file
-        java.util.Map<Long, Long> categoryCounts = documentClientService.getApprovedCategoryCounts();
-        java.util.Map<String, Long> docTypeCounts = documentClientService.getApprovedDocumentTypeCounts();
-
         model.addAttribute("categories", categories);
-        model.addAttribute("categoryCounts", categoryCounts);
-        model.addAttribute("docTypeCounts", docTypeCounts);
         model.addAttribute("documentPage", documentPage); // truyền page object xuống view
         model.addAttribute("savedDocIds", savedDocIds); // truyền danh sách ID đã lưu
 
@@ -62,7 +55,6 @@ public class DocumentClientController {
         // Giữ nguyên các tham số filter để nạp lại vào giao diện (nếu cần đổi màu active hoặc map url param)
         model.addAttribute("keyword", keyword);
         model.addAttribute("categoryId", categoryId);
-        model.addAttribute("documentType", documentType);
         model.addAttribute("currentPage", page);
 
         return "client/documents";

@@ -8,11 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -29,13 +29,18 @@ public class DocumentAdminService {
     public Page<Document> getDocuments(String keyword, Long categoryId, int page, int size) {
         // Mặc định sắp xếp mới nhất lên đầu
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "uploadedAt"));
-        if (keyword != null && categoryId != null) {
-            return documentRepository.findByTitleContainingIgnoreCaseAndCategoryId(keyword, categoryId, pageRequest);
-        } else if (keyword != null) {
-            return documentRepository.findByTitleContainingIgnoreCase(keyword, pageRequest);
-        } else {
-            return documentRepository.findAll(pageRequest);
+        
+        Specification<Document> spec = Specification.where(null);
+
+        if (keyword != null && !keyword.isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), " loweringKeyword + "%"));
         }
+
+        if (categoryId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category").get("id"), categoryId));
+        }
+
+        return documentRepository.findAll(spec, pageRequest);
     }
 
     public Document getDocumentById(Long id) {

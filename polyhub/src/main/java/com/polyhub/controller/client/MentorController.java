@@ -1,17 +1,12 @@
 package com.polyhub.controller.client;
 
-import com.polyhub.entity.MentorRequest;
-import com.polyhub.entity.MentorRequestStatus;
 import com.polyhub.entity.User;
-import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.UserRepository;
-import com.polyhub.service.FileStorageService;
 import java.io.IOException;
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,13 +21,13 @@ public class MentorController {
 
   @Autowired private UserRepository userRepository;
 
-  @Autowired private MentorRequestRepository mentorRequestRepository;
-
-  @Autowired private FileStorageService fileStorageService;
-
   @GetMapping("/mentors")
   public String mentors(Model model) {
-    List<User> mentors = userRepository.findByRole_Name("MENTOR");
+    List<User> mentors = userRepository
+      .findAll()
+      .stream()
+      .filter(u -> "MENTOR".equals(u.getRole().getName()))
+      .collect(Collectors.toList());
     model.addAttribute("mentors", mentors);
     return "client/mentors";
   }
