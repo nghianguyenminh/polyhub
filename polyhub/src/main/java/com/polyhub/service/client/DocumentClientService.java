@@ -2,6 +2,7 @@ package com.polyhub.service.client;
 
 import com.polyhub.entity.Category;
 import com.polyhub.entity.Document;
+import com.polyhub.entity.DocumentStatus;
 import com.polyhub.entity.SavedDocument;
 import com.polyhub.entity.User;
 import com.polyhub.repository.CategoryRepository;
@@ -56,7 +57,7 @@ public class DocumentClientService {
     document.setFileType(extractFileType(file.getOriginalFilename()));
     document.setThumbnailUrl("");
     document.setUser(uploader);
-    document.setApproved(false); // Chờ admin duyệt
+    document.setStatus(DocumentStatus.PENDING); // Chờ admin duyệt
 
     return documentRepository.save(document);
   }
@@ -74,7 +75,7 @@ public class DocumentClientService {
     );
 
     Specification<Document> spec = Specification.where(
-      (root, query, cb) -> cb.isTrue(root.get("approved"))
+      (root, query, cb) -> cb.equal(root.get("status"), DocumentStatus.APPROVED)
     );
 
     if (StringUtils.hasText(keyword)) {
@@ -103,10 +104,6 @@ public class DocumentClientService {
       setIds.add(s.getDocument().getId());
     }
     return setIds;
-  }
-
-  public List<Document> getAllDocuments() {
-    return documentRepository.findByApproved(true);
   }
 
   private String extractFileType(String fileName) {

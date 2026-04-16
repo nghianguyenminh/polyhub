@@ -1,6 +1,7 @@
 package com.polyhub.service.admin;
 
 import com.polyhub.entity.Document;
+import com.polyhub.entity.DocumentStatus;
 import com.polyhub.repository.DocumentRepository;
 import com.polyhub.service.EmailService;
 import com.polyhub.service.FileStorageService;
@@ -51,14 +52,14 @@ public class DocumentAdminService {
     // Duyệt tài liệu
     public void approveDocument(Long id) {
         Document doc = getDocumentById(id);
-        doc.setApproved(true);
+        doc.setStatus(DocumentStatus.APPROVED);
         documentRepository.save(doc);
     }
 
     // Từ chối / Gỡ tài liệu
     public void rejectOrTakedownDocument(Long id, String reason) {
         Document doc = getDocumentById(id);
-        doc.setApproved(false);
+        doc.setStatus(DocumentStatus.REJECTED);
         documentRepository.save(doc);
 
         // Bổ sung: Gửi Email cho Uploader (Nếu có người tải lên)
@@ -70,7 +71,7 @@ public class DocumentAdminService {
     // Phục hồi / Mở khóa tài liệu
     public void restoreDocument(Long id) {
         Document doc = getDocumentById(id);
-        doc.setApproved(true);
+        doc.setStatus(DocumentStatus.APPROVED);
         documentRepository.save(doc);
     }
 
@@ -96,8 +97,8 @@ public class DocumentAdminService {
     public Map<String, Object> getDocumentStats() {
         Map<String, Object> stats = new HashMap<>();
         long total = documentRepository.count();
-        long approved = documentRepository.countByApproved(true);
-        long pending = total - approved;
+        long approved = documentRepository.countByStatus(DocumentStatus.APPROVED);
+        long pending = documentRepository.countByStatus(DocumentStatus.PENDING);
 
         stats.put("total", total);
         stats.put("pending", pending);
