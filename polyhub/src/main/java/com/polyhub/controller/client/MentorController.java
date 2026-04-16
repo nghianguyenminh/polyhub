@@ -158,6 +158,6 @@ public class MentorController {
             return "redirect:/mentors";
         }
         model.addAttribute("mentor", mentor);
-        return "client/mentor_detail"; // Mở file src/main/resources/templates/client/mentor_detail.html
+        return "client/mentor_detail"; 
     }
 }

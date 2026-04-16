@@ -7,7 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+// MentorRequest đại diện cho một yêu cầu đăng ký làm mentor của người dùng.
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
