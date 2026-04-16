@@ -33,7 +33,7 @@ public class DocumentAdminService {
         Specification<Document> spec = Specification.where(null);
 
         if (keyword != null && !keyword.isEmpty()) {
-            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), " loweringKeyword + "%"));
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), "%" + keyword.toLowerCase() + "%"));
         }
 
         if (categoryId != null) {

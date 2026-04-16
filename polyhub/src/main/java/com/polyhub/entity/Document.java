@@ -30,8 +30,11 @@ public class Document {
     @Column(nullable = false)
     private String fileUrl;
 
-    @Column(nullable = false)
+    @Column
     private String thumbnailUrl;
+    
+    @Column
+    private String fileType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

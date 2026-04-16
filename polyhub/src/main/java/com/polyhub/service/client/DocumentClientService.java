@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -65,7 +64,6 @@ public class DocumentClientService {
   public Page<Document> getDocumentsForClient(
     String keyword,
     Long categoryId,
-    String documentType,
     int page,
     int size
   ) {
@@ -92,12 +90,6 @@ public class DocumentClientService {
       );
     }
 
-    if (StringUtils.hasText(documentType)) {
-      spec = spec.and(
-        (root, query, cb) -> cb.equal(root.get("fileType"), documentType)
-      );
-    }
-
     return documentRepository.findAll(spec, pageRequest);
   }
 
@@ -115,28 +107,6 @@ public class DocumentClientService {
 
   public List<Document> getAllDocuments() {
     return documentRepository.findByApproved(true);
-  }
-
-  public Map<Long, Long> getApprovedCategoryCounts() {
-    return documentRepository
-      .findByApproved(true)
-      .stream()
-      .collect(
-        Collectors.groupingBy(
-          doc -> doc.getCategory().getId(),
-          Collectors.counting()
-        )
-      );
-  }
-
-  public Map<String, Long> getApprovedDocumentTypeCounts() {
-    return documentRepository
-      .findByApproved(true)
-      .stream()
-      .filter(doc -> doc.getFileType() != null)
-      .collect(
-        Collectors.groupingBy(Document::getFileType, Collectors.counting())
-      );
   }
 
   private String extractFileType(String fileName) {

@@ -15,6 +15,7 @@ public class FileStorageService {
 
   private final Cloudinary cloudinary;
 
+  @SuppressWarnings("rawtypes")
   public Map<String, Object> getStorageUsage() {
     try {
       ApiResponse usage = cloudinary.api().usage(ObjectUtils.emptyMap());
@@ -25,6 +26,7 @@ public class FileStorageService {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
     Map<String, Object> options = ObjectUtils.asMap(
       "folder",
@@ -32,12 +34,10 @@ public class FileStorageService {
       "resource_type",
       "auto"
     );
-    Map<String, Object> uploadResult = cloudinary
-      .uploader()
-      .upload(file.getBytes(), options);
-    return uploadResult;
+    return cloudinary.uploader().upload(file.getBytes(), options);
   }
 
+  @SuppressWarnings("rawtypes")
   public Map<String, Object> uploadImage(MultipartFile file, String folder)
     throws IOException {
     Map<String, Object> options = ObjectUtils.asMap(
@@ -46,12 +46,10 @@ public class FileStorageService {
       "resource_type",
       "image"
     );
-    Map<String, Object> uploadResult = cloudinary
-      .uploader()
-      .upload(file.getBytes(), options);
-    return uploadResult;
+    return cloudinary.uploader().upload(file.getBytes(), options);
   }
 
+  @SuppressWarnings("rawtypes")
   public void deleteFile(String publicId) throws IOException {
     Map<String, Object> options = ObjectUtils.asMap(
       "invalidate",
