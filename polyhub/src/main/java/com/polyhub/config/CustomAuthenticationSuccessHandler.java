@@ -13,27 +13,34 @@ import org.springframework.stereotype.Component;
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-  @Override
-  public void onAuthenticationSuccess(HttpServletRequest request,
-      HttpServletResponse response,
-      Authentication authentication) throws IOException, ServletException {
-    // Lấy danh sách các quyền của người dùng
-    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, 
+                                        Authentication authentication) throws IOException, ServletException {
+        
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-    // Chuyển hướng người dùng dựa trên quyền
-    authorities.forEach(authority -> {
-      try {
-        if (authority.getAuthority().equals("ROLE_ADMIN")) {
-          response.sendRedirect("/admin/dashboard"); // Chuyển hướng đến trang admin
-        } else if (authority.getAuthority().equals("ROLE_USER")) {
-          response.sendRedirect("/"); // Chuyển hướng đến trang user
-        } else {
-          response.sendRedirect("/"); // Mặc định chuyển hướng đến trang user
+        // Default redirect URL if no specific role-based redirect is found
+        String redirectUrl = "/?loginSuccess";
+
+        if (authorities != null && !authorities.isEmpty()) {
+            for (GrantedAuthority grantedAuthority : authorities) {
+                String authorityName = grantedAuthority.getAuthority();
+
+                // Prioritize redirect for higher-privileged roles
+                if (authorityName.equals("ROLE_SUPER_ADMIN")) {
+                    redirectUrl = "/admin/dashboard?role=super_admin";
+                    break; // Exit loop once highest priority role is found
+                } else if (authorityName.equals("ROLE_ADMIN")) {
+                    redirectUrl = "/admin/dashboard?role=admin";
+                    break; 
+                } else if (authorityName.equals("ROLE_USER")) {
+                    redirectUrl = "/?role=user";
+                    // Don't break here, in case the user has higher roles
+                }
+            }
         }
-      } catch (IOException e) {
-        // Handle the exception, perhaps by logging it
-        e.printStackTrace();
-      }
-    });
-  }
+
+        // Perform the redirect
+        response.sendRedirect(request.getContextPath() + redirectUrl);
+    }
 }
