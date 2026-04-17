@@ -147,12 +147,4 @@ public class AdminController {
     public String groups() {
         return "admin/groups"; 
     }
-
-    @GetMapping("/reports")
-    public String reports() {
-        return "admin/reports"; 
-    }
-
-
-    
 }

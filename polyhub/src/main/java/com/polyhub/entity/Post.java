@@ -50,6 +50,16 @@ public class Post {
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
+    // --- Xoá bài thì xoá luôn Report ---
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PostReport> reports = new ArrayList<>();
+
+    // Quyền riêng tư của bài viết (false = Công khai, true = Chỉ mình tôi)
+    @Column(name = "is_private")
+    @Builder.Default
+    private Boolean isPrivate = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

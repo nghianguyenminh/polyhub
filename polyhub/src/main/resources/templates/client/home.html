@@ -91,15 +91,34 @@
                     <div style="line-height: 1.3;">
                         <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
                         <div class="text-muted" style="font-size: 13px;">
-                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> 
+                            • <i th:id="'privacy-icon-' + ${post.id}" th:class="${post.isPrivate != null and post.isPrivate ? 'bi bi-lock-fill' : 'bi bi-globe-americas'}" th:title="${post.isPrivate != null and post.isPrivate ? 'Chỉ mình tôi' : 'Công khai'}"></i>
                         </div>
                     </div>
                 </div>
-                <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
+                <div class="dropdown">
+                    <button class="btn-icon-circle bg-transparent border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots text-muted fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="font-size: 14.5px;">
+                        <th:block th:if="${currentUser != null and post.user?.username == currentUser.username}">
+                            <li><a class="dropdown-item py-2" href="#" th:onclick="'openEditPostModal(' + ${post.id} + ')'"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa bài viết</a></li>
+                            <li><a class="dropdown-item py-2" href="#" th:onclick="'togglePostPrivacy(' + ${post.id} + ')'">
+                                <i th:id="'privacy-menu-icon-' + ${post.id}" th:class="${post.isPrivate != null and post.isPrivate ? 'bi bi-globe-americas me-2' : 'bi bi-lock me-2'}"></i>
+                                <span th:id="'privacy-menu-text-' + ${post.id}" th:text="${post.isPrivate != null and post.isPrivate ? 'Đổi sang Công khai' : 'Đổi sang Chỉ mình tôi'}"></span>
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="#" th:onclick="'deletePost(' + ${post.id} + ')'"><i class="bi bi-trash3 me-2"></i>Xóa bài viết</a></li>
+                        </th:block>
+                        <th:block th:unless="${currentUser != null and post.user?.username == currentUser.username}">
+                            <li><a class="dropdown-item py-2 text-danger" href="#" th:onclick="'openReportModal(' + ${post.id} + ')'"><i class="bi bi-exclamation-triangle me-2"></i>Báo cáo bài viết</a></li>
+                        </th:block>
+                    </ul>
+                </div>
             </div>
             
             <div class="px-3 pb-2">
-                <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
+                <p th:id="'post-content-display-' + ${post.id}" class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
             </div>
             
             <img th:if="${post.imageUrl != null and post.sharedPost == null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
@@ -568,6 +587,226 @@
                 inputArea.value = `@${authorName} : `; // Mention tên
                 inputArea.focus();
                 inputArea.style.height = inputArea.scrollHeight + 'px';
+            }
+
+            /* =======================================================
+               === PHASE 5: TÍNH NĂNG QUẢN LÝ BÀI ĐĂNG ===
+               ======================================================= */
+            
+            // 1. Chuyển đổi quyền riêng tư (Public/Private)
+            async function togglePostPrivacy(postId) {
+                if (!confirm("Bạn có chắc muốn thay đổi quyền riêng tư của bài viết này?")) return;
+                
+                try {
+                    const res = await fetch(`/api/posts/${postId}/privacy`, {
+                        method: 'PATCH'
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        // Cập nhật lại UI
+                        const iconEl = document.getElementById(`privacy-icon-${postId}`);
+                        const menuIconEl = document.getElementById(`privacy-menu-icon-${postId}`);
+                        const menuTextEl = document.getElementById(`privacy-menu-text-${postId}`);
+                        
+                        if (data.isPrivate) {
+                            iconEl.className = 'bi bi-lock-fill';
+                            iconEl.title = 'Chỉ mình tôi';
+                            menuIconEl.className = 'bi bi-globe-americas me-2';
+                            menuTextEl.innerText = 'Đổi sang Công khai';
+                        } else {
+                            iconEl.className = 'bi bi-globe-americas';
+                            iconEl.title = 'Công khai';
+                            menuIconEl.className = 'bi bi-lock me-2';
+                            menuTextEl.innerText = 'Đổi sang Chỉ mình tôi';
+                        }
+                        
+                        alert(data.message);
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng. Vui lòng thử lại!");
+                }
+            }
+
+            // 2. Xóa bài viết
+            async function deletePost(postId) {
+                if (!confirm("Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác!")) return;
+                
+                try {
+                    const res = await fetch(`/api/posts/${postId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (res.ok) {
+                        alert("Đã xóa bài viết thành công!");
+                        window.location.reload();
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi xóa: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng. Vui lòng thử lại!");
+                }
+            }
+
+            // 3. Sửa bài viết (Mở modal)
+            let currentEditPostId = null;
+            function openEditPostModal(postId) {
+                currentEditPostId = postId;
+                const contentEl = document.getElementById(`post-content-display-${postId}`);
+                if(!contentEl) return;
+                
+                const currentContent = contentEl.innerText;
+                
+                if(!document.getElementById('editPostModal')) {
+                    const modalHtml = `
+                        <div class="modal fade" id="editPostModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="modal-title fw-bold w-100 text-center">Chỉnh sửa bài viết</h5>
+                                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; right: 15px;"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <textarea id="edit-post-content" class="form-control border-0 px-0 shadow-none fs-5" rows="4" style="resize:none; outline:none;"></textarea>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-primary w-100 fw-bold" onclick="execEditPost()" id="btn-submit-edit">Lưu thay đổi</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                }
+                
+                document.getElementById('edit-post-content').value = currentContent;
+                const bsModal = new bootstrap.Modal(document.getElementById('editPostModal'));
+                bsModal.show();
+            }
+
+            // Thực thi lưu bài viết
+            async function execEditPost() {
+                if(!currentEditPostId) return;
+                
+                const newContent = document.getElementById('edit-post-content').value.trim();
+                if(!newContent) {
+                    alert("Nội dung không được để trống!");
+                    return;
+                }
+                
+                const btn = document.getElementById('btn-submit-edit');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i> Đang lưu...';
+
+                try {
+                    const res = await fetch(`/api/posts/${currentEditPostId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: newContent })
+                    });
+                    
+                    if(res.ok) {
+                        // Update DOM trực tiếp
+                        document.getElementById(`post-content-display-${currentEditPostId}`).innerText = newContent;
+                        
+                        const modalEl = document.getElementById('editPostModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        modalInstance.hide();
+                        alert("Đã cập nhật bài viết!");
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng khi lưu bài viết!");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Lưu thay đổi';
+                }
+            }
+
+            // 4. Báo cáo bài viết (Mở modal)
+            let currentReportPostId = null;
+            function openReportModal(postId) {
+                currentReportPostId = postId;
+                
+                if(!document.getElementById('reportPostModal')) {
+                    const modalHtml = `
+                        <div class="modal fade" id="reportPostModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="modal-title fw-bold w-100 text-center text-danger">Báo cáo bài viết</h5>
+                                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; right: 15px;"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="mb-2 text-muted" style="font-size: 14.5px;">Hãy cho chúng tôi biết tại sao bạn muốn báo cáo bài viết này:</p>
+                                        <select id="report-reason" class="form-select mb-3">
+                                            <option value="" disabled selected>-- Chọn lý do --</option>
+                                            <option value="Nội dung khiêu dâm, đồi trụy">Nội dung khiêu dâm, đồi trụy</option>
+                                            <option value="Bạo lực, đẫm máu">Bạo lực, đẫm máu</option>
+                                            <option value="Xúc phạm, bôi nhọ người khác">Xúc phạm, bôi nhọ người khác</option>
+                                            <option value="Spam, quảng cáo trái phép">Spam, quảng cáo trái phép</option>
+                                            <option value="Khác">Lý do khác...</option>
+                                        </select>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-danger w-100 fw-bold" onclick="execReportPost()" id="btn-submit-report">Gửi Báo Cáo</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                }
+                
+                document.getElementById('report-reason').value = "";
+                const bsModal = new bootstrap.Modal(document.getElementById('reportPostModal'));
+                bsModal.show();
+            }
+
+            // Thực thi Báo cáo
+            async function execReportPost() {
+                if(!currentReportPostId) return;
+                
+                const reason = document.getElementById('report-reason').value;
+                if(!reason) {
+                    alert("Vui lòng chọn một lý do báo cáo!");
+                    return;
+                }
+                
+                const btn = document.getElementById('btn-submit-report');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i> Đang gửi...';
+
+                try {
+                    const res = await fetch(`/api/posts/${currentReportPostId}/report`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reason: reason })
+                    });
+                    
+                    if(res.ok) {
+                        const data = await res.json();
+                        alert(data.message); 
+                        
+                        const modalEl = document.getElementById('reportPostModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        modalInstance.hide();
+                    } else {
+                        const err = await res.text();
+                        alert("Không thể báo cáo: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng khi gửi báo cáo!");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Gửi Báo Cáo';
+                }
             }
         </script>
 

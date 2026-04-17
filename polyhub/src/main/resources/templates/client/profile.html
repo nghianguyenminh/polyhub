@@ -128,36 +128,105 @@
                         <!-- Posts List -->
                         <!-- Sử dụng Thymeleaf lấy Post từ Controller -->
                         <div th:each="post : ${recentPosts}" class="poly-card p-0 mb-3"> 
-                            <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-2">
-                                    <img th:src="${post.user != null and post.user.avatar != null and post.user.avatar.startsWith('http') ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;" alt="Avatar">
-                                    <div style="line-height: 1.3;">
-                                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
-                                        <div class="text-muted" style="font-size: 13px;">
-                                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
-                            </div>
-                            
-                            <div class="px-3 pb-2">
-                                <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
-                            </div>
-                            
-                            <img th:if="${post.imageUrl != null}" th:src="${post.imageUrl}" class="img-fluid w-100 border-top border-bottom" style="max-height: 400px; object-fit: cover;" alt="Post img">
-                            
-                            <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> 0</div>
-                                <div>0 Bình luận • 0 Chia sẻ</div>
-                            </div>
-                            <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top mx-3">
-                                <button class="btn-ghost flex-grow-1 py-1 btn-like"><i class="bi bi-heart me-1"></i> Thích</button>
-                                <button class="btn-ghost flex-grow-1 py-1"><i class="bi bi-chat me-1"></i> Bình luận</button>
-                                <button class="btn-ghost flex-grow-1 py-1"><i class="bi bi-share me-1"></i> Chia sẻ</button>
-                            </div>
+            <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <img th:src="${post.user != null and post.user.avatar != null and post.user.avatar.startsWith('http') ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;" alt="Avatar">
+                    <div style="line-height: 1.3;">
+                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                        <div class="text-muted" style="font-size: 13px;">
+                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> 
+                            • <i th:id="'privacy-icon-' + ${post.id}" th:class="${post.isPrivate != null and post.isPrivate ? 'bi bi-lock-fill' : 'bi bi-globe-americas'}" th:title="${post.isPrivate != null and post.isPrivate ? 'Chỉ mình tôi' : 'Công khai'}"></i>
                         </div>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn-icon-circle bg-transparent border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots text-muted fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="font-size: 14.5px;">
+                        <th:block th:if="${currentUser != null and post.user?.username == currentUser.username}">
+                            <li><a class="dropdown-item py-2" href="#" th:onclick="'openEditPostModal(' + ${post.id} + ')'"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa bài viết</a></li>
+                            <li><a class="dropdown-item py-2" href="#" th:onclick="'togglePostPrivacy(' + ${post.id} + ')'">
+                                <i th:id="'privacy-menu-icon-' + ${post.id}" th:class="${post.isPrivate != null and post.isPrivate ? 'bi bi-globe-americas me-2' : 'bi bi-lock me-2'}"></i>
+                                <span th:id="'privacy-menu-text-' + ${post.id}" th:text="${post.isPrivate != null and post.isPrivate ? 'Đổi sang Công khai' : 'Đổi sang Chỉ mình tôi'}"></span>
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="#" th:onclick="'deletePost(' + ${post.id} + ')'"><i class="bi bi-trash3 me-2"></i>Xóa bài viết</a></li>
+                        </th:block>
+                        <th:block th:unless="${currentUser != null and post.user?.username == currentUser.username}">
+                            <li><a class="dropdown-item py-2 text-danger" href="#" th:onclick="'openReportModal(' + ${post.id} + ')'"><i class="bi bi-exclamation-triangle me-2"></i>Báo cáo bài viết</a></li>
+                        </th:block>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="px-3 pb-2">
+                <p th:id="'post-content-display-' + ${post.id}" class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
+            </div>
+            
+            <img th:if="${post.imageUrl != null and post.sharedPost == null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
+            
+            <!-- KIỂM TRA NẾU ĐÂY LÀ BÀI SHARE -> HIỂN THỊ BOX LỒNG NHAU -->
+            <div th:if="${post.sharedPost != null}" class="border rounded mx-3 mb-2 overflow-hidden pointer-box">
+                <!-- Header của bài gốc -->
+                <div class="p-2 d-flex align-items-center bg-light border-bottom">
+                    <img th:src="${post.sharedPost.user != null and post.sharedPost.user.avatar != null and post.sharedPost.user.avatar.startsWith('http') ? post.sharedPost.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border me-2" width="30" height="30" style="object-fit: cover;">
+                    <div style="line-height: 1.2;">
+                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 13.5px;" th:text="${post.sharedPost.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                        <div class="text-muted" style="font-size: 12px;">
+                            <span th:text="${#temporals.format(post.sharedPost.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- Content bài gốc -->
+                <div class="p-2" th:if="${post.sharedPost.content != null and !post.sharedPost.content.isEmpty()}">
+                    <p class="mb-0" style="font-size: 13.5px; white-space: pre-wrap;" th:text="${post.sharedPost.content}">Nội dung gốc</p>
+                </div>
+                <!-- Image bài gốc -->
+                <img th:if="${post.sharedPost.imageUrl != null}" th:src="${post.sharedPost.imageUrl}" class="img-fluid w-100 border-top" style="max-height: 400px; object-fit: cover;">
+            </div>
+            
+            <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
+                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> <span th:text="${#lists.size(post.comments)}">0</span></div>
+                <div><span th:text="${#lists.size(post.comments)}">0</span> Bình luận • <span th:text="${#lists.size(post.shares)}">0</span> Chia sẻ</div>
+            </div>
 
+            <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top">
+                <button class="btn-ghost flex-grow-1 btn-like">
+                    <i class="bi bi-heart me-1 fs-5"></i> Thích
+                </button>
+                <button class="btn-ghost flex-grow-1" th:onclick="'toggleCommentSection(' + ${post.id} + ')'">
+                    <i class="bi bi-chat-fill me-1 fs-5"></i> Bình luận
+                </button>
+                <button class="btn-ghost flex-grow-1" th:onclick="'openShareModal(' + ${post.id} + ')'">
+                    <i class="bi bi-share-fill me-1 fs-5"></i> Chia sẻ
+                </button>
+            </div>
+            
+            <!-- Vùng chứa Bình Luận (Mặc định ẩn) -->
+            <div th:id="'comment-section-' + ${post.id}" class="px-3 pb-3 d-none border-top pt-2" style="background-color: #f8f9fa; border-radius: 0 0 10px 10px;">
+                <!-- Box render các bình luận (AJAX sẽ load dữ liệu vào đây) -->
+                <div th:id="'comment-list-' + ${post.id}" class="mb-3 d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Element bình luận mẫu sẽ được render bằng JS -->
+                    <div class="text-center text-muted py-2" style="font-size: 13px;">
+                        <i class="spinner-border spinner-border-sm me-1"></i> Đang tải bình luận...
+                    </div>
+                </div>
+
+                <!-- Ô nhập bình luận mới -->
+                <div class="d-flex align-items-start gap-2 mt-2">
+                    <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="32" height="32" style="object-fit: cover;">
+                    <div class="flex-grow-1 position-relative">
+                        <textarea th:id="'comment-input-' + ${post.id}" class="form-control border-secondary rounded-4 bg-white pe-5" rows="1" placeholder="Viết bình luận..." style="font-size: 14px; resize: none; overflow: hidden; min-height: 38px; line-height: 1.5; padding-top: 8px;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" th:onkeypress="'if(event.key === \'Enter\' && !event.shiftKey) { event.preventDefault(); submitComment(' + ${post.id} + '); }'"></textarea>
+                        <button type="button" class="btn btn-link text-primary position-absolute p-0" style="right: 12px; bottom: 8px; text-decoration: none;" th:onclick="'submitComment(' + ${post.id} + ')'" title="Gửi">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
                         <!-- Nếu không có bài viết -->
                         <div th:if="${#lists.isEmpty(recentPosts)}" class="poly-card p-4 text-center mt-3 text-muted">
                             <i class="bi bi-journal-x fs-1 opacity-50"></i>
