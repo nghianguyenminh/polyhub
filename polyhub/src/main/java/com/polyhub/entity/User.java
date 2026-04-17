@@ -51,7 +51,7 @@ public class User implements Serializable {
 
     // Thêm biến này vào danh sách các thuộc tính
     @Column(columnDefinition = "NVARCHAR(500)")
-    private String bio;
+    private String bio; 
 
     // --- KẾT NỐI VỚI BẢNG ROLE ---
     @ManyToOne

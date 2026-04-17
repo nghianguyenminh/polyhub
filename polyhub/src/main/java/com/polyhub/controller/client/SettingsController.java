@@ -67,7 +67,7 @@ public String updateAccount(Principal principal,
 public String changePassword(Principal principal,
                              @RequestParam("currentPassword") String currentPassword,
                              @RequestParam("newPassword") String newPassword,
-                             @RequestParam("confirmPassword") String confirmPassword,
+                             @RequestParam("confirmPassword") String confirmPassword, 
                              RedirectAttributes redirectAttributes) {
     if (principal != null) {
         User user = userRepository.findById(principal.getName()).orElse(null);
