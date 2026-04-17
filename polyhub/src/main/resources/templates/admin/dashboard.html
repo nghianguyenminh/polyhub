@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{layouts/admin_layout :: layout(~{this::title}, ~{this::myContent})}"
+  th:replace="~{layouts/main_layout :: layout(~{this::title}, ~{this::myContent})}"
 >
 <head>
   <title>Dashboard - PolyHUB</title>
@@ -118,7 +118,7 @@ bsp;
                   </div>
                   <div class="col-7 align-self-center">
                     <div class="report-main">
-                      <h3 class="report-title" th:text="${totalUsers}">0</h3>
+                      <h3 class.report-title th:text="${totalUsers}">0</h3>
                       <span class="report-subtitle">Tổng người dùng</span>
                     </div>
                   </div>
