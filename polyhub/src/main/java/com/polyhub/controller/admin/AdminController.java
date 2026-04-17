@@ -26,13 +26,6 @@ public class AdminController {
         return "admin/dashboard";
     }
 
-    @GetMapping("/users")
-    public String users(Model model) {
-        List<User> users = userService.getAllUsers();
-        model.addAttribute("users", users);
-        return "admin/users";
-    }
-
     @GetMapping("/mentors")
     public String mentors(Model model) {
         List<User> mentors = userService.getMentors();
