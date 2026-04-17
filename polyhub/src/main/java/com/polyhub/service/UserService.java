@@ -1,28 +1,34 @@
 package com.polyhub.service;
 
-import com.polyhub.dto.request.RegisterRequest;
 import com.polyhub.entity.User;
-
 import java.util.List;
-import java.util.Optional;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
-    /**
-     * Xử lý đăng ký tài khoản người dùng mới.
-     * @param request dữ liệu được gửi từ form đăng ký
-     * @return User: The newly created user
-     */
-    User registerNewUser(RegisterRequest request);
 
     List<User> getAllUsers();
 
-    void toggleLock(Long id);
+    List<User> getMentors();
 
-    void approveMentor(Long id);
+    List<User> getMentorRequests();
 
-    void rejectMentor(Long id, String reason);
+    void approveMentorRequest(Long id);
 
-    Optional<User> findById(Long id);
+    void rejectMentorRequest(Long id, String rejectionReason);
 
-    List<User> findByRole(String role);
+    User findByUsername(String username);
+
+    void save(User user);
+
+    void updateAvatar(User user, MultipartFile avatarFile);
+
+    void updateUser(User user);
+
+    void becomeMentor(User user, String mentorMajor, String mentorDescription);
+
+    void addSkill(User user, String skill);
+
+    void removeSkill(User user, String skill);
+
+    void changePassword(User user, String oldPassword, String newPassword);
 }

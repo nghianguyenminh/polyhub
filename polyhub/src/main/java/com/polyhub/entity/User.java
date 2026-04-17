@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import java.time.LocalDate;
 import java.util.Date;
 import lombok.Data;
 
@@ -56,7 +57,18 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Date createdAt;
 
+    private boolean gender;
+
+    private LocalDate birthday;
+
+    private boolean active;
+
+    private boolean wantsToBecomeMentor;
+
+    private String rejectionReason;
+
     public User() {
         this.createdAt = new Date();
+        this.active = true;
     }
 }
