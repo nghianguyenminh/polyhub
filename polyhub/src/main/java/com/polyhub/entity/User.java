@@ -24,7 +24,8 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
+    // Đảm bảo cột password đủ dài để chứa chuỗi mã hóa
+    @Column(nullable = false, length = 100)
     private String password;
 
     @Column(nullable = false, unique = true)
