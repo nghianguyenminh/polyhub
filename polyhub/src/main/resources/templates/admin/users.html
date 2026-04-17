@@ -228,82 +228,34 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Dòng 1: Student -->
-                        <tr>
-                          
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=random" class="table-avatar">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Nguyễn Văn A</div>
-                                        <div class="text-muted" style="font-size: 12px;">nguyenvena@fpt.edu.vn</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-muted fw-medium">PS12345</td>
-                            <td><span class="role-badge role-student">Sinh viên</span></td>
-                            <td>
-                                <span class="status-badge status-active">
-                                    <span class="status-dot"></span> Hoạt động
-                                </span>
-                            </td>
-                            <td class="text-muted">15/03/2026</td>
-                            <td class="text-end" style="padding-right: 1.25rem;">
-                                <a href="/admin/users/detail" class="btn btn-sm btn-light border text-muted fw-medium d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-size: 12.5px;">
-                                    <i class="bi bi-eye"></i> Chi tiết
-                                </a>
-                            </td>
-                        </tr>
-
-                        <!-- Dòng 2: Mentor -->
-                        <tr>
+                        <!-- Loop qua danh sách User -->
+                        <tr th:each="user : ${users}" th:style="${not user.active ? 'background-color: #FDFBFB;' : ''}">
                            
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Lưu+Châu&background=4F46E5&color=fff" class="table-avatar">
+                                    <img th:src="${user.avatar != null and user.avatar.startsWith('http') ? user.avatar : '/client/images/avatars/' + (user.avatar ?: 'default.png')}" class="table-avatar" th:style="${not user.active ? 'opacity: 0.6;' : ''}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';">
                                     <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-dark">Lưu Phan Bảo Châu</div>
-                                        <div class="text-muted" style="font-size: 12px;">chaultp@fpt.edu.vn</div>
+                                        <div class="fw-semibold" th:classappend="${not user.active ? 'text-muted text-decoration-line-through' : 'text-dark'}" th:text="${user.fullname}">Tên người dùng</div>
+                                        <div class="text-muted" style="font-size: 12px;" th:text="${user.email}">email@domain.com</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-muted fw-medium">PS54321</td>
-                            <td><span class="role-badge role-mentor">Mentor</span></td>
+                            <td class="text-muted fw-medium" th:text="${user.username}">Username</td>
                             <td>
-                                <span class="status-badge status-active">
-                                    <span class="status-dot"></span> Hoạt động
+                                <span class="role-badge" 
+                                      th:classappend="${user.role != null and user.role.id == 'USER' ? 'role-student' : (user.role != null and user.role.id == 'ADMIN' ? 'role-admin' : 'role-mentor')}"
+                                      th:text="${user.role != null ? user.role.name : 'Chưa có'}">Vai trò</span>
+                            </td>
+                            <td>
+                                <span class="status-badge" th:classappend="${user.active ? 'status-active' : 'status-banned'}">
+                                    <span class="status-dot"></span>
+                                    <th:block th:if="${user.active}">Hoạt động</th:block>
+                                    <th:block th:unless="${user.active}">Đã khóa</th:block>
                                 </span>
                             </td>
-                            <td class="text-muted">10/03/2026</td>
+                            <td class="text-muted" th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}">01/01/2026</td>
                             <td class="text-end" style="padding-right: 1.25rem;">
-                                <a href="/admin/users/detail" class="btn btn-sm btn-light border text-muted fw-medium d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-size: 12.5px;">
-                                    <i class="bi bi-eye"></i> Chi tiết
-                                </a>
-                            </td>
-                        </tr>
-
-                        <!-- Dòng 3: Banned User -->
-                        <tr style="background-color: #FDFBFB;">
-                           
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Lê+Văn+C&background=e5e7eb&color=6b7280" class="table-avatar" style="opacity: 0.6;">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-semibold text-muted text-decoration-line-through">Lê Văn C</div>
-                                        <div class="text-muted" style="font-size: 12px;">clev@fpt.edu.vn</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-muted fw-medium">PS99999</td>
-                            <td><span class="role-badge role-student">Sinh viên</span></td>
-                            <td>
-                                <span class="status-badge status-banned">
-                                    <span class="status-dot"></span> Đã khóa
-                                </span>
-                            </td>
-                            <td class="text-muted">01/01/2026</td>
-                            <td class="text-end" style="padding-right: 1.25rem;">
-                                <a href="/admin/users/detail" class="btn btn-sm btn-light border text-muted fw-medium d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-size: 12.5px;">
+                                <a th:href="@{/admin/users/detail/{id}(id=${user.username})}" class="btn btn-sm btn-light border text-muted fw-medium d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-size: 12.5px;">
                                     <i class="bi bi-eye"></i> Chi tiết
                                 </a>
                             </td>
@@ -313,31 +265,21 @@
             </div>
             
             <!-- Pagination Footer -->
-            <div class="d-flex justify-content-between align-items-center p-3 border-top" style="background-color: #fcfcfc;">
+            <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center p-3 border-top" style="background-color: #fcfcfc;">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted" style="font-size: 13px;">Hiển thị</span>
-                    <select class="form-select form-select-sm" style="width: 70px; font-size: 13px; border-radius: 6px;">
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                    </select>
-                    <span class="text-muted" style="font-size: 13px;">dòng</span>
+                    <span class="text-muted" style="font-size: 13px;">Trang hiện tại: <b th:text="${currentPage}">1</b> / <b th:text="${totalPages}">10</b></span>
                 </div>
-                
-                <span class="text-muted" style="font-size: 13px;">Hiển thị 1 đến 3 của 2,510 người dùng</span>
                 
                 <nav aria-label="Page navigation">
                     <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item disabled">
-                            <a class="page-link shadow-none" style="border-radius: 6px 0 0 6px;" href="#" tabindex="-1" aria-disabled="true">Trang trước</a>
+                        <li class="page-item" th:classappend="${currentPage == 1 ? 'disabled' : ''}">
+                            <a class="page-link shadow-none" style="border-radius: 6px 0 0 6px;" th:href="@{/admin/users(page=${currentPage - 1})}" tabindex="-1">Trang trước</a>
                         </li>
-                        <li class="page-item active" aria-current="page">
-                            <a class="page-link shadow-none" style="background-color: var(--admin-primary); border-color: var(--admin-primary);" href="#">1</a>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}" th:classappend="${currentPage == i ? 'active' : ''}">
+                            <a class="page-link shadow-none" th:style="${currentPage == i ? 'background-color: var(--admin-primary); border-color: var(--admin-primary);' : 'color: #000'}" th:href="@{/admin/users(page=${i})}" th:text="${i}">1</a>
                         </li>
-                        <li class="page-item"><a class="page-link shadow-none text-dark" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link shadow-none text-dark" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link shadow-none text-dark" style="border-radius: 0 6px 6px 0;" href="#">Trang tiếp</a>
+                        <li class="page-item" th:classappend="${currentPage == totalPages ? 'disabled' : ''}">
+                            <a class="page-link shadow-none text-dark" style="border-radius: 0 6px 6px 0;" th:href="@{/admin/users(page=${currentPage + 1})}">Trang tiếp</a>
                         </li>
                     </ul>
                 </nav>

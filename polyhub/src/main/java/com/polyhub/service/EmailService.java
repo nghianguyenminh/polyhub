@@ -143,4 +143,92 @@ public class EmailService {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendAccountLockEmail(String toEmail, String fullname, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã bị khóa");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #e02424; text-align: center;\">Tài Khoản Bị Khóa</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Chúng tôi rất lấy làm tiếc phải thông báo rằng tài khoản của bạn trên hệ thống PolyHUB đã bị <strong>khóa</strong>.</p>"
+                    + "<p>Lý do cụ thể như sau:</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Nếu bạn có thắc mắc hoặc cần khiếu nại, vui lòng liên hệ trực tiếp với bộ phận chăm sóc để được giải đáp.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendAccountUnlockEmail(String toEmail, String fullname) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã được mở khóa");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #057A55; text-align: center;\">Tài Khoản Được Mở Khóa</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Tài khoản của bạn trên hệ thống PolyHUB vừa được Ban quản trị <strong>mở khóa</strong> thành công.</p>"
+                    + "<p>Bạn có thể tiếp tục truy cập và sử dụng dịch vụ của chúng tôi.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+    @Async
+    public void sendRoleAssignmentEmail(String toEmail, String fullname, String roleName) {
+        try {
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Cập nhật quyền hạn tài khoản");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #057A55; text-align: center;\">Cập Nhật Quyền Hạn</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Tài khoản của bạn trên hệ thống PolyHUB vừa được cập nhật vai trò mới.</p>"
+                    + "<p>Vai trò hiện tại của bạn là: <strong style=\"color: #EE0979;\">" + roleName + "</strong></p>"
+                    + "<p>Hãy đăng nhập lại vào hệ thống để trải nghiệm các chức năng tương ứng với quyền hạn mới của bạn.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (jakarta.mail.MessagingException e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
 }

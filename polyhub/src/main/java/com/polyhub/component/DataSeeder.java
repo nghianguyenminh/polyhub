@@ -34,6 +34,34 @@ public class DataSeeder implements CommandLineRunner {
             return roleRepository.save(role);
         });
 
+        roleRepository.findById("USER").orElseGet(() -> {
+            Role role = new Role();
+            role.setId("USER");
+            role.setName("Sinh Viên");
+            return roleRepository.save(role);
+        });
+
+        roleRepository.findById("MENTOR").orElseGet(() -> {
+            Role role = new Role();
+            role.setId("MENTOR");
+            role.setName("Mentor");
+            return roleRepository.save(role);
+        });
+
+        roleRepository.findById("USER_ADMIN").orElseGet(() -> {
+            Role role = new Role();
+            role.setId("USER_ADMIN");
+            role.setName("Admin Người dùng");
+            return roleRepository.save(role);
+        });
+
+        roleRepository.findById("CONTENT_ADMIN").orElseGet(() -> {
+            Role role = new Role();
+            role.setId("CONTENT_ADMIN");
+            role.setName("Admin Nội dung");
+            return roleRepository.save(role);
+        });
+
         // 2. Tạo tài khoản Admin (Nếu chưa có)
         if (!userRepository.existsById("admin")) {
             User admin = new User();
