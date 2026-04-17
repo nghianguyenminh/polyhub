@@ -29,17 +29,21 @@ public class AdminController {
         List<User> users = userRepository.findAll();
 
         List<User> pendingMentors = users.stream()
+            .filter(u -> Boolean.TRUE.equals(u.getWantsToBecomeMentor())) // Null-safe check
             .filter(u -> u.getRole() != null && "USER".equals(u.getRole().getName()))
-            .filter(u -> Boolean.TRUE.equals(u.getWantsToBecomeMentor()))
             .collect(Collectors.toList());
 
         long approvedMentorCount = users.stream()
             .filter(u -> u.getRole() != null && "MENTOR".equals(u.getRole().getName()))
             .count();
 
+        long rejectedMentorCount = users.stream()
+            .filter(u -> u.getRejectionReason() != null && !u.getRejectionReason().isEmpty())
+            .count();
+
         model.addAttribute("pendingMentorRequests", pendingMentors.size());
         model.addAttribute("approvedMentorRequests", approvedMentorCount);
-        model.addAttribute("rejectedMentorRequests", 0); // Logic to be added
+        model.addAttribute("rejectedMentorRequests", rejectedMentorCount);
         model.addAttribute("totalUsers", userRepository.count());
         model.addAttribute("pendingRequestsList", pendingMentors);
 
@@ -56,8 +60,8 @@ public class AdminController {
         List<User> users = userRepository.findAll();
         
         List<User> pendingMentors = users.stream()
+            .filter(u -> Boolean.TRUE.equals(u.getWantsToBecomeMentor())) // Null-safe check
             .filter(u -> u.getRole() != null && "USER".equals(u.getRole().getName()))
-            .filter(u -> Boolean.TRUE.equals(u.getWantsToBecomeMentor()))
             .collect(Collectors.toList());
 
         List<User> approvedMentors = users.stream()

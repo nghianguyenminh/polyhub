@@ -1,221 +1,182 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
-      th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'dashboard')}">
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layouts/admin_layout :: layout(~{this::title}, ~{this::myContent})}"
+>
 <head>
-    <title>Bảng điều khiển - PolyHUB Admin</title>
-    
-    <th:block th:fragment="myCss">
-        </th:block>
+  <title>Dashboard - PolyHUB</title>
 </head>
 <body>
-
-    <div th:fragment="myContent">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1 text-uppercase text-muted" style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
-                        <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Bảng điều khiển</li>
-                    </ol>
-                </nav>
-                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -1px;">Tổng quan PolyHUB</h3>
-            </div>
-            <button class="btn btn-export btn-sm rounded-pill px-3 py-2 fw-medium d-flex align-items-center gap-2"><i class="bi bi-file-earmark-arrow-down fs-6"></i> Xuất báo cáo</button>
-        </div>
-
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 mb-4">
-            
+  <div th:fragment="myContent">
+    <!-- Page-Title -->
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="page-title-box">
+          <div class="row">
             <div class="col">
-                <div class="poly-card p-3 d-flex align-items-center gap-3">
-                    <div class="icon-box-lg bg-primary-soft rounded-circle">
-                        <i class="bi bi-people fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted fw-medium" style="font-size: 13px;">Tổng người dùng</div>
-                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${totalUsers}"></h4>
-                        <div class="stat-indicator text-success" style="font-size: 11px;"><i class="bi bi-arrow-up"></i> 15% <span class="text-muted">vs hôm qua</span></div>
-                    </div>
-                </div>
+              <h4 class="page-title">Dashboard</h4>
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item active">Dashboard</li>
+              </ol>
             </div>
-
-            <div class="col">
-                <div class="poly-card p-3 d-flex align-items-center gap-3">
-                    <div class="icon-box-lg" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745;">
-                        <i class="bi bi-collection fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted fw-medium" style="font-size: 13px;">Nhóm học tập</div>
-                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);">128</h4>
-                        <div class="stat-indicator text-success" style="font-size: 11px;"><i class="bi bi-arrow-up"></i> 5% <span class="text-muted">vs hôm qua</span></div>
-                    </div>
-                </div>
+            <!--end col-->
+            <div class="col-auto align-self-center">
+              <a
+                href="#"
+                class="btn btn-sm btn-outline-primary"
+                id="Dash_Date"
+                ><span class="day-name" id="Day_Name">Today:</span>&
+bsp;
+                <span class="" id="Select_date">Jan 11</span>
+                <i
+                  data-feather="calendar"
+                  class="align-self-center icon-xs ms-1"
+                ></i>
+              </a>
             </div>
-
-            <div class="col">
-                <div class="poly-card p-3 d-flex align-items-center gap-3">
-                    <div class="icon-box-lg" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">
-                        <i class="bi bi-patch-exclamation fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted fw-medium" style="font-size: 13px;">Mentor chờ duyệt</div>
-                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${pendingMentorRequests}"></h4>
-                        <div class="stat-indicator text-danger" style="font-size: 11px;">Hôm nay mới có</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="poly-card p-3 d-flex align-items-center gap-3">
-                    <div class="icon-box-lg" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545;">
-                        <i class="bi bi-flag fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted fw-medium" style="font-size: 13px;">Báo cáo vi phạm</div>
-                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);">12</h4>
-                        <div class="stat-indicator text-danger" style="font-size: 11px;"><i class="bi bi-arrow-up"></i> 3 báo cáo mới</div>
-                    </div>
-                </div>
-            </div>
-
+            <!--end col-->
+          </div>
+          <!--end row-->
         </div>
-
-        <div class="row g-3 mb-4">
-            
-            <div class="col-12 col-xl-8">
-                <div class="poly-card p-3 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold text-dark mb-0">Lưu lượng truy cập hệ thống (30 ngày gần nhất)</h6>
-                        <div class="badge bg-light text-dark border fw-medium" style="font-size: 11px;">Cập nhật: 12:00 PM</div>
-                    </div>
-                    <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
-                        <canvas id="trafficChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-xl-4">
-                <div class="poly-card p-3 h-100">
-                    <h6 class="fw-bold text-dark mb-3">Tỉ lệ Người dùng theo Chuyên ngành</h6>
-                    <div class="chart-container" style="height: 250px;">
-                        <canvas id="majorChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-        
-        <div class="row g-3 mb-5">
-            
-            <div class="col-12">
-                <div class="poly-card p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold text-dark mb-0">Yêu cầu Mentor đang chờ duyệt <i class="bi bi-fire text-danger"></i></h6>
-                        <a href="/admin/mentors" class="text-decoration-none text-poly fw-medium" style="font-size: 13px;">Xem tất cả</a>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover admin-table mb-0" style="font-size: 13.5px;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th scope="col" style="width: 25px;"></th>
-                                    <th scope="col">Ứng viên</th>
-                                    <th scope="col">Chuyên ngành</th>
-                                    <th scope="col">Kỹ năng cốt lõi</th>
-                                    <th scope="col">Ngày gửi</th>
-                                    <th scope="col">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="request : ${pendingRequestsList}">
-                                    <td class="text-center align-middle"><input class="form-check-input shadow-none" type="checkbox"></td>
-                                    <td class="align-middle">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <img th:src="@{'/api/v1/files/' + ${request.user.avatar}}" class="rounded-circle" width="30" height="30">
-                                            <div style="line-height: 1.2;">
-                                                <div class="fw-semibold text-dark" th:text="${request.user.fullName}"></div>
-                                                <div class="text-muted" style="font-size: 11px;" th:text="${request.user.email}"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle fw-medium text-dark" th:text="${request.specialized}"></td>
-                                    <td class="align-middle" th:text="${request.skills}"></td>
-                                    <td class="align-middle text-muted" th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy')}"></td>
-                                    <td class="align-middle">
-                                        <a th:href="@{/admin/mentors/{id}/approve(id=${request.id})}" class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</a>
-                                        <a th:href="@{/admin/mentors/{id}/detail(id=${request.id})}" class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
+        <!--end page-title-box-->
+      </div>
+      <!--end col-->
     </div>
-
-   <th:block th:fragment="myJs">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        
-        // 1. LINE CHART - Màu Indigo
-        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
-        new Chart(ctxTraffic, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Lượt truy cập',
-                    data: [2500, 2900, 3100, 2800, 3400, 3700, 4200, 4100, 3900, 4600, 4900, 5200],
-                    borderColor: '#4F46E5', /* Indigo Primary */
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)', /* Indigo mờ */
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#E5E7EB' }, ticks: { font: { size: 11 } } },
-                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
-                }
-            }
-        });
-
-        // 2. DOUGHNUT CHART - Các sắc độ của Indigo
-        const ctxMajor = document.getElementById('majorChart').getContext('2d');
-        new Chart(ctxMajor, {
-            type: 'doughnut',
-            data: {
-                labels: ['Ứng dụng phần mềm', 'Thiết kế đồ họa', 'Digital Marketing', 'Ngành khác'],
-                datasets: [{
-                    data: [45, 25, 20, 10],
-                    backgroundColor: [
-                        '#4F46E5', /* Indigo 100% */
-                        '#818CF8', /* Indigo 70% */
-                        '#C7D2FE', /* Indigo 40% */
-                        '#E5E7EB'  /* Xám cho Ngành khác */
-                    ],
-                    borderWidth: 3,
-                    borderColor: '#ffffff',
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, cutout: '75%',
-                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 12 }, padding: 15 } } }
-            }
-        });
-
-    });
-    </script>
-</th:block>
-
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="row justify-content-center">
+          <div class="col-md-6 col-lg-3">
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="row d-flex justify-content-center">
+                  <div class="col-5">
+                    <i
+                      class="fas fa-user-plus text-primary font-30px"
+                    ></i>
+                  </div>
+                  <div class="col-7 align-self-center">
+                    <div class="report-main">
+                      <h3 class="report-title" th:text="${pendingMentorRequests}">0</h3>
+                      <span class="report-subtitle">Yêu cầu chờ</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--end card-body-->
+            </div>
+            <!--end card-->
+          </div>
+          <!--end col-->
+          <div class="col-md-6 col-lg-3">
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="row d-flex justify-content-center">
+                  <div class="col-5">
+                    <i
+                      class="fas fa-user-check text-success font-30px"
+                    ></i>
+                  </div>
+                  <div class="col-7 align-self-center">
+                    <div class="report-main">
+                      <h3 class="report-title" th:text="${approvedMentorRequests}">0</h3>
+                      <span class="report-subtitle">Mentor đã duyệt</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--end card-body-->
+            </div>
+            <!--end card-->
+          </div>
+          <!--end col-->
+          <div class="col-md-6 col-lg-3">
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="row d-flex justify-content-center">
+                  <div class="col-5">
+                    <i class="fas fa-user-times text-danger font-30px"></i>
+                  </div>
+                  <div class="col-7 align-self-center">
+                    <div class="report-main">
+                      <h3 class="report-title" th:text="${rejectedMentorRequests}">0</h3>
+                      <span class="report-subtitle">Yêu cầu từ chối</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--end card-body-->
+            </div>
+            <!--end card-->
+          </div>
+          <!--end col-->
+          <div class="col-md-6 col-lg-3">
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="row d-flex justify-content-center">
+                  <div class="col-5">
+                    <i class="fas fa-users text-info font-30px"></i>
+                  </div>
+                  <div class="col-7 align-self-center">
+                    <div class="report-main">
+                      <h3 class="report-title" th:text="${totalUsers}">0</h3>
+                      <span class="report-subtitle">Tổng người dùng</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--end card-body-->
+            </div>
+            <!--end card-->
+          </div>
+          <!--end col-->
+        </div>
+        <!--end row-->
+        <div class="card">
+          <div class="card-header">
+            <div class="row align-items-center">
+              <div class="col">
+                <h4 class="card-title">Yêu cầu trở thành Mentor</h4>
+              </div>
+              <!--end col-->
+              <div class="col-auto">
+                <a th:href="@{/admin/mentors}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+              </div>
+              <!--end col-->
+            </div>
+            <!--end row-->
+          </div>
+          <!--end card-header-->
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table mb-0">
+                <thead class="thead-light">
+                  <tr>
+                    <th>Họ và tên</th>
+                    <th>Email</th>
+                    <th>Chuyên ngành</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="user : ${pendingRequestsList}">
+                    <td th:text="${user.fullname}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td th:text="${user.mentorMajor}"></td>
+                    <td>
+                      <a th:href="@{/admin/mentors/detail}" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!--end /table-->
+            </div>
+            <!--end /tableresponsive-->
+          </div>
+          <!--end card-body-->
+        </div>
+        <!--end card-->
+      </div>
+    </div>
+  </div>
 </body>
 </html>
