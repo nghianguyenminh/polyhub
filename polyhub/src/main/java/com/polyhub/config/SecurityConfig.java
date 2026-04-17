@@ -52,13 +52,11 @@ public class SecurityConfig {
             .userDetailsService(customUserDetailsService)
             .authorizeHttpRequests(authorize -> authorize
                 // Permit all for static resources and public pages
-                .requestMatchers("/", "/home", "/login", "/register", "/css/**", "/js/**", "/images/**", "/vendor/**", "/fonts/**").permitAll()
+                .requestMatchers("/", "/home", "/login", "/register", "/admin/**", "/client/**", "/vendor/**", "/fonts/**").permitAll()
                 // Permit POST for creating posts
                 .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
                  // Permit all for Gemini AI
                 .requestMatchers("/api/gemini/**").permitAll()
-                // Require authentication for admin pages
-                .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 // All other requests need to be authenticated
                 .anyRequest().authenticated()
             )
@@ -69,7 +67,7 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
+                .logoutSuccessUrl("/?logout")
                 .permitAll()
             );
         return http.build();
