@@ -3,7 +3,6 @@ package com.polyhub.controller.admin;
 import com.polyhub.entity.User;
 import com.polyhub.service.UserService;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,11 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequiredArgsConstructor
 @RequestMapping("/admin")
 public class AdminController {
 
     private final UserService userService;
+
+    public AdminController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -55,11 +57,5 @@ public class AdminController {
     public String rejectMentor(@PathVariable Long id, @RequestParam String rejectionReason) {
         userService.rejectMentorRequest(id, rejectionReason);
         return "redirect:/admin/mentor-requests";
-    }
-
-    @GetMapping("/documents")
-    public String documents(Model model) {
-        // TODO: Implement document management
-        return "admin/documents";
     }
 }
