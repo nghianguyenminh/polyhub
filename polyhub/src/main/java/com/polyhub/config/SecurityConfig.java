@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -33,6 +34,12 @@ public class SecurityConfig {
     }
 
     @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // Exclude static resources from Spring Security filter chain
+        return (web) -> web.ignoring().requestMatchers("/client/**", "/vendor/**", "/fonts/**", "/images/**");
+    }
+
+    @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("*"));
@@ -51,13 +58,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .userDetailsService(customUserDetailsService)
             .authorizeHttpRequests(authorize -> authorize
-                // Permit all for static resources and public pages
-                .requestMatchers("/", "/home", "/login", "/register", "/admin/**", "/client/**", "/vendor/**", "/fonts/**").permitAll()
-                // Permit POST for creating posts
+                // Publicly accessible pages
+                .requestMatchers("/", "/home", "/login", "/register", "/admin/**").permitAll()
+                // API endpoints that should be public
                 .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
-                 // Permit all for Gemini AI
                 .requestMatchers("/api/gemini/**").permitAll()
-                // All other requests need to be authenticated
+                // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
