@@ -4,7 +4,6 @@ import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
 import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,27 +19,25 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Create roles if they don't exist
-        Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
-            Role role = new Role();
-            role.setName("USER");
-            return roleRepository.save(role);
-        });
+        if (roleRepository.findByName("ROLE_USER").isEmpty()) {
+            Role userRole = new Role();
+            userRole.setName("ROLE_USER");
+            roleRepository.save(userRole);
+        }
 
-        Role adminRole = roleRepository.findByName("ADMIN").orElseGet(() -> {
-            Role role = new Role();
-            role.setName("ADMIN");
-            return roleRepository.save(role);
-        });
+        if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
+            Role adminRole = new Role();
+            adminRole.setName("ROLE_ADMIN");
+            roleRepository.save(adminRole);
+        }
 
-        // Create a default admin user if no users exist
-        if (userRepository.count() == 0) {
+        if (userRepository.findByUsername("admin").isEmpty()) {
             User admin = new User();
             admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("123456"));
+            admin.setPassword(passwordEncoder.encode("admin"));
             admin.setEmail("admin@polyhub.com");
             admin.setFullname("Admin");
-            admin.setRole(adminRole);
+            admin.setRole(roleRepository.findByName("ROLE_ADMIN").get());
             userRepository.save(admin);
         }
     }

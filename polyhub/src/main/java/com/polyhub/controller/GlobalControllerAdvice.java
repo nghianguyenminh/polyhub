@@ -2,25 +2,21 @@ package com.polyhub.controller;
 
 import com.polyhub.entity.User;
 import com.polyhub.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import java.security.Principal;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 @ControllerAdvice
+@RequiredArgsConstructor
 public class GlobalControllerAdvice {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @ModelAttribute("currentUser")
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() 
-                && !authentication.getPrincipal().equals("anonymousUser")) {
-            String username = authentication.getName();
-            return userRepository.findByUsernameOrEmail(username, username).orElse(null);
+    public User currentUser(Principal principal) {
+        if (principal != null) {
+            return userRepository.findByUsername(principal.getName()).orElse(null);
         }
         return null;
     }

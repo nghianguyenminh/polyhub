@@ -1,69 +1,62 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import java.util.Date;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String fullname;
-
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String fullname;
+
     private String phone;
 
-    private LocalDate birthday;
+    private String address;
 
-    private Boolean gender;
-
-    private String major;
-
-    @Column(nullable = false)
-    private Boolean active = true;
-
-    @Column(nullable = false)
-    private String avatar = "default.png";
-
-    private String coverImage = "default.png";
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(nullable = false)
-    private Boolean wantsToBecomeMentor = false;
+    private String avatar;
 
     @Column(name = "mentor_major")
     private String mentorMajor;
 
-    @Column(name = "mentor_reason", columnDefinition = "TEXT")
-    private String mentorReason;
+    @Column(name = "mentor_description", columnDefinition = "TEXT")
+    private String mentorDescription;
 
-    @Column(name = "evidence_link")
-    private String evidenceLink;
+    private String skills;
 
-    @Column(name = "rejection_reason")
-    private String rejectionReason;
-
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Date createdAt;
+
+    public User() {
+        this.createdAt = new Date();
+    }
 }
