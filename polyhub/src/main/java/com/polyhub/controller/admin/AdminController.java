@@ -33,8 +33,18 @@ public class AdminController {
             .filter(u -> u.getRole() != null && "USER".equals(u.getRole().getName()))
             .collect(Collectors.toList());
 
-        // Data for charts can be added here
+        long approvedMentorCount = users.stream()
+            .filter(u -> u.getRole() != null && "MENTOR".equals(u.getRole().getName()))
+            .count();
 
+        long rejectedMentorCount = users.stream()
+            .filter(u -> u.getRejectionReason() != null && !u.getRejectionReason().isEmpty())
+            .count();
+
+        model.addAttribute("pendingMentorRequests", pendingMentors.size());
+        model.addAttribute("approvedMentorRequests", approvedMentorCount);
+        model.addAttribute("rejectedMentorRequests", rejectedMentorCount);
+        model.addAttribute("totalUsers", userRepository.count());
         model.addAttribute("pendingRequestsList", pendingMentors);
 
         // Example data for charts
