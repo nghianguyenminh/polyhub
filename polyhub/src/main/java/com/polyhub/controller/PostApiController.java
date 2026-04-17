@@ -19,7 +19,7 @@ public class PostApiController {
     @Autowired
     private PostService postService;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<?> createPost(
             @RequestParam("content") String content,
             @RequestParam(value = "image", required = false) MultipartFile image) {
