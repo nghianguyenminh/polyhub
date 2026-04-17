@@ -4,12 +4,11 @@ import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
 import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -21,31 +20,28 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Tạo Role nếu chưa tồn tại
-        createRoleIfNotFound("USER", "Người dùng");
-        Role adminRole = createRoleIfNotFound("ADMIN", "Quản trị viên");
+        // Create roles if they don't exist
+        Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
+            Role role = new Role();
+            role.setName("USER");
+            return roleRepository.save(role);
+        });
 
-        // Tạo Admin user nếu chưa tồn tại
-        if (userRepository.findByUsername("admin").isEmpty()) {
+        Role adminRole = roleRepository.findByName("ADMIN").orElseGet(() -> {
+            Role role = new Role();
+            role.setName("ADMIN");
+            return roleRepository.save(role);
+        });
+
+        // Create a default admin user if no users exist
+        if (userRepository.count() == 0) {
             User admin = new User();
             admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin")); // Nhớ mã hóa mật khẩu
-            admin.setFullname("Quản trị viên");
+            admin.setPassword(passwordEncoder.encode("123456"));
             admin.setEmail("admin@polyhub.com");
-            admin.setActive(true);
+            admin.setFullname("Admin");
             admin.setRole(adminRole);
             userRepository.save(admin);
-            System.out.println(">>> Đã tạo tài khoản admin mặc định với mật khẩu 'admin'");
         }
-    }
-
-    private Role createRoleIfNotFound(String id, String name) {
-        Optional<Role> roleOptional = roleRepository.findById(id);
-        if (roleOptional.isEmpty()) {
-            Role newRole = new Role(id, name);
-            System.out.println(">>> Đã tạo vai trò: " + name);
-            return roleRepository.save(newRole);
-        }
-        return roleOptional.get();
     }
 }
