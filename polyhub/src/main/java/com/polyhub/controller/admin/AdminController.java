@@ -4,7 +4,7 @@ import com.polyhub.entity.User;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.UserService;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -33,19 +33,16 @@ public class AdminController {
             .filter(u -> u.getRole() != null && "USER".equals(u.getRole().getName()))
             .collect(Collectors.toList());
 
-        long approvedMentorCount = users.stream()
-            .filter(u -> u.getRole() != null && "MENTOR".equals(u.getRole().getName()))
-            .count();
+        // Data for charts can be added here
 
-        long rejectedMentorCount = users.stream()
-            .filter(u -> u.getRejectionReason() != null && !u.getRejectionReason().isEmpty())
-            .count();
-
-        model.addAttribute("pendingMentorRequests", pendingMentors.size());
-        model.addAttribute("approvedMentorRequests", approvedMentorCount);
-        model.addAttribute("rejectedMentorRequests", rejectedMentorCount);
-        model.addAttribute("totalUsers", userRepository.count());
         model.addAttribute("pendingRequestsList", pendingMentors);
+
+        // Example data for charts
+        model.addAttribute("dailyTrafficLabels", List.of("Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"));
+        model.addAttribute("dailyTrafficData", List.of(120, 190, 300, 500, 200, 350, 400));
+
+        model.addAttribute("documentsByMajorLabels", List.of("Web Development", "Mobile Development", "Data Science", "DevOps"));
+        model.addAttribute("documentsByMajorData", List.of(300, 150, 250, 100));
 
         return "admin/dashboard";
     }
