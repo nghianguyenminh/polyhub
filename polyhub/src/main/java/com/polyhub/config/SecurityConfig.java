@@ -38,13 +38,13 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register", "/public/**", "/client/**", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/login", "/register", "/public/**", "/client/**", "/css/**", "/js/**", "/images/**", "/perform_login").permitAll()
                 .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .loginProcessingUrl("/login")
+                .loginProcessingUrl("/perform_login")
                 .successHandler(customAuthenticationSuccessHandler)
                 .permitAll()
             )
