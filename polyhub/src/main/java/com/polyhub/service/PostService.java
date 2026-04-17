@@ -7,6 +7,9 @@ import com.polyhub.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.AccessDeniedException;
+import com.polyhub.entity.PostReport;
+import com.polyhub.repository.PostReportRepository;
 
 import java.io.IOException;
 import java.util.Map;
@@ -18,6 +21,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final PostReportRepository postReportRepository;
 
     public Post createPost(String content, MultipartFile image, String username) throws IOException {
         // Tìm User trong DB, nếu không có thì lấy một tài khoản mặc định để demo
@@ -61,5 +65,72 @@ public class PostService {
         sharedPost.setSharedPost(rootPost);
 
         return postRepository.save(sharedPost);
+    }
+
+    // --- Tính năng Sửa bài viết ---
+    public Post updatePost(Long postId, String newContent, String username) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("Bạn không có quyền sửa bài viết này");
+        }
+
+        post.setContent(newContent);
+        return postRepository.save(post);
+    }
+
+    // --- Tính năng Xóa bài viết ---
+    public void deletePost(Long postId, String username) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("Bạn không có quyền xóa bài viết này");
+        }
+
+        postRepository.delete(post);
+    }
+
+    // --- Tính năng Chỉnh quyền riêng tư (Public/Private) ---
+    public Post togglePrivacy(Long postId, String username) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("Bạn không có quyền đổi trạng thái bài viết này");
+        }
+
+        // Đảo ngược trạng thái hiện tại (nếu null thì coi như cũ là false -> đảo thành true)
+        boolean currentStatus = (post.getIsPrivate() != null) ? post.getIsPrivate() : false;
+        post.setIsPrivate(!currentStatus);
+        
+        return postRepository.save(post);
+    }
+
+    // --- Tính năng Báo cáo (Report) bài viết ---
+    public void reportPost(Long postId, String reason, String username) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+        
+        User reporter = userRepository.findById(username)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        // Nếu users report chính bài mình thì chặn (Vô lý)
+        if (post.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bạn không thể báo cáo bài viết của chính mình");
+        }
+
+        // Chống Spam Report (1 người chỉ report 1 bài 1 lần)
+        if (postReportRepository.existsByPostIdAndReporterUsername(postId, username)) {
+            throw new RuntimeException("Bạn đã gửi báo cáo cho bài viết này rồi, hệ thống đang xem xét.");
+        }
+
+        PostReport report = new PostReport();
+        report.setPost(post);
+        report.setReporter(reporter);
+        report.setReason(reason);
+
+        postReportRepository.save(report);
     }
 }

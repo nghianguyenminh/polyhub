@@ -99,8 +99,8 @@
                 <div class="kpi-card kpi-pending">
                     <div class="kpi-icon"><i class="bi bi-fire"></i></div>
                     <div>
-                        <div class="kpi-value text-danger">42</div>
-                        <div class="kpi-label">Tickets Chờ xử lý khẩn</div>
+                        <div class="kpi-value text-danger" th:text="${pendingCount}">42</div>
+                        <div class="kpi-label">Tickets Chờ xử lý</div>
                     </div>
                 </div>
             </div>
@@ -108,8 +108,8 @@
                 <div class="kpi-card kpi-resolved">
                     <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
                     <div>
-                        <div class="kpi-value">1,208</div>
-                        <div class="kpi-label">Đã xử lý (Tháng này)</div>
+                        <div class="kpi-value" th:text="${resolvedCount}">1,208</div>
+                        <div class="kpi-label">Đã Gỡ bài (Thành công)</div>
                     </div>
                 </div>
             </div>
@@ -117,8 +117,8 @@
                 <div class="kpi-card kpi-false">
                     <div class="kpi-icon"><i class="bi bi-shield-slash-fill"></i></div>
                     <div>
-                        <div class="kpi-value">315</div>
-                        <div class="kpi-label">Báo cáo sai / Lạm dụng</div>
+                        <div class="kpi-value" th:text="${falseCount}">315</div>
+                        <div class="kpi-label">Báo cáo sai / Bác bỏ</div>
                     </div>
                 </div>
             </div>
@@ -166,178 +166,110 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Record 1 (Pending) -->
-                        <tr class="row-link" data-bs-toggle="modal" data-bs-target="#ticketModal">
-                            <td class="ps-4 fw-bold text-muted">#REP-1023</td>
+                        <tr th:each="report : ${reports}" class="row-link" data-bs-toggle="modal" th:data-bs-target="'#ticketModal-' + ${report.id}">
+                            <td class="ps-4 fw-bold text-muted" th:text="'#REP-' + ${report.id}">#REP-1023</td>
                             <td>
                                 <div class="d-flex flex-column gap-1">
-                                    <span class="target-type target-post"><i class="bi bi-file-post"></i> Bài viết trong Nhóm</span>
-                                    <span class="text-truncate" style="max-width: 200px; font-weight: 500;">Bán tài khoản ChatGPT giá rẻ...</span>
+                                    <span class="target-type target-post"><i class="bi bi-file-post"></i> Bài viết</span>
+                                    <span class="text-truncate" style="max-width: 200px; font-weight: 500;" th:text="${report.post.content}">Nội dung bài viết...</span>
                                 </div>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Hieu&background=random" class="reporter-avatar">
+                                    <img th:src="${report.reporter.avatar != null and report.reporter.avatar.startsWith('http') ? report.reporter.avatar : '/admin/images/' + (report.reporter.avatar != null ? report.reporter.avatar : 'default.png')}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="reporter-avatar">
                                     <div class="lh-1">
-                                        <div class="fw-medium text-dark">Trần Trung Hiếu</div>
-                                        <span class="text-muted" style="font-size: 11px;">PS21045</span>
+                                        <div class="fw-medium text-dark" th:text="${report.reporter.fullname}">Trần Trung Hiếu</div>
+                                        <span class="text-muted" style="font-size: 11px;" th:text="${report.reporter.username}">PS21045</span>
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="reason-tag reason-spam"><i class="bi bi-bug me-1"></i> Spam / Lừa đảo</span></td>
-                            <td class="text-muted">10 phút trước</td>
+                            <td><span class="reason-tag reason-spam" th:text="${report.reason}"><i class="bi bi-bug me-1"></i> Spam / Lừa đảo</span></td>
+                            <td class="text-muted" th:text="${#temporals.format(report.createdAt, 'dd/MM/yyyy HH:mm')}">10 phút trước</td>
                             <td><span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Chờ xử lý</span></td>
                         </tr>
-
-                        <!-- Record 2 (Pending) -->
-                        <tr class="row-link" data-bs-toggle="modal" data-bs-target="#ticketModal">
-                            <td class="ps-4 fw-bold text-muted">#REP-1022</td>
-                            <td>
-                                <div class="d-flex flex-column gap-1">
-                                    <span class="target-type target-cmt"><i class="bi bi-chat-dots-fill"></i> Bình luận</span>
-                                    <span class="text-truncate" style="max-width: 200px; font-weight: 500;">Thằng ngu này code dở mà còn...</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Lan&background=random" class="reporter-avatar">
-                                    <div class="lh-1">
-                                        <div class="fw-medium text-dark">Lê Thị Lan</div>
-                                        <span class="text-muted" style="font-size: 11px;">PS21099</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="reason-tag reason-hate"><i class="bi bi-exclamation-octagon me-1"></i> Ngôn từ kích động</span></td>
-                            <td class="text-muted">1 giờ trước</td>
-                            <td><span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Chờ xử lý</span></td>
-                        </tr>
-
-                        <!-- Record 3 (Resolved) -->
-                        <tr>
-                            <td class="ps-4 fw-bold text-muted">#REP-1010</td>
-                            <td>
-                                <div class="d-flex flex-column gap-1">
-                                    <span class="target-type target-doc"><i class="bi bi-file-earmark"></i> Tài liệu</span>
-                                    <span class="text-muted text-decoration-line-through text-truncate" style="max-width: 200px;">Share_Assignment_Final.zip</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Long&background=random" class="reporter-avatar opacity-75">
-                                    <div class="lh-1">
-                                        <div class="fw-medium text-muted">Phạm Hoàng Long</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="reason-tag">Bản quyền</span></td>
-                            <td class="text-muted">Hôm qua</td>
-                            <td><span class="status-badge status-resolved"><i class="bi bi-check2"></i> Đã Gỡ (Take Action)</span></td>
-                        </tr>
-                        
-                        <!-- Record 4 (False) -->
-                        <tr>
-                            <td class="ps-4 fw-bold text-muted">#REP-1008</td>
-                            <td>
-                                <div class="d-flex flex-column gap-1">
-                                    <span class="target-type target-acc"><i class="bi bi-person-badge"></i> Tài khoản</span>
-                                    <span class="text-truncate" style="max-width: 200px; font-weight: 500;">Bùi Anh Tuấn</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Khoa&background=random" class="reporter-avatar">
-                                    <div class="lh-1">
-                                        <div class="fw-medium text-dark d-flex align-items-center gap-1">
-                                            Lê Khoa
-                                            <span class="trust-score trust-low" title="Tỷ lệ report đúng thấp">Uy tín: Thấp</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="reason-tag">Giả mạo</span></td>
-                            <td class="text-muted">Hôm qua</td>
-                            <td><span class="status-badge status-false"><i class="bi bi-dash-circle"></i> Đã Bác bỏ (False)</span></td>
+                        <tr th:if="${#lists.isEmpty(reports)}">
+                            <td colspan="6" class="text-center py-4 text-muted">Không có báo cáo nào chờ xử lý.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Phân trang -->
+            <div class="card-footer bg-white border-top-0 py-3" th:if="${totalPages > 1}">
+                <ul class="pagination pagination-sm justify-content-end mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/reports(page=${currentPage - 1})}" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+                    <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}" th:classappend="${currentPage == i} ? 'active'">
+                        <a class="page-link" th:href="@{/admin/reports(page=${i})}" th:text="${i}">1</a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/reports(page=${currentPage + 1})}">Next</a>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <!-- 5. Ticket Modal -->
-        <div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">
+        <div th:each="report : ${reports}" class="modal fade" th:id="'ticketModal-' + ${report.id}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
                     <div class="modal-header border-bottom-0 pb-0">
                         <div class="d-flex align-items-center gap-3">
-                            <h5 class="modal-title fw-bold">Ticket #REP-1022</h5>
+                            <h5 class="modal-title fw-bold" th:text="'Ticket #REP-' + ${report.id}">Ticket #REP-1022</h5>
                             <span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Chờ xử lý</span>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body pt-3">
                         <div class="row g-4 mb-4">
-                            <!-- Cột trái: Thông tin người gửi -->
                             <div class="col-md-6 border-end">
                                 <p class="text-uppercase text-muted fw-bold mb-2" style="font-size: 11px; letter-spacing: 0.5px;">Người gửi (Reporter)</p>
                                 <div class="d-flex align-items-center gap-3 mb-2">
-                                    <img src="https://ui-avatars.com/api/?name=Lan&background=random" class="rounded-circle" width="40">
+                                    <img th:src="${report.reporter.avatar != null and report.reporter.avatar.startsWith('http') ? report.reporter.avatar : '/admin/images/' + (report.reporter.avatar != null ? report.reporter.avatar : 'default.png')}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle" width="40">
                                     <div>
-                                        <div class="fw-bold">Lê Thị Lan (PS21099)</div>
-                                        <span class="trust-score trust-high mt-1 d-inline-block">Uy tín: 95% (Report đúng 18/19 lần)</span>
+                                        <div class="fw-bold" th:text="${report.reporter.fullname} + ' (' + ${report.reporter.username} + ')'">Lê Thị Lan (PS21099)</div>
                                     </div>
                                 </div>
                             </div>
-                            <!-- Cột phải: Target & Reason -->
                             <div class="col-md-6">
                                 <p class="text-uppercase text-muted fw-bold mb-2" style="font-size: 11px; letter-spacing: 0.5px;">Phân loại Vi phạm</p>
-                                <div class="mb-2"><span class="target-type target-cmt"><i class="bi bi-chat-dots-fill"></i> Bình luận</span> trong bài viết <a href="#" class="text-decoration-none">"Hỏi bài Java..."</a></div>
-                                <div><span class="reason-tag reason-hate"><i class="bi bi-exclamation-octagon me-1"></i> Ngôn từ kích động / Xúc phạm</span></div>
+                                <div class="mb-2"><span class="target-type target-post"><i class="bi bi-file-post"></i> Bài viết</span></div>
+                                <div><span class="reason-tag reason-hate" th:text="${report.reason}"><i class="bi bi-exclamation-octagon me-1"></i> Ngôn từ kích động</span></div>
                             </div>
                         </div>
 
-                        <!-- Bằng chứng -->
                         <p class="text-uppercase text-muted fw-bold mb-2" style="font-size: 11px; letter-spacing: 0.5px;"><i class="bi bi-search text-primary"></i> Bằng chứng (Evidence)</p>
                         <div class="evidence-box">
                             <div class="d-flex justify-content-between mb-2">
                                 <div class="fw-bold d-flex align-items-center gap-2">
-                                    <i class="bi bi-person-circle text-muted"></i> Chủ Comment: Nguyễn Văn B (PS20111)
+                                    <i class="bi bi-person-circle text-muted"></i> Chủ bài viết: <span th:text="${report.post.user.fullname} + ' (' + ${report.post.user.username} + ')'">Nguyễn Văn B</span>
                                 </div>
-                                <span class="text-muted" style="font-size: 12px;">Ngày đăng: 29/03/2026</span>
+                                <span class="text-muted" style="font-size: 12px;" th:text="'Ngày đăng: ' + ${#temporals.format(report.post.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày đăng: 29/03/2026</span>
                             </div>
-                            <blockquote>
-                                "Thằng ngu này code dở mà còn bày đặt lên đây hỏi, nghỉ học về quê chăn bò đi cho rảnh nợ."
+                            <!-- Render img của bài viết nếu có -->
+                            <div th:if="${report.post.imageUrl != null}" class="mb-3">
+                                <img th:src="${report.post.imageUrl}" style="max-height: 150px; border-radius: 8px; border: 1px solid #ddd;" alt="Post image">
+                            </div>
+                            <blockquote th:text="${report.post.content}">
+                                Nội dung bài viết...
                             </blockquote>
                         </div>
                     </div>
                     
                     <div class="modal-footer bg-light border-top-0 d-flex justify-content-between" style="border-radius: 0 0 16px 16px;">
                         
-                        <!-- Action Bác bỏ -->
-                        <button type="button" class="btn btn-outline-secondary fw-medium px-4" data-bs-dismiss="modal">
-                            <i class="bi bi-shield-slash-fill me-1"></i> Bác bỏ (False Report)
-                        </button>
-                        
-                        <!-- Các Hành động Xử phạt -->
-                        <div class="dropdown">
-                            <button class="btn btn-danger fw-bold px-4 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-hammer me-1"></i> Xử phạt (Take Action)
+                        <form th:action="@{/admin/reports/{id}/reject(id=${report.id})}" method="post">
+                            <button type="submit" class="btn btn-outline-secondary fw-medium px-4">
+                                <i class="bi bi-shield-slash-fill me-1"></i> Bác bỏ (False Report)
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow" style="border-radius: 12px; margin-bottom: 8px;">
-                                <li><h6 class="dropdown-header">Cấp độ 1</h6></li>
-                                <li>
-                                    <button class="dropdown-item d-flex align-items-center gap-2 py-2" type="button">
-                                        <i class="bi bi-trash text-danger"></i> Xóa Comment + Cảnh cáo (Cờ vàng)
-                                    </button>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Cấp độ 2 (Nguy hiểm)</h6></li>
-                                <li>
-                                    <button class="dropdown-item d-flex align-items-center gap-2 py-2" type="button" data-bs-toggle="modal" data-bs-target="#escalateModal">
-                                        <i class="bi bi-person-x-fill text-dark"></i> Escalate tới USER_ADMIN kỉ luật acc
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
+                        </form>
+                        
+                        <form th:action="@{/admin/reports/{id}/approve(id=${report.id})}" method="post">
+                            <button type="submit" class="btn btn-danger fw-bold px-4">
+                                <i class="bi bi-trash text-white me-1"></i> Gỡ bài viết
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -73,4 +73,57 @@ public class PostApiController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // --- API Chỉnh sửa bài viết ---
+    @PutMapping("/{postId}")
+    public ResponseEntity<?> updatePost(@PathVariable Long postId, @RequestBody Map<String, String> payload, Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body("Chưa đăng nhập");
+        try {
+            String newContent = payload.get("content");
+            postService.updatePost(postId, newContent, principal.getName());
+            return ResponseEntity.ok(Map.of("message", "Cập nhật bài viết thành công"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // --- API Xóa bài viết ---
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<?> deletePost(@PathVariable Long postId, Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body("Chưa đăng nhập");
+        try {
+            postService.deletePost(postId, principal.getName());
+            return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // --- API Chuyển đổi quyền riêng tư (Public/Private) ---
+    @PatchMapping("/{postId}/privacy")
+    public ResponseEntity<?> togglePrivacy(@PathVariable Long postId, Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body("Chưa đăng nhập");
+        try {
+            Post updatedPost = postService.togglePrivacy(postId, principal.getName());
+            String status = updatedPost.getIsPrivate() ? "riêng tư (Chỉ mình tôi)" : "công khai";
+            return ResponseEntity.ok(Map.of("message", "Đã đổi bài viết sang chế độ " + status, "isPrivate", updatedPost.getIsPrivate()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // --- API Báo cáo bài viết ---
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<?> reportPost(@PathVariable Long postId, @RequestBody Map<String, String> payload, Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body("Chưa đăng nhập");
+        try {
+            String reason = payload.get("reason");
+            postService.reportPost(postId, reason, principal.getName());
+            return ResponseEntity.ok(Map.of("message", "Cảm ơn bạn đã báo cáo. Quản trị viên sẽ xử lý sớm."));
+        } catch (RuntimeException e) { // Bắt lỗi Logic chống Report
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Lỗi hệ thống");
+        }
+    }
 }
