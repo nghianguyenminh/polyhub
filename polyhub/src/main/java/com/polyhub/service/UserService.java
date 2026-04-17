@@ -1,10 +1,13 @@
 package com.polyhub.service;
 
+import com.polyhub.dto.request.RegisterRequest;
 import com.polyhub.entity.User;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
+
+    void registerNewUser(RegisterRequest registerRequest);
 
     List<User> getAllUsers();
 

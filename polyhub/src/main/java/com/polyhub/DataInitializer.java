@@ -36,7 +36,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin"));
             admin.setEmail("admin@polyhub.com");
-            admin.setFullname("Admin");
+            admin.setFullName("Admin");
             admin.setRole(roleRepository.findByName("ROLE_ADMIN").get());
             userRepository.save(admin);
         }

@@ -22,6 +22,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRole_Id(Long id);
 
+    List<User> findByRole_Name(String roleName);
+
+    List<User> findByWantsToBecomeMentor(boolean wantsToBecomeMentor);
+
     @Query(value = "SELECT FUNCTION('DATE', u.createdAt), COUNT(u) FROM User u WHERE u.createdAt >= :sevenDaysAgo GROUP BY FUNCTION('DATE', u.createdAt) ORDER BY FUNCTION('DATE', u.createdAt) ASC")
     List<Object[]> countNewUsersPerDay(@Param("sevenDaysAgo") Date sevenDaysAgo);
 }

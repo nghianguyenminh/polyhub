@@ -1,5 +1,6 @@
 package com.polyhub.service.impl;
 
+import com.polyhub.dto.request.RegisterRequest;
 import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
 import com.polyhub.repository.RoleRepository;
@@ -20,6 +21,29 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public void registerNewUser(RegisterRequest registerRequest) {
+        if (userRepository.existsByUsername(registerRequest.getUsername())) {
+            throw new RuntimeException("Username is already taken!");
+        }
+
+        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+            throw new RuntimeException("Email is already in use!");
+        }
+
+        User user = new User();
+        user.setUsername(registerRequest.getUsername());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setEmail(registerRequest.getEmail());
+        user.setFullName(registerRequest.getFullName());
+
+        Role userRole = roleRepository.findByName("ROLE_USER")
+            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        user.setRole(userRole);
+        user.setCreatedAt(new Date());
+        userRepository.save(user);
+    }
 
     @Override
     public List<User> getAllUsers() {

@@ -33,6 +33,14 @@ public class Document {
     @Column(nullable = false)
     private String filePath;
 
+    private String fileUrl;
+
+    private String fileName;
+
+    private String fileType;
+
+    private String thumbnailUrl;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

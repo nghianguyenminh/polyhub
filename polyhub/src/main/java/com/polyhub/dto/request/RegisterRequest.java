@@ -1,12 +1,17 @@
 package com.polyhub.dto.request;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegisterRequest {
     private String username;
     private String password;
-    private String confirmPassword;
-    private String fullname;
+    private String fullName;
     private String email;
 }

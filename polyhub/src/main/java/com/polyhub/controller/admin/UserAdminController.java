@@ -1,0 +1,25 @@
+package com.polyhub.controller.admin;
+
+import com.polyhub.entity.User;
+import com.polyhub.service.UserService;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/admin/users")
+public class UserAdminController {
+
+    private final UserService userService;
+
+    @GetMapping
+    public String listUsers(Model model) {
+        List<User> users = userService.getAllUsers();
+        model.addAttribute("users", users);
+        return "admin/users";
+    }
+}

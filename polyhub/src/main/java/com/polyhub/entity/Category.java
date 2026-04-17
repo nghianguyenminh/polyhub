@@ -22,6 +22,14 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false, unique = true)
+    private String code;
+
+    private boolean active;
+
     @OneToMany(mappedBy = "category")
     private List<Product> products;
+
+    @OneToMany(mappedby = "category")
+    private List<Document> documents;
 }

@@ -8,10 +8,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-  List<Category> findByActiveTrueOrderByNameAsc();
+  List<Category> findByActive(boolean active);
 
-  @Query("SELECT c FROM Category c WHERE c.active = true ORDER BY c.name ASC")
-  List<Category> findByIsActiveTrueOrderByNameAsc();
+  boolean existsByName(String name);
 
   boolean existsByCode(String code);
 }
