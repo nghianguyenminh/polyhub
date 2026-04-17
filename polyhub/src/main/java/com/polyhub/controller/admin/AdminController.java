@@ -1,8 +1,12 @@
 package com.polyhub.controller.admin;
 
 import com.polyhub.entity.User;
+import com.polyhub.repository.DocumentRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.UserService;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,6 +27,7 @@ public class AdminController {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    private final DocumentRepository documentRepository;
 
     @GetMapping({"", "/", "/dashboard"})
     public String dashboard(Model model) {
@@ -47,12 +52,30 @@ public class AdminController {
         model.addAttribute("totalUsers", userRepository.count());
         model.addAttribute("pendingRequestsList", pendingMentors);
 
-        // Example data for charts
-        model.addAttribute("dailyTrafficLabels", List.of("Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"));
-        model.addAttribute("dailyTrafficData", List.of(120, 190, 300, 500, 200, 350, 400));
+        // Data for daily traffic chart
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -7);
+        Date sevenDaysAgo = cal.getTime();
+        List<Object[]> dailyTrafficData = userRepository.countNewUsersPerDay(sevenDaysAgo);
+        List<String> dailyTrafficLabels = new ArrayList<>();
+        List<Long> dailyTrafficCounts = new ArrayList<>();
+        dailyTrafficData.forEach(row -> {
+            dailyTrafficLabels.add(String.valueOf(row[0]));
+            dailyTrafficCounts.add((Long) row[1]);
+        });
+        model.addAttribute("dailyTrafficLabels", dailyTrafficLabels);
+        model.addAttribute("dailyTrafficData", dailyTrafficCounts);
 
-        model.addAttribute("documentsByMajorLabels", List.of("Web Development", "Mobile Development", "Data Science", "DevOps"));
-        model.addAttribute("documentsByMajorData", List.of(300, 150, 250, 100));
+        // Data for documents by major chart
+        List<Object[]> documentsByMajorData = documentRepository.countDocumentsByCategory();
+        List<String> documentsByMajorLabels = new ArrayList<>();
+        List<Long> documentsByMajorCounts = new ArrayList<>();
+        documentsByMajorData.forEach(row -> {
+            documentsByMajorLabels.add((String) row[0]);
+            documentsByMajorCounts.add((Long) row[1]);
+        });
+        model.addAttribute("documentsByMajorLabels", documentsByMajorLabels);
+        model.addAttribute("documentsByMajorData", documentsByMajorCounts);
 
         return "admin/dashboard";
     }

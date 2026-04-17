@@ -93,7 +93,7 @@
             </div>
 
             <div class="col-lg-7 mt-4">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title fw-bold text-dark mb-3">Lượng truy cập</h5>
                         <canvas id="dailyTrafficChart"></canvas>
@@ -102,7 +102,7 @@
             </div>
 
             <div class="col-lg-5 mt-4">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title fw-bold text-dark mb-3">Tài liệu theo chuyên ngành</h5>
                         <canvas id="documentsByMajorChart"></canvas>
@@ -147,6 +147,14 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script th:inline="javascript">
             /*<![CDATA[*/
+            // Chart colors
+            const primaryColor = '#0d6efd';
+            const successColor = '#198754';
+            const warningColor = '#ffc107';
+            const dangerColor = '#dc3545';
+            const infoColor = '#0dcaf0';
+            const secondaryColor = '#6c757d';
+
             // Daily Traffic Chart (Line)
             const dailyTrafficCtx = document.getElementById('dailyTrafficChart');
             if (dailyTrafficCtx) {
@@ -157,8 +165,8 @@
                         datasets: [{
                             label: 'Lượt truy cập',
                             data: /*[[${dailyTrafficData}]]*/ [],
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: primaryColor,
+                            backgroundColor: 'rgba(13, 110, 253, 0.2)',
                             fill: true,
                             tension: 0.4
                         }]
@@ -184,10 +192,12 @@
                             label: 'Số lượng tài liệu',
                             data: /*[[${documentsByMajorData}]]*/ [],
                             backgroundColor: [
-                                'rgba(255, 99, 132, 0.7)',
-                                'rgba(54, 162, 235, 0.7)',
-                                'rgba(255, 206, 86, 0.7)',
-                                'rgba(75, 192, 192, 0.7)'
+                                primaryColor,
+                                successColor,
+                                warningColor,
+                                dangerColor,
+                                infoColor,
+                                secondaryColor
                             ],
                             borderColor: '#fff',
                             borderWidth: 2
