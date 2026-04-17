@@ -55,7 +55,7 @@
                     </div>
                 </div>
 
-                <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;">Code is poetry. Always seeking new challenges and learning new technologies! 🚀☕💻</p>
+                <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;" th:text="${currentUser.bio != null and !currentUser.bio.isEmpty() ? currentUser.bio : 'Chưa có thông tin giới thiệu.'}"></p>
             </div>
 
             <!-- <hr class="m-0 border-opacity-50"> -->
