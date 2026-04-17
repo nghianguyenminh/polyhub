@@ -29,8 +29,8 @@ public class AdminController {
         List<User> users = userRepository.findAll();
 
         List<User> pendingMentors = users.stream()
-            .filter(User::getWantsToBecomeMentor)
             .filter(u -> u.getRole() != null && "USER".equals(u.getRole().getName()))
+            .filter(u -> Boolean.TRUE.equals(u.getWantsToBecomeMentor()))
             .collect(Collectors.toList());
 
         long approvedMentorCount = users.stream()
@@ -56,7 +56,8 @@ public class AdminController {
         List<User> users = userRepository.findAll();
         
         List<User> pendingMentors = users.stream()
-            .filter(u -> u.getWantsToBecomeMentor() && u.getRole() != null && "USER".equals(u.getRole().getName()))
+            .filter(u -> u.getRole() != null && "USER".equals(u.getRole().getName()))
+            .filter(u -> Boolean.TRUE.equals(u.getWantsToBecomeMentor()))
             .collect(Collectors.toList());
 
         List<User> approvedMentors = users.stream()
