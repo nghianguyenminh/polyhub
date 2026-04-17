@@ -20,7 +20,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        return "client/login";
+        return "client/auth";
     }
 
     @GetMapping("/register")
