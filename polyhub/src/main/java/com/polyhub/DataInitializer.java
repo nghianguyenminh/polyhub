@@ -4,30 +4,32 @@ import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
 import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    public DataInitializer(RoleRepository roleRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
     public void run(String... args) throws Exception {
         if (roleRepository.findByName("ROLE_USER").isEmpty()) {
-            Role userRole = new Role();
-            userRole.setName("ROLE_USER");
+            Role userRole = new Role("USER", "ROLE_USER");
             roleRepository.save(userRole);
         }
 
         if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
-            Role adminRole = new Role();
-            adminRole.setName("ROLE_ADMIN");
+            Role adminRole = new Role("ADMIN", "ROLE_ADMIN");
             roleRepository.save(adminRole);
         }
 
@@ -36,7 +38,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin"));
             admin.setEmail("admin@polyhub.com");
-            admin.setFullName("Admin");
+            admin.setFullname("Admin");
             admin.setRole(roleRepository.findByName("ROLE_ADMIN").get());
             userRepository.save(admin);
         }

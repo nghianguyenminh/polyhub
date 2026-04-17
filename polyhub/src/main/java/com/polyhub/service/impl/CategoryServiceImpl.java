@@ -27,4 +27,14 @@ public class CategoryServiceImpl implements CategoryService {
     public Category findById(Long id) {
         return categoryRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public List<Category> getAllCategoriesForAdmin() {
+        return categoryRepository.findAll();
+    }
+
+    @Override
+    public List<Category> getActiveCategoriesForDropdown() {
+        return categoryRepository.findByActive(true);
+    }
 }

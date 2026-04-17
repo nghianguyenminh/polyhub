@@ -30,6 +30,6 @@ public class Category {
     @OneToMany(mappedBy = "category")
     private List<Product> products;
 
-    @OneToMany(mappedby = "category")
+    @OneToMany(mappedBy = "category")
     private List<Document> documents;
 }

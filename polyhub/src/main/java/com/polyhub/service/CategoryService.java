@@ -7,4 +7,6 @@ public interface CategoryService {
     List<Category> getAllCategories();
     Category saveCategory(Category category);
     Category findById(Long id);
+    List<Category> getAllCategoriesForAdmin();
+    List<Category> getActiveCategoriesForDropdown();
 }

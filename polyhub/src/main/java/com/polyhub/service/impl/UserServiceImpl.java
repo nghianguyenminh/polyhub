@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setEmail(registerRequest.getEmail());
-        user.setFullName(registerRequest.getFullName());
+        user.setFullname(registerRequest.getFullName());
 
         Role userRole = roleRepository.findByName("ROLE_USER")
             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
