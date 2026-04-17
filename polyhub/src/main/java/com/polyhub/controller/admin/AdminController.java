@@ -7,8 +7,11 @@ import com.polyhub.entity.User;
 import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.DocumentRepository;
+import com.polyhub.repository.PostReportRepository;
 import com.polyhub.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,21 +28,26 @@ public class AdminController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmailService emailService;
+    private final DocumentRepository documentRepository;
+    private final PostReportRepository postReportRepository;
 
     // Map cả 2 đường dẫn /admin và /admin/dashboard về chung 1 trang
     @GetMapping({"", "/", "/dashboard"})
-    public String dashboard() {
+    public String dashboard(Model model) {
+        long totalUsers = userRepository.count();
+        long totalDocuments = documentRepository.count();
+        long pendingMentors = mentorRequestRepository.countByStatus(RequestStatus.PENDING);
+        long totalReports = postReportRepository.count();
+
+        List<Object[]> countByCategory = documentRepository.countByCategory();
+
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("totalDocuments", totalDocuments);
+        model.addAttribute("pendingMentors", pendingMentors);
+        model.addAttribute("totalReports", totalReports);
+        model.addAttribute("countByCategory", countByCategory);
+
         return "admin/dashboard"; // Mở file templates/admin/dashboard.html
-    }
-
-    @GetMapping("/users")
-    public String users() {
-        return "admin/users"; // Mở file templates/admin/users.html
-    }
-
-    @GetMapping("/users/detail")
-    public String userDetail() {
-        return "admin/user_detail"; 
     }
 
     @GetMapping("/mentors")
@@ -71,6 +79,7 @@ public class AdminController {
         return "admin/mentors"; 
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER_ADMIN')")
     @PostMapping("/mentors/{id}/approve")
     public String approveMentor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
@@ -97,6 +106,7 @@ public class AdminController {
         return "redirect:/admin/mentors";
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER_ADMIN')")
     @PostMapping("/mentors/{id}/reject")
     public String rejectMentor(@PathVariable Long id, @RequestParam(value="reason", required=false) String reason, RedirectAttributes redirectAttributes) {
         MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
@@ -113,6 +123,7 @@ public class AdminController {
         return "redirect:/admin/mentors";
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER_ADMIN')")
     @PostMapping("/mentors/{id}/revoke")
     public String revokeMentor(@PathVariable Long id, @RequestParam(value="reason", required=true) String reason, RedirectAttributes redirectAttributes) {
         MentorRequest request = mentorRequestRepository.findById(id).orElse(null);
@@ -123,7 +134,7 @@ public class AdminController {
 
             User user = request.getUser();
             if (user != null) {
-                Role role = roleRepository.findById("CLIENT").orElse(null);
+                Role role = roleRepository.findById("USER").orElse(null);
                 if (role != null) {
                     user.setRole(role);
                     userRepository.save(user); // Cập nhật role về Sinh viên

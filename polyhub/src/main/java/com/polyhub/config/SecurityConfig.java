@@ -2,6 +2,7 @@ package com.polyhub.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -10,6 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     // 1. Khai báo công cụ mã hóa mật khẩu BCrypt
@@ -25,7 +27,7 @@ public class SecurityConfig {
                 // Cấp quyền tự do truy cập tài nguyên tĩnh, đăng ký và đăng nhập
                 .requestMatchers("/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login", "/forgot-password", "/verify-otp", "/error").permitAll()
                 // Phân quyền cho trang Quản trị: Chỉ những user có role SUPER_ADMIN hoặc ADMIN mới được phép truy cập
-                .requestMatchers("/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                .requestMatchers("/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "USER_ADMIN", "CONTENT_ADMIN")
                 // Bắt buộc đăng nhập cho các chức năng và trang chủ (/ và /home)
                 .anyRequest().authenticated() 
             )
@@ -34,7 +36,10 @@ public class SecurityConfig {
                 // Cấu hình chuyển hướng theo Role sau khi đăng nhập thành công
                 .successHandler((request, response, authentication) -> {
                     boolean isAdmin = authentication.getAuthorities().stream()
-                            .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN") || a.getAuthority().equals("ROLE_ADMIN"));
+                            .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN") || 
+                                           a.getAuthority().equals("ROLE_ADMIN") ||
+                                           a.getAuthority().equals("ROLE_USER_ADMIN") ||
+                                           a.getAuthority().equals("ROLE_CONTENT_ADMIN"));
                     if (isAdmin) {
                         response.sendRedirect("/admin/dashboard");
                     } else {

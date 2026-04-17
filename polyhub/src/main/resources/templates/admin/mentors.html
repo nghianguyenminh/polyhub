@@ -241,7 +241,7 @@
             </div>
 
             <!-- Action Area cho PENDING -->
-            <div th:if="${req.status.name() == 'PENDING'}" class="action-area">
+            <div th:if="${req.status.name() == 'PENDING'}" class="action-area" sec:authorize="hasAnyRole('SUPER_ADMIN', 'USER_ADMIN')">
                 <form th:action="@{/admin/mentors/{id}/reject(id=${req.id})}" method="post" class="mb-3 d-none" th:id="'rejectForm_' + ${req.id}">
                     <label class="form-label fw-semibold text-danger">Lý do từ chối <span class="text-danger">*</span></label>
                     <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Nhập lý do từ chối..." required></textarea>
@@ -268,7 +268,7 @@
             </div>
 
             <!-- Action Area cho APPROVED (Tước quyền) -->
-            <div th:if="${req.status.name() == 'APPROVED'}" class="action-area">
+            <div th:if="${req.status.name() == 'APPROVED'}" class="action-area" sec:authorize="hasAnyRole('SUPER_ADMIN', 'USER_ADMIN')">
                 <form th:action="@{/admin/mentors/{id}/revoke(id=${req.id})}" method="post" class="mb-3 d-none" th:id="'revokeForm_' + ${req.id}">
                     <label class="form-label fw-semibold text-danger">Lý do tước quyền <span class="text-danger">*</span></label>
                     <textarea class="form-control mb-2" name="reason" rows="2" placeholder="Nhập lý do thu hồi quyền Mentor..." required></textarea>

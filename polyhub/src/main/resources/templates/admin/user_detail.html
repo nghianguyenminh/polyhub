@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'users')}">
 <head>
     <title>Chi tiết Người dùng - PolyHUB Admin</title>
@@ -203,42 +204,59 @@
         <div class="mb-4">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1 text-uppercase text-muted" style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
-                    <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
-                    <li class="breadcrumb-item"><a href="/admin/users" class="text-decoration-none text-muted">Người dùng</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Bảo Châu</li>
+                    <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}" class="text-decoration-none text-muted">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/admin/users}" class="text-decoration-none text-muted">Người dùng</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${user.fullname}">Hồ sơ</li>
                 </ol>
             </nav>
             <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Hồ sơ Người dùng</h3>
         </div>
 
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show mb-4 shadow-sm" role="alert" style="border-radius: 8px; border-left: 4px solid #057A55;">
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+            <strong th:text="${successMessage}">Thành công</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <!-- 2. Profile Header (Cover & Main Info) -->
         <div class="profile-header">
-            <div class="profile-cover"></div>
+            <div class="profile-cover" th:style="${user.coverImage != null and user.coverImage != 'default-cover.jpg' ? (user.coverImage.startsWith('http') ? 'background: url(' + user.coverImage + ') center/cover;' : 'background: url(/client/images/covers/' + user.coverImage + ') center/cover;') : ''}"></div>
             <div class="profile-avatar-container">
                 <div class="d-flex align-items-end gap-3" style="margin-bottom: 20px;">
                     <div class="profile-avatar-wrapper shadow-sm">
-                        <img src="https://ui-avatars.com/api/?name=Lưu+Châu&background=4F46E5&color=fff&size=200" alt="Avatar" class="profile-avatar">
+                        <img th:src="${user.avatar != null and user.avatar.startsWith('http') ? user.avatar : '/client/images/avatars/' + (user.avatar ?: 'default.png')}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" alt="Avatar" class="profile-avatar">
                     </div>
                     <div class="pb-2">
                         <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
-                            Lưu Phan Bảo Châu
-                            <i class="bi bi-patch-check-fill text-primary" style="font-size: 18px;" data-bs-toggle="tooltip" title="Đã xác thực"></i>
+                            <span th:text="${user.fullname}">Tên người dùng</span>
+                            <i th:if="${user.role != null and user.role.id != 'USER'}" class="bi bi-patch-check-fill text-primary" style="font-size: 18px;" data-bs-toggle="tooltip" title="Đã xác thực"></i>
                         </h4>
-                        <div class="text-muted" style="font-size: 14px;">chaultp@fpt.edu.vn • <span class="fw-medium">PS54321</span></div>
+                        <div class="text-muted" style="font-size: 14px;"><span th:text="${user.email}">email</span> • <span class="fw-medium" th:text="${user.username}">Username</span></div>
                     </div>
                 </div>
                 <!-- Nút Khóa tài khoản nổi bật -->
-                <div class="profile-action-btn">
-                    <button class="btn btn-danger fw-medium d-inline-flex align-items-center gap-2 shadow-sm" style="border-radius: 8px; padding: 8px 16px;" data-bs-toggle="modal" data-bs-target="#banUserModal">
+                <div class="profile-action-btn" sec:authorize="hasAnyRole('SUPER_ADMIN', 'USER_ADMIN')">
+                    <button th:if="${user.active}" class="btn btn-danger fw-medium d-inline-flex align-items-center gap-2 shadow-sm" style="border-radius: 8px; padding: 8px 16px;" data-bs-toggle="modal" data-bs-target="#banUserModal">
                         <i class="bi bi-slash-circle fs-5"></i>
                         <span>Khóa tài khoản</span>
                     </button>
+                    <!-- Form Mở khóa -->
+                    <form th:if="${not user.active}" th:action="@{/admin/users/unlock/{id}(id=${user.username})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-success fw-medium d-inline-flex align-items-center gap-2 shadow-sm" style="border-radius: 8px; padding: 8px 16px;">
+                            <i class="bi bi-check-circle fs-5"></i>
+                            <span>Mở khóa tài khoản</span>
+                        </button>
+                    </form>
                 </div>
             </div>
             
             <div class="px-4 pb-4 mt-2 d-flex gap-2">
-                <span class="role-badge">Mentor</span>
-                <span class="status-badge"><span class="status-dot"></span> Đang hoạt động</span>
+                <span class="role-badge" 
+                      th:classappend="${user.role != null and user.role.id == 'USER' ? 'role-student' : (user.role != null and user.role.id == 'ADMIN' ? 'role-admin' : 'role-mentor')}"
+                      th:text="${user.role != null ? user.role.name : 'Chưa có'}">Vai trò</span>
+                <span class="status-badge" th:classappend="${user.active ? 'status-active' : 'status-banned'}">
+                    <span class="status-dot"></span> <span th:text="${user.active ? 'Đang hoạt động' : 'Tài khoản đã bị khóa'}">Hoạt động</span>
+                </span>
             </div>
         </div>
 
@@ -246,27 +264,30 @@
         <div class="row g-4 mb-4">
             
             <!-- Cột trái: Thông tin cá nhân -->
-            <div class="col-12 col-xl-4">
+            <div class="col-12 col-xl-5">
                 <div class="info-card">
                     <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
                         <i class="bi bi-person-vcard text-primary fs-5"></i> Thông tin cơ bản
                     </h6>
                     
+                    <div class="info-label">Số điện thoại</div>
+                    <div class="info-value" th:text="${user.phone ?: 'Chưa cập nhật'}">0123456789</div>
+
+                    <div class="info-label">Giới tính</div>
+                    <div class="info-value" th:text="${user.gender != null ? (user.gender ? 'Nam' : 'Nữ') : 'Chưa cập nhật'}">Nam</div>
+
+                    <div class="info-label">Ngày sinh</div>
+                    <div class="info-value" th:text="${user.birthday != null ? #temporals.format(user.birthday, 'dd/MM/yyyy') : 'Chưa cập nhật'}">01/01/2000</div>
+
                     <div class="info-label">Chuyên ngành</div>
-                    <div class="info-value">Ứng dụng phần mềm</div>
+                    <div class="info-value" th:text="${user.major ?: 'Chưa cập nhật'}">CNTT</div>
 
-                    <div class="info-label">Kỹ năng cốt lõi</div>
-                    <div class="info-value">Java / Spring Boot, SQL, Hệ thống</div>
-
-                    <div class="info-label">Ngày tham gia</div>
-                    <div class="info-value">10/03/2026 (2 tuần trước)</div>
-
-                    <div class="info-label">Lần đăng nhập cuối</div>
-                    <div class="info-value mb-0">Hôm nay, lúc 09:41 AM</div>
+                    <div class="info-label">Ngày đăng ký tham gia hệ thống</div>
+                    <div class="info-value mb-0" th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</div>
                 </div>
 
                 <!-- KHU VỰC PHÂN QUYỀN (CHỈ HIỂN THỊ VỚI SUPER ADMIN) -->
-                <div class="info-card mt-4 border-primary" style="box-shadow: 0 4px 15px -3px rgba(79, 70, 229, 0.1); height: auto;">
+                <div class="info-card mt-4 border-primary" style="box-shadow: 0 4px 15px -3px rgba(79, 70, 229, 0.1); height: auto;" sec:authorize="hasRole('SUPER_ADMIN')">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="fw-bold mb-0 d-flex align-items-center gap-2 text-primary">
                             <i class="bi bi-shield-lock-fill fs-5"></i> Cấp quyền Hệ thống
@@ -277,132 +298,113 @@
                         <span>Tính năng này chỉ hiển thị với <strong>Super Admin</strong>.</span>
                     </div>
 
-                    <form>
-                        <!-- Role: User / Mentor -->
-                        <label class="role-radio-card active">
-                            <input type="radio" name="roleOption" class="role-radio-input" checked>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold text-dark" style="font-size: 13.5px;">Người dùng thường</div>
-                                <div class="text-muted" style="font-size: 11.5px;">Quyền hạn thông thường (Sinh viên / Mentor)</div>
-                            </div>
-                        </label>
-
+                    <form th:action="@{/admin/users/roles/{id}(id=${user.username})}" method="post">
                         <!-- Role: User Admin -->
-                        <label class="role-radio-card disabled">
-                            <input type="radio" name="roleOption" class="role-radio-input" disabled>
+                        <label class="role-radio-card" 
+                               th:classappend="${user.role != null and user.role.id == 'USER_ADMIN'} ? 'active' : (${userAdminCount >= MAX_USER_ADMIN and (user.role == null or user.role.id != 'USER_ADMIN')} ? 'disabled' : '')">
+                            <input type="radio" name="roleId" value="USER_ADMIN" class="role-radio-input" 
+                                   th:checked="${user.role != null and user.role.id == 'USER_ADMIN'}"
+                                   th:disabled="${userAdminCount >= MAX_USER_ADMIN and (user.role == null or user.role.id != 'USER_ADMIN')}">
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="fw-semibold text-dark" style="font-size: 13.5px;">Admin Quản lý Người dùng</div>
-                                    <span class="badge bg-danger rounded-pill role-limit-text">Đầy: 2/2</span>
+                                    <span class="badge rounded-pill role-limit-text" 
+                                          th:classappend="${userAdminCount >= MAX_USER_ADMIN} ? 'bg-danger' : 'bg-primary'"
+                                          th:text="${userAdminCount >= MAX_USER_ADMIN ? 'Đầy: ' + userAdminCount + '/' + MAX_USER_ADMIN : 'Đã cấp: ' + userAdminCount + '/' + MAX_USER_ADMIN}">Đã cấp: 0/2</span>
                                 </div>
-                                <div class="text-muted" style="font-size: 11.5px;">Kiểm duyệt, khóa/mở khóa tài khoản user</div>
+                                <div class="text-muted" style="font-size: 11.5px;">Xem danh sách, kiểm duyệt, khóa/mở khóa Mentor và User</div>
                             </div>
                         </label>
 
                         <!-- Role: Content Admin -->
-                        <label class="role-radio-card">
-                            <input type="radio" name="roleOption" class="role-radio-input">
+                        <label class="role-radio-card" 
+                               th:classappend="${user.role != null and user.role.id == 'CONTENT_ADMIN'} ? 'active' : (${contentAdminCount >= MAX_CONTENT_ADMIN and (user.role == null or user.role.id != 'CONTENT_ADMIN')} ? 'disabled' : '')">
+                            <input type="radio" name="roleId" value="CONTENT_ADMIN" class="role-radio-input" 
+                                   th:checked="${user.role != null and user.role.id == 'CONTENT_ADMIN'}"
+                                   th:disabled="${contentAdminCount >= MAX_CONTENT_ADMIN and (user.role == null or user.role.id != 'CONTENT_ADMIN')}">
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="fw-semibold text-dark" style="font-size: 13.5px;">Admin Quản lý Nội dung</div>
-                                    <span class="badge bg-success rounded-pill role-limit-text">Đã cấp: 1/2</span>
+                                    <span class="badge rounded-pill role-limit-text" 
+                                          th:classappend="${contentAdminCount >= MAX_CONTENT_ADMIN} ? 'bg-danger' : 'bg-success'"
+                                          th:text="${contentAdminCount >= MAX_CONTENT_ADMIN ? 'Đầy: ' + contentAdminCount + '/' + MAX_CONTENT_ADMIN : 'Đã cấp: ' + contentAdminCount + '/' + MAX_CONTENT_ADMIN}">Đã cấp: 0/2</span>
                                 </div>
-                                <div class="text-muted" style="font-size: 11.5px;">Kiểm duyệt tài liệu, báo cáo đen, bài viết</div>
+                                <div class="text-muted" style="font-size: 11.5px;">Duyệt tài liệu, xử lý báo cáo vi phạm, quản lý nhóm</div>
                             </div>
                         </label>
 
-                        <button type="button" class="btn btn-poly-gradient w-100 fw-medium mt-2" style="border-radius: 8px;">
+                        <!-- Rút quyền Admin (Về USER) -->
+                        <label class="role-radio-card" th:classappend="${user.role == null or (user.role.id != 'USER_ADMIN' and user.role.id != 'CONTENT_ADMIN' and user.role.id != 'SUPER_ADMIN')} ? 'active' : ''">
+                            <input type="radio" name="roleId" value="USER" class="role-radio-input" th:checked="${user.role == null or (user.role.id != 'USER_ADMIN' and user.role.id != 'CONTENT_ADMIN' and user.role.id != 'SUPER_ADMIN')}">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-semibold text-dark" style="font-size: 13.5px;">Tước quyền Admin (Chỉ làm Sinh viên/Mentor)</div>
+                                </div>
+                                <div class="text-muted" style="font-size: 11.5px;">Mặc định trở về Sinh viên. Nếu là Mentor cần đăng ký lại.</div>
+                            </div>
+                        </label>
+
+                        <!-- Mặc định Super Admin không được cấp qua form này -->
+
+                        <button type="submit" class="btn btn-poly-gradient w-100 fw-medium mt-2 text-white" style="border-radius: 8px; background: linear-gradient(135deg, #FF6A00 0%, #EE0979 100%);">
                             Cập nhật Vai trò
                         </button>
                     </form>
                 </div>
                 <!-- KẾT THÚC KHU VỰC PHÂN QUYỀN -->
-
             </div>
 
-            <!-- Cột phải: Thống kê & Hoạt động -->
-            <div class="col-12 col-xl-8">
-                <div class="info-card">
-                    <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
-                        <i class="bi bi-bar-chart-line text-primary fs-5"></i> Tổng quan hoạt động
-                    </h6>
-                    
-                    <!-- Stats Grid -->
-                    <div class="row g-3 mb-5">
-                        <div class="col-6 col-md-3">
-                            <div class="stat-box">
-                                <div class="stat-number">12</div>
-                                <div class="stat-text">Nhóm đã tham gia</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="stat-box">
-                                <div class="stat-number">45</div>
-                                <div class="stat-text">Tài liệu chia sẻ</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="stat-box">
-                                <div class="stat-number text-success">98%</div>
-                                <div class="stat-text">Tỉ lệ phản hồi</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="stat-box" style="background-color: #FDF2F8; border-color: #FCE7F3;">
-                                <div class="stat-number text-danger">0</div>
-                                <div class="stat-text text-danger">Lần vi phạm</div>
-                            </div>
-                        </div>
+            <!-- Cột phải: Thống kê tùy chọn -->
+            <div class="col-12 col-xl-7">
+                <div class="info-card h-100 placeholder-glow d-flex align-items-center justify-content-center text-muted" style="background-color: #F9FAFB; border: 1px dashed #E5E7EB;">
+                    <div class="text-center">
+                        <i class="bi bi-bar-chart fs-1 mb-2"></i>
+                        <p class="mb-0 fw-medium">Khu vực thống kê tùy chọn</p>
+                        <small>Chưa áp dụng dữ liệu</small>
                     </div>
-
-                    <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
-                        <i class="bi bi-clock-history text-primary fs-5"></i> Hoạt động gần đây
-                    </h6>
-                    <div class="timeline mt-3">
-                        <div class="timeline-item">
-                            <div class="timeline-date">Hôm nay, 10:30 AM</div>
-                            <div class="timeline-content">Tải lên tài liệu <a href="#" class="text-decoration-none fw-medium">"Hướng dẫn Spring Boot MSA"</a> trong nhóm Java Elite.</div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-date">Hôm qua, 15:45 PM</div>
-                            <div class="timeline-content">Tham gia tư vấn cho sinh viên mã <strong>PS12345</strong>.</div>
-                        </div>
-                        <div class="timeline-item" style="margin-bottom: 0;">
-                            <div class="timeline-date">26/03/2026</div>
-                            <div class="timeline-content">Được hệ thống xét duyệt lên vai trò <span class="badge bg-primary-soft text-primary">Mentor</span>.</div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
         </div>
 
         <!-- Modal Xác nhận Khóa -->
-        <div class="modal fade" id="banUserModal" tabindex="-1" aria-labelledby="banUserModalLabel" aria-hidden="true">
+        <div th:if="${user.active}" class="modal fade" id="banUserModal" tabindex="-1" aria-labelledby="banUserModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-sm">
                 <div class="modal-content" style="border-radius: var(--border-radius-lg); border: none;">
-                    <div class="modal-body text-center p-4">
-                        <div class="icon-box-lg rounded-circle mx-auto mb-3 text-danger" style="background-color: #FDE8E8; width: 64px; height: 64px;">
-                            <i class="bi bi-exclamation-triangle fs-2"></i>
+                    <form th:action="@{/admin/users/lock/{id}(id=${user.username})}" method="post">
+                        <div class="modal-body text-center p-4">
+                            <div class="icon-box-lg rounded-circle mx-auto mb-3 text-danger" style="background-color: #FDE8E8; width: 64px; height: 64px;">
+                                <i class="bi bi-exclamation-triangle fs-2"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">Khóa tài khoản <span th:text="${user.fullname}">User</span>?</h5>
+                            <p class="text-muted mb-4" style="font-size: 13.5px;">Sau khi khóa, người dùng sẽ bị đăng xuất lập tức và không thể truy cập lại hệ thống. Email thông báo sẽ được gửi.</p>
+                            
+                            <div class="text-start mb-4">
+                                <label class="form-label fw-medium text-dark" style="font-size: 13px;">Lý do khóa tài khoản <span class="text-danger">*</span></label>
+                                <textarea name="reason" class="form-control" rows="3" placeholder="Ví dụ: Đăng tải nội dung spam, vi phạm chuẩn mực cộng đồng..." style="border-radius: 8px; font-size: 13px;" required></textarea>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light border w-50 fw-medium" style="border-radius: 8px;" data-bs-dismiss="modal">Hủy bỏ</button>
+                                <button type="submit" class="btn btn-danger w-50 fw-medium" style="border-radius: 8px;">Xác nhận khóa</button>
+                            </div>
                         </div>
-                        <h5 class="fw-bold mb-2">Khóa tài khoản Lưu Phan Bảo Châu?</h5>
-                        <p class="text-muted mb-4" style="font-size: 13.5px;">Sau khi khóa, người dùng sẽ bị đăng xuất lập tức và không thể truy cập lại hệ thống. Hãy điền lý do vi phạm.</p>
-                        
-                        <div class="text-start mb-4">
-                            <label class="form-label fw-medium text-dark" style="font-size: 13px;">Lý do khóa tài khoản <span class="text-danger">*</span></label>
-                            <textarea class="form-control" rows="3" placeholder="Ví dụ: Đăng tải nội dung spam, vi phạm chuẩn mực cộng đồng..." style="border-radius: 8px; font-size: 13px;"></textarea>
-                        </div>
-                        
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-light border w-50 fw-medium" style="border-radius: 8px;" data-bs-dismiss="modal">Hủy bỏ</button>
-                            <button type="button" class="btn btn-danger w-50 fw-medium" style="border-radius: 8px;">Xác nhận khóa</button>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
-        </div>
-        
-    </div>
+    <th:block th:fragment="myJs">
+        <script>
+            // Init tooltips
+            document.addEventListener('DOMContentLoaded', function () {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                });
+            });
+        </script>
+    </th:block>
+
+</body>
+</html>
 
     <th:block th:fragment="myJs">
         <script>
