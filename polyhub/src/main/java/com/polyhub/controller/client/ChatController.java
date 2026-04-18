@@ -44,15 +44,14 @@ public class ChatController {
             return "redirect:/login";
         }
 
+        // Truyền thêm danh sách các User để hiển thị Sidebar
+        List<User> allUsers = userRepository.findAll();
+        model.addAttribute("allUsers", allUsers);
+
         // Nếu chưa chọn ai để chat, cứ load giao diện tĩnh
         if (targetUserId == null) {
             return "client/chat";
         }
-
-        // Truyền thêm danh sách các User để hiển thị Sidebar
-        List<User> allUsers = userRepository.findAll();
-        // Bỏ bớt logic rườm rà (thực tế nên xài Set/Map hoặc Filter ở Service)
-        model.addAttribute("allUsers", allUsers);
 
         // 2. Tìm người nhận tin nhắn
         User targetUser = userRepository.findById(targetUserId).orElse(null);
