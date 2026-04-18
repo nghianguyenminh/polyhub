@@ -2,6 +2,8 @@ package com.polyhub.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -10,7 +12,8 @@ import jakarta.persistence.Table;
 public class Role {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id; // Sửa từ String thành Integer và thêm GeneratedValue
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -18,16 +21,12 @@ public class Role {
     public Role() {
     }
 
-    public Role(String id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    public String getId() {
+    // Getters and Setters
+    public Integer getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
