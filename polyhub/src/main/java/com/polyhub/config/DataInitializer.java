@@ -1,3 +1,4 @@
+
 package com.polyhub.config;
 
 import com.polyhub.entity.Role;
@@ -5,54 +6,48 @@ import com.polyhub.entity.User;
 import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
-import java.util.Date;
+@Configuration
+public class DataInitializer {
 
-@Component
-public class DataInitializer implements CommandLineRunner {
+    @Bean
+    public CommandLineRunner commandLineRunner(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+        return args -> {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
+            // Tạo role nếu chưa có
+            Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
+                Role newRole = new Role();
+                newRole.setName("ROLE_ADMIN");
+                roleRepository.save(newRole);
+                System.out.println("Created Role: ROLE_ADMIN");
+                return newRole;
+            });
 
-    public DataInitializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+            Role userRole = roleRepository.findByName("ROLE_USER").orElseGet(() -> {
+                Role newRole = new Role();
+                newRole.setName("ROLE_USER");
+                roleRepository.save(newRole);
+                System.out.println("Created Role: ROLE_USER");
+                return newRole;
+            });
 
-    @Override
-    public void run(String... args) throws Exception {
-        // Tạo các vai trò nếu chúng chưa tồn tại
-        createRoleIfNotFound("SUPER_ADMIN", "ROLE_SUPER_ADMIN");
-        createRoleIfNotFound("ADMIN", "ROLE_ADMIN");
-        createRoleIfNotFound("USER", "ROLE_USER");
+            // Xóa tài khoản admin cũ nếu có
+            userRepository.findByUsername("admin").ifPresent(userRepository::delete);
 
-        // Tạo tài khoản Admin nếu nó chưa tồn tại
-        if (userRepository.findByUsername("admin").isEmpty()) {
-            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                    .orElseThrow(() -> new RuntimeException("Error: Admin Role is not found."));
-
+            // Tạo tài khoản admin mới với đầy đủ thông tin
             User admin = new User();
             admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("123456"));
+            admin.setFullname("Super Admin");
             admin.setEmail("admin@polyhub.com");
-            admin.setFullname("Administrator");
+            admin.setPassword(passwordEncoder.encode("123456"));
             admin.setRole(adminRole);
-            admin.setCreatedAt(new Date());
-            admin.setActive(true);
-
+            admin.setActive(true); // *** ĐÂY LÀ SỬA LỖI QUAN TRỌNG NHẤT ***
             userRepository.save(admin);
-            System.out.println("Created ADMIN account.");
-        }
-    }
+            System.out.println("Created ADMIN account with ACTIVE state.");
 
-    private void createRoleIfNotFound(String id, String name) {
-        if (roleRepository.findByName(name).isEmpty()) {
-            roleRepository.save(new Role(id, name));
-            System.out.println("Created Role: " + name);
-        }
+        };
     }
 }
