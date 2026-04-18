@@ -143,4 +143,32 @@ public class EmailService {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendOTPEmail(String toEmail, String fullname, String otpCode) {
+        try {
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu Cấp lại Mật khẩu");
+            String htmlContent = "<div style=\"font-family: Inter, Arial, sans-serif; padding: 20px; background-color: #f3f4f6;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-top: 5px solid #f27125;\">"
+                    + "<div style=\"text-align: center; margin-bottom: 30px;\">"
+                    + "<h1 style=\"color: #111827; margin: 0; font-size: 24px;\">Quên Mật Khẩu?</h1>"
+                    + "</div>"
+                    + "<p style=\"color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 20px;\">Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p style=\"color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 30px;\">Chúng tôi nhận được yêu cầu cấp lại mật khẩu cho tài khoản liên kết với email này. Để tiếp tục, vui lòng sử dụng mã xác thực (OTP) có hiệu lực trong 5 phút dưới đây:</p>"
+                    + "<div style=\"background-color: #fef3c7; border: 2px dashed #f59e0b; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 30px;\">"
+                    + "<span style=\"display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #b45309;\">" + otpCode + "</span>"
+                    + "</div>"
+                    + "<p style=\"color: #6b7280; font-size: 14px; line-height: 1.5; margin-bottom: 0;\">Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng bỏ qua email này. Không chia sẻ mã OTP với bất kỳ ai để đảm bảo an toàn cho tài khoản.</p>"
+                    + "<hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 40px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #9ca3af; font-size: 13px; margin: 0;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (jakarta.mail.MessagingException e) {
+            System.err.println("Lỗi gửi OTP Email: " + e.getMessage());
+        }
+    }
 }

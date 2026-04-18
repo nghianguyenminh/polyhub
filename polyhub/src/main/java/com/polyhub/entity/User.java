@@ -49,6 +49,10 @@ public class User implements Serializable {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Thêm biến này vào danh sách các thuộc tính
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String bio; 
+
     // --- KẾT NỐI VỚI BẢNG ROLE ---
     @ManyToOne
     @JoinColumn(name = "role_id")
