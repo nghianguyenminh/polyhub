@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/perform_login")
                 .successHandler(customAuthenticationSuccessHandler)
+                .failureUrl("/login?error=true") // Thêm dòng này để xử lý lỗi
                 .permitAll()
             )
             .logout(logout -> logout.permitAll());
