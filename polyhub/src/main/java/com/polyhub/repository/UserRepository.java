@@ -20,11 +20,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Boolean existsByEmail(String email);
 
-    // Sửa cả phương thức này để đảm bảo tính nhất quán
     @Query("SELECT u FROM User u JOIN FETCH u.role WHERE u.username = :usernameOrEmail OR u.email = :usernameOrEmail")
     Optional<User> findByUsernameOrEmail(@Param("usernameOrEmail") String usernameOrEmail);
 
-    List<User> findByRoleId(String id);
+    // Sửa từ String id thành Integer id
+    List<User> findByRoleId(Integer id);
 
     List<User> findByRole_Name(String roleName);
 
