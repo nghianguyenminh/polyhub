@@ -6,7 +6,181 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" th:href="@{/client/css/style.css}">
-<link rel="stylesheet" th:href="@{/client/css/chat.css}">
+    <link rel="stylesheet" th:href="@{/client/css/chat.css}">
+    <style>
+        :root {
+            --poly-orange: #f27125;
+            --poly-orange-light: #fff2eb;
+            --poly-orange-border: #fce1d3;
+        }
+
+        .chat-container {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f27125' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-color: #f8f9fa;
+        }
+
+        /* Sidebar Styling */
+        .chat-sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid rgba(0,0,0,0.05) !important;
+        }
+
+        .search-box input {
+            border-radius: 1rem;
+            padding: 0.6rem 1rem;
+            background-color: #f1f3f5 !important;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box input:focus {
+            background-color: #ffffff !important;
+            border: 1px solid var(--poly-orange-border) !important;
+            box-shadow: 0 0 0 0.25rem rgba(242, 113, 37, 0.1);
+        }
+
+        .chat-list {
+            padding: 0 0.8rem;
+        }
+
+        .chat-item-card {
+            border-radius: 1.2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 0.5rem;
+            border: 1px solid transparent;
+            background-color: #ffffff;
+        }
+
+        .chat-item-card:hover {
+            background-color: #fffcfb;
+            border-color: var(--poly-orange-border);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(242, 113, 37, 0.06);
+        }
+
+        .chat-item-card.active {
+            background-color: var(--poly-orange-light) !important;
+            border-color: var(--poly-orange-border);
+            box-shadow: 0 4px 12px rgba(242, 113, 37, 0.08);
+        }
+
+        /* Glassmorphism Chat Area */
+        .chat-main {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .chat-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+        }
+
+        .chat-messages {
+            background: transparent !important;
+            scroll-behavior: smooth;
+        }
+
+        /* Message Bubbles */
+        .msg-bubble {
+            padding: 0.8rem 1.2rem;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.3s ease forwards;
+            width: fit-content;
+            text-align: left;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-sent {
+            background: linear-gradient(135deg, var(--poly-orange), #ff8a47);
+            color: white;
+            border-radius: 1.2rem 1.2rem 0.2rem 1.2rem;
+            box-shadow: 0 4px 12px rgba(242, 113, 37, 0.2);
+        }
+
+        .msg-received {
+            background-color: #ffffff;
+            color: #2b2d31;
+            border: 1px solid #e9ecef;
+            border-radius: 1.2rem 1.2rem 1.2rem 0.2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        /* Input Area Footer */
+        .chat-footer {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
+        }
+
+        .chat-input-wrapper {
+            background-color: #ffffff;
+            border: 1.5px solid #e9ecef;
+            border-radius: 50rem !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            padding: 0.4rem 0.6rem;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-input-wrapper:focus-within {
+            border-color: var(--poly-orange-border);
+            box-shadow: 0 4px 20px rgba(242, 113, 37, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .chat-input-wrapper input {
+            font-size: 0.95rem;
+        }
+
+        .chat-input-wrapper input::placeholder {
+            color: #adb5bd;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--poly-orange), #ff8a47);
+            color: white !important;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 10px rgba(242, 113, 37, 0.3);
+        }
+        
+        .send-btn:hover {
+            transform: scale(1.1) rotate(-5deg);
+            box-shadow: 0 6px 15px rgba(242, 113, 37, 0.4);
+        }
+        
+        .send-btn i {
+            margin-left: -2px;
+            font-size: 1.1rem !important;
+        }
+
+        .attach-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .attach-icon:hover {
+            background-color: #f1f3f5;
+            color: var(--poly-orange) !important;
+        }
+    </style>
 </head>
 <body class="bg-white">
     <div th:replace="~{fragments/header :: header}"></div>
@@ -27,15 +201,15 @@
 
             <div class="chat-list overflow-y-auto">
                 <a th:each="user : ${allUsers}" th:href="@{/chat(userId=${user.username})}" th:if="${user.username != currentUser.username}" 
-                   class="chat-item d-flex gap-3 p-3 text-decoration-none text-dark"
-                   th:classappend="${targetUser != null and targetUser.username == user.username ? 'active bg-light' : ''}">
+                   class="chat-item-card d-flex gap-3 p-3 text-decoration-none text-dark"
+                   th:classappend="${targetUser != null and targetUser.username == user.username ? 'active' : ''}">
                     <img th:src="${user.avatar != null ? user.avatar : 'https://ui-avatars.com/api/?name=' + user.fullname}" class="rounded-circle shadow-sm" width="48" height="48">
                     <div class="flex-grow-1 overflow-hidden">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold text-truncate" th:text="${user.fullname}">Tên người dùng</h6>
-                            <span class="text-muted small"></span>
+                            <h6 class="mb-1 fw-bold text-truncate" th:text="${user.fullname}">Tên người dùng</h6>
+                            <span class="text-muted" style="font-size: 11px;"></span>
                         </div>
-                        <p class="mb-0 text-muted small text-truncate">Nhấn để trò chuyện</p>
+                        <p class="mb-0 text-muted small text-truncate opacity-75">Nhấn để trò chuyện</p>
                     </div>
                 </a>
             </div>
@@ -54,19 +228,24 @@
             </header>
 
             <!-- Vùng hiển thị tin nhắn -->
-            <div id="chatMessages" class="chat-messages p-4 flex-grow-1 overflow-y-auto bg-light-subtle">
-                <div th:if="${targetUser == null}" class="text-center text-muted mt-5">
-                    <i class="bi bi-chat-dots-fill fs-1"></i>
-                    <p class="mt-2">Chọn một người trong danh sách để bắt đầu trò chuyện</p>
+            <div id="chatMessages" class="chat-messages p-4 flex-grow-1 overflow-y-auto">
+                <div th:if="${targetUser == null}" class="text-center mt-5" style="opacity: 0.6;">
+                    <br><br>
+                    <i class="bi bi-chat-heart-fill fs-1" style="color: var(--poly-orange);"></i>
+                    <p class="mt-3 fw-medium">Chọn một người trong danh sách để bắt đầu trò chuyện</p>
                 </div>
             </div>
 
             <!-- Vùng nhập tin nhắn -->
             <footer class="chat-footer p-3 border-top" th:if="${targetUser != null}">
-                <form id="chatForm" class="input-group align-items-center bg-light rounded-pill px-3">
-                    <i class="bi bi-paperclip fs-5 text-muted cursor-pointer"></i>
-                    <input type="text" id="messageInput" class="form-control border-0 bg-transparent shadow-none" placeholder="Nhắn tin..." autocomplete="off" required>
-                    <button type="submit" class="btn btn-link p-0 border-0 shadow-none"><i class="bi bi-send-fill text-poly fs-5 cursor-pointer"></i></button>
+                <form id="chatForm" class="chat-input-wrapper d-flex align-items-center bg-white rounded-pill px-2 w-100 m-0">
+                    <span class="attach-icon text-muted cursor-pointer me-2">
+                        <i class="bi bi-paperclip fs-5"></i>
+                    </span>
+                    <input type="text" id="messageInput" class="form-control border-0 bg-transparent shadow-none flex-grow-1 px-1" placeholder="Nhập tin nhắn..." autocomplete="off" style="outline: none;" required>
+                    <button type="submit" class="btn send-btn p-0 border-0 shadow-none ms-2">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
                     
                     <!-- Dữ liệu ngầm cho Javascript -->
                     <input type="hidden" id="roomId" th:value="${roomId}">
@@ -142,7 +321,7 @@
                     .then(messages => {
                         chatMessages.innerHTML = ''; // Xoá thông báo default chờ chọn người chat
                         if(messages.length === 0) {
-                            chatMessages.innerHTML = '<div class="text-center text-muted mt-5 small">Chưa có tin nhắn. Hãy chào nhau đi! 👋</div>';
+                            chatMessages.innerHTML = '<div class="text-center mt-5 opacity-50"><br><i class="bi bi-chat-square-quote fs-2" style="color: var(--poly-orange);"></i><p class="mt-3 fw-medium">Chưa có tin nhắn. Hãy là người bắt đầu câu chuyện! 👋</p></div>';
                         } else {
                             messages.forEach(msg => displayMessage(msg));
                             scrollToBottom();
@@ -164,7 +343,7 @@
 
             function displayMessage(message) {
                 // Xoá dòng "Chưa có tin nhắn" nếu có
-                const emptyMsg = chatMessages.querySelector('.text-muted.mt-5');
+                const emptyMsg = chatMessages.querySelector('.opacity-50');
                 if(emptyMsg) emptyMsg.remove();
                 
                 // Đảm bảo so sánh chuỗi ID
@@ -177,26 +356,26 @@
                 }
                 
                 if (isSent) {
-                    messageDiv.className = 'd-flex flex-row-reverse gap-2 mb-4';
+                    messageDiv.className = 'd-flex flex-row-reverse gap-2 mb-3';
                     messageDiv.innerHTML = `
-                        <div>
-                            <div class="msg-content sent">
+                        <div class="d-flex flex-column align-items-end" style="max-width: 75%;">
+                            <div class="msg-bubble msg-sent">
                                 ${message.content}
                             </div>
-                            <div class="small text-muted mt-1 text-end" style="font-size: 10px;">
+                            <div class="small mt-1 text-end text-muted opacity-75" style="font-size: 10.5px; margin-right: 4px;">
                                 ${timeStr}
                             </div>
                         </div>
                     `;
                 } else {
-                    messageDiv.className = 'd-flex gap-2 mb-4';
+                    messageDiv.className = 'd-flex gap-2 mb-3';
                     messageDiv.innerHTML = `
-                        <img src="${targetAvatar}" class="rounded-circle" width="32" height="32">
-                        <div>
-                            <div class="msg-content received">
+                        <img src="${targetAvatar}" class="rounded-circle shadow-sm flex-shrink-0" width="36" height="36" style="margin-top: 4px;">
+                        <div class="d-flex flex-column align-items-start" style="max-width: 75%;">
+                            <div class="msg-bubble msg-received">
                                 ${message.content}
                             </div>
-                            <div class="small text-muted mt-1" style="font-size: 10px;">
+                            <div class="small mt-1 text-muted opacity-75" style="font-size: 10.5px; margin-left: 4px;">
                                 ${timeStr}
                             </div>
                         </div>
