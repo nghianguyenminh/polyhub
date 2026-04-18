@@ -32,12 +32,12 @@ public class DocumentAdminController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             Model model) {
 
-        int size = 5; // Cập nhật số lượng tài liệu hiển thị trên một trang thành 5
+        int size = 5;
         Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page, size);
         List<Category> categories = categoryService.getAllCategoriesForAdmin();
         Map<String, Object> stats = documentAdminService.getDocumentStats();
 
-        // Get filter stats
+        
         List<Object[]> typeStats = documentAdminService.getDocumentTypeStats();
         List<Object[]> categoryStats = documentAdminService.getCategoryStats();
         List<Object[]> statusStats = documentAdminService.getStatusStats();
@@ -96,9 +96,9 @@ public class DocumentAdminController {
     public String restoreDocument(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             documentAdminService.restoreDocument(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Ph?c h?i th�nh c�ng! T�i li?u d� hi?n th? l?i tr�n trang ch?.");
+            redirectAttributes.addFlashAttribute("successMessage", "Phục hồi thành công! Tài liệu đã hiển thị lại trên trang chủ.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "L?i: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/documents";
     }

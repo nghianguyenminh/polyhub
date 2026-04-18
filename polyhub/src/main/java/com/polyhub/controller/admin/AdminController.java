@@ -31,7 +31,6 @@ public class AdminController {
     private final DocumentRepository documentRepository;
     private final PostReportRepository postReportRepository;
 
-    // Map cả 2 đường dẫn /admin và /admin/dashboard về chung 1 trang
     @GetMapping({"", "/", "/dashboard"})
     public String dashboard(Model model) {
         long totalUsers = userRepository.count();
@@ -47,7 +46,7 @@ public class AdminController {
         model.addAttribute("totalReports", totalReports);
         model.addAttribute("countByCategory", countByCategory);
 
-        return "admin/dashboard"; // Mở file templates/admin/dashboard.html
+        return "admin/dashboard"; 
     }
 
     @GetMapping("/mentors")
@@ -95,10 +94,10 @@ public class AdminController {
                     roleRepository.save(role);
                 }
                 user.setRole(role);
-                userRepository.save(user); // Cập nhật role trong CSDL ngay
+                userRepository.save(user); 
             }
 
-            // Gửi email chúc mừng (phê duyệt Mentor)
+            
             emailService.sendMentorApprovalEmail(request.getEmail(), request.getFullname());
 
             redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt yêu cầu trở thành Mentor.");
@@ -115,7 +114,7 @@ public class AdminController {
             request.setRejectionReason(reason);
             mentorRequestRepository.save(request);
 
-            // Gửi email từ chối có reason
+           
             emailService.sendMentorRejectionEmail(request.getEmail(), request.getFullname(), reason);
 
             redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối yêu cầu trở thành Mentor.");
@@ -137,11 +136,11 @@ public class AdminController {
                 Role role = roleRepository.findById("USER").orElse(null);
                 if (role != null) {
                     user.setRole(role);
-                    userRepository.save(user); // Cập nhật role về Sinh viên
+                    userRepository.save(user); 
                 }
             }
 
-            // Gửi email báo tước quyền
+          
             emailService.sendMentorRevokeEmail(request.getEmail(), request.getFullname(), reason);
 
             redirectAttributes.addFlashAttribute("successMessage", "Đã tước quyền Mentor và đưa tài khoản về vai trò Sinh viên.");

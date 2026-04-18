@@ -58,16 +58,16 @@ public class MentorController {
     @GetMapping("/mentors/register")
     public String registerForm(@ModelAttribute("currentUser") User currentUser, Model model, RedirectAttributes redirectAttributes) {
         if (currentUser == null) {
-            return "redirect:/login"; // Bắt buộc đăng nhập
+            return "redirect:/login"; 
         }
         
-        // Kiểm tra nếu User đã là Mentor
+        
         if (currentUser.getRole() != null && "MENTOR".equalsIgnoreCase(currentUser.getRole().getId())) {
             redirectAttributes.addFlashAttribute("error", "Bạn đã là Mentor rồi, không cần đăng ký thêm.");
             return "redirect:/mentors";
         }
         
-        // Kiểm tra user có đơn đăng ký đang chờ hoặc đã duyệt chưa
+       
         MentorRequest existingRequest = mentorRequestRepository.findByUser(currentUser).orElse(null);
         if (existingRequest != null && (existingRequest.getStatus() == RequestStatus.PENDING || existingRequest.getStatus() == RequestStatus.APPROVED)) {
             redirectAttributes.addFlashAttribute("error", "Bạn đã có một yêu cầu đăng ký đang được xử lý hoặc đã được duyệt.");
@@ -75,7 +75,7 @@ public class MentorController {
         }
         
         model.addAttribute("user", currentUser);
-        return "client/mentor_register"; // Mở file form wizard
+        return "client/mentor_register";
     }
 
     @PostMapping("/mentors/register")
@@ -99,10 +99,8 @@ public class MentorController {
 
         try {
             LocalDate birthday = LocalDate.parse(birthdayStr);
-            // Cập nhật lại request cũ thay vì tạo mới để tránh Spam Row trong CS dữ liệu
             MentorRequest request = mentorRequestRepository.findByUser(currentUser).orElse(new MentorRequest());
             
-            // Re-check để chặn user Submit nhiều tab cùng lúc
             if (request.getId() != null && (request.getStatus() == RequestStatus.PENDING || request.getStatus() == RequestStatus.APPROVED)) {
                 redirectAttributes.addFlashAttribute("error", "Bạn đã có yêu cầu đăng ký đang xử lý.");
                 return "redirect:/mentors";
@@ -117,9 +115,9 @@ public class MentorController {
             request.setIntroduction(introduction);
             request.setMotivation(motivation);
             request.setStatus(RequestStatus.PENDING);
-            request.setRejectionReason(null); // Reset lại lý do từ chối cũ
+            request.setRejectionReason(null);
 
-            // Upload CV (Bắt buộc)
+           
             if (cvFile != null && !cvFile.isEmpty()) {
                 Map<String, Object> uploadResult = fileStorageService.uploadFile(cvFile);
                 request.setCvFile(uploadResult.get("url").toString());
@@ -128,13 +126,13 @@ public class MentorController {
                 return "redirect:/mentors/register";
             }
 
-            // Upload Chứng chỉ (Optional)
+       
             if (certificateFile != null && !certificateFile.isEmpty()) {
                 Map<String, Object> certResult = fileStorageService.uploadFile(certificateFile);
                 request.setCertificateFile(certResult.get("url").toString());
             }
 
-            // Upload Bằng cấp (Optional)
+           
             if (degreeFile != null && !degreeFile.isEmpty()) {
                 Map<String, Object> degreeResult = fileStorageService.uploadFile(degreeFile);
                 request.setDegreeFile(degreeResult.get("url").toString());

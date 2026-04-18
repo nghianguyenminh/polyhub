@@ -9,7 +9,5 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
     
-    // Load lịch sử chat: Lấy TẤT CẢ tin nhắn của 1 phòng (roomId), 
-    // Sắp xếp theo thứ tự Timestamp Tăng dần (Từ cũ tới mới)
     List<ChatMessage> findByRoomIdOrderByTimestampAsc(String roomId);
 }
