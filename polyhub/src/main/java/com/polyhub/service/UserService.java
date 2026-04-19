@@ -1,6 +1,7 @@
 package com.polyhub.service;
 
 import com.polyhub.dto.request.RegisterRequest;
+<<<<<<< HEAD
 import com.polyhub.entity.User;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,3 +36,14 @@ public interface UserService {
 
     void changePassword(User user, String oldPassword, String newPassword);
 }
+=======
+
+public interface UserService {
+    /**
+     * Xử lý đăng ký tài khoản người dùng mới.
+     * @param request dữ liệu được gửi từ form đăng ký
+     * @return String: Thông báo kết quả ("success" nếu thành công, hoặc các lỗi cụ thể như "Trùng username")
+     */
+    String registerUser(RegisterRequest request);
+}
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e

@@ -26,7 +26,16 @@ public class HomeController {
     }
 
     @GetMapping("/")
+<<<<<<< HEAD
     public String home(Model model, Principal principal) {
+=======
+    public String index(Principal principal, Model model) {
+        // Nếu user đã đăng nhập, lấy bài public + bài private của user. Nếu CHƯA đăng nhập, chỉ lấy bài public (truyền "" hoặc null)
+        String viewerUsername = (principal != null) ? principal.getName() : "";
+        org.springframework.data.domain.Page<com.polyhub.entity.Post> posts = postRepository.findVisiblePostsForFeed(viewerUsername, org.springframework.data.domain.PageRequest.of(0, 10));
+        model.addAttribute("recentPosts", posts.getContent());
+
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
         if (principal != null) {
             User user = userRepository.findByUsername(principal.getName()).orElse(null);
             model.addAttribute("user", user);

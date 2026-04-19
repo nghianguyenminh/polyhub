@@ -1,5 +1,6 @@
 package com.polyhub.entity;
 
+<<<<<<< HEAD
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +14,13 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import java.util.Date;
+=======
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import java.time.LocalDateTime;
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
 @Entity
 @Table(name = "documents")
@@ -43,6 +51,7 @@ public class Document {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
+<<<<<<< HEAD
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
@@ -50,6 +59,25 @@ public class Document {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DocumentStatus status;
+=======
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    // Liên kết với Chuyên Ngành (Category) ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    @NotFound(action = NotFoundAction.IGNORE)
+    private Category category;
+
+    // Bổ sung: Liên kết với Người dùng upload (Sinh viên/Mentor)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uploader_id", nullable = true) // Cứ mở nullable để không chết các data DB cũ
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User uploader;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", nullable = false, updatable = false)

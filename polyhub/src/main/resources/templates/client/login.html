@@ -35,6 +35,12 @@
             <div th:if="${param.error}" class="alert-custom alert-error">
                 <i class="bi bi-exclamation-circle-fill"></i> Tên đăng nhập hoặc mật khẩu không chính xác.
             </div>
+            <div th:if="${param.registerSuccess}" class="alert-custom alert-success">
+                <i class="bi bi-check-circle-fill"></i> Đăng ký thành công! Vui lòng đăng nhập.
+            </div>
+            <div th:if="${param.resetSuccess}" class="alert-custom alert-success">
+                <i class="bi bi-check-circle-fill"></i> Mật khẩu đã được cấp lại thành công! Vui lòng đăng nhập.
+            </div>
 
             <form th:action="@{/perform_login}" method="post">
                 <div class="form-group">

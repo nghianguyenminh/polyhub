@@ -46,8 +46,24 @@ public class User {
     @Column(name = "mentor_description", columnDefinition = "TEXT")
     private String mentorDescription;
 
+<<<<<<< HEAD
     private String skills;
 
+=======
+    // Ảnh bìa
+    private String coverImage = "default-cover.jpg";
+
+    private Boolean active = true; // Trạng thái hoạt động
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Thêm biến này vào danh sách các thuộc tính
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String bio; 
+
+    // --- KẾT NỐI VỚI BẢNG ROLE ---
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;

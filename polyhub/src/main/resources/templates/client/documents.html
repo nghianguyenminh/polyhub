@@ -6,6 +6,76 @@
     
     <th:block th:fragment="myCss">
         <link rel="stylesheet" th:href="@{/client/css/documents.css}">
+        <style>
+            /* Trendy Gen Z Upload Modal Customization */
+            #uploadDocModal .modal-content {
+                border-radius: 20px;
+                border: none;
+                box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+                overflow: hidden;
+            }
+            #uploadDocModal .modal-header {
+                font-family: 'Inter', sans-serif;
+            }
+            #uploadDocModal .form-control, #uploadDocModal .form-select {
+                border: 1.5px solid #e9ecef;
+                border-radius: 12px;
+                padding: 12px 16px;
+                font-size: 15px;
+                transition: all 0.3s ease;
+                background-color: #fafbfc !important;
+                color: #2b2d31;
+            }
+            #uploadDocModal .form-control:focus, #uploadDocModal .form-select:focus {
+                border-color: rgba(242, 113, 37, 0.5);
+                box-shadow: 0 0 0 4px rgba(242, 113, 37, 0.1);
+                background-color: #ffffff !important;
+            }
+            #uploadDocModal label {
+                font-weight: 600;
+                color: #495057;
+                margin-bottom: 6px;
+            }
+            #uploadDocModal .upload-btn {
+                background: linear-gradient(135deg, var(--poly-orange, #f27125), #ff8a47);
+                color: white;
+                border: none;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(242, 113, 37, 0.25);
+            }
+            #uploadDocModal .upload-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(242, 113, 37, 0.4);
+            }
+            #uploadDocModal .btn-close-custom {
+                background-color: #f1f3f5;
+                border-radius: 50%;
+                width: 36px;
+                height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background-color 0.2s;
+                cursor: pointer;
+            }
+            #uploadDocModal .btn-close-custom:hover {
+                background-color: #e9ecef;
+            }
+            #uploadDocModal input[type="file"]::file-selector-button {
+                border: none;
+                background: #e9ecef;
+                padding: 8px 16px;
+                border-radius: 8px;
+                color: #495057;
+                font-weight: 600;
+                margin-right: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            #uploadDocModal input[type="file"]::file-selector-button:hover {
+                background: #dee2e6;
+            }
+        </style>
     </th:block>
 </head>
 <body>
@@ -171,45 +241,49 @@
         <!-- MODAL UPLOAD TÀI LIỆU -->
         <div class="modal fade" id="uploadDocModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content border-0 rounded-4 shadow">
-                    <div class="modal-header pb-2 border-0">
-                        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-cloud-arrow-up-fill text-poly me-2"></i>Chia sẻ Tài liệu mới</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-content">
+                    <div class="modal-header pb-2 border-0 position-relative mt-2">
+                        <h5 class="modal-title fw-bolder w-100 text-center" style="font-size: 1.35rem; letter-spacing:-0.4px; color: #1c1e21;"><i class="bi bi-cloud-upload-fill me-2" style="color: var(--poly-orange, #f27125);"></i>Chia sẻ Tài liệu mới</h5>
+                        <div class="btn-close-custom position-absolute" data-bs-dismiss="modal" style="right: 18px; top: 12px;">
+                            <i class="bi bi-x fs-4 text-muted"></i>
+                        </div>
                     </div>
                     
                     <form th:action="@{/documents/upload}" method="post" enctype="multipart/form-data">
-                        <div class="modal-body pt-2">
-                            <div class="row g-3">
+                        <div class="modal-body pt-3 pb-4 px-4">
+                            <div class="row g-4">
                                 
                                 <div class="col-md-12">
-                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Tên tài liệu / Tiêu đề <span class="text-danger">*</span></label>
-                                    <input type="text" name="title" class="form-control bg-light" placeholder="Ví dụ: Đề thi thử SOF3021, Slide Thuyết trình Agile..." required>
+                                    <label class="form-label" style="font-size: 14.5px;">Tên tài liệu / Tiêu đề <span class="text-danger">*</span></label>
+                                    <input type="text" name="title" class="form-control" placeholder="Ví dụ: Đề thi thử SOF3021, Slide Thuyết trình Agile..." required>
                                 </div>
                                 
                                 <div class="col-md-12">
-                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Mô tả ngắn</label>
-                                    <textarea name="description" class="form-control bg-light" rows="3" placeholder="Ghi chú thêm về nội dung tài liệu để mọi người dễ dàng tìm kiếm..."></textarea>
+                                    <label class="form-label" style="font-size: 14.5px;">Mô tả ngắn</label>
+                                    <textarea name="description" class="form-control" rows="3" placeholder="Ghi chú thêm về nội dung tài liệu để mọi người dễ dàng tìm kiếm..." style="resize: none;"></textarea>
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Chuyên ngành / Nhóm ngành <span class="text-danger">*</span></label>
-                                    <select name="categoryId" class="form-select bg-light" required>
+                                    <label class="form-label" style="font-size: 14.5px;">Chuyên ngành / Nhóm ngành <span class="text-danger">*</span></label>
+                                    <select name="categoryId" class="form-select dropdown-icon" required>
                                         <option value="" disabled selected>-- Chọn chuyên ngành --</option>
                                         <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
                                     </select>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium text-muted mb-1" style="font-size: 13.5px;">Tệp đính kèm <span class="text-danger">*</span></label>
-                                    <input type="file" name="file" class="form-control bg-light" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z">
-                                    <small class="text-muted" style="font-size: 11px;">Hỗ trợ: PDF, Word, Excel, PPT, ZIP, RAR.</small>
+                                    <label class="form-label" style="font-size: 14.5px;">Tệp đính kèm <span class="text-danger">*</span></label>
+                                    <div class="position-relative">
+                                        <input type="file" name="file" class="form-control file-input-trendy" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z">
+                                    </div>
+                                    <small class="text-muted mt-1 d-block" style="font-size: 11.5px; opacity: 0.85;">Hỗ trợ: PDF, Word, Excel, PPT, ZIP, RAR.</small>
                                 </div>
                                 
                             </div>
                         </div>
-                        <div class="modal-footer border-0 pt-0">
-                            <button type="button" class="btn btn-light fw-medium rounded-pill px-4" data-bs-dismiss="modal">Hủy bỏ</button>
-                            <button type="submit" class="btn btn-poly-gradient fw-bold rounded-pill px-4">Đăng tải lên</button>
+                        <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn fw-semibold rounded-pill px-4 py-2" data-bs-dismiss="modal" style="background-color: #f1f3f5; color: #050505; border: none;">Hủy bỏ</button>
+                            <button type="submit" class="btn upload-btn fw-bold rounded-pill px-4 py-2">Đăng tải lên</button>
                         </div>
                     </form>
                 </div>

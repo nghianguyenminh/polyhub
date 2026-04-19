@@ -6,11 +6,108 @@
     
     <th:block th:fragment="myCss">
         <link rel="stylesheet" th:href="@{/client/css/home.css}">
+        <style>
+            /* Custom CSS for Create Post Modal - Glassmorphism & Trendy Gen Z */
+            #createPostModal .modal-content {
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+                overflow: hidden;
+            }
+            #createPostModal .modal-header {
+                font-family: 'Inter', sans-serif;
+            }
+            #createPostModal .modal-title {
+                color: #050505;
+                font-size: 1.25rem;
+                letter-spacing: -0.3px;
+            }
+            #createPostModal .btn-close {
+                background-color: #e4e6eb;
+                border-radius: 50%;
+                opacity: 1;
+                padding: 0.6rem;
+                margin-right: 0.2rem;
+                transition: background-color 0.2s;
+            }
+            #createPostModal .btn-close:hover {
+                background-color: #d8dadf;
+            }
+
+            #post-content {
+                font-family: 'Inter', sans-serif;
+                font-size: 16px;
+                color: #050505;
+                line-height: 1.5;
+                transition: all 0.3s;
+            }
+            #post-content::placeholder {
+                color: #65676b;
+                font-size: 18px;
+                font-weight: 400;
+            }
+
+            .topic-pill {
+                background-color: #f0f2f5;
+                color: #050505;
+                font-weight: 500;
+                padding: 6px 14px;
+                font-size: 13.5px;
+                cursor: pointer;
+                transition: all 0.25s ease;
+                border: 1px solid transparent;
+            }
+            .topic-pill:hover {
+                background-color: #e4e6eb;
+            }
+            .topic-pill.active {
+                background-color: #fce1d3;
+                color: var(--poly-primary, #f27125);
+                border-color: rgba(242, 113, 37, 0.4);
+                box-shadow: 0 0 0 3px rgba(242, 113, 37, 0.1);
+            }
+
+            .add-to-post-box {
+                border-color: #ced0d4 !important;
+                border-radius: 12px !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            }
+
+            .modal-tool-icon {
+                width: 38px;
+                height: 38px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: background-color 0.2s;
+            }
+            .modal-tool-icon:hover {
+                background-color: #f2f2f2;
+            }
+
+            .post-btn {
+                background-color: var(--poly-primary, #f27125);
+                border-radius: 50rem;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(242, 113, 37, 0.3);
+            }
+            .post-btn:hover {
+                background-color: #e06015;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(242, 113, 37, 0.45);
+            }
+            .post-btn:active {
+                transform: translateY(0);
+                box-shadow: 0 2px 8px rgba(242, 113, 37, 0.3);
+            }
+        </style>
     </th:block>
 </head>
 <body>
 
     <div th:fragment="myContent" class="poly-main-feed" style="max-width: 850px;">
+<<<<<<< HEAD
         
         <!--/* START: Post Creation Section - Only visible to logged-in users */-->
         <th:block th:if="${currentUser != null}">
@@ -24,6 +121,95 @@
                     <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
                     <button class="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal"><i class="bi bi-image text-success me-2 fs-5"></i> Ảnh/GIF</button>
                     <button class="btn-ghost flex-grow-1"><i class="bi bi-emoji-smile text-warning me-2 fs-5"></i> Cảm xúc</button>
+=======
+        <div class="poly-card p-3">
+            <div class="d-flex align-items-center gap-2">
+                <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
+                <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" th:placeholder="'Bạn đang nghĩ gì, ' + ${currentUser.fullname} + '?'" style="cursor: pointer; font-size: 14.5px;" readonly data-bs-toggle="modal" data-bs-target="#createPostModal">
+            </div>
+            
+            <div class="d-flex justify-content-between px-1 mt-3">
+                <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
+                <button class="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal"><i class="bi bi-image text-success me-2 fs-5"></i> Ảnh/GIF</button>
+                <button class="btn-ghost flex-grow-1"><i class="bi bi-emoji-smile text-warning me-2 fs-5"></i> Cảm xúc</button>
+            </div>
+        </div>
+
+        <!-- Modal Tạo Bài Đăng -->
+        <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="postForm">
+                        <div class="modal-header border-0 pb-0 position-relative">
+                            <h5 class="modal-title fw-bolder w-100 text-center" id="createPostModalLabel">Tạo bài viết</h5>
+                            <button type="button" class="btn border-0 shadow-none position-absolute rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close" style="right: 15px; top: 12px; background-color: #e4e6eb; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-x fs-4"></i></button>
+                        </div>
+                        <hr class="w-100 mb-0 mt-3" style="border-top: 1px solid #ced0d4;">
+                        <div class="modal-body pt-3 pb-2">
+                            
+                            <div class="d-flex mb-2">
+                                <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border border-light shadow-sm me-3" width="46" height="46" style="object-fit: cover;">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold" style="font-size: 15px; color: #050505;" th:text="${currentUser.fullname}">Nghĩa Nguyễn</div>
+                                    <div class="badge bg-light text-dark shadow-none border mt-1 d-inline-flex align-items-center" style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; cursor: pointer; color: #65676b !important;">
+                                        <i class="bi bi-globe-americas me-1"></i>Công khai <i class="bi bi-caret-down-fill ms-1" style="font-size: 10px;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <textarea id="post-content" class="form-control border-0 px-0 shadow-none w-100 mt-2" rows="3" th:placeholder="'Bạn đang nghĩ gì, ' + ${currentUser.fullname} + '?'" required style="resize: none; background-color: transparent;"></textarea>
+                            
+                            <!-- Chủ đề (Tags/Pills) -->
+                            <div class="d-flex flex-wrap gap-2 mt-2 mb-3" id="topic-tags">
+                                <input type="hidden" name="topicList" id="topicIdInput" value="">
+                                <span class="badge rounded-pill topic-pill" onclick="selectTopic(this, 'Học tập')">Học tập</span>
+                                <span class="badge rounded-pill topic-pill" onclick="selectTopic(this, 'Hỏi đáp')">Hỏi đáp</span>
+                                <span class="badge rounded-pill topic-pill" onclick="selectTopic(this, 'Tin tức')">Tin tức</span>
+                                <span class="badge rounded-pill topic-pill" onclick="selectTopic(this, 'Chia sẻ')">Chia sẻ</span>
+                            </div>
+
+                            <!-- Hiển thị ảnh Preview -->
+                            <div id="imagePreviewContainer" class="mt-2 d-none position-relative rounded overflow-hidden border">
+                                <img id="imagePreview" src="" class="img-fluid w-100" style="max-height: 350px; object-fit: cover;">
+                                <button type="button" class="btn btn-light rounded-circle position-absolute shadow flex-center" style="top: 10px; right: 10px; width: 34px; height: 34px; border: 1px solid #ced0d4;" onclick="removeImage()">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                            <!-- Nút AI phụ trợ -->
+                            <div class="d-flex align-items-center gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-medium" id="btn-ai-improve" title="Yêu cầu AI cải thiện nội dung bạn vừa nhập">
+                                    <i class="bi bi-magic me-1"></i>Cải thiện văn bản
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill d-none fw-medium" id="btn-ai-caption" title="AI sẽ gợi ý nội dung phù hợp với bức ảnh">
+                                    <i class="bi bi-stars me-1"></i>Gợi ý từ ảnh
+                                </button>
+                            </div>
+                            
+                            <p id="ai-loading" class="text-muted d-none mt-2 mb-0" style="font-size: 13px;"><i class="spinner-border spinner-border-sm me-1"></i>AI đang suy nghĩ...</p>
+                            
+                            <!-- Thêm vào bài viết Toolbar -->
+                            <div class="add-to-post-box p-2 d-flex align-items-center justify-content-between mt-3 border">
+                                <span class="fw-semibold px-2" style="font-size: 15px; color: #050505;">Thêm vào bài viết</span>
+                                <div class="d-flex gap-1 me-1">
+                                    <label for="post-image" class="modal-tool-icon cursor-pointer mb-0" title="Ảnh/Video">
+                                        <i class="bi bi-image text-success fs-5"></i>
+                                    </label>
+                                    <input type="file" id="post-image" accept="image/*" class="d-none" onchange="previewImage(event)">
+                                    <div class="modal-tool-icon cursor-pointer text-primary" title="Tag bạn bè">
+                                        <i class="bi bi-person-plus-fill fs-5"></i>
+                                    </div>
+                                    <div class="modal-tool-icon cursor-pointer text-warning" title="Cảm xúc">
+                                        <i class="bi bi-emoji-smile fs-5"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0 pb-3 px-3">
+                            <button type="button" class="btn w-100 fw-bold post-btn text-white fs-6 py-2" onclick="submitPost()">Đăng</button>
+                        </div>
+                    </form>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                 </div>
             </div>
 
@@ -88,6 +274,23 @@
         </th:block>
         <!--/* END: Post Creation Section */-->
 
+        <script>
+            function selectTopic(element, topicValue) {
+                const topicInput = document.getElementById('topicIdInput');
+                // Thay vì logic phức tạp, giả lập chọn 1 Chủ đề duy nhất
+                document.querySelectorAll('.topic-pill').forEach(pill => pill.classList.remove('active'));
+                
+                if (topicInput.value === topicValue) {
+                    // Toggle tắt bỏ chọn
+                    topicInput.value = '';
+                } else {
+                    // Chọn
+                    element.classList.add('active');
+                    topicInput.value = topicValue;
+                }
+            }
+        </script>
+
         <!-- Feed list: Sử dụng Thymeleaf lấy Post từ Controller -->
         <div th:each="post : ${recentPosts}" class="poly-card p-0 mt-3"> 
             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
@@ -96,34 +299,95 @@
                     <div style="line-height: 1.3;">
                         <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
                         <div class="text-muted" style="font-size: 13px;">
-                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> 
+                            • <i th:id="'privacy-icon-' + ${post.id}" th:class="${post.isPrivate != null and post.isPrivate ? 'bi bi-lock-fill' : 'bi bi-globe-americas'}" th:title="${post.isPrivate != null and post.isPrivate ? 'Chỉ mình tôi' : 'Công khai'}"></i>
                         </div>
                     </div>
                 </div>
-                <button class="btn-icon-circle bg-transparent"><i class="bi bi-three-dots text-muted fs-5"></i></button>
+                <div class="dropdown">
+                    <button class="btn-icon-circle bg-transparent border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots text-muted fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="font-size: 14.5px;">
+                        <th:block th:if="${currentUser != null and post.user?.username == currentUser.username}">
+                            <li><a class="dropdown-item py-2" href="#" th:onclick="'openEditPostModal(' + ${post.id} + ')'"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa bài viết</a></li>
+                            <li><a class="dropdown-item py-2" href="#" th:onclick="'togglePostPrivacy(' + ${post.id} + ')'">
+                                <i th:id="'privacy-menu-icon-' + ${post.id}" th:class="${post.isPrivate != null and post.isPrivate ? 'bi bi-globe-americas me-2' : 'bi bi-lock me-2'}"></i>
+                                <span th:id="'privacy-menu-text-' + ${post.id}" th:text="${post.isPrivate != null and post.isPrivate ? 'Đổi sang Công khai' : 'Đổi sang Chỉ mình tôi'}"></span>
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="#" th:onclick="'deletePost(' + ${post.id} + ')'"><i class="bi bi-trash3 me-2"></i>Xóa bài viết</a></li>
+                        </th:block>
+                        <th:block th:unless="${currentUser != null and post.user?.username == currentUser.username}">
+                            <li><a class="dropdown-item py-2 text-danger" href="#" th:onclick="'openReportModal(' + ${post.id} + ')'"><i class="bi bi-exclamation-triangle me-2"></i>Báo cáo bài viết</a></li>
+                        </th:block>
+                    </ul>
+                </div>
             </div>
             
             <div class="px-3 pb-2">
-                <p class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
+                <p th:id="'post-content-display-' + ${post.id}" class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
             </div>
             
-            <img th:if="${post.imageUrl != null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
+            <img th:if="${post.imageUrl != null and post.sharedPost == null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
+            
+            <!-- KIỂM TRA NẾU ĐÂY LÀ BÀI SHARE -> HIỂN THỊ BOX LỒNG NHAU -->
+            <div th:if="${post.sharedPost != null}" class="border rounded mx-3 mb-2 overflow-hidden pointer-box">
+                <!-- Header của bài gốc -->
+                <div class="p-2 d-flex align-items-center bg-light border-bottom">
+                    <img th:src="${post.sharedPost.user != null and post.sharedPost.user.avatar != null and post.sharedPost.user.avatar.startsWith('http') ? post.sharedPost.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border me-2" width="30" height="30" style="object-fit: cover;">
+                    <div style="line-height: 1.2;">
+                        <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 13.5px;" th:text="${post.sharedPost.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                        <div class="text-muted" style="font-size: 12px;">
+                            <span th:text="${#temporals.format(post.sharedPost.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- Content bài gốc -->
+                <div class="p-2" th:if="${post.sharedPost.content != null and !post.sharedPost.content.isEmpty()}">
+                    <p class="mb-0" style="font-size: 13.5px; white-space: pre-wrap;" th:text="${post.sharedPost.content}">Nội dung gốc</p>
+                </div>
+                <!-- Image bài gốc -->
+                <img th:if="${post.sharedPost.imageUrl != null}" th:src="${post.sharedPost.imageUrl}" class="img-fluid w-100 border-top" style="max-height: 400px; object-fit: cover;">
+            </div>
             
             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
-                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> 0</div>
-                <div>0 Bình luận • 0 Chia sẻ</div>
+                <div class="d-flex align-items-center"><i class="bi bi-heart text-danger me-1"></i> <span th:text="${#lists.size(post.comments)}">0</span></div>
+                <div><span th:text="${#lists.size(post.comments)}">0</span> Bình luận • <span th:text="${#lists.size(post.shares)}">0</span> Chia sẻ</div>
             </div>
 
             <div class="d-flex justify-content-between px-2 pb-2 pt-1 border-top">
                 <button class="btn-ghost flex-grow-1 btn-like">
                     <i class="bi bi-heart me-1 fs-5"></i> Thích
                 </button>
-                <button class="btn-ghost flex-grow-1">
+                <button class="btn-ghost flex-grow-1" th:onclick="'toggleCommentSection(' + ${post.id} + ')'">
                     <i class="bi bi-chat-fill me-1 fs-5"></i> Bình luận
                 </button>
-                <button class="btn-ghost flex-grow-1">
+                <button class="btn-ghost flex-grow-1" th:onclick="'openShareModal(' + ${post.id} + ')'">
                     <i class="bi bi-share-fill me-1 fs-5"></i> Chia sẻ
                 </button>
+            </div>
+            
+            <!-- Vùng chứa Bình Luận (Mặc định ẩn) -->
+            <div th:id="'comment-section-' + ${post.id}" class="px-3 pb-3 d-none border-top pt-2" style="background-color: #f8f9fa; border-radius: 0 0 10px 10px;">
+                <!-- Box render các bình luận (AJAX sẽ load dữ liệu vào đây) -->
+                <div th:id="'comment-list-' + ${post.id}" class="mb-3 d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Element bình luận mẫu sẽ được render bằng JS -->
+                    <div class="text-center text-muted py-2" style="font-size: 13px;">
+                        <i class="spinner-border spinner-border-sm me-1"></i> Đang tải bình luận...
+                    </div>
+                </div>
+
+                <!-- Ô nhập bình luận mới -->
+                <div class="d-flex align-items-start gap-2 mt-2">
+                    <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="32" height="32" style="object-fit: cover;">
+                    <div class="flex-grow-1 position-relative">
+                        <textarea th:id="'comment-input-' + ${post.id}" class="form-control border-secondary rounded-4 bg-white pe-5" rows="1" placeholder="Viết bình luận..." style="font-size: 14px; resize: none; overflow: hidden; min-height: 38px; line-height: 1.5; padding-top: 8px;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" th:onkeypress="'if(event.key === \'Enter\' && !event.shiftKey) { event.preventDefault(); submitComment(' + ${post.id} + '); }'"></textarea>
+                        <button type="button" class="btn btn-link text-primary position-absolute p-0" style="right: 12px; bottom: 8px; text-decoration: none;" th:onclick="'submitComment(' + ${post.id} + ')'" title="Gửi">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -146,6 +410,80 @@
                     });
                 });
             });
+
+            /* =======================================================
+               === PHASE 4: TÍNH NĂNG CHIA SẺ BÀI VIẾT (SHARE) ===
+               ======================================================= */
+            let currentSharePostId = null;
+
+            // Hàm mở Modal gõ trạng thái chia sẻ
+            function openShareModal(postId) {
+                currentSharePostId = postId;
+                // Nếu chưa có Modal HTML trong trang, tạo nó ngầm để bớt phình code 
+                if(!document.getElementById('sharePostModal')) {
+                    const modalHtml = `
+                        <div class="modal fade" id="sharePostModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                                    <div class="modal-header border-0 pb-0 position-relative" style="font-family: 'Inter', sans-serif;">
+                                        <h5 class="modal-title fw-bolder w-100 text-center" style="color: #050505; font-size: 1.25rem; letter-spacing: -0.3px;">Chia sẻ bài viết</h5>
+                                        <button type="button" class="btn border-0 shadow-none position-absolute rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close" style="right: 15px; top: 12px; background-color: #e4e6eb; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;"><i class="bi bi-x fs-4"></i></button>
+                                    </div>
+                                    <hr class="w-100 mb-0 mt-3" style="border-top: 1px solid #ced0d4;">
+                                    <div class="modal-body pt-3 pb-2">
+                                        <textarea id="share-post-caption" class="form-control border-0 px-0 shadow-none w-100 mt-2" rows="3" placeholder="Hãy nói gì đó về nội dung này..." style="resize:none; outline:none; background-color: transparent; font-family: 'Inter', sans-serif; font-size: 16px; color: #050505;"></textarea>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0 pb-3 px-3">
+                                        <button type="button" class="btn w-100 fw-bold post-btn text-white fs-6 py-2" onclick="execSharePost()" id="btn-submit-share">Chia sẻ ngay</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                }
+                
+                const bsModal = new bootstrap.Modal(document.getElementById('sharePostModal'));
+                bsModal.show();
+            }
+
+            // Hành động ấn nút Chia sẻ
+            async function execSharePost() {
+                if(!currentSharePostId) return;
+
+                const caption = document.getElementById('share-post-caption').value.trim();
+                const btn = document.getElementById('btn-submit-share');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i> Đang chia sẻ...';
+
+                try {
+                    const res = await fetch(`/api/posts/${currentSharePostId}/share`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: caption })
+                    });
+                    
+                    if(res.ok) {
+                        const modalEl = document.getElementById('sharePostModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        modalInstance.hide();
+                        
+                        document.getElementById('share-post-caption').value = '';
+                        // Do luồng Chia sẻ yêu cầu Render bọc nguyên 1 cục Post mớ => Đẩy reload nhẹ cho chắc CSDL thay vì Build nguyên cục DOM to đùng.
+                        window.location.reload(); 
+                    } else if (res.status === 401) {
+                        alert("Theo tác gọi API từ chối: Vui lòng đăng nhập hệ thống để sử dụng tính năng.");
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi chia sẻ: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng khi chia sẻ bài viết!");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Chia sẻ ngay';
+                }
+            }
 
             // Handle Image Preview
             function previewImage(event) {
@@ -291,6 +629,398 @@
                     // Trả nút về trạng thái cũ
                     btnSubmit.disabled = false;
                     btnSubmit.innerText = originalText;
+                }
+            }
+
+            /* =======================================================
+               === PHASE 3: AJAX XỬ LÝ CHỨC NĂNG BÌNH LUẬN (COMMENT) ===
+               ======================================================= */
+            
+            let replyingToMap = {}; // Biến toàn cục giúp lưu tạm trạng thái đang Reply cho bình luận cha nào
+
+            // 1. Mở/Đóng phần bình luận của một bài viết
+            function toggleCommentSection(postId) {
+                const section = document.getElementById('comment-section-' + postId);
+                if (section.classList.contains('d-none')) {
+                    section.classList.remove('d-none');
+                    loadComments(postId); // Gọi API Fetch Bình luận bằng JSON
+                    
+                    // Focus chuột ngay vào ô nhập để người dùng gõ
+                    setTimeout(() => {
+                        document.getElementById('comment-input-' + postId).focus();
+                    }, 100);
+                } else {
+                    section.classList.add('d-none');
+                }
+            }
+
+            // 2. Fetch danh sách bình luận từ Spring Boot RESTful API
+            async function loadComments(postId) {
+                const commentList = document.getElementById('comment-list-' + postId);
+                commentList.innerHTML = `<div class="text-center text-muted py-2" style="font-size: 13px;"><i class="spinner-border spinner-border-sm me-1"></i> Đang tải bình luận...</div>`;
+
+                try {
+                    const response = await fetch(`/api/comments/${postId}`);
+                    if (!response.ok) throw new Error('Network lỗi không lấy được bình luận');
+                    
+                    const comments = await response.json();
+                    renderComments(postId, comments);
+                    
+                } catch (error) {
+                    console.error('Error fetching comments:', error);
+                    commentList.innerHTML = `<div class="text-center text-danger small py-2">Lỗi kết nối tải bình luận, vui lòng thử lại!</div>`;
+                }
+            }
+
+            // 3. Render giao diện các bình luận bằng HTML Injection (Render đệ quy danh sách)
+            function renderComments(postId, comments) {
+                const commentList = document.getElementById('comment-list-' + postId);
+                commentList.innerHTML = ''; 
+
+                if(comments.length === 0) {
+                    commentList.innerHTML = `<div class="text-center text-muted py-3" style="font-size: 13.5px;" id="no-comment-msg-${postId}">Chưa có bình luận nào. Hãy là người trao yêu thương đầu tiên!</div>`;
+                    return;
+                }
+
+                comments.forEach(comment => {
+                    const html = generateCommentHtml(comment, false, postId);
+                    commentList.insertAdjacentHTML('beforeend', html);
+                });
+            }
+
+            // Hàm tạo Single Comment Block HTML (Hỗ trợ Render Đệ Quy cho cấu trúc con - Cấp 1, Cấp 2...)
+            function generateCommentHtml(c, isReply, postId) {
+                const avt = (c.avatar && c.avatar.startsWith('http')) ? c.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                
+                const dateObj = new Date(c.createdAt);
+                const timeString = `${dateObj.toLocaleDateString('vi-VN')} ${dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}`;
+                
+                let renderReplies = '';
+                // Nếu comment có chứa vòng đời đệ quy con thì đâm thẳng vào code tiếp
+                if(c.replies && c.replies.length > 0) {
+                    c.replies.forEach(rep => {
+                        renderReplies += generateCommentHtml(rep, true, postId);
+                    });
+                }
+
+                return `
+                    <div class="d-flex align-items-start gap-2 ${isReply ? 'ms-4 mt-2 border-start ps-2 border-2' : 'mt-1'}" id="comment-item-${c.id}">
+                        <img src="${avt}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="rounded-circle border mt-1" width="${isReply ? 24 : 32}" height="${isReply ? 24 : 32}" style="object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <div class="bg-white rounded-4 px-3 py-2 border shadow-sm" style="display: inline-block; max-width: 100%;">
+                                <div class="fw-bold" style="font-size: ${isReply ? 12 : 13.5}px;">${c.fullname}</div>
+                                <div style="font-size: ${isReply ? 13 : 14}px; white-space: pre-wrap; line-height: 1.4; color: #1c1e21;">${c.content}</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 text-muted mt-1 px-2" style="font-size: 11.5px; font-weight: 500;">
+                                <span class="cursor-pointer" style="cursor:pointer;" onclick="alert('Tính năng Like Comment đang được nâng cấp')">Thích</span>
+                                <span class="cursor-pointer" style="cursor:pointer;" onclick="focusReply(${postId}, ${c.id}, '${c.fullname}')">Phản hồi</span>
+                                <span class="fw-normal" style="font-size: 11px;">${timeString}</span>
+                            </div>
+                            
+                            <!-- Box render các replies (Đệ quy gắn vào ngọn này) -->
+                            <div id="reply-list-${c.id}" class="d-flex flex-column w-100">
+                                ${renderReplies}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 4. Bắn HTTP POST Lên CSDL để Save Comment và Trả Mới Về Tức Thì
+            async function submitComment(postId) {
+                const inputEle = document.getElementById('comment-input-' + postId);
+                const content = inputEle.value.trim();
+                
+                if (!content) return;
+
+                // Lấy ID cha nếu đang rơi vào luồng Trả lời
+                const parentId = replyingToMap[postId] || null;
+
+                const payload = {
+                    content: content,
+                    postId: postId,
+                    parentId: parentId
+                };
+
+                inputEle.disabled = true;
+
+                try {
+                    const response = await fetch('/api/comments', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const newCommentDTO = await response.json();
+                        
+                        // Xóa tin nhắn chuẩn bị cho lần gõ sau
+                        inputEle.value = '';
+                        inputEle.style.height = '38px'; 
+                        replyingToMap[postId] = null; 
+
+                        // Tắt chữ "Chưa có bình luận nào"
+                        const noCmtMsg = document.getElementById('no-comment-msg-' + postId);
+                        if(noCmtMsg) noCmtMsg.remove();
+
+                        // Nếu là bắn trả lời thì dí HTML ngọn vào cành cha
+                        if(parentId) {
+                            const targetReplyList = document.getElementById('reply-list-' + parentId);
+                            if(targetReplyList) {
+                                targetReplyList.insertAdjacentHTML('beforeend', generateCommentHtml(newCommentDTO, true, postId));
+                            }
+                        } else {
+                            // Cành cha thì mọc dưới luồng gốc bảng to
+                            const listEle = document.getElementById('comment-list-' + postId);
+                            listEle.insertAdjacentHTML('beforeend', generateCommentHtml(newCommentDTO, false, postId));
+                        }
+
+                        // Cuộn Auto trượt thanh cuốn xuống kịch đáy hộp chat Comment
+                        const scrollDiv = document.getElementById('comment-list-' + postId);
+                        scrollDiv.scrollTop = scrollDiv.scrollHeight;
+
+                    } else {
+                        const err = await response.text();
+                        alert("Không thể gửi bình luận: " + err);
+                    }
+                } catch (error) {
+                    console.error('Submit error:', error);
+                    alert("Kết nối mạng yếu, không gửi được bình luận hiện tại.");
+                } finally {
+                    inputEle.disabled = false;
+                    inputEle.focus();
+                }
+            }
+
+            // 5. Nút Bấm Phản hồi (Mention Auto Fill)
+            function focusReply(postId, commentId, authorName) {
+                replyingToMap[postId] = commentId; // Neo node đang bị trỏ tới bằng Object Memory
+                const inputArea = document.getElementById('comment-input-' + postId);
+                inputArea.value = `@${authorName} : `; // Mention tên
+                inputArea.focus();
+                inputArea.style.height = inputArea.scrollHeight + 'px';
+            }
+
+            /* =======================================================
+               === PHASE 5: TÍNH NĂNG QUẢN LÝ BÀI ĐĂNG ===
+               ======================================================= */
+            
+            // 1. Chuyển đổi quyền riêng tư (Public/Private)
+            async function togglePostPrivacy(postId) {
+                if (!confirm("Bạn có chắc muốn thay đổi quyền riêng tư của bài viết này?")) return;
+                
+                try {
+                    const res = await fetch(`/api/posts/${postId}/privacy`, {
+                        method: 'PATCH'
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        // Cập nhật lại UI
+                        const iconEl = document.getElementById(`privacy-icon-${postId}`);
+                        const menuIconEl = document.getElementById(`privacy-menu-icon-${postId}`);
+                        const menuTextEl = document.getElementById(`privacy-menu-text-${postId}`);
+                        
+                        if (data.isPrivate) {
+                            iconEl.className = 'bi bi-lock-fill';
+                            iconEl.title = 'Chỉ mình tôi';
+                            menuIconEl.className = 'bi bi-globe-americas me-2';
+                            menuTextEl.innerText = 'Đổi sang Công khai';
+                        } else {
+                            iconEl.className = 'bi bi-globe-americas';
+                            iconEl.title = 'Công khai';
+                            menuIconEl.className = 'bi bi-lock me-2';
+                            menuTextEl.innerText = 'Đổi sang Chỉ mình tôi';
+                        }
+                        
+                        alert(data.message);
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng. Vui lòng thử lại!");
+                }
+            }
+
+            // 2. Xóa bài viết
+            async function deletePost(postId) {
+                if (!confirm("Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác!")) return;
+                
+                try {
+                    const res = await fetch(`/api/posts/${postId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (res.ok) {
+                        alert("Đã xóa bài viết thành công!");
+                        window.location.reload();
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi xóa: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng. Vui lòng thử lại!");
+                }
+            }
+
+            // 3. Sửa bài viết (Mở modal)
+            let currentEditPostId = null;
+            function openEditPostModal(postId) {
+                currentEditPostId = postId;
+                const contentEl = document.getElementById(`post-content-display-${postId}`);
+                if(!contentEl) return;
+                
+                const currentContent = contentEl.innerText;
+                
+                // Nếu chưa có Modal HTML trong trang, tạo nó ngầm để bớt phình code 
+                if(!document.getElementById('editPostModal')) {
+                    const modalHtml = `
+                        <div class="modal fade" id="editPostModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                                    <div class="modal-header border-0 pb-0 position-relative" style="font-family: 'Inter', sans-serif;">
+                                        <h5 class="modal-title fw-bolder w-100 text-center" style="color: #050505; font-size: 1.25rem; letter-spacing: -0.3px;">Chỉnh sửa bài viết</h5>
+                                        <button type="button" class="btn border-0 shadow-none position-absolute rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close" style="right: 15px; top: 12px; background-color: #e4e6eb; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;"><i class="bi bi-x fs-4"></i></button>
+                                    </div>
+                                    <hr class="w-100 mb-0 mt-3" style="border-top: 1px solid #ced0d4;">
+                                    <div class="modal-body pt-3 pb-2">
+                                        <textarea id="edit-post-content" class="form-control border-0 px-0 shadow-none w-100 mt-2" rows="4" style="resize:none; outline:none; background-color: transparent; font-family: 'Inter', sans-serif; font-size: 16px; color: #050505;"></textarea>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0 pb-3 px-3">
+                                        <button type="button" class="btn w-100 fw-bold post-btn text-white fs-6 py-2" onclick="execEditPost()" id="btn-submit-edit">Lưu thay đổi</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                }
+                
+                document.getElementById('edit-post-content').value = currentContent;
+                const bsModal = new bootstrap.Modal(document.getElementById('editPostModal'));
+                bsModal.show();
+            }
+
+            // Thực thi lưu bài viết
+            async function execEditPost() {
+                if(!currentEditPostId) return;
+                
+                const newContent = document.getElementById('edit-post-content').value.trim();
+                if(!newContent) {
+                    alert("Nội dung không được để trống!");
+                    return;
+                }
+                
+                const btn = document.getElementById('btn-submit-edit');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i> Đang lưu...';
+
+                try {
+                    const res = await fetch(`/api/posts/${currentEditPostId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: newContent })
+                    });
+                    
+                    if(res.ok) {
+                        // Update DOM trực tiếp
+                        document.getElementById(`post-content-display-${currentEditPostId}`).innerText = newContent;
+                        
+                        const modalEl = document.getElementById('editPostModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        modalInstance.hide();
+                        alert("Đã cập nhật bài viết!");
+                    } else {
+                        const err = await res.text();
+                        alert("Lỗi: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng khi lưu bài viết!");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Lưu thay đổi';
+                }
+            }
+
+            // 4. Báo cáo bài viết (Mở modal)
+            let currentReportPostId = null;
+            function openReportModal(postId) {
+                currentReportPostId = postId;
+                
+                if(!document.getElementById('reportPostModal')) {
+                    const modalHtml = `
+                        <div class="modal fade" id="reportPostModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                                    <div class="modal-header border-0 pb-0 position-relative" style="font-family: 'Inter', sans-serif;">
+                                        <h5 class="modal-title fw-bolder w-100 text-center text-danger" style="font-size: 1.25rem; letter-spacing: -0.3px;">Báo cáo bài viết</h5>
+                                        <button type="button" class="btn border-0 shadow-none position-absolute rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close" style="right: 15px; top: 12px; background-color: #e4e6eb; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;"><i class="bi bi-x fs-4"></i></button>
+                                    </div>
+                                    <hr class="w-100 mb-0 mt-3" style="border-top: 1px solid #ced0d4;">
+                                    <div class="modal-body pt-3 pb-2">
+                                        <p class="mb-2 text-muted" style="font-size: 14.5px;">Hãy cho chúng tôi biết tại sao bạn muốn báo cáo bài viết này:</p>
+                                        <select id="report-reason" class="form-select mb-3" style="border-radius: 8px; cursor: pointer; border-color: #ced0d4;">
+                                            <option value="" disabled selected>-- Chọn lý do --</option>
+                                            <option value="Nội dung khiêu dâm, đồi trụy">Nội dung khiêu dâm, đồi trụy</option>
+                                            <option value="Bạo lực, đẫm máu">Bạo lực, đẫm máu</option>
+                                            <option value="Xúc phạm, bôi nhọ người khác">Xúc phạm, bôi nhọ người khác</option>
+                                            <option value="Spam, quảng cáo trái phép">Spam, quảng cáo trái phép</option>
+                                            <option value="Khác">Lý do khác...</option>
+                                        </select>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0 pb-3 px-3">
+                                        <button type="button" class="btn btn-danger w-100 fw-bold fs-6 py-2" style="border-radius: 50rem;" onclick="execReportPost()" id="btn-submit-report">Gửi Báo Cáo</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                }
+                
+                document.getElementById('report-reason').value = "";
+                const bsModal = new bootstrap.Modal(document.getElementById('reportPostModal'));
+                bsModal.show();
+            }
+
+            // Thực thi Báo cáo
+            async function execReportPost() {
+                if(!currentReportPostId) return;
+                
+                const reason = document.getElementById('report-reason').value;
+                if(!reason) {
+                    alert("Vui lòng chọn một lý do báo cáo!");
+                    return;
+                }
+                
+                const btn = document.getElementById('btn-submit-report');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i> Đang gửi...';
+
+                try {
+                    const res = await fetch(`/api/posts/${currentReportPostId}/report`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reason: reason })
+                    });
+                    
+                    if(res.ok) {
+                        const data = await res.json();
+                        alert(data.message); 
+                        
+                        const modalEl = document.getElementById('reportPostModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        modalInstance.hide();
+                    } else {
+                        const err = await res.text();
+                        alert("Không thể báo cáo: " + err);
+                    }
+                } catch(e) {
+                    alert("Lỗi mạng khi gửi báo cáo!");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Gửi Báo Cáo';
                 }
             }
         </script>

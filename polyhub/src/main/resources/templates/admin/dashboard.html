@@ -7,7 +7,106 @@
 </head>
 <body>
     <div th:fragment="myContent">
+<<<<<<< HEAD
         <div class="row">
+=======
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 text-uppercase text-muted" style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">
+                        <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Bảng điều khiển</li>
+                    </ol>
+                </nav>
+                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -1px;">Tổng quan PolyHUB</h3>
+            </div>
+            <button class="btn btn-export btn-sm rounded-pill px-3 py-2 fw-medium d-flex align-items-center gap-2"><i class="bi bi-file-earmark-arrow-down fs-6"></i> Xuất báo cáo</button>
+        </div>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 mb-4">
+            
+            <div class="col">
+                <div class="poly-card p-3 d-flex align-items-center gap-3">
+                    <div class="icon-box-lg bg-primary-soft rounded-circle">
+                        <i class="bi bi-people fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fw-medium" style="font-size: 13px;">Tổng người dùng</div>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${totalUsers}">2,510</h4>
+                        <div class="stat-indicator text-success" style="font-size: 11px;"><i class="bi bi-arrow-up"></i> 15% <span class="text-muted">vs hôm qua</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="poly-card p-3 d-flex align-items-center gap-3">
+                    <div class="icon-box-lg" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745;">
+                        <i class="bi bi-collection fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fw-medium" style="font-size: 13px;">Tổng Số Tài Liệu</div>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${totalDocuments}">128</h4>
+                        <div class="stat-indicator text-success" style="font-size: 11px;"><i class="bi bi-arrow-up"></i> 5% <span class="text-muted">vs hôm qua</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="poly-card p-3 d-flex align-items-center gap-3">
+                    <div class="icon-box-lg" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">
+                        <i class="bi bi-patch-exclamation fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fw-medium" style="font-size: 13px;">Mentor chờ duyệt</div>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${pendingMentors}">5</h4>
+                        <div class="stat-indicator text-danger" style="font-size: 11px;">Hôm nay mới có</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="poly-card p-3 d-flex align-items-center gap-3">
+                    <div class="icon-box-lg" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545;">
+                        <i class="bi bi-flag fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fw-medium" style="font-size: 13px;">Báo cáo vi phạm</div>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-dark);" th:text="${totalReports}">12</h4>
+                        <div class="stat-indicator text-danger" style="font-size: 11px;"><i class="bi bi-arrow-up"></i> 3 báo cáo mới</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-3 mb-4">
+            
+            <div class="col-12 col-xl-8">
+                <div class="poly-card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold text-dark mb-0">Lưu lượng truy cập hệ thống (30 ngày gần nhất)</h6>
+                        <div class="badge bg-light text-dark border fw-medium" style="font-size: 11px;">Cập nhật: 12:00 PM</div>
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="poly-card p-3 h-100">
+                    <h6 class="fw-bold text-dark mb-3">Tỉ lệ tài liệu theo Chuyên ngành</h6>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="majorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="row g-3 mb-5">
+            
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                     <div>
@@ -155,6 +254,7 @@
             const infoColor = '#0dcaf0';
             const secondaryColor = '#6c757d';
 
+<<<<<<< HEAD
             // Daily Traffic Chart (Line)
             const dailyTrafficCtx = document.getElementById('dailyTrafficChart');
             if (dailyTrafficCtx) {
@@ -179,8 +279,42 @@
                         }
                     }
                 });
+=======
+   <th:block th:fragment="myJs">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // 1. LINE CHART - Màu Indigo
+        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+        new Chart(ctxTraffic, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Lượt truy cập',
+                    data: [2500, 2900, 3100, 2800, 3400, 3700, 4200, 4100, 3900, 4600, 4900, 5200],
+                    borderColor: '#4F46E5', /* Indigo Primary */
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)', /* Indigo mờ */
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#E5E7EB' }, ticks: { font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                }
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             }
 
+<<<<<<< HEAD
             // Documents by Major Chart (Pie)
             const documentsByMajorCtx = document.getElementById('documentsByMajorChart');
             if (documentsByMajorCtx) {
@@ -204,6 +338,40 @@
                         }]
                     }
                 });
+=======
+        // 2. DOUGHNUT CHART - Các sắc độ của Indigo
+        var categoryData = /*[[${countByCategory}]]*/ [];
+        var majorLabels = [];
+        var majorData = [];
+        var bgColors = ['#4F46E5', '#818CF8', '#C7D2FE', '#8B5CF6', '#A78BFA', '#DDD6FE', '#6366F1', '#E5E7EB'];
+        
+        if (categoryData && categoryData.length > 0) {
+            for (var i = 0; i < categoryData.length; i++) {
+                majorLabels.push(categoryData[i][1]); // categoryName
+                majorData.push(categoryData[i][2]);   // count
+            }
+        } else {
+            majorLabels = ['Chưa có dữ liệu'];
+            majorData = [1];
+            bgColors = ['#E5E7EB'];
+        }
+
+        const ctxMajor = document.getElementById('majorChart').getContext('2d');
+        new Chart(ctxMajor, {
+            type: 'doughnut',
+            data: {
+                labels: majorLabels,
+                datasets: [{
+                    data: majorData,
+                    backgroundColor: bgColors,
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '75%',
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 12 }, padding: 15 } } }
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             }
             /*]]>*/
         </script>

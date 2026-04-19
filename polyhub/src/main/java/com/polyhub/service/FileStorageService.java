@@ -49,6 +49,7 @@ public class FileStorageService {
     return cloudinary.uploader().upload(file.getBytes(), options);
   }
 
+<<<<<<< HEAD
   @SuppressWarnings("unchecked")
   public void deleteFile(String publicId) throws IOException {
     Map<String, Object> options = ObjectUtils.asMap(
@@ -63,6 +64,47 @@ public class FileStorageService {
       cloudinary
         .uploader()
         .destroy(publicId, ObjectUtils.asMap("invalidate", true));
+=======
+        return uploadResult;
+    }
+
+    /**
+     * TẢI HÌNH ẢNH (AVATAR, ẢNH BÌA) LÊN CLOUDINARY
+     */
+    public Map<String, Object> uploadImage(MultipartFile file, String folder) throws IOException {
+        Map<String, Object> options = ObjectUtils.asMap(
+                "folder", folder,
+                "resource_type", "image"
+        );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+        return uploadResult;
+    }
+
+    /**
+     * XÓA TÀI LIỆU
+     * Hàm này dùng khi Admin hoặc User muốn xóa tài liệu đã được tải lên trước đó.
+     * 
+     * @param publicId ID công khai của file trên Cloudinary (lưu trong database)
+     * @throws IOException Bắt lỗi nếu có trục trặc mạng
+     */
+    @SuppressWarnings("unchecked")
+    public void deleteFile(String publicId) throws IOException {
+        // Khai báo tùy chọn xóa: invalidate = true để cưỡng chế xóa sạch bộ nhớ đệm (cache) trên máy chủ
+        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
+            "invalidate", true,
+            "resource_type", "raw" // Các file thư mục, zip, word,... thường được Cloud phân loại là "raw"
+        );
+        
+        try {
+            // Thử xóa đối tượng với tư cách là file "raw" (Tài liệu thông thường)
+            cloudinary.uploader().destroy(publicId, options);
+        } catch (Exception e) {
+            // Nếu Cloudinary báo lỗi (Do nhận diện file này là hình ảnh - image), 
+            // thì fallback lại xóa theo dạng image mặc định
+            cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("invalidate", true));
+        }
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     }
   }
 }

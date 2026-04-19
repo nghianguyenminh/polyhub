@@ -1,5 +1,7 @@
 package com.polyhub.service.admin;
 
+import com.polyhub.entity.User;
+import com.polyhub.service.EmailService;
 import com.polyhub.entity.Document;
 import com.polyhub.entity.DocumentStatus;
 import com.polyhub.repository.DocumentRepository;
@@ -59,12 +61,23 @@ public class DocumentAdminService {
     // Từ chối / Gỡ tài liệu
     public void rejectOrTakedownDocument(Long id, String reason) {
         Document doc = getDocumentById(id);
+<<<<<<< HEAD
         doc.setStatus(DocumentStatus.REJECTED);
         documentRepository.save(doc);
 
         // Bổ sung: Gửi Email cho Uploader (Nếu có người tải lên)
         if (doc.getUser() != null && doc.getUser().getEmail() != null) {
             emailService.sendRejectionEmail(doc.getUser().getEmail(), doc.getUser().getFullname(), doc.getTitle(), reason);
+=======
+        doc.setStatus(DocumentStatus.REJECTED); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
+        doc.setRejectionReason(reason);
+        documentRepository.save(doc);
+
+        // Bổ sung: Gửi Email cho Uploader (Nếu có người tải lên)
+        User uploader = doc.getUploader();
+        if (uploader != null && uploader.getEmail() != null) {
+            emailService.sendRejectionEmail(uploader.getEmail(), uploader.getFullname(), doc.getTitle(), reason);
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
         }
     }
 

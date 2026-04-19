@@ -12,6 +12,7 @@
 
 <div th:fragment="myContent" class="settings-container w-100 mx-auto" style="max-width: 950px; padding: 20px 0;">
 
+<<<<<<< HEAD
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <strong th:text="${success}"></strong>
@@ -43,6 +44,217 @@
                     <a th:href="@{/settings/security}" class="list-group-item list-group-item-action d-flex align-items-center" th:classappend="${activeSection == 'security' ? 'active' : ''}">
                         <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
                             <i class="bi bi-shield-lock-fill"></i>
+=======
+        <div class="row g-4">
+            <!-- Left Sidebar Navigation -->
+            <div class="col-md-4">
+                <div class="poly-card p-0 overflow-hidden sticky-top" style="top: 80px; z-index: 10;">
+                    <div class="list-group list-group-flush settings-nav">
+                        <a href="#account" class="list-group-item list-group-item-action d-flex align-items-center active" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Thông tin tài khoản</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Họ tên, email, liên hệ</small>
+                            </div>
+                        </a>
+                        <a href="#security" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Mật khẩu & Bảo mật</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Đổi mật khẩu, 2FA</small>
+                            </div>
+                        </a>
+                        <a href="#privacy" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-eye-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Quyền riêng tư</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Ai có thể xem nội dung</small>
+                            </div>
+                        </a>
+                        <a href="#notifications" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-bell-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Thông báo</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Tùy chỉnh thông báo</small>
+                            </div>
+                        </a> 
+                        <a href="#display" class="list-group-item list-group-item-action d-flex align-items-center" data-bs-toggle="list">
+                            <div class="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-palette-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Hiển thị & Giao diện</h6>
+                                <small class="text-muted d-block" style="font-size: 12px;">Chủ đề, ngôn ngữ</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content Area -->
+            <div class="col-md-8">
+                <div class="tab-content" id="nav-tabContent">
+                    
+                    <!-- TAB 1: THÔNG TIN TÀI KHOẢN -->
+                    <div class="tab-pane fade show active" id="account" role="tabpanel">
+                        <div class="poly-card p-4">
+                            <h4 class="fw-bold mb-1">Thông tin cá nhân</h4>
+                            <p class="text-muted mb-4" style="font-size: 14.5px;">Quản lý thông tin định danh của bạn trên hệ thống PolyHUB.</p>
+                            <div th:if="${success}" class="alert alert-success py-2 mb-3" style="font-size: 14px;" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger py-2 mb-3" style="font-size: 14px;" th:text="${error}"></div>
+<form th:action="@{/settings/update-account}" method="post">
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Họ và Tên</label>
+            <input type="text" name="fullname" class="form-control form-control-poly" th:value="${currentUser.fullname}">
+        </div>
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Mã Sinh Viên</label>
+            <input type="text" class="form-control form-control-poly bg-light" th:value="${currentUser.username}" readonly>
+        </div>
+    </div>
+    
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Điện thoại</label>
+            <input type="text" name="phone" class="form-control form-control-poly" th:value="${currentUser.phone}" placeholder="Nhập số điện thoại">
+        </div>
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Email liên hệ</label>
+            <input type="email" name="email" class="form-control form-control-poly" th:value="${currentUser.email}" readonly>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Ngày sinh</label>
+            <input type="date" name="birthday" class="form-control form-control-poly" th:value="${currentUser.birthday != null ? #temporals.format(currentUser.birthday, 'yyyy-MM-dd') : ''}">
+        </div>
+        <div class="col-sm-6">
+            <label class="form-label fw-medium text-dark" style="font-size: 14px;">Giới tính</label>
+            <select class="form-select form-control-poly" name="gender">
+                <option value="true" th:selected="${currentUser.gender == true}">Nam</option>
+                <option value="false" th:selected="${currentUser.gender == false}">Nữ</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-medium text-dark" style="font-size: 14px;">Giới thiệu ngắn (Tiểu sử)</label>
+        <textarea name="bio" class="form-control form-control-poly" rows="3" placeholder="Viết gì đó về bản thân bạn..." th:text="${currentUser.bio}"></textarea>
+    </div>
+    
+    <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary btn-poly fw-semibold px-4 rounded-pill">Lưu thay đổi</button>
+    </div>
+</form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: BẢO MẬT -->
+                    <div class="tab-pane fade" id="security" role="tabpanel">
+                        <div class="poly-card p-4 mb-4 border-0 shadow-sm rounded-4 position-relative overflow-hidden">
+                            <!-- Background accent -->
+                            <!-- <div class="position-absolute top-0 end-0 p-4 opacity-10 pointer-events-none">
+                                <i class="bi bi-shield-check" style="font-size: 8rem; color: var(--poly-orange);"></i>
+                            </div> -->
+
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-key-fill text-poly fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-bold mb-1">Đổi mật khẩu</h4>
+                                        <p class="text-muted mb-0" style="font-size: 14px;">Bảo vệ tài khoản của bạn bằng mật khẩu mạnh và an toàn.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${pwdError}" class="alert alert-danger alert-dismissible bg-white border-danger border-start border-start-4 fade show py-3 mb-4 rounded-3 shadow-sm d-flex align-items-center" role="alert">
+                                <i class="bi bi-exclamation-octagon-fill text-danger fs-4 me-3"></i>
+                                <div class="flex-grow-1">
+                                    <span class="fw-medium text-danger" style="font-size: 14.5px;" th:text="${pwdError}"></span>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            
+                            <div th:if="${pwdSuccess}" class="alert alert-success alert-dismissible bg-white border-success border-start border-start-4 fade show py-3 mb-4 rounded-3 shadow-sm d-flex align-items-center" role="alert">
+                                <i class="bi bi-check-circle-fill text-success fs-4 me-3"></i>
+                                <div class="flex-grow-1">
+                                    <span class="fw-medium text-success" style="font-size: 14.5px;" th:text="${pwdSuccess}"></span>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+
+                            <form id="passwordChangeForm" th:action="@{/settings/change-password}" method="post" class="position-relative z-1 mb-2">
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold text-dark mb-2" style="font-size: 14px;">Mật khẩu hiện tại</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-color: #dee2e6;"><i class="bi bi-lock-fill"></i></span>
+                                        <input type="password" id="currentPassword" name="currentPassword" class="form-control border-start-0 border-end-0 ps-0 bg-light focus-ring-poly" placeholder="Nhập mật khẩu đang sử dụng" required style="border-color: #dee2e6;">
+                                        <button class="btn btn-outline-secondary border-start-0 bg-light text-muted password-toggle" type="button" tabindex="-1" style="border-color: #dee2e6;">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-4 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold text-dark mb-2" style="font-size: 14px;">Mật khẩu mới</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0 text-muted" style="border-color: #dee2e6;"><i class="bi bi-shield-lock-fill"></i></span>
+                                            <input type="password" id="newPassword" name="newPassword" class="form-control border-start-0 border-end-0 ps-0 bg-light focus-ring-poly" placeholder="Tối thiểu 8 ký tự" required minlength="8" style="border-color: #dee2e6;">
+                                            <button class="btn btn-outline-secondary border-start-0 bg-light text-muted password-toggle" type="button" tabindex="-1" style="border-color: #dee2e6;">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 4px; display: none;" id="passwordStrengthBar">
+                                            <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" id="passwordStrengthText" style="font-size: 12px;">Độ mạnh: Chưa có</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold text-dark mb-2" style="font-size: 14px;">Xác nhận mật khẩu mới</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0 text-muted" style="border-color: #dee2e6;"><i class="bi bi-check2-all"></i></span>
+                                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-control border-start-0 border-end-0 ps-0 bg-light focus-ring-poly" placeholder="Nhập lại mật khẩu mới" required minlength="8" style="border-color: #dee2e6;">
+                                            <button class="btn btn-outline-secondary border-start-0 bg-light text-muted password-toggle" type="button" tabindex="-1" style="border-color: #dee2e6;">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <small class="mt-1 d-block" id="passwordMatchMsg" style="font-size: 12.5px; display: none;"></small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                                    <button type="submit" id="btnUpdatePassword" class="btn btn-primary btn-poly fw-semibold px-5 py-2 rounded-pill shadow-sm d-flex align-items-center transition-all">
+                                        <span>Cập nhật mật khẩu</span>
+                                        <i class="bi bi-arrow-right ms-2 fs-5"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="poly-card p-4 rounded-4 shadow-sm border-0">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h4 class="fw-bold mb-1 fs-5">Xác thực 2 yếu tố (2FA)</h4>
+                                    <p class="text-muted mb-0" style="font-size: 13.5px;">Bảo vệ tài khoản bằng lớp bảo mật thứ hai.</p>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="switch2FA">
+                                </div>
+                            </div>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         </div>
                         <div>
                             <h6 class="mb-0 fw-semibold">Mật khẩu & Bảo mật</h6>
@@ -89,6 +301,7 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Right Content Area -->
         <div class="col-md-8">
             <div class="tab-content" id="nav-tabContent">
@@ -328,6 +541,145 @@
 
             </div>
         </div>
+=======
+        <!-- Script that handles hash-based navigation, password strength, and UI toggle -->
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Restore Tab based on URL Hash
+                var hash = window.location.hash || '#account';
+                
+                // First disable all currently active navs and tabs
+                document.querySelectorAll('.settings-nav .list-group-item.active').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('#nav-tabContent .tab-pane.active').forEach(el => el.classList.remove('show', 'active'));
+                
+                // Set the target nav and tab to active
+                var targetNav = document.querySelector(`.settings-nav .list-group-item[href="${hash}"]`);
+                var targetTab = document.querySelector(hash);
+                
+                if (targetNav && targetTab) {
+                    targetNav.classList.add('active');
+                    targetTab.classList.add('show', 'active');
+                } else {
+                    // Fallback to #account
+                    document.querySelector('.settings-nav .list-group-item[href="#account"]').classList.add('active');
+                    document.querySelector('#account').classList.add('show', 'active');
+                }
+                
+                // Allow manual hash change by clicking links
+                document.querySelectorAll('.settings-nav .list-group-item').forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        var href = this.getAttribute('href');
+                        if (window.history.pushState) {
+                            window.history.pushState(null, null, href);
+                        } else {
+                            window.location.hash = href;
+                        }
+                    });
+                });
+                
+                // Toggle Password Visibility
+                document.querySelectorAll('.password-toggle').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        var inputGroup = this.closest('.input-group');
+                        if (!inputGroup) return;
+                        
+                        var input = inputGroup.querySelector('input');
+                        var icon = this.querySelector('i');
+                        
+                        if (input && icon) {
+                            if (input.type === 'password') {
+                                input.type = 'text';
+                                icon.classList.remove('bi-eye');
+                                icon.classList.add('bi-eye-slash');
+                                this.classList.add('text-poly');
+                            } else {
+                                input.type = 'password';
+                                icon.classList.remove('bi-eye-slash');
+                                icon.classList.add('bi-eye');
+                                this.classList.remove('text-poly');
+                            }
+                        }
+                    });
+                });
+                
+                // Password Strength and Match Check
+                var newPwd = document.getElementById('newPassword');
+                var confirmPwd = document.getElementById('confirmPassword');
+                var currPwd = document.getElementById('currentPassword');
+                var pwdStrengthBarWrapper = document.getElementById('passwordStrengthBar');
+                var pwdStrengthBar = pwdStrengthBarWrapper ? pwdStrengthBarWrapper.querySelector('.progress-bar') : null;
+                var pwdStrengthText = document.getElementById('passwordStrengthText');
+                var pwdMatchMsg = document.getElementById('passwordMatchMsg');
+                var btnUpdatePassword = document.getElementById('btnUpdatePassword');
+
+                if (newPwd && confirmPwd && btnUpdatePassword) {
+                    function checkPasswordLogic() {
+                        var newVal = newPwd.value;
+                        var confirmVal = confirmPwd.value;
+                        var currVal = currPwd ? currPwd.value : '';
+                        
+                        // 1. Check Strength
+                        var strength = 0;
+                        if (newVal.length > 0) {
+                            pwdStrengthBarWrapper.style.display = 'flex';
+                            if (newVal.length >= 8) strength++;
+                            if (/[A-Z]/.test(newVal)) strength++;
+                            if (/[0-9]/.test(newVal)) strength++;
+                            if (/[^A-Za-z0-9]/.test(newVal)) strength++;
+                        } else {
+                            pwdStrengthBarWrapper.style.display = 'none';
+                            pwdStrengthText.textContent = 'Độ mạnh: Chưa có';
+                        }
+                        
+                        if (strength > 0) {
+                            var percent = Math.min((strength / 4) * 100, 100);
+                            pwdStrengthBar.style.width = percent + '%';
+                            
+                            if (strength === 1 || newVal.length < 8) {
+                                pwdStrengthBar.className = 'progress-bar bg-danger';
+                                pwdStrengthText.innerHTML = '<span class="text-danger"><i class="bi bi-shield-x me-1"></i>Yếu (Quá ngắn hoặc thiếu độ phong phú)</span>';
+                            } else if (strength === 2 || strength === 3) {
+                                pwdStrengthBar.className = 'progress-bar bg-warning';
+                                pwdStrengthText.innerHTML = '<span class="text-warning"><i class="bi bi-shield-exclamation me-1"></i>Trung bình (Cần thêm chữ hoa/số/ký tự đặc biệt)</span>';
+                            } else if (strength === 4) {
+                                pwdStrengthBar.className = 'progress-bar bg-success';
+                                pwdStrengthText.innerHTML = '<span class="text-success"><i class="bi bi-shield-check me-1"></i>Mạnh (Bảo mật tốt)</span>';
+                            }
+                        }
+                        
+                        // 2. Check Match
+                        var matchValid = false;
+                        pwdMatchMsg.style.display = 'block';
+                        if (confirmVal.length === 0) {
+                            pwdMatchMsg.style.display = 'none';
+                        } else if (newVal === confirmVal && newVal.length > 0) {
+                            pwdMatchMsg.innerHTML = '<span class="text-success fw-medium"><i class="bi bi-check-circle-fill me-1"></i>Mật khẩu khớp nhau</span>';
+                            matchValid = true;
+                        } else {
+                            pwdMatchMsg.innerHTML = '<span class="text-danger fw-medium"><i class="bi bi-x-circle-fill me-1"></i>Mật khẩu nhập lại không khớp</span>';
+                        }
+                        
+                        // 3. Enable / Disable button
+                        // Requirement: current is typed, new is strong enough (>=8 length), passwords match.
+                        var isValidToSubmit = matchValid && newVal.length >= 8 && currVal.length > 0;
+                        if (isValidToSubmit) {
+                            btnUpdatePassword.removeAttribute('disabled');
+                            btnUpdatePassword.classList.remove('opacity-50');
+                        } else {
+                            btnUpdatePassword.setAttribute('disabled', 'disabled');
+                            btnUpdatePassword.classList.add('opacity-50');
+                        }
+                    }
+                    
+                    checkPasswordLogic(); // run once on init
+                    
+                    newPwd.addEventListener('input', checkPasswordLogic);
+                    confirmPwd.addEventListener('input', checkPasswordLogic);
+                    if(currPwd) currPwd.addEventListener('input', checkPasswordLogic);
+                }
+            });
+        </script>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     </div>
 
 </div>
