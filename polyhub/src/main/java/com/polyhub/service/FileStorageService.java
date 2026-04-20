@@ -3,81 +3,54 @@ package com.polyhub.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
-import java.io.IOException;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class FileStorageService {
 
-  private final Cloudinary cloudinary;
+    // Inject đối tượng Cloudinary chúng ta đã cấu hình ở CloudinaryConfig
+    private final Cloudinary cloudinary;
 
-  @SuppressWarnings("unchecked")
-  public Map<String, Object> getStorageUsage() {
-    try {
-      ApiResponse usage = cloudinary.api().usage(ObjectUtils.emptyMap());
-      return (Map<String, Object>) usage;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
-    Map<String, Object> options = ObjectUtils.asMap(
-      "folder",
-      "polyhub_documents",
-      "resource_type",
-      "auto"
-    );
-    return cloudinary.uploader().upload(file.getBytes(), options);
-  }
-
-  @SuppressWarnings("unchecked")
-  public Map<String, Object> uploadImage(MultipartFile file, String folder)
-    throws IOException {
-    Map<String, Object> options = ObjectUtils.asMap(
-      "folder",
-      folder,
-      "resource_type",
-      "image"
-    );
-    return cloudinary.uploader().upload(file.getBytes(), options);
-  }
-
-<<<<<<< HEAD
-  @SuppressWarnings("unchecked")
-  public void deleteFile(String publicId) throws IOException {
-    Map<String, Object> options = ObjectUtils.asMap(
-      "invalidate",
-      true,
-      "resource_type",
-      "raw"
-    );
-    try {
-      cloudinary.uploader().destroy(publicId, options);
-    } catch (Exception e) {
-      cloudinary
-        .uploader()
-        .destroy(publicId, ObjectUtils.asMap("invalidate", true));
-=======
-        return uploadResult;
+    /**
+     * LẤY THÔNG TIN SỬ DỤNG DUNG LƯỢNG (USAGE) TỪ CLOUDINARY
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getStorageUsage() {
+        try {
+            ApiResponse usage = cloudinary.api().usage(ObjectUtils.emptyMap());
+            return (Map<String, Object>) (Map<?, ?>) usage;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
-     * TẢI HÌNH ẢNH (AVATAR, ẢNH BÌA) LÊN CLOUDINARY
+     * TẢI LÊN TÀI LIỆU
+     * Hàm này nhận file từ Frontend, đẩy lên Cloudinary và trả về thông tin chi tiết.
+     * 
+     * @param file File cần upload (PDF, DOCX, ZIP, RAR,...)
+     * @return Map chứa các thuộc tính do Cloudinary trả về (url, public_id, format, bytes,...)
+     * @throws IOException Bắt lỗi nếu file bị hỏng hoặc lỗi mạng
      */
-    public Map<String, Object> uploadImage(MultipartFile file, String folder) throws IOException {
-        Map<String, Object> options = ObjectUtils.asMap(
-                "folder", folder,
-                "resource_type", "image"
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
+        
+        // Cấu hình các tham số khi đẩy file lên cloud
+        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
+                "folder", "polyhub_documents", // Tự động tạo thư mục trên Cloudinary để lưu file gọn gàng
+                "resource_type", "auto"        // Tự động nhận diện loại file (image cho ảnh, raw cho zip/pdf/docx...)
         );
-        @SuppressWarnings("unchecked")
-        Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+
+        // Chuyển file thành biến byte và upload thẳng lên Cloudinary
+        Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(file.getBytes(), options);
+
         return uploadResult;
     }
 
@@ -117,7 +90,5 @@ public class FileStorageService {
             // thì fallback lại xóa theo dạng image mặc định
             cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("invalidate", true));
         }
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     }
-  }
 }

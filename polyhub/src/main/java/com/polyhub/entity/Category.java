@@ -1,35 +1,47 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
 
-@Data
 @Entity
-@Table(name = "categories")
+@Table(name = "categories") // Danh mục Chuyên ngành
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
-
-    @Column(nullable = false, unique = true)
+    // Ví dụ: IT, GRAPHIC, BIZ
+    @Column(nullable = false, unique = true, length = 20)
     private String code;
 
-    private boolean active;
+    // Ví dụ: Công nghệ thông tin, Thiết kế đồ họa
+    @Column(nullable = false)
+    private String name;
 
-    @OneToMany(mappedBy = "category")
-    private List<Product> products;
+    // Trạng thái hoạt động: true = đang dùng, false = tạm ẩn
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean isActive = true;
 
-    @OneToMany(mappedBy = "category")
-    private List<Document> documents;
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+    
+    // Một chuyên ngành có thể có nhiều Tài liệu
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Document> documents = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

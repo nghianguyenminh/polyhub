@@ -21,15 +21,8 @@ public class PostApiController {
     @Autowired
     private PostService postService;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    @PostMapping
-=======
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     // ... createPost
     @PostMapping("/create")
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     public ResponseEntity<?> createPost(
             @RequestParam("content") String content,
             @RequestParam(value = "image", required = false) MultipartFile image) {

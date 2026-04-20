@@ -2,14 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org" 
       th:replace="~{admin/layouts/admin_layout :: layout(~{this :: myCss}, ~{this :: myContent}, ~{this :: myJs}, 'dashboard')}">
 <head>
-    <title>Dashboard - PolyHUB Admin</title>
-    <th:block th:fragment="myCss"></th:block>
+    <title>Bảng điều khiển - PolyHUB Admin</title>
+    
+    <th:block th:fragment="myCss">
+        </th:block>
 </head>
 <body>
+
     <div th:fragment="myContent">
-<<<<<<< HEAD
-        <div class="row">
-=======
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <nav aria-label="breadcrumb">
@@ -106,180 +106,74 @@
         
         <div class="row g-3 mb-5">
             
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                    <div>
-                        <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Dashboard</h3>
-                        <ol class="breadcrumb mb-1 text-uppercase text-muted mt-2" style="font-size: 11px; font-weight: 600;">
-                            <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
-                            <li class="breadcrumb-item active">Dashboard</li>
-                        </ol>
+                <div class="poly-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold text-dark mb-0">Yêu cầu Mentor đang chờ duyệt <i class="bi bi-fire text-danger"></i></h6>
+                        <a href="/admin/mentors" class="text-decoration-none text-poly fw-medium" style="font-size: 13px;">Xem tất cả</a>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover admin-table mb-0" style="font-size: 13.5px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" style="width: 25px;"></th>
+                                    <th scope="col">Ứng viên</th>
+                                    <th scope="col">Chuyên ngành</th>
+                                    <th scope="col">Kỹ năng cốt lõi</th>
+                                    <th scope="col">Ngày gửi</th>
+                                    <th scope="col">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center align-middle"><input class="form-check-input shadow-none" type="checkbox"></td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="https://ui-avatars.com/api/?name=Lưu+Châu&background=random" class="rounded-circle" width="30" height="30">
+                                            <div style="line-height: 1.2;">
+                                                <div class="fw-semibold text-dark">Lưu Phan Bảo Châu</div>
+                                                <div class="text-muted" style="font-size: 11px;">chaultp@fpt.edu.vn</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle fw-medium text-dark">Ứng dụng phần mềm</td>
+                                    <td class="align-middle">Java / Spring Boot, SQL</td>
+                                    <td class="align-middle text-muted">2 giờ trước</td>
+                                    <td class="align-middle">
+                                        <button class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</button>
+                                        <button class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center align-middle"><input class="form-check-input shadow-none" type="checkbox"></td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="https://ui-avatars.com/api/?name=Anh+Khoa&background=random" class="rounded-circle" width="30" height="30">
+                                            <div style="line-height: 1.2;">
+                                                <div class="fw-semibold text-dark">Lương Anh Khoa</div>
+                                                <div class="text-muted" style="font-size: 11px;">khoala@fpt.edu.vn</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle fw-medium text-dark">Thiết kế đồ họa</td>
+                                    <td class="align-middle">UI/UX, Figma</td>
+                                    <td class="align-middle text-muted">Hôm qua</td>
+                                    <td class="align-middle">
+                                        <button class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</button>
+                                        <button class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-people-fill fs-4"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-muted mb-1">Tổng người dùng</p>
-                                <h4 class="mb-0 fw-bold" th:text="${totalUsers}">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-person-check-fill fs-4"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-muted mb-1">Mentor được duyệt</p>
-                                <h4 class="mb-0 fw-bold" th:text="${approvedMentorRequests}">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-person-plus-fill fs-4"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-muted mb-1">Yêu cầu chờ</p>
-                                <h4 class="mb-0 fw-bold" th:text="${pendingMentorRequests}">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-person-x-fill fs-4"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-muted mb-1">Yêu cầu từ chối</p>
-                                <h4 class="mb-0 fw-bold" th:text="${rejectedMentorRequests}">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-7 mt-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold text-dark mb-3">Lượng truy cập</h5>
-                        <canvas id="dailyTrafficChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-5 mt-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold text-dark mb-3">Tài liệu theo chuyên ngành</h5>
-                        <canvas id="documentsByMajorChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 mt-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-bottom-0">
-                        <h5 class="card-title fw-bold text-dark mb-0">Yêu cầu trở thành Mentor</h5>
-                    </div>
-                    <div class="card-body pt-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Họ và tên</th>
-                                        <th>Email</th>
-                                        <th>Chuyên ngành</th>
-                                        <th>Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="user : ${pendingRequestsList}">
-                                        <td th:text="${user.fullname}"></td>
-                                        <td th:text="${user.email}"></td>
-                                        <td th:text="${user.mentorMajor}"></td>
-                                        <td>
-                                            <a th:href="@{/admin/mentors/detail}" class="btn btn-sm btn-primary">Xem chi tiết</a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-    </div>
-    <th:block th:fragment="myJs">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script th:inline="javascript">
-            /*<![CDATA[*/
-            // Chart colors
-            const primaryColor = '#0d6efd';
-            const successColor = '#198754';
-            const warningColor = '#ffc107';
-            const dangerColor = '#dc3545';
-            const infoColor = '#0dcaf0';
-            const secondaryColor = '#6c757d';
 
-<<<<<<< HEAD
-            // Daily Traffic Chart (Line)
-            const dailyTrafficCtx = document.getElementById('dailyTrafficChart');
-            if (dailyTrafficCtx) {
-                new Chart(dailyTrafficCtx, {
-                    type: 'line',
-                    data: {
-                        labels: /*[[${dailyTrafficLabels}]]*/ [],
-                        datasets: [{
-                            label: 'Lượt truy cập',
-                            data: /*[[${dailyTrafficData}]]*/ [],
-                            borderColor: primaryColor,
-                            backgroundColor: 'rgba(13, 110, 253, 0.2)',
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-=======
+    </div>
+
    <th:block th:fragment="myJs">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script th:inline="javascript">
@@ -311,34 +205,9 @@
                     y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#E5E7EB' }, ticks: { font: { size: 11 } } },
                     x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 }
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             }
+        });
 
-<<<<<<< HEAD
-            // Documents by Major Chart (Pie)
-            const documentsByMajorCtx = document.getElementById('documentsByMajorChart');
-            if (documentsByMajorCtx) {
-                new Chart(documentsByMajorCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: /*[[${documentsByMajorLabels}]]*/ [],
-                        datasets: [{
-                            label: 'Số lượng tài liệu',
-                            data: /*[[${documentsByMajorData}]]*/ [],
-                            backgroundColor: [
-                                primaryColor,
-                                successColor,
-                                warningColor,
-                                dangerColor,
-                                infoColor,
-                                secondaryColor
-                            ],
-                            borderColor: '#fff',
-                            borderWidth: 2
-                        }]
-                    }
-                });
-=======
         // 2. DOUGHNUT CHART - Các sắc độ của Indigo
         var categoryData = /*[[${countByCategory}]]*/ [];
         var majorLabels = [];
@@ -371,10 +240,12 @@
             options: {
                 responsive: true, maintainAspectRatio: false, cutout: '75%',
                 plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 12 }, padding: 15 } } }
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             }
-            /*]]>*/
-        </script>
-    </th:block>
+        });
+
+    });
+    </script>
+</th:block>
+
 </body>
 </html>

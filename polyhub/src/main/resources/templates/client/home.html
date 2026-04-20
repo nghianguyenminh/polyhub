@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" 
       th:replace="~{layouts/main_layout :: layout(~{this :: myCss}, ~{this :: myContent}, 'home')}">
 <head>
@@ -107,21 +107,6 @@
 <body>
 
     <div th:fragment="myContent" class="poly-main-feed" style="max-width: 850px;">
-<<<<<<< HEAD
-        
-        <!--/* START: Post Creation Section - Only visible to logged-in users */-->
-        <th:block th:if="${currentUser != null}">
-            <div class="poly-card p-3">
-                <div class="d-flex align-items-center gap-2">
-                    <img th:src="${currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
-                    <input type="text" class="form-control rounded-pill bg-light border-0 py-2 px-3" th:placeholder="'Bạn đang nghĩ gì, ' + ${currentUser.fullname} + '?'" style="cursor: pointer; font-size: 14.5px;" readonly data-bs-toggle="modal" data-bs-target="#createPostModal">
-                </div>
-                
-                <div class="d-flex justify-content-between px-1 mt-3">
-                    <button class="btn-ghost flex-grow-1"><i class="bi bi-camera-reels text-danger me-2 fs-5"></i> Video</button>
-                    <button class="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal"><i class="bi bi-image text-success me-2 fs-5"></i> Ảnh/GIF</button>
-                    <button class="btn-ghost flex-grow-1"><i class="bi bi-emoji-smile text-warning me-2 fs-5"></i> Cảm xúc</button>
-=======
         <div class="poly-card p-3">
             <div class="d-flex align-items-center gap-2">
                 <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
@@ -209,87 +194,9 @@
                             <button type="button" class="btn w-100 fw-bold post-btn text-white fs-6 py-2" onclick="submitPost()">Đăng</button>
                         </div>
                     </form>
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                 </div>
             </div>
-
-            <!-- Modal Tạo Bài Đăng -->
-            <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <form id="postForm">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="modal-title fw-bold w-100 text-center" id="createPostModalLabel">Tạo bài viết</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; right: 15px;"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="d-flex align-items-center gap-2 mb-3">
-                                    <img th:src="${currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
-                                    <div>
-                                        <div class="fw-bold" style="font-size: 14px;" th:text="${currentUser.fullname}">Nghĩa Nguyễn</div>
-                                        <span class="badge bg-light text-dark shadow-sm border" style="font-size: 11px;"><i class="bi bi-globe-americas me-1"></i>Công khai</span>
-                                    </div>
-                                </div>
-                                
-                                <textarea id="post-content" class="form-control border-0 px-0 shadow-none fs-5" rows="3" th:placeholder="'Bạn đang nghĩ gì, ' + ${currentUser.fullname} + '?'" required style="resize: none;"></textarea>
-                                
-                                <!-- Hiển thị ảnh Preview -->
-                                <div id="imagePreviewContainer" class="mt-2 d-none position-relative">
-                                    <img id="imagePreview" src="" class="img-fluid rounded w-100" style="max-height: 300px; object-fit: cover;">
-                                    <button type="button" class="btn btn-light rounded-circle position-absolute" style="top: 10px; right: 10px;" onclick="removeImage()">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </div>
-
-                                <div class="d-flex align-items-center gap-2 mt-3">
-                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="btn-ai-improve" title="Yêu cầu AI cải thiện nội dung bạn vừa nhập">
-                                        <i class="bi bi-magic me-1"></i>Cải thiện văn bản
-                                    </button>
-                                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill d-none" id="btn-ai-caption" title="AI sẽ gợi ý nội dung phù hợp với bức ảnh">
-                                        <i class="bi bi-stars me-1"></i>Gợi ý từ ảnh
-                                    </button>
-                                </div>
-                                
-                                <p id="ai-loading" class="text-muted d-none mt-2 mb-0" style="font-size: 13px;"><i class="spinner-border spinner-border-sm me-1"></i>AI đang suy nghĩ...</p>
-                                
-                                <div class="border rounded p-2 d-flex align-items-center justify-content-between mt-3">
-                                    <span class="fw-semibold px-2">Thêm vào bài viết</span>
-                                    <div>
-                                        <label for="post-image" class="btn btn-icon-circle bg-light mb-0 ms-1 text-success fs-5 cursor-pointer">
-                                            <i class="bi bi-image"></i>
-                                        </label>
-                                        <input type="file" id="post-image" accept="image/*" class="d-none" onchange="previewImage(event)">
-                                        <button type="button" class="btn btn-icon-circle bg-light ms-1 text-primary fs-5"><i class="bi bi-person-plus-fill"></i></button>
-                                        <button type="button" class="btn btn-icon-circle bg-light ms-1 text-warning fs-5"><i class="bi bi-emoji-smile"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer border-0 pt-0">
-                                <button type="button" class="btn btn-primary w-100 fw-bold" onclick="submitPost()">Đăng</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </th:block>
-        <!--/* END: Post Creation Section */-->
-
-        <script>
-            function selectTopic(element, topicValue) {
-                const topicInput = document.getElementById('topicIdInput');
-                // Thay vì logic phức tạp, giả lập chọn 1 Chủ đề duy nhất
-                document.querySelectorAll('.topic-pill').forEach(pill => pill.classList.remove('active'));
-                
-                if (topicInput.value === topicValue) {
-                    // Toggle tắt bỏ chọn
-                    topicInput.value = '';
-                } else {
-                    // Chọn
-                    element.classList.add('active');
-                    topicInput.value = topicValue;
-                }
-            }
-        </script>
+        </div>
 
         <script>
             function selectTopic(element, topicValue) {
@@ -528,71 +435,68 @@
                 document.getElementById('btn-ai-caption').classList.add('d-none');
             }
 
-            // This block will only be present if the user is logged in, so these elements will exist.
-            if (document.getElementById('btn-ai-improve')) {
-                // Gọi AI cải thiện văn bản
-                document.getElementById('btn-ai-improve').addEventListener('click', async () => {
-                    const text = document.getElementById('post-content').value;
-                    if (!text.trim()) {
-                        alert('Vui lòng nhập nội dung trước khi dùng AI!');
-                        return;
+            // Gọi AI cải thiện văn bản
+            document.getElementById('btn-ai-improve').addEventListener('click', async () => {
+                const text = document.getElementById('post-content').value;
+                if (!text.trim()) {
+                    alert('Vui lòng nhập nội dung trước khi dùng AI!');
+                    return;
+                }
+
+                document.getElementById('ai-loading').classList.remove('d-none');
+                document.getElementById('btn-ai-improve').disabled = true;
+
+                try {
+                    const res = await fetch('/api/ai/improve-text', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text })
+                    });
+                    if(res.ok) {
+                        document.getElementById('post-content').value = await res.text();
+                    } else {
+                        alert('Lỗi khi gọi AI: ' + await res.text());
                     }
+                } catch(e) {
+                    alert('Lỗi kết nối tới Server AI!');
+                }
 
-                    document.getElementById('ai-loading').classList.remove('d-none');
-                    document.getElementById('btn-ai-improve').disabled = true;
+                document.getElementById('ai-loading').classList.add('d-none');
+                document.getElementById('btn-ai-improve').disabled = false;
+            });
 
-                    try {
-                        const res = await fetch('/api/ai/improve-text', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: text })
-                        });
-                        if(res.ok) {
-                            document.getElementById('post-content').value = await res.text();
-                        } else {
-                            alert('Lỗi khi gọi AI: ' + await res.text());
-                        }
-                    } catch(e) {
-                        alert('Lỗi kết nối tới Server AI!');
+            // Gọi AI gợi ý caption từ ảnh
+            document.getElementById('btn-ai-caption').addEventListener('click', async () => {
+                const file = document.getElementById('post-image').files[0];
+                if (!file) return;
+
+                document.getElementById('ai-loading').classList.remove('d-none');
+                document.getElementById('btn-ai-caption').disabled = true;
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const res = await fetch('/api/ai/suggest-caption', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if(res.ok) {
+                        const caption = await res.text();
+                        // Append vào nội dung hiện tại
+                        const currentText = document.getElementById('post-content').value;
+                        document.getElementById('post-content').value = currentText ? currentText + '\n\n' + caption : caption;
+                    } else {
+                        alert('Lỗi khi gọi AI: ' + await res.text());
                     }
+                } catch(e) {
+                    alert('Lỗi kết nối tới Server AI!');
+                }
 
-                    document.getElementById('ai-loading').classList.add('d-none');
-                    document.getElementById('btn-ai-improve').disabled = false;
-                });
+                document.getElementById('ai-loading').classList.add('d-none');
+                document.getElementById('btn-ai-caption').disabled = false;
+            });
 
-                // Gọi AI gợi ý caption từ ảnh
-                document.getElementById('btn-ai-caption').addEventListener('click', async () => {
-                    const file = document.getElementById('post-image').files[0];
-                    if (!file) return;
-
-                    document.getElementById('ai-loading').classList.remove('d-none');
-                    document.getElementById('btn-ai-caption').disabled = true;
-
-                    const formData = new FormData();
-                    formData.append('image', file);
-
-                    try {
-                        const res = await fetch('/api/ai/suggest-caption', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        if(res.ok) {
-                            const caption = await res.text();
-                            // Append vào nội dung hiện tại
-                            const currentText = document.getElementById('post-content').value;
-                            document.getElementById('post-content').value = currentText ? currentText + '\n\n' + caption : caption;
-                        } else {
-                            alert('Lỗi khi gọi AI: ' + await res.text());
-                        }
-                    } catch(e) {
-                        alert('Lỗi kết nối tới Server AI!');
-                    }
-
-                    document.getElementById('ai-loading').classList.add('d-none');
-                    document.getElementById('btn-ai-caption').disabled = false;
-                });
-            }
-            
             async function submitPost() {
                 const content = document.getElementById('post-content').value;
                 const imageFile = document.getElementById('post-image').files[0];

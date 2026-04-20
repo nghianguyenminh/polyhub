@@ -14,12 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
-
-    public SecurityConfig(CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) {
-        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
-    }
-
+    // 1. Khai báo công cụ mã hóa mật khẩu BCrypt
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -28,19 +23,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-<<<<<<< HEAD
-                .requestMatchers("/login", "/register", "/public/**", "/client/**", "/css/**", "/js/**", "/images/**", "/perform_login").permitAll()
-                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/perform_login")
-                .successHandler(customAuthenticationSuccessHandler)
-                .failureUrl("/login?error=true") // Thêm dòng này để xử lý lỗi
-=======
                 // Cấp quyền tự do truy cập tài nguyên tĩnh, đăng ký và đăng nhập
                 .requestMatchers("/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login", "/forgot-password", "/verify-otp", "/error").permitAll()
                 // Phân quyền cho trang Quản trị: Chỉ những user có role SUPER_ADMIN hoặc ADMIN mới được phép truy cập
@@ -63,10 +46,15 @@ public class SecurityConfig {
                         response.sendRedirect("/");
                     }
                 })
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                 .permitAll()
             )
-            .logout(logout -> logout.permitAll());
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout=true")
+                .permitAll()
+            )
+            .csrf(csrf -> csrf.disable()); // Tạm tắt CSRF để test dễ dàng
+
         return http.build();
     }
 }

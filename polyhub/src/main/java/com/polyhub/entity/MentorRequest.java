@@ -1,19 +1,6 @@
 package com.polyhub.entity;
 
 import jakarta.persistence.*;
-<<<<<<< HEAD
-<<<<<<< HEAD
-import lombok.Data;
-import java.time.LocalDateTime;
-import org.springframework.format.annotation.DateTimeFormat;
-
-@Data
-@Entity
-@Table(name = "mentor_requests")
-public class MentorRequest {
-=======
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -27,32 +14,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "Mentor_Requests")
 public class MentorRequest implements Serializable {
-<<<<<<< HEAD
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "username")
-    private User user;
-
-    @Column(columnDefinition = "TEXT")
-    private String reason;
-
-    private String status = "pending"; // pending, approved, rejected
-
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime requestDate = LocalDateTime.now();
-
-=======
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "username", nullable = false)
     private User user;
@@ -109,8 +75,4 @@ public class MentorRequest implements Serializable {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-<<<<<<< HEAD
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 }

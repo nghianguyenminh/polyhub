@@ -1,40 +1,19 @@
 package com.polyhub.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.*;
+import java.io.Serializable;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "roles")
-public class Role {
-
+@Table(name = "Roles")
+public class Role implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; // Sửa từ String thành Integer và thêm GeneratedValue
+    @Column(length = 20)
+    private String id; // Ví dụ: ADMIN_SUPER, STUDENT, MENTOR...
 
-    @Column(nullable = false, unique = true)
-    private String name;
-
-    public Role() {
-    }
-
-    // Getters and Setters
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Column(columnDefinition = "nvarchar(50)", nullable = false)
+    private String name; // Ví dụ: Quản trị viên cấp cao, Sinh viên...
 }

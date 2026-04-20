@@ -5,13 +5,6 @@ import com.polyhub.entity.SavedDocument;
 import com.polyhub.entity.User;
 import com.polyhub.repository.DocumentRepository;
 import com.polyhub.repository.SavedDocumentRepository;
-<<<<<<< HEAD
-<<<<<<< HEAD
-import java.time.LocalDateTime;
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,14 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 import java.util.Date;
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
-=======
-import java.util.Date;
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import java.util.Optional;
 
 @Service
@@ -40,15 +26,7 @@ public class SavedDocumentService {
      * Lấy danh sách các tài liệu đã lưu của người dùng có tuỳ chỉnh phân trang.
      */
     public Page<SavedDocument> getSavedDocumentsByUser(User user, int page, int size) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
-=======
         Pageable pageable = PageRequest.of(page - 1, size);
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
-=======
-        Pageable pageable = PageRequest.of(page - 1, size);
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
         return savedDocumentRepository.findByUserOrderBySavedAtDesc(user, pageable);
     }
 
@@ -72,15 +50,7 @@ public class SavedDocumentService {
             SavedDocument savedDocument = new SavedDocument();
             savedDocument.setUser(user);
             savedDocument.setDocument(document);
-<<<<<<< HEAD
-<<<<<<< HEAD
-            savedDocument.setSavedAt(LocalDateTime.now());
-=======
             savedDocument.setSavedAt(new Date());
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
-=======
-            savedDocument.setSavedAt(new Date());
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             savedDocumentRepository.save(savedDocument);
             return true; // Returns status "saved"
         }

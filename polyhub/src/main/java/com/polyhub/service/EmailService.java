@@ -111,12 +111,6 @@ public class EmailService {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
-}
-=======
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
     @Async
     public void sendMentorRevokeEmail(String toEmail, String fullname, String reason) {
@@ -264,7 +258,3 @@ public class EmailService {
         }
     }
 }
-<<<<<<< HEAD
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
-=======
->>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
