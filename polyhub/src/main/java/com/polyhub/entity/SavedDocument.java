@@ -2,7 +2,7 @@ package com.polyhub.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.io.Serializable;
 
 @Data
@@ -27,7 +27,6 @@ public class SavedDocument implements Serializable {
     private Document document;
 
     // Thời gian lưu
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "saved_at", updatable = false)
-    private Date savedAt = new Date();
+    private LocalDateTime savedAt = LocalDateTime.now();
 }

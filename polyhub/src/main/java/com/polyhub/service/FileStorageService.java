@@ -24,7 +24,7 @@ public class FileStorageService {
     public Map<String, Object> getStorageUsage() {
         try {
             ApiResponse usage = cloudinary.api().usage(ObjectUtils.emptyMap());
-            return (Map<String, Object>) (Map<?, ?>) usage;
+            return (Map<String, Object>) usage;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -43,13 +43,13 @@ public class FileStorageService {
     public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
         
         // Cấu hình các tham số khi đẩy file lên cloud
-        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
+        Map<String, Object> options = ObjectUtils.asMap(
                 "folder", "polyhub_documents", // Tự động tạo thư mục trên Cloudinary để lưu file gọn gàng
                 "resource_type", "auto"        // Tự động nhận diện loại file (image cho ảnh, raw cho zip/pdf/docx...)
         );
 
         // Chuyển file thành biến byte và upload thẳng lên Cloudinary
-        Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(file.getBytes(), options);
+        Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
 
         return uploadResult;
     }
@@ -77,7 +77,7 @@ public class FileStorageService {
     @SuppressWarnings("unchecked")
     public void deleteFile(String publicId) throws IOException {
         // Khai báo tùy chọn xóa: invalidate = true để cưỡng chế xóa sạch bộ nhớ đệm (cache) trên máy chủ
-        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
+        Map<String, Object> options = ObjectUtils.asMap(
             "invalidate", true,
             "resource_type", "raw" // Các file thư mục, zip, word,... thường được Cloud phân loại là "raw"
         );

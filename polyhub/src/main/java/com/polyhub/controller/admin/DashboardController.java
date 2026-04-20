@@ -17,8 +17,8 @@ public class DashboardController {
     @GetMapping
     public String dashboard(Model model) {
         model.addAttribute("totalUsers", userRepository.findAll().size());
-        model.addAttribute("totalMentors", userRepository.findByRoles_Id("MENTOR").size());
-        model.addAttribute("mentorRequests", userRepository.findByRoles_Id("MENTOR_PENDING").size());
+        model.addAttribute("totalMentors", userRepository.countByRole_Id("MENTOR"));
+        model.addAttribute("mentorRequests", userRepository.countByRole_Id("MENTOR_PENDING"));
         return "admin/dashboard";
     }
 }
