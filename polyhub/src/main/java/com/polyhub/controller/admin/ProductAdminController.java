@@ -4,7 +4,7 @@ import com.polyhub.entity.Product;
 import com.polyhub.repository.CategoryRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.ProductService;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,7 +39,7 @@ public class ProductAdminController {
         product.setName(name);
         product.setPrice(price);
         product.setCategory(categoryRepository.findById(categoryId).orElse(null));
-        product.setCreatedAt(new Date());
+        product.setCreatedAt(LocalDateTime.now());
         productService.saveProduct(product);
         return "redirect:/admin/products";
     }

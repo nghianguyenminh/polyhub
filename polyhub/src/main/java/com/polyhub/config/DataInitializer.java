@@ -1,4 +1,3 @@
-
 package com.polyhub.config;
 
 import com.polyhub.entity.Role;
@@ -28,15 +27,16 @@ public class DataInitializer {
 
             roleRepository.findByName("ROLE_USER").orElseGet(() -> {
                 Role newRole = new Role();
-                newRole.setName("ROLE_USER
-                ");
+                newRole.setName("ROLE_USER");
                 roleRepository.save(newRole);
                 System.out.println("Created Role: ROLE_USER");
                 return newRole;
             });
 
             // Xóa tài khoản admin cũ nếu có
-            userRepository.findByUsername("admin").ifPresent(userRepository::delete);
+            userRepository.findByUsername("admin
+
+").ifPresent(userRepository::delete);
 
             // Tạo tài khoản admin mới với đầy đủ thông tin
             User admin = new User();
