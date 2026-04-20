@@ -1,6 +1,7 @@
 package com.polyhub.controller.admin;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.polyhub.entity.User;
 import com.polyhub.service.UserService;
 import java.util.List;
@@ -26,10 +27,29 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+=======
+import com.polyhub.entity.MentorRequest;
+import com.polyhub.entity.RequestStatus;
+import com.polyhub.entity.Role;
+import com.polyhub.entity.User;
+import com.polyhub.repository.MentorRequestRepository;
+import com.polyhub.repository.RoleRepository;
+import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.DocumentRepository;
+import com.polyhub.repository.PostReportRepository;
+import com.polyhub.service.EmailService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
 @Controller
@@ -37,6 +57,7 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController {
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     private final UserService userService;
 
@@ -89,6 +110,35 @@ public class AdminController {
     }
 
     @GetMapping("/mentors")
+=======
+    private final MentorRequestRepository mentorRequestRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final EmailService emailService;
+    private final DocumentRepository documentRepository;
+    private final PostReportRepository postReportRepository;
+
+    // Map cả 2 đường dẫn /admin và /admin/dashboard về chung 1 trang
+    @GetMapping({"", "/", "/dashboard"})
+    public String dashboard(Model model) {
+        long totalUsers = userRepository.count();
+        long totalDocuments = documentRepository.count();
+        long pendingMentors = mentorRequestRepository.countByStatus(RequestStatus.PENDING);
+        long totalReports = postReportRepository.count();
+
+        List<Object[]> countByCategory = documentRepository.countByCategory();
+
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("totalDocuments", totalDocuments);
+        model.addAttribute("pendingMentors", pendingMentors);
+        model.addAttribute("totalReports", totalReports);
+        model.addAttribute("countByCategory", countByCategory);
+
+        return "admin/dashboard"; // Mở file templates/admin/dashboard.html
+    }
+
+    @GetMapping("/mentors")
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     public String mentors(@RequestParam(defaultValue = "1") int page,
                           @RequestParam(required = false, defaultValue="ALL") String status,
                           Model model) {
@@ -199,6 +249,7 @@ public class AdminController {
         return "redirect:/admin/mentor-requests";
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     @PostMapping("/reject-mentor/{id}")
     public String rejectMentor(@PathVariable Long id, @RequestParam String rejectionReason) {
@@ -206,6 +257,9 @@ public class AdminController {
         return "redirect:/admin/mentor-requests";
     }
 }
+=======
+}
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
 }
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e

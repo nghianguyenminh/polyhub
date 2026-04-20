@@ -13,12 +13,15 @@ import java.util.Optional;
 @Repository
 public interface SavedDocumentRepository extends JpaRepository<SavedDocument, Long> {
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     Page<SavedDocument> findByUserOrderBySavedAtDesc(User user, Pageable pageable);
 
     Optional<SavedDocument> findByUserAndDocument(User user, Document document);
 
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     
     // Tìm các tài liệu đã lưu của một user, phân trang và sắp xếp theo ngày lưu giảm dần
     Page<SavedDocument> findByUserOrderBySavedAtDesc(User user, Pageable pageable);
@@ -30,6 +33,9 @@ public interface SavedDocumentRepository extends JpaRepository<SavedDocument, Lo
     Optional<SavedDocument> findByUserAndDocument(User user, Document document);
     
     // Đếm tổng số tài liệu mà User đã lưu
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     long countByUser(User user);
 }

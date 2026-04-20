@@ -66,10 +66,14 @@
             
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             <div class="col" th:each="mentor : ${mentors}">
 =======
             <div class="col" th:each="req : ${approvedMentors}">
 >>>>>>> origin/appmod/java-upgrade-20260406032344
+=======
+            <div class="col" th:each="req : ${approvedMentors}">
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
             <div class="col" th:each="req : ${approvedMentors}">
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
@@ -78,6 +82,7 @@
                     
                     <div class="mentor-card-body">
                         <div class="d-flex justify-content-between align-items-start">
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
                             <img th:src="@{/img/avatar/} + ${mentor.avatar}" class="mentor-card-avatar">
@@ -91,10 +96,15 @@
                             <img th:src="${req.user.avatar != null ? req.user.avatar : 'https://ui-avatars.com/api/?name=' + req.fullname + '&background=random'}" class="mentor-card-avatar">
                             
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
+                            <img th:src="${req.user.avatar != null ? req.user.avatar : 'https://ui-avatars.com/api/?name=' + req.fullname + '&background=random'}" class="mentor-card-avatar">
+                            
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         </div>
                         
                         <div class="mt-2 mb-3">
                             <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
                                 <span th:text="${mentor.fullname}"></span> <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực"></i>
@@ -102,6 +112,10 @@
                                 <span th:text="${req.fullname}">N/A</span>
                                 <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực" style="background: -webkit-linear-gradient(45deg, #f27121, #e94057); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
 >>>>>>> origin/appmod/java-upgrade-20260406032344
+=======
+                                <span th:text="${req.fullname}">N/A</span>
+                                <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực" style="background: -webkit-linear-gradient(45deg, #f27121, #e94057); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                                 <span th:text="${req.fullname}">N/A</span>
                                 <i class="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực" style="background: -webkit-linear-gradient(45deg, #f27121, #e94057); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
@@ -118,6 +132,7 @@
                         </div>
                         
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <div class="d-flex justify-content-between text-muted mb-3" style="font-size: 12.5px; font-weight: 500;">
                             <div><i class="bi bi-people-fill me-1"></i> 0 Mentee</div>
                             <div><i class="bi bi-journal-check me-1"></i> 0 Dự án</div>
@@ -130,6 +145,16 @@
                             <a th:href="@{'/profile?username=' + ${req.user.username}}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
 >>>>>>> origin/appmod/java-upgrade-20260406032344
                             <button class="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action"><i class="bi bi-chat-dots-fill me-1"></i> Nhắn tin</button>
+=======
+                        <!-- <div class="d-flex justify-content-between text-muted mb-3" style="font-size: 12.5px; font-weight: 500;">
+                            <div><i class="bi bi-people-fill me-1"></i> 0 Mentee</div>
+                            <div><i class="bi bi-journal-check me-1"></i> 0 Dự án</div>
+                        </div> -->
+                        
+                        <div class="d-flex gap-2 mt-auto">
+                            <a th:href="@{'/mentors/' + ${req.id}}" class="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">Hồ sơ</a>
+                            <a th:href="@{/chat(userId=${req.user.username})}" class="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none"><i class="bi bi-chat-dots-fill me-1"></i> Nhắn tin</a>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                         <!-- <div class="d-flex justify-content-between text-muted mb-3" style="font-size: 12.5px; font-weight: 500;">
                             <div><i class="bi bi-people-fill me-1"></i> 0 Mentee</div>

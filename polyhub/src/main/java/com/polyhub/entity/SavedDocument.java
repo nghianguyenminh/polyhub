@@ -2,11 +2,17 @@ package com.polyhub.entity;
 
 import jakarta.persistence.*;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+=======
+import lombok.*;
+import java.util.Date;
+import java.io.Serializable;
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
 import lombok.*;
 import java.util.Date;
@@ -18,8 +24,13 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Entity
 <<<<<<< HEAD
+<<<<<<< HEAD
 @Table(name = "saved_documents")
 public class SavedDocument {
+=======
+@Table(name = "Saved_Documents")
+public class SavedDocument implements Serializable {
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
 @Table(name = "Saved_Documents")
 public class SavedDocument implements Serializable {
@@ -29,6 +40,7 @@ public class SavedDocument implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "username")
@@ -43,6 +55,8 @@ public class SavedDocument implements Serializable {
 
 }
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     // Mapping tới User (Ai đã lưu)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -58,4 +72,7 @@ public class SavedDocument implements Serializable {
     @Column(name = "saved_at", updatable = false)
     private Date savedAt = new Date();
 }
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e

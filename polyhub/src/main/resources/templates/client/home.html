@@ -291,6 +291,23 @@
             }
         </script>
 
+        <script>
+            function selectTopic(element, topicValue) {
+                const topicInput = document.getElementById('topicIdInput');
+                // Thay vì logic phức tạp, giả lập chọn 1 Chủ đề duy nhất
+                document.querySelectorAll('.topic-pill').forEach(pill => pill.classList.remove('active'));
+                
+                if (topicInput.value === topicValue) {
+                    // Toggle tắt bỏ chọn
+                    topicInput.value = '';
+                } else {
+                    // Chọn
+                    element.classList.add('active');
+                    topicInput.value = topicValue;
+                }
+            }
+        </script>
+
         <!-- Feed list: Sử dụng Thymeleaf lấy Post từ Controller -->
         <div th:each="post : ${recentPosts}" class="poly-card p-0 mt-3"> 
             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">

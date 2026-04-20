@@ -13,6 +13,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import com.polyhub.entity.PostReport;
 import com.polyhub.repository.PostReportRepository;
+<<<<<<< HEAD
+=======
+
+import java.io.IOException;
+import java.util.Map;
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +33,9 @@ public class PostService {
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
     private final PostReportRepository postReportRepository;
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
   public Post createPost(String content, MultipartFile image, String username)
@@ -93,6 +102,42 @@ public class PostService {
         return postRepository.save(post);
     }
 
+<<<<<<< HEAD
+=======
+
+    // --- Tính năng Share bài viết ---
+    public Post sharePost(Long originalPostId, String content, String username) {
+        User user = userRepository.findById(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        Post originalPost = postRepository.findById(originalPostId)
+                .orElseThrow(() -> new RuntimeException("Bài viết gốc không tồn tại"));
+
+        // Chống lồng quá sâu: Nếu bài gốc đã là 1 bài share, thì móc thẳng tới bài rễ (root post)
+        Post rootPost = originalPost.getSharedPost() != null ? originalPost.getSharedPost() : originalPost;
+
+        Post sharedPost = new Post();
+        sharedPost.setContent(content); // Lời tựa người dùng thêm vào
+        sharedPost.setUser(user);
+        sharedPost.setSharedPost(rootPost);
+
+        return postRepository.save(sharedPost);
+    }
+
+    // --- Tính năng Sửa bài viết ---
+    public Post updatePost(Long postId, String newContent, String username) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("Bạn không có quyền sửa bài viết này");
+        }
+
+        post.setContent(newContent);
+        return postRepository.save(post);
+    }
+
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     // --- Tính năng Xóa bài viết ---
     public void deletePost(Long postId, String username) {
         Post post = postRepository.findById(postId)
@@ -146,5 +191,9 @@ public class PostService {
 
         postReportRepository.save(report);
     }
+<<<<<<< HEAD
+}
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 }
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e

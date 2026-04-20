@@ -7,6 +7,7 @@ import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.UserService;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -128,6 +129,8 @@ public class UserServiceImpl implements UserService {
 
 }
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -193,5 +196,9 @@ public class UserServiceImpl implements UserService {
 
         return "success"; // Trả về text báo hiệu thành công
     }
+<<<<<<< HEAD
+}
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 }
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e

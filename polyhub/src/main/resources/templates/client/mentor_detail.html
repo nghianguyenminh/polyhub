@@ -20,11 +20,19 @@
             <div class="px-4 pb-4 position-relative bg-white pt-2">
                 <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end" style="margin-top: -70px;">
 <<<<<<< HEAD
+<<<<<<< HEAD
                     <img th:src="@{/img/avatar/} + ${mentor.avatar}" class="rounded-circle border border-4 border-white shadow bg-white" width="140" height="140" style="object-fit: cover; z-index: 10;">
                     
                     <div class="ms-md-4 mt-3 mt-md-0 flex-grow-1 text-center text-md-start z-index-1" style="margin-bottom: 10px;">
                         <h3 class="fw-bold mb-1 text-dark d-flex align-items-center justify-content-center justify-content-md-start">
                             <span th:text="${mentor.fullname}"></span> <i class="bi bi-patch-check-fill text-primary ms-2 fs-5" title="Chuyên gia được xác thực"></i>
+=======
+                    <img th:src="${mentor.user.avatar != null ? mentor.user.avatar : 'https://ui-avatars.com/api/?name=' + mentor.fullname + '&background=random'}" class="rounded-circle border border-4 border-white shadow bg-white flex-shrink-0" width="140" height="140" style="object-fit: cover; z-index: 10;">
+                    
+                    <div class="ms-md-4 mt-3 mt-md-0 flex-grow-1 text-center text-md-start z-index-1" style="margin-bottom: 10px;">
+                        <h3 class="fw-bold mb-1 text-dark d-flex align-items-center justify-content-center justify-content-md-start text-break">
+                            <span th:text="${mentor.fullname}">Tên Mentor</span> <i class="bi bi-patch-check-fill text-primary ms-2 fs-5" title="Chuyên gia được xác thực" style="background: -webkit-linear-gradient(45deg, #f27121, #e94057); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                     <img th:src="${mentor.user.avatar != null ? mentor.user.avatar : 'https://ui-avatars.com/api/?name=' + mentor.fullname + '&background=random'}" class="rounded-circle border border-4 border-white shadow bg-white flex-shrink-0" width="140" height="140" style="object-fit: cover; z-index: 10;">
                     
@@ -51,6 +59,7 @@
             <!-- Left Column -->
             <div class="col-lg-8">
                 <div class="poly-card p-4 mb-4 rounded-4 shadow-sm border-0">
+<<<<<<< HEAD
 <<<<<<< HEAD
                     <h5 class="fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-person-lines-fill text-poly me-2"></i> Giới thiệu</h5>
                             <p class="text-secondary" style="line-height: 1.7;" th:text="${mentor.bio}">
@@ -148,6 +157,10 @@
                             </div>
                         </div>
                     </div>
+=======
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-person-lines-fill text-poly me-2"></i> Lý do / Giới thiệu</h5>
+                    <p class="text-secondary" style="line-height: 1.7; white-space: pre-line;" th:text="${mentor.motivation}"></p>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                     <h5 class="fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-person-lines-fill text-poly me-2"></i> Lý do / Giới thiệu</h5>
                     <p class="text-secondary" style="line-height: 1.7; white-space: pre-line;" th:text="${mentor.motivation}"></p>

@@ -2,6 +2,7 @@ package com.polyhub.controller.admin;
 
 import com.polyhub.entity.User;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.polyhub.service.UserService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import com.polyhub.entity.Role;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.repository.RoleRepository;
@@ -24,11 +27,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/users")
+<<<<<<< HEAD
 <<<<<<< HEAD
 public class UserAdminController {
 
@@ -41,6 +48,8 @@ public class UserAdminController {
         return "admin/users";
     }
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN')")
 public class UserAdminController {
 
@@ -151,5 +160,8 @@ public class UserAdminController {
         }
         return "redirect:/admin/users/detail/" + username;
     }
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 }

@@ -62,6 +62,7 @@ public class DocumentAdminService {
     public void rejectOrTakedownDocument(Long id, String reason) {
         Document doc = getDocumentById(id);
 <<<<<<< HEAD
+<<<<<<< HEAD
         doc.setStatus(DocumentStatus.REJECTED);
         documentRepository.save(doc);
 
@@ -69,6 +70,8 @@ public class DocumentAdminService {
         if (doc.getUser() != null && doc.getUser().getEmail() != null) {
             emailService.sendRejectionEmail(doc.getUser().getEmail(), doc.getUser().getFullname(), doc.getTitle(), reason);
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
         doc.setStatus(DocumentStatus.REJECTED); // Đổi thành REJECTED (hoặc HIDDEN tùy ý định ban đầu, nhưng REJECT chuẩn hơn)
         doc.setRejectionReason(reason);
         documentRepository.save(doc);
@@ -77,6 +80,9 @@ public class DocumentAdminService {
         User uploader = doc.getUploader();
         if (uploader != null && uploader.getEmail() != null) {
             emailService.sendRejectionEmail(uploader.getEmail(), uploader.getFullname(), doc.getTitle(), reason);
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
         }
     }

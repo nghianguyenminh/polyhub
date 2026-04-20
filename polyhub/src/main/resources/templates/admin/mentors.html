@@ -9,6 +9,9 @@
 <<<<<<< HEAD
 =======
             /* KPI Cards */
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             .kpi-card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; }
             .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
@@ -59,7 +62,10 @@
             <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">Phê duyệt Mentor</h3>
         </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
         <div class="d-flex gap-2 align-items-center">
             <form th:action="@{/admin/mentors}" method="get" class="d-flex align-items-center gap-2">
                 <label for="statusFilter" class="ms-2 mb-0 fw-medium">Trạng thái:</label>
@@ -72,6 +78,9 @@
                 </select>
             </form>
         </div>
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     </div>
 
@@ -126,6 +135,7 @@
                             <div class="d-flex align-items-center gap-3">
                                 <div style="line-height: 1.4;">
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     <div class="fw-semibold text-dark" th:text="${req.user.fullname}">Tên</div>
                                     <div class="text-muted" style="font-size: 12px;" th:text="${req.user.email}">Email</div>
                                 </div>
@@ -133,12 +143,17 @@
                         </td>
                         <td class="fw-medium text-dark" th:text="${req.user.cccdNumber}">CCCD</td>
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                                     <div class="fw-semibold text-dark" th:text="${req.fullname}">Tên</div>
                                     <div class="text-muted" style="font-size: 12px;" th:text="${req.email}">Email</div>
                                 </div>
                             </div>
                         </td>
                         <td class="fw-medium text-dark" th:text="${req.cccdNumber}">CCCD</td>
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         <td>
                             <a th:href="${req.cvFile}" class="evidence-link" target="_blank">
@@ -148,7 +163,11 @@
                         <td class="text-muted" th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy HH:mm')}">Date</td>
                         <td>
 <<<<<<< HEAD
+<<<<<<< HEAD
                             <span th:if="${req.status.name() == 'PENDING'}" class="status-badge status-pending">
+=======
+            <span th:if="${req.status.name() == 'PENDING'}" class="status-badge status-pending">
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
             <span th:if="${req.status.name() == 'PENDING'}" class="status-badge status-pending">
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
@@ -161,6 +180,12 @@
                                 <span class="status-dot"></span> Đã từ chối
                             </span>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+                            <span th:if="${req.status.name() == 'REVOKED'}" class="status-badge status-rejected" style="background-color: #f3f4f6; color: #4b5563;">
+                                <span class="status-dot" style="background-color: #6b7280;"></span> Bị tước quyền
+                            </span>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                             <span th:if="${req.status.name() == 'REVOKED'}" class="status-badge status-rejected" style="background-color: #f3f4f6; color: #4b5563;">
                                 <span class="status-dot" style="background-color: #6b7280;"></span> Bị tước quyền
@@ -185,7 +210,10 @@
     </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     <!-- Pagination -->
     <nav th:if="${totalPages > 1}" aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center">
@@ -202,13 +230,20 @@
         </ul>
     </nav>
 
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     <!-- Offcanvas Details (Loop) -->
     <div th:each="req : ${requests}" class="offcanvas offcanvas-end" tabindex="-1" th:id="'offcanvas_' + ${req.id}">
         <div class="offcanvas-header p-4">
             <div>
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <h5 class="offcanvas-title fw-bold mb-1" th:text="${req.user.fullname}">Tên</h5>
+=======
+                <h5 class="offcanvas-title fw-bold mb-1" th:text="${req.fullname}">Tên</h5>
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                 <h5 class="offcanvas-title fw-bold mb-1" th:text="${req.fullname}">Tên</h5>
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
@@ -223,6 +258,7 @@
                     <div class="oc-section-title">Thông tin cá nhân</div>
                     <div class="info-box">
                         <div class="info-row">
+<<<<<<< HEAD
 <<<<<<< HEAD
                             <div class="info-label">Họ và tên</div><div class="info-value" th:text="${req.user.fullname}"></div>
                         </div>
@@ -241,6 +277,11 @@
                             <div class="info-label">Họ và tên</div><div class="info-value" th:text="${req.fullname}"></div>
                         </div>
                         <div class="info-row">
+=======
+                            <div class="info-label">Họ và tên</div><div class="info-value" th:text="${req.fullname}"></div>
+                        </div>
+                        <div class="info-row">
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                             <div class="info-label">Email</div><div class="info-value text-primary" th:text="${req.email}"></div>
                         </div>
                         <div class="info-row">
@@ -251,6 +292,9 @@
                         </div>
                         <div class="info-row">
                             <div class="info-label">Ngày sinh</div><div class="info-value" th:text="${#temporals.format(req.birthday, 'dd/MM/yyyy')}"></div>
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         </div>
                     </div>
@@ -258,6 +302,7 @@
 
                 <div class="mb-4">
                     <div class="oc-section-title">Giới thiệu bản thân</div>
+<<<<<<< HEAD
 <<<<<<< HEAD
                     <div class="reason-box" style="border-left-color: #10b981;" th:text="${req.description}"></div>
                 </div>
@@ -292,6 +337,21 @@
                     <div class="reason-box" style="border-left-color: #ef4444; background: #fef2f2;" th:text="${req.rejectionReason}"></div>
                 </div>
 
+=======
+                    <div class="reason-box" style="border-left-color: #10b981;" th:text="${req.introduction}"></div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="oc-section-title">Lý do ứng tuyển</div>
+                    <div class="reason-box" th:text="${req.motivation}"></div>
+                </div>
+                
+                <div th:if="${req.status.name() == 'REJECTED' or req.status.name() == 'REVOKED'}" class="mb-4">
+                    <div class="oc-section-title text-danger">Lý do bị từ chối / tước quyền (Từ Admin)</div>
+                    <div class="reason-box" style="border-left-color: #ef4444; background: #fef2f2;" th:text="${req.rejectionReason}"></div>
+                </div>
+
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                 <div class="mb-4">
                     <div class="oc-section-title">Hồ sơ đính kèm (Quy định bắt buộc)</div>
                     <a th:href="${req.cvFile}" target="_blank" class="evidence-link mb-2 w-100 justify-content-center py-2 border">
@@ -308,6 +368,9 @@
 
             <!-- Action Area cho PENDING -->
             <div th:if="${req.status.name() == 'PENDING'}" class="action-area" sec:authorize="hasAnyRole('SUPER_ADMIN', 'USER_ADMIN')">
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                 <form th:action="@{/admin/mentors/{id}/reject(id=${req.id})}" method="post" class="mb-3 d-none" th:id="'rejectForm_' + ${req.id}">
                     <label class="form-label fw-semibold text-danger">Lý do từ chối <span class="text-danger">*</span></label>
@@ -325,7 +388,11 @@
                         </button>
                     </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
                     <div class.col-6">
+=======
+                    <div class="col-6">
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                     <div class="col-6">
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
@@ -335,7 +402,10 @@
                             </button>
                         </form>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                     </div>
                 </div>
             </div>
@@ -356,6 +426,9 @@
                         <button type="button" class="btn btn-danger text-white w-100 fw-medium" th:onclick="'showRevokeForm(' + ${req.id} + ')'">
                             <i class="bi bi-shield-x"></i> Tước quyền Mentor
                         </button>
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                     </div>
                 </div>
@@ -375,7 +448,10 @@
             document.getElementById('actionButtonsGroup_' + id).classList.remove('d-none');
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
         function showRevokeForm(id) {
             document.getElementById('revokeButtonsGroup_' + id).classList.add('d-none');
             document.getElementById('revokeForm_' + id).classList.remove('d-none');
@@ -384,6 +460,9 @@
             document.getElementById('revokeForm_' + id).classList.add('d-none');
             document.getElementById('revokeButtonsGroup_' + id).classList.remove('d-none');
         }
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     </script>
 </th:block>

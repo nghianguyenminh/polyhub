@@ -53,6 +53,9 @@ public class User {
     // Ảnh bìa
     private String coverImage = "default-cover.jpg";
 
+    // Ảnh bìa
+    private String coverImage = "default-cover.jpg";
+
     private Boolean active = true; // Trạng thái hoạt động
 
     @Column(name = "created_at", updatable = false)

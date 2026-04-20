@@ -61,6 +61,7 @@
                 </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;" th:text="${currentUser.bio}"></p>
             </div>
 
@@ -70,6 +71,11 @@
                 <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;" th:text="${currentUser.bio != null and !currentUser.bio.isEmpty() ? currentUser.bio : 'Chưa có thông tin giới thiệu.'}"></p>
             </div>
 
+=======
+                <p class="mt-3 mb-0 text-center text-md-start" style="font-size: 14.5px;" th:text="${currentUser.bio != null and !currentUser.bio.isEmpty() ? currentUser.bio : 'Chưa có thông tin giới thiệu.'}"></p>
+            </div>
+
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             <!-- <hr class="m-0 border-opacity-50"> --> 
  
             <!-- Profile Nav Tabs -->
@@ -78,15 +84,21 @@
                 <!-- <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab" aria-selected="true">Bài viết</button>
 <<<<<<< HEAD
+<<<<<<< HEAD
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-selected="false">Cài đặt</button>
                 </li>
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                 </li> -->
                 <!-- <li class="nav-item" role="presentation">
                     <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-selected="false">Cài đặt & Bảo mật</button>
                 </li> -->
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
             </ul>
         </div>
@@ -142,6 +154,7 @@
                         </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <div th:each="post : ${recentPosts}" class="poly-card p-0 mb-3"> 
                             <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-2">
@@ -172,6 +185,8 @@
                                 <button class="btn-ghost flex-grow-1 py-1"><i class="bi bi-share me-1"></i> Chia sẻ</button>
                             </div>
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         <!-- Posts List -->
                         <!-- Sử dụng Thymeleaf lấy Post từ Controller -->
                         <div th:each="post : ${recentPosts}" class="poly-card p-0 mb-3"> 
@@ -278,12 +293,15 @@
                         <div th:if="${#lists.isEmpty(recentPosts)}" class="poly-card p-4 text-center mt-3 text-muted">
                             <i class="bi bi-journal-x fs-1 opacity-50"></i>
                             <p class="mt-2 mb-0">Chưa có bài viết nào.</p>
+<<<<<<< HEAD
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         </div>
 
                         <div th:if="${#lists.isEmpty(recentPosts)}" class="poly-card p-4 text-center mt-3 text-muted">
                             <i class="bi bi-journal-x fs-1 opacity-50"></i>
                             <p class="mt-2 mb-0">Chưa có bài viết nào.</p>
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         </div>
 
                     </div>
@@ -300,8 +318,11 @@
                     <div class="p-4">
                         
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <div class="col-md-12">
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                         Col Left: Update Info
                         <div class="col-md-6 border-end-md pe-md-4">
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
@@ -327,7 +348,11 @@
                                 <div class="mb-3">
                                     <label class="form-label fw-medium text-dark" style="font-size: 14px;">Ngày sinh</label>
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     <input type="date" name="birthday" class="form-control form-control-poly" th:value="${currentUser.birthday != null ? #dates.format(currentUser.birthday, 'yyyy-MM-dd') : ''}">
+=======
+                                    <input type="date" name="birthday" class="form-control form-control-poly" th:value="${currentUser.birthday != null ? #temporals.format(currentUser.birthday, 'yyyy-MM-dd') : ''}">
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 =======
                                     <input type="date" name="birthday" class="form-control form-control-poly" th:value="${currentUser.birthday != null ? #temporals.format(currentUser.birthday, 'yyyy-MM-dd') : ''}">
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
@@ -384,6 +409,9 @@
         <button type="submit" class="btn btn-dark w-100 fw-semibold rounded-pill">Đổi mật khẩu</button>
     </form>
 </div>
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
                     </div>
                 </div>

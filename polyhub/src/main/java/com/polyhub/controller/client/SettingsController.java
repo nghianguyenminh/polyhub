@@ -3,6 +3,7 @@ package com.polyhub.controller.client;
 import com.polyhub.entity.User;
 import com.polyhub.repository.UserRepository;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.polyhub.service.UserService;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+=======
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.time.LocalDate;
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 
 @Controller
@@ -32,6 +45,7 @@ import java.time.LocalDate;
 @RequestMapping("/settings")
 public class SettingsController {
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     private final UserService userService;
     private final UserRepository userRepository;
@@ -88,6 +102,28 @@ public class SettingsController {
         model.addAttribute("currentUser", user);
         return "client/settings";
     }
+=======
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @GetMapping
+    public String settings(Principal principal, Model model) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+        
+        User user = userRepository.findById(principal.getName()).orElse(null);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("currentUser", user);
+        return "client/settings";
+    }
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     @PostMapping("/update-account")
 public String updateAccount(Principal principal,
                             @RequestParam("fullname") String fullname,
@@ -112,6 +148,9 @@ public String updateAccount(Principal principal,
         }
     }
     return "redirect:/settings";
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 }
     @PostMapping("/change-password")

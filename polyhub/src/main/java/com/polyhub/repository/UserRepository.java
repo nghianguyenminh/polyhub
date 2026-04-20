@@ -1,5 +1,12 @@
 
 package com.polyhub.repository;
+<<<<<<< HEAD
+=======
+import com.polyhub.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
 import com.polyhub.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -41,6 +48,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 =======
 import java.util.Optional;
 
+import java.util.Optional;
+
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByEmail(String email);
@@ -54,4 +63,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     
 
 
+<<<<<<< HEAD
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
+=======
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e

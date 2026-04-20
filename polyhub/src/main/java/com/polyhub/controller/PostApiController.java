@@ -22,8 +22,11 @@ public class PostApiController {
     private PostService postService;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     @PostMapping
 =======
+=======
+>>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
     // ... createPost
     @PostMapping("/create")
 >>>>>>> b97c3c267eb6d6ba53fb865b3901f4c020c4057e
