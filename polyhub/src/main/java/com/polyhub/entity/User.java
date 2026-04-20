@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -53,8 +54,19 @@ public class User implements Serializable {
     @Column(columnDefinition = "NVARCHAR(500)")
     private String bio; 
 
-    // --- KẾT NỐI VỚI BẢNG ROLE ---
+    // --- KẾT NỐI VỚI BẢNG ROLE -- -
     @ManyToOne
     @JoinColumn(name = "role_id")
-    private Role role; 
+    private Role role;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_following",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "following_id")
+    )
+    private Set<User> following;
+
+    @ManyToMany(mappedBy = "following")
+    private Set<User> followers;
 }
