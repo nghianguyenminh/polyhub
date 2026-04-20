@@ -1,6 +1,6 @@
 package com.polyhub.controller.admin;
 
-import com.polyhub.service.UserService;
+import com.polyhub.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/admin")
 public class DashboardController {
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     @GetMapping
     public String dashboard(Model model) {
-        model.addAttribute("totalUsers", userService.getAllUsers().size());
-        model.addAttribute("totalMentors", userService.getMentors().size());
-        model.addAttribute("mentorRequests", userService.getMentorRequests().size());
+        model.addAttribute("totalUsers", userRepository.findAll().size());
+        model.addAttribute("totalMentors", userRepository.findByRoles_Id("MENTOR").size());
+        model.addAttribute("mentorRequests", userRepository.findByRoles_Id("MENTOR_PENDING").size());
         return "admin/dashboard";
     }
 }

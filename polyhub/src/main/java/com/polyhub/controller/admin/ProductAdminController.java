@@ -1,6 +1,7 @@
 package com.polyhub.controller.admin;
 
 import com.polyhub.entity.Product;
+import com.polyhub.repository.CategoryRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.ProductService;
 import java.util.Date;
@@ -19,11 +20,12 @@ public class ProductAdminController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
 
     @GetMapping
     public String listProducts(Model model) {
         model.addAttribute("products", productService.getAllProducts());
-        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("categories", categoryService.getAllCategoriesForAdmin());
         return "admin/products";
     }
 
@@ -36,7 +38,7 @@ public class ProductAdminController {
         Product product = new Product();
         product.setName(name);
         product.setPrice(price);
-        product.setCategory(categoryService.findById(categoryId));
+        product.setCategory(categoryRepository.findById(categoryId).orElse(null));
         product.setCreatedAt(new Date());
         productService.saveProduct(product);
         return "redirect:/admin/products";
