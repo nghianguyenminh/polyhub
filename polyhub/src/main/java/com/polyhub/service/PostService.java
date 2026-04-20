@@ -13,6 +13,10 @@ import com.polyhub.repository.PostReportRepository;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,36 @@ public class PostService {
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
     private final PostReportRepository postReportRepository;
+
+    public List<Post> getFeedForUser(String username) {
+        User user = userRepository.findById(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        // Lấy danh sách những người user đang follow
+        List<User> following = new ArrayList<>(user.getFollowing());
+        
+        // Thêm chính user vào danh sách để lấy cả bài viết của họ
+        following.add(user);
+
+        // Lấy danh sách bài viết từ những người user follow và chính user
+        List<Post> feedPosts = postRepository.findByUserInOrderByCreatedAtDesc(following);
+
+        // Lấy bài viết từ những người có cùng chuyên ngành
+        if (user.getMajor() != null && !user.getMajor().isEmpty()) {
+            List<User> usersWithSameMajor = userRepository.findByMajorAndUsernameNotIn(user.getMajor(), 
+                following.stream().map(User::getUsername).collect(Collectors.toList()));
+            
+            if (!usersWithSameMajor.isEmpty()) {
+                 List<Post> majorPosts = postRepository.findByUserInOrderByCreatedAtDesc(usersWithSameMajor);
+                 feedPosts.addAll(majorPosts);
+            }
+        }
+        
+        // Sắp xếp lại toàn bộ bài viết theo thời gian giảm dần
+        feedPosts.sort(Comparator.comparing(Post::getCreatedAt).reversed());
+
+        return feedPosts;
+    }
 
     public Post createPost(String content, MultipartFile image, String username) throws IOException {
         // Tìm User trong DB, nếu không có thì lấy một tài khoản mặc định để demo

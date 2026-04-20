@@ -29,6 +29,7 @@ public class SecurityConfig {
                 // Phân quyền cho trang Quản trị: Chỉ những user có role SUPER_ADMIN hoặc ADMIN mới được phép truy cập
                 .requestMatchers("/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "USER_ADMIN", "CONTENT_ADMIN")
                 // Bắt buộc đăng nhập cho các chức năng và trang chủ (/ và /home)
+                .requestMatchers("/api/v1/follows/**").authenticated()
                 .anyRequest().authenticated() 
             )
             .formLogin(login -> login

@@ -4,6 +4,7 @@ import com.polyhub.entity.User;
 import com.polyhub.entity.Category;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.CategoryService;
+import com.polyhub.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,20 +25,24 @@ public class HomeController {
     private CategoryService categoryService;
 
     @Autowired
+    private PostService postService;
+
+    @Autowired
     private com.polyhub.repository.PostRepository postRepository;
 
     @GetMapping("/")
     public String index(Principal principal, Model model) {
-        // Nếu user đã đăng nhập, lấy bài public + bài private của user. Nếu CHƯA đăng nhập, chỉ lấy bài public (truyền "" hoặc null)
-        String viewerUsername = (principal != null) ? principal.getName() : "";
-        org.springframework.data.domain.Page<com.polyhub.entity.Post> posts = postRepository.findVisiblePostsForFeed(viewerUsername, org.springframework.data.domain.PageRequest.of(0, 10));
-        model.addAttribute("recentPosts", posts.getContent());
-
         if (principal != null) {
-            User user = userRepository.findById(principal.getName()).orElse(null);
+            String username = principal.getName();
+            User user = userRepository.findById(username).orElse(null);
+
             if (user != null) {
                 model.addAttribute("currentUser", user);
-                
+
+                // Get feed using the new service method
+                List<com.polyhub.entity.Post> posts = postService.getFeedForUser(username);
+                model.addAttribute("recentPosts", posts);
+
                 // Hiển thị popup nếu như user không phải là Admin và chưa cập nhật chuyên ngành
                 String roleId = user.getRole() != null ? user.getRole().getId() : "";
                 if (!"ADMIN".equals(roleId) && !"SUPER_ADMIN".equals(roleId)) {
@@ -48,7 +53,12 @@ public class HomeController {
                     }
                 }
             }
+        } else {
+             // For non-logged-in users, get public posts
+             org.springframework.data.domain.Page<com.polyhub.entity.Post> posts = postRepository.findVisiblePostsForFeed("", org.springframework.data.domain.PageRequest.of(0, 10));
+             model.addAttribute("recentPosts", posts.getContent());
         }
+
         return "client/home";
     }
 

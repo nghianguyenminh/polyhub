@@ -3,18 +3,19 @@
 <body>
     <div th:fragment="left_sidebar(activeMenu)" class="poly-sidebar-left d-none d-lg-block">
          
-        <div class="sidebar-heading">MENU CHÍNH</div>
-        
+        <a th:href="@{/profile}" class="poly-nav-item" th:classappend="${activeMenu == 'profile'} ? 'active' : ''">
+             <div class="nav-icon-box">
+                <img th:src="${currentUser != null and currentUser.avatar != null and currentUser.avatar.startsWith('http') ? currentUser.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" 
+                     onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" 
+                     class="rounded-circle" width="32" height="32" style="object-fit: cover;">
+            </div>
+            <span class="nav-text fw-bold" th:text="${currentUser != null ? currentUser.fullname : 'Cá nhân'}"></span>
+        </a>
+
         <a href="/" class="poly-nav-item" th:classappend="${activeMenu == 'home'} ? 'active' : ''">
             <div class="nav-icon-box"><i class="bi bi-house-door-fill icon-grad icon-grad-main"></i></div>
             <span class="nav-text">Trang chủ</span>
         </a>
-        
-        <!-- <a href="/groups" class="poly-nav-item" th:classappend="${activeMenu == 'groups'} ? 'active' : ''">
-            <div class="nav-icon-box"><i class="bi bi-people-fill icon-grad icon-grad-main"></i></div>
-            <span class="nav-text">Nhóm học tập</span>
-          
-        </a> -->
         
         <a href="/mentors" class="poly-nav-item" th:classappend="${activeMenu == 'mentors'} ? 'active' : ''">
             <div class="nav-icon-box"><i class="bi bi-award-fill icon-grad icon-grad-main"></i></div>
@@ -27,16 +28,6 @@
         </a>
 
         <div class="sidebar-heading mt-4">PHÍM TẮT & KHÁM PHÁ</div>
-        
-        <!-- <a href="/videos" class="poly-nav-item" th:classappend="${activeMenu == 'videos'} ? 'active' : ''">
-            <div class="nav-icon-box"><i class="bi bi-play-btn-fill icon-grad icon-grad-red"></i></div>
-            <span class="nav-text">Video</span>
-        </a>
-        
-        <a href="/events" class="poly-nav-item" th:classappend="${activeMenu == 'events'} ? 'active' : ''">
-            <div class="nav-icon-box"><i class="bi bi-calendar-event-fill icon-grad icon-grad-warm"></i></div>
-            <span class="nav-text">Sự kiện FPT</span>
-        </a> -->
         
         <a href="/saved" class="poly-nav-item" th:classappend="${activeMenu == 'saved'} ? 'active' : ''">
             <div class="nav-icon-box"><i class="bi bi-bookmark-fill icon-grad icon-grad-main"></i></div>
