@@ -25,7 +25,7 @@ public class FollowApiController {
         String followerUsername = principal.getName();
 
         try {
-            followService.followUser(followerUsername, username);
+            followService.follow(followerUsername, username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -40,7 +40,7 @@ public class FollowApiController {
         String followerUsername = principal.getName();
 
         try {
-            followService.unfollowUser(followerUsername, username);
+            followService.unfollow(followerUsername, username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
