@@ -253,11 +253,7 @@
                 <p th:id="'post-content-display-' + ${post.id}" class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
             </div>
             
-            <!-- Blurred Background Letterboxing cho Bài chính (Chống bể ảnh và lấp khoảng trống) -->
-            <div th:if="${post.imageUrl != null and post.sharedPost == null}" class="position-relative overflow-hidden w-100 bg-dark d-flex justify-content-center align-items-center" style="max-height: 550px;">
-                <img th:src="${post.imageUrl}" class="position-absolute w-100 h-100 start-0 top-0" style="object-fit: cover; filter: blur(20px); transform: scale(1.1); opacity: 0.6;" alt="Background blur">
-                <img th:src="${post.imageUrl}" class="position-relative img-fluid" style="max-height: 550px; object-fit: contain; z-index: 1;" alt="Post img">
-            </div>
+            <img th:if="${post.imageUrl != null and post.sharedPost == null}" th:src="${post.imageUrl}" class="img-fluid w-100" style="max-height: 550px; object-fit: cover;" alt="Post img">
             
             <!-- KIỂM TRA NẾU ĐÂY LÀ BÀI SHARE -> HIỂN THỊ BOX LỒNG NHAU -->
             <div th:if="${post.sharedPost != null}" class="border rounded mx-3 mb-2 overflow-hidden pointer-box">
@@ -275,11 +271,8 @@
                 <div class="p-2" th:if="${post.sharedPost.content != null and !post.sharedPost.content.isEmpty()}">
                     <p class="mb-0" style="font-size: 13.5px; white-space: pre-wrap;" th:text="${post.sharedPost.content}">Nội dung gốc</p>
                 </div>
-                <!-- Blurred Background Letterboxing cho Ảnh bài gốc (Chống bể ảnh và lấp khoảng trống) -->
-                <div th:if="${post.sharedPost.imageUrl != null}" class="position-relative overflow-hidden w-100 bg-dark d-flex justify-content-center align-items-center border-top" style="max-height: 400px;">
-                    <img th:src="${post.sharedPost.imageUrl}" class="position-absolute w-100 h-100 start-0 top-0" style="object-fit: cover; filter: blur(20px); transform: scale(1.1); opacity: 0.6;" alt="Background blur">
-                    <img th:src="${post.sharedPost.imageUrl}" class="position-relative img-fluid" style="max-height: 400px; object-fit: contain; z-index: 1;" alt="Shared Post img">
-                </div>
+                <!-- Image bài gốc -->
+                <img th:if="${post.sharedPost.imageUrl != null}" th:src="${post.sharedPost.imageUrl}" class="img-fluid w-100 border-top" style="max-height: 400px; object-fit: cover;">
             </div>
             
             <div class="d-flex justify-content-between px-3 py-2 text-muted" style="font-size: 13.5px;">
