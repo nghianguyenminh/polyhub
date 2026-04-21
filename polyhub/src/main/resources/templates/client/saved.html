@@ -63,12 +63,72 @@
 
         <div class="saved-items-list mb-5">
             
-            <!-- Danh sách Bài viết đã lưu (Dự kiến / Sắp tới mới làm) -->
+            <!-- Danh sách Bài viết đã lưu -->
             <div th:if="${type == 'posts'}">
-                <div class="alert alert-light text-center py-5 border-0">
-                    <i class="bi bi-tools text-poly fs-1 d-block mb-3"></i>
-                    <h6 class="fw-bold text-dark">Chức năng bài viết đang được xây dựng!</h6>
-                    <p class="text-muted mb-0">Tính năng lưu bài viết sẽ sớm ra mắt trong thời gian tới.</p>
+                <div class="poly-card p-0 mb-3 saved-item-wrapper" th:each="savedItem : ${savedPostsPage.content}">
+                    <div class="saved-status-bar text-muted border-bottom mb-0">
+                        <i class="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu bài viết này vào <span th:text="${#temporals.format(savedItem.savedAt, 'dd/MM/yyyy HH:mm')}">Hôm nay</span>
+                    </div>
+                    
+                    <div class="p-3 pb-2 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2" th:with="post=${savedItem.post}">
+                            <img th:src="${post.user != null and post.user.avatar != null and post.user.avatar.startsWith('http') ? post.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border" width="40" height="40" style="object-fit: cover;" alt="Avatar">
+                            <div style="line-height: 1.3;">
+                                <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 14.5px;" th:text="${post.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                                <div class="text-muted" style="font-size: 13px;">
+                                    <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> 
+                                    • <i th:id="'privacy-icon-' + ${post.id}" th:class="${post.isPrivate != null and post.isPrivate ? 'bi bi-lock-fill' : 'bi bi-globe-americas'}" th:title="${post.isPrivate != null and post.isPrivate ? 'Chỉ mình tôi' : 'Công khai'}"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 ms-auto">
+                            <form th:action="@{/saved/togglePost}" method="POST" class="m-0">
+                                <input type="hidden" name="postId" th:value="${savedItem.post.id}">
+                                <button type="submit" class="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved" style="font-size: 13px;"><i class="bi bi-bookmark-x me-1"></i> Bỏ lưu</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="px-3 pb-2" th:with="post=${savedItem.post}">
+                        <p th:id="'post-content-display-' + ${post.id}" class="mb-0" style="font-size: 14.5px; white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết</p>
+                    </div>
+                    
+                    <!-- Blurred Background Letterboxing for main post image -->
+                    <div th:if="${savedItem.post.imageUrl != null and savedItem.post.sharedPost == null}" class="image-letterbox-container large">
+                        <div class="image-letterbox-bg" th:style="'background-image: url(' + ${savedItem.post.imageUrl} + ')'"></div>
+                        <img th:src="${savedItem.post.imageUrl}" class="image-letterbox-main" alt="Post img">
+                    </div>
+                    
+                    <!-- KIỂM TRA NẾU ĐÂY LÀ BÀI SHARE -> HIỂN THỊ BOX LỒNG NHAU -->
+                    <div th:if="${savedItem.post.sharedPost != null}" class="border rounded mx-3 mb-2 overflow-hidden pointer-box">
+                        <!-- Header của bài gốc -->
+                        <div class="p-2 d-flex align-items-center bg-light border-bottom">
+                            <img th:src="${savedItem.post.sharedPost.user != null and savedItem.post.sharedPost.user.avatar != null and savedItem.post.sharedPost.user.avatar.startsWith('http') ? savedItem.post.sharedPost.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" class="rounded-circle border me-2" width="30" height="30" style="object-fit: cover;">
+                            <div style="line-height: 1.2;">
+                                <a href="#" class="fw-bold text-dark text-decoration-none" style="font-size: 13.5px;" th:text="${savedItem.post.sharedPost.user?.fullname ?: 'Ẩn danh'}">Tên người dùng</a>
+                                <div class="text-muted" style="font-size: 12px;">
+                                    <span th:text="${#temporals.format(savedItem.post.sharedPost.createdAt, 'dd/MM/yyyy HH:mm')}">Thời điểm</span> • <i class="bi bi-globe-americas"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Content bài gốc -->
+                        <div class="p-2" th:if="${savedItem.post.sharedPost.content != null and !savedItem.post.sharedPost.content.isEmpty()}">
+                            <p class="mb-0" style="font-size: 13.5px; white-space: pre-wrap;" th:text="${savedItem.post.sharedPost.content}">Nội dung gốc</p>
+                        </div>
+                        <!-- Image bài gốc (Blurred Letterboxing) -->
+                        <div th:if="${savedItem.post.sharedPost.imageUrl != null}" class="image-letterbox-container small" th:with="post=${savedItem.post}">
+                            <div class="image-letterbox-bg" th:style="'background-image: url(' + ${post.sharedPost.imageUrl} + ')'"></div>
+                            <img th:src="${savedItem.post.sharedPost.imageUrl}" class="image-letterbox-main" alt="Shared Post img">
+                        </div>
+                    </div>
+
+                    <div class="p-2"></div> <!-- Khoảng trống dưới -->
+                </div>
+
+                <!-- Nếu không có bài viết nào -->
+                <div th:if="${savedPostsPage.totalElements == 0}" class="text-center py-5">
+                    <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">Bạn chưa lưu bài viết nào.</p>
                 </div>
             </div>
 
@@ -119,7 +179,8 @@
 
         </div>
 
-        <nav aria-label="Page navigation" th:if="${type == 'documents' and savedDocsPage.totalPages > 1}">
+        <!-- Phân trang cho Tài liệu -->
+        <nav aria-label="Page navigation" th:if="${type == 'documents' and savedDocsPage != null and savedDocsPage.totalPages > 1}">
             <ul class="pagination poly-pagination justify-content-center mt-4 mb-5">
                 <li class="page-item" th:classappend="${savedDocsPage.number == 0 ? 'disabled' : ''}">
                     <a class="page-link" th:href="@{/saved(type=${type}, page=${savedDocsPage.number})}" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i></a>
@@ -131,6 +192,23 @@
 
                 <li class="page-item" th:classappend="${savedDocsPage.number + 1 == savedDocsPage.totalPages ? 'disabled' : ''}">
                     <a class="page-link" th:href="@{/saved(type=${type}, page=${savedDocsPage.number + 2})}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Phân trang cho Bài viết -->
+        <nav aria-label="Page navigation" th:if="${type == 'posts' and savedPostsPage != null and savedPostsPage.totalPages > 1}">
+            <ul class="pagination poly-pagination justify-content-center mt-4 mb-5">
+                <li class="page-item" th:classappend="${savedPostsPage.number == 0 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${savedPostsPage.number})}" tabindex="-1" aria-disabled="true"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                
+                <li class="page-item" th:each="i : ${#numbers.sequence(1, savedPostsPage.totalPages)}" th:classappend="${savedPostsPage.number + 1 == i ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${i})}" th:text="${i}"></a>
+                </li>
+
+                <li class="page-item" th:classappend="${savedPostsPage.number + 1 == savedPostsPage.totalPages ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/saved(type=${type}, page=${savedPostsPage.number + 2})}"><i class="bi bi-chevron-right"></i></a>
                 </li>
             </ul>
         </nav>

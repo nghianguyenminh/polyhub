@@ -138,6 +138,19 @@
                         <i class="bi bi-three-dots text-muted fs-5"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="font-size: 14.5px;">
+                        
+                        <th:block th:if="${currentUser != null}">
+                            <li>
+                                <form th:action="@{/saved/togglePost}" method="post" class="m-0 p-0 d-inline">
+                                    <input type="hidden" name="postId" th:value="${post.id}"/>
+                                    <button type="submit" class="dropdown-item py-2" style="background: none; border: none; width: 100%; text-align: left;">
+                                        <i class="bi" th:classappend="${savedPostIds != null and savedPostIds.contains(post.id) ? 'bi-bookmark-fill text-poly' : 'bi-bookmark'}"></i> 
+                                        <span th:text="${savedPostIds != null and savedPostIds.contains(post.id) ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}">Lưu bài viết</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </th:block>
+                    
                         <th:block th:if="${currentUser != null and post.user?.username == currentUser.username}">
                             <li><a class="dropdown-item py-2" href="#" th:onclick="'openEditPostModal(' + ${post.id} + ')'"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa bài viết</a></li>
                             <li><a class="dropdown-item py-2" href="#" th:onclick="'togglePostPrivacy(' + ${post.id} + ')'">

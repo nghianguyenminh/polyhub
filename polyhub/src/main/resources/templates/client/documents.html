@@ -177,7 +177,22 @@
         <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3 mb-4">
             
             <div class="col" th:each="doc : ${documentPage.content}">
-                <div class="doc-card h-100 d-flex flex-column">
+                <div class="doc-card h-100 d-flex flex-column position-relative" style="cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;" 
+                     onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.08)';" 
+                     onmouseout="this.style.transform='none'; this.style.boxShadow='none';"
+                     data-bs-toggle="modal" data-bs-target="#viewDocModal"
+                     th:data-title="${doc.title}"
+                     th:data-desc="${doc.description}"
+                     th:data-category="${doc.category.name}"
+                     th:data-type="${doc.documentType}"
+                     th:data-downloads="${doc.downloadCount}"
+                     th:data-filesize="${doc.fileSize != null ? doc.fileSize : 0}"
+                     th:data-date="${doc.createdAt != null ? #temporals.format(doc.createdAt, 'dd/MM/yyyy HH:mm') : 'Mới đây'}"
+                     th:data-url="@{/documents/download/{id}(id=${doc.id})}"
+                     th:data-uploader="${doc.uploader != null ? doc.uploader.fullname : 'Hệ thống'}"
+                     th:data-avatar="${doc.uploader != null && doc.uploader.avatar != null && doc.uploader.avatar != 'default.png' ? doc.uploader.avatar : (doc.uploader != null ? 'https://ui-avatars.com/api/?name='+doc.uploader.fullname+'&background=random' : 'https://ui-avatars.com/api/?name=PolyHub&background=random')}"
+                     th:data-role="${doc.uploader != null && doc.uploader.role != null ? doc.uploader.role.name : (doc.uploader != null ? 'Sinh viên' : 'Hệ thống')}"
+                     onclick="fillDocModal(this)">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="doc-icon-box" 
                              th:classappend="${doc.documentType == 'PDF' ? 'bg-danger-soft text-danger' : 
@@ -187,7 +202,7 @@
                                                          (doc.documentType == 'WORD' ? 'bi-file-earmark-word-fill' : 
                                                          (doc.documentType == 'ZIP' ? 'bi-file-earmark-zip-fill' : 'bi-file-earmark-fill'))}"></i>
                         </div> 
-                        <form th:action="@{/saved/toggle}" method="POST" class="m-0">
+                        <form th:action="@{/saved/toggle}" method="POST" class="m-0 z-3 position-relative" onclick="event.stopPropagation();">
                             <input type="hidden" name="documentId" th:value="${doc.id}">
                             <button type="submit" class="btn-icon-transparent" th:classappend="${savedDocIds != null and savedDocIds.contains(doc.id)} ? 'text-poly' : 'text-muted'">
                                 <i class="bi" th:classappend="${savedDocIds != null and savedDocIds.contains(doc.id)} ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
@@ -213,9 +228,9 @@
                         <span class="text-truncate fw-medium" style="font-size: 13px;">Hệ thống</span>
                     </div>
                     
-                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top z-3 position-relative">
                         <div class="text-muted" style="font-size: 11.5px;"><i class="bi bi-download me-1"></i> <span th:text="${doc.downloadCount}">0</span></div>
-                        <a th:href="${doc.fileUrl}" target="_blank" class="btn btn-download btn-sm rounded-pill fw-bold">Tải về</a>
+                        <a th:href="@{/documents/download/{id}(id=${doc.id})}" target="_blank" onclick="event.stopPropagation();" class="btn btn-download btn-sm rounded-pill fw-bold">Tải về</a>
                     </div>
                 </div>
             </div>
@@ -289,6 +304,111 @@
                 </div>
             </div>
         </div>
+
+        <!-- MODAL XEM CHI TIẾT TÀI LIỆU -->
+        <div class="modal fade" id="viewDocModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow" style="border-radius: 16px; overflow: hidden; background: linear-gradient(145deg, #ffffff, #fdfbf7);">
+                    <div class="modal-header border-0 pb-0 position-relative mt-2 px-4 pt-4">
+                        <div class="d-flex align-items-center justify-content-between w-100">
+                           <span id="vd-category" class="badge bg-light text-dark border px-3 py-2 fw-medium" style="border-radius: 8px;">SOF3021</span>
+                           <div class="btn-close-custom" data-bs-dismiss="modal" style="cursor: pointer; background: #f8f9fa; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;">
+                                <i class="bi bi-x fs-5 text-dark"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-body px-4 py-3">
+                        <div class="d-flex mb-3">
+                            <div id="vd-icon-box" class="doc-icon-box me-3 mt-1 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; font-size: 24px;">
+                                <i id="vd-icon" class="bi bi-file-earmark-fill"></i>
+                            </div>
+                            <div>
+                                <h4 id="vd-title" class="fw-bolder mb-1" style="color: #1a1a1a; line-height: 1.35;">Tiêu đề tài liệu</h4>
+                                <div class="d-flex flex-wrap text-muted align-items-center gap-3" style="font-size: 13px;">
+                                    <span><i class="bi bi-clock me-1"></i> <span id="vd-date">01/01/2026</span></span>
+                                    <span><i class="bi bi-file-earmark-text me-1"></i> <span id="vd-type">PDF</span></span>
+                                    <span><i class="bi bi-download me-1"></i> <span id="vd-downloads">0</span> Lượt tải</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 mb-4 mt-2" style="background: rgba(242, 113, 37, 0.04); border: 1px solid rgba(242, 113, 37, 0.1); border-radius: 12px;">
+                            <h6 class="fw-bold mb-2 text-dark" style="font-size: 13.5px;">Mô tả tài liệu:</h6>
+                            <p id="vd-desc" class="mb-0 text-muted" style="font-size: 14px; line-height: 1.6;">Chưa có mô tả cho tài liệu này.</p>
+                        </div>
+                        
+                        <hr class="border-light">
+                        
+                        <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
+                            <div>
+                                <p class="text-muted mb-1" style="font-size: 12px; font-weight: 500; text-transform: uppercase;">Người chia sẻ</p>
+                                <div class="d-flex align-items-center">
+                                    <img id="vd-avatar" src="" class="rounded-circle me-2 object-fit-cover shadow-sm border border-white" width="36" height="36">
+                                    <div>
+                                        <div id="vd-uploader" class="fw-bold text-dark" style="font-size: 14px; line-height: 1.2;">Tên User</div>
+                                        <span id="vd-role" class="badge bg-poly-soft text-poly mt-1" style="font-size: 10px; padding: 3px 6px;">Role</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex">
+                        <a id="vd-download-btn" href="#" target="_blank" class="btn btn-poly-gradient fw-bold rounded-pill w-100 py-2 d-flex justify-content-center align-items-center" style="font-size: 15px;">
+                            <i class="bi bi-cloud-arrow-down-fill me-2 fs-5"></i> Tải Xuống Tài Liệu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function fillDocModal(el) {
+                const title = el.getAttribute('data-title');
+                const desc = el.getAttribute('data-desc');
+                const category = el.getAttribute('data-category');
+                const type = el.getAttribute('data-type');
+                const downloads = el.getAttribute('data-downloads');
+                const date = el.getAttribute('data-date');
+                const url = el.getAttribute('data-url');
+                const uploader = el.getAttribute('data-uploader');
+                const avatar = el.getAttribute('data-avatar');
+                const role = el.getAttribute('data-role');
+                
+                document.getElementById('vd-title').innerText = title;
+                document.getElementById('vd-desc').innerText = desc ? desc : 'Người chia sẻ không để lại mô tả chi tiết cho tài liệu này.';
+                document.getElementById('vd-category').innerText = category;
+                document.getElementById('vd-type').innerText = type;
+                document.getElementById('vd-downloads').innerText = downloads;
+                document.getElementById('vd-date').innerText = date;
+                document.getElementById('vd-download-btn').href = url;
+                document.getElementById('vd-uploader').innerText = uploader;
+                document.getElementById('vd-avatar').src = avatar;
+                document.getElementById('vd-role').innerText = role;
+                
+                // Cập nhật icon theo file type
+                const iconBox = document.getElementById('vd-icon-box');
+                const icon = document.getElementById('vd-icon');
+                
+                iconBox.className = 'doc-icon-box me-3 mt-1 d-flex align-items-center justify-content-center ';
+                icon.className = 'bi ';
+                
+                if (type === 'PDF') {
+                    iconBox.classList.add('bg-danger-soft', 'text-danger');
+                    icon.classList.add('bi-file-earmark-pdf-fill');
+                } else if (type === 'WORD') {
+                    iconBox.classList.add('bg-primary-soft', 'text-primary');
+                    icon.classList.add('bi-file-earmark-word-fill');
+                } else if (type === 'ZIP') {
+                    iconBox.classList.add('bg-warning-soft', 'text-warning');
+                    icon.classList.add('bi-file-earmark-zip-fill');
+                } else {
+                    iconBox.classList.add('bg-info-soft', 'text-info');
+                    icon.classList.add('bi-file-earmark-fill');
+                }
+            }
+        </script>
 
     </div>
 

@@ -119,6 +119,21 @@ public class DocumentClientService {
         return counts;
     }
 
+    /**
+     * Xử lý Nghiệp vụ: Tăng lượt tải và trả về URL file
+     */
+    @Transactional
+    public String getDownloadUrlAndIncrementCount(Long documentId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài liệu này."));
+        
+        // Tăng lượt tải
+        document.setDownloadCount(document.getDownloadCount() + 1);
+        documentRepository.save(document);
+        
+        return document.getFileUrl();
+    }
+
     // --- CÁC HÀM TIỆN ÍCH DÙNG CHUNG TRONG SERVICE ---
 
     // Hàm lấy đuôi file (vd: pdf, docx, zip)
