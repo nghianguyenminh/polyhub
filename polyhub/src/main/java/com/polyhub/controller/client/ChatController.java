@@ -17,8 +17,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -41,35 +45,58 @@ public class ChatController {
             return "redirect:/login";
         }
 
+        ChatRoom room = null;
+        User targetUser = null;
         
-        List<User> allUsers = userRepository.findAll();
-        model.addAttribute("allUsers", allUsers);
-
+        if (targetUserId != null) {
+            targetUser = userRepository.findById(targetUserId).orElse(null);
+            if (targetUser != null) {
+                room = chatRoomRepository.findByUsers(currentUser.getUsername(), targetUserId)
+                        .orElseGet(() -> {
+                            ChatRoom newRoom = ChatRoom.builder()
+                                    .user1Id(currentUser.getUsername())
+                                    .user2Id(targetUserId)
+                                    .lastUpdated(new Date())
+                                    .build();
+                            return chatRoomRepository.save(newRoom);
+                        });
+                model.addAttribute("roomId", room.getId());
+                model.addAttribute("targetUser", targetUser);
+            }
+        }
         
-        if (targetUserId == null) {
-            return "client/chat";
+        // Fetch all rooms for current user
+        List<ChatRoom> userRooms = chatRoomRepository.findByUserIdOrderByLastUpdatedDesc(currentUser.getUsername());
+        Map<String, ChatRoom> userRoomMap = new HashMap<>();
+        for (ChatRoom r : userRooms) {
+            String otherUserId = r.getUser1Id().equals(currentUser.getUsername()) ? r.getUser2Id() : r.getUser1Id();
+            userRoomMap.put(otherUserId, r);
         }
 
-      
-        User targetUser = userRepository.findById(targetUserId).orElse(null);
-        if (targetUser == null) return "client/chat";
+        List<User> allUsers = userRepository.findAll();
+        List<User> sortedUsers = allUsers.stream()
+                .filter(u -> !u.getUsername().equals(currentUser.getUsername())) // Bỏ qua chính mình
+                .sorted((u1, u2) -> {
+                    ChatRoom r1 = userRoomMap.get(u1.getUsername());
+                    ChatRoom r2 = userRoomMap.get(u2.getUsername());
+                    Date d1 = r1 != null ? r1.getLastUpdated() : null;
+                    Date d2 = r2 != null ? r2.getLastUpdated() : null;
 
-        
-        ChatRoom room = chatRoomRepository.findByUsers(currentUser.getUsername(), targetUserId)
-                .orElseGet(() -> {
-                    ChatRoom newRoom = ChatRoom.builder()
-                            .user1Id(currentUser.getUsername())
-                            .user2Id(targetUserId)
-                            .lastUpdated(new Date())
-                            .build();
-                    return chatRoomRepository.save(newRoom);
-                });
+                    if (d1 != null && d2 != null) return d2.compareTo(d1); // Mới nhất lên đầu
+                    if (d1 != null) return -1;
+                    if (d2 != null) return 1;
+                    
+                    // Nếu chưa chat bao giờ, ai có tên trước thì lên trên
+                    return u1.getFullname() != null && u2.getFullname() != null 
+                        ? u1.getFullname().compareToIgnoreCase(u2.getFullname()) 
+                        : 0;
+                })
+                .collect(Collectors.toList());
 
-        
-        model.addAttribute("roomId", room.getId());
+        model.addAttribute("allUsers", sortedUsers);
         model.addAttribute("currentUser", currentUser);
-        model.addAttribute("targetUser", targetUser);
-        
+        model.addAttribute("userRoomMap", userRoomMap); // Truyền map xuống giao diện để lấy lastMessage (tuỳ chọn)
+
         return "client/chat"; 
     }
 

@@ -209,7 +209,8 @@
                             <h6 class="mb-1 fw-bold text-truncate" th:text="${user.fullname}">Tên người dùng</h6>
                             <span class="text-muted" style="font-size: 11px;"></span>
                         </div>
-                        <p class="mb-0 text-muted small text-truncate opacity-75">Nhấn để trò chuyện</p>
+                        <p class="mb-0 text-muted small text-truncate opacity-75"
+                           th:text="${userRoomMap.get(user.username) != null and userRoomMap.get(user.username).lastMessage != null ? userRoomMap.get(user.username).lastMessage : 'Nhấn để trò chuyện'}">Nhấn để trò chuyện</p>
                     </div>
                 </a>
             </div>
