@@ -25,6 +25,9 @@ public class HomeController {
 
     @Autowired
     private com.polyhub.repository.PostRepository postRepository;
+    
+    @Autowired
+    private com.polyhub.service.client.SavedPostService savedPostService;
 
     @GetMapping("/")
     public String index(Principal principal, Model model) {
@@ -47,6 +50,14 @@ public class HomeController {
                         model.addAttribute("categories", categories);
                     }
                 }
+
+                // Truyền xuống list ID bài viết đã lưu để UI tô màu
+                org.springframework.data.domain.Page<com.polyhub.entity.SavedPost> savedPostPage = savedPostService.getSavedPostsByUser(user, org.springframework.data.domain.PageRequest.of(0, 99999));
+                java.util.Set<Long> savedPostIds = new java.util.HashSet<>();
+                for (com.polyhub.entity.SavedPost p : savedPostPage.getContent()) {
+                    savedPostIds.add(p.getPost().getId());
+                }
+                model.addAttribute("savedPostIds", savedPostIds);
             }
         }
         return "client/home";

@@ -102,4 +102,19 @@ public class DocumentClientController {
         
         return "redirect:/documents"; // Load lại trang Document (cùng form với file HTML bên Client)
     }
+
+    /**
+     * Hành động: Tải xuống tài liệu (Chuẩn nghiệp vụ)
+     * Tăng số lượt tải (Download Count) rồi Redirect tới URL file (Cloudinary)
+     */
+    @GetMapping("/download/{id}")
+    public String downloadDocument(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            String fileUrl = documentClientService.getDownloadUrlAndIncrementCount(id);
+            return "redirect:" + fileUrl;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error_msg", "Không thể tải tài liệu: " + e.getMessage());
+            return "redirect:/documents";
+        }
+    }
 }
