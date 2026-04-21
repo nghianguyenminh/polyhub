@@ -19,6 +19,45 @@ body {
     padding-top: var(--header-height); 
 }
 
+/* Blurred Background Letterboxing for Images */
+.image-letterbox-container {
+    position: relative;
+    width: 100%;
+    background-color: #e4e6eb; /* Fallback background */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.image-letterbox-container.large {
+    height: 550px;
+}
+.image-letterbox-container.small {
+    height: 400px;
+    border-top: 1px solid #dee2e6;
+}
+
+.image-letterbox-bg {
+    position: absolute;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(15px) brightness(0.85); /* Blur and slightly darken */
+    z-index: 1;
+}
+
+.image-letterbox-main {
+    position: relative;
+    z-index: 2;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
 /* =========================================
    2. HEADER & TỔNG THỂ
    ========================================= */
