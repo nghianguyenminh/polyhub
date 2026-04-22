@@ -1,4 +1,4 @@
-package com.polyhub.repository.jpa;
+package com.polyhub.repository.mongodb;
 
 import com.polyhub.entity.Like;
 import org.springframework.data.mongodb.repository.MongoRepository;
