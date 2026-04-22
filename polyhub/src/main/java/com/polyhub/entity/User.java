@@ -56,5 +56,21 @@ public class User implements Serializable {
     // --- KẾT NỐI VỚI BẢNG ROLE ---
     @ManyToOne
     @JoinColumn(name = "role_id")
-    private Role role; 
+    private Role role;
+
+    // --- KẾT NỐI NGƯỜI DÙNG (FOLLOWERS/FOLLOWING) ---
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_follows",
+            joinColumns = @JoinColumn(name = "user_username"),
+            inverseJoinColumns = @JoinColumn(name = "follower_username")
+    )
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private java.util.Set<User> followers = new java.util.HashSet<>();
+
+    @ManyToMany(mappedBy = "followers", fetch = FetchType.LAZY)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private java.util.Set<User> following = new java.util.HashSet<>();
 }

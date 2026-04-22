@@ -1,9 +1,5 @@
+﻿package com.polyhub.repository;
 
-package com.polyhub.repository;
-import com.polyhub.entity.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-import java.util.Optional;
 import com.polyhub.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -18,8 +14,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmail(String email);
     long countByRole_Id(String roleId);
+
+    org.springframework.data.domain.Page<User> findByFullnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+            String fullname, String email, org.springframework.data.domain.Pageable pageable);
 }
-
-    
-
-
