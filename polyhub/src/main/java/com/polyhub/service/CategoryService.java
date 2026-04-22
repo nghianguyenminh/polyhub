@@ -1,7 +1,7 @@
 package com.polyhub.service;
 
 import com.polyhub.entity.Category;
-import com.polyhub.repository.CategoryRepository;
+import com.polyhub.repository.jpa.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

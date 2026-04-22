@@ -2,14 +2,14 @@ package com.polyhub.service;
 
 import com.polyhub.entity.Post;
 import com.polyhub.entity.User;
-import com.polyhub.repository.PostRepository;
-import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.jpa.PostRepository;
+import com.polyhub.repository.jpa.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import com.polyhub.entity.PostReport;
-import com.polyhub.repository.PostReportRepository;
+import com.polyhub.repository.jpa.PostReportRepository;
 
 import java.io.IOException;
 import java.util.Map;

@@ -4,7 +4,7 @@ import com.polyhub.entity.User;
 import com.polyhub.service.EmailService;
 import com.polyhub.entity.Document;
 import com.polyhub.entity.DocumentStatus;
-import com.polyhub.repository.DocumentRepository;
+import com.polyhub.repository.jpa.DocumentRepository;
 import com.polyhub.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

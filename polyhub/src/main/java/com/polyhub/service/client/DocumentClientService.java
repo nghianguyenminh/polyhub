@@ -3,8 +3,8 @@ package com.polyhub.service.client;
 import com.polyhub.entity.Category;
 import com.polyhub.entity.User;
 import com.polyhub.entity.Document;
-import com.polyhub.repository.CategoryRepository;
-import com.polyhub.repository.DocumentRepository;
+import com.polyhub.repository.jpa.CategoryRepository;
+import com.polyhub.repository.jpa.DocumentRepository;
 import com.polyhub.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class DocumentClientService {
     private final DocumentRepository documentRepository;
     private final CategoryRepository categoryRepository;
     private final FileStorageService fileStorageService;
-    private final com.polyhub.repository.SavedDocumentRepository savedDocumentRepository;
+    private final com.polyhub.repository.jpa.SavedDocumentRepository savedDocumentRepository;
 
     /**
      * Upload tài liệu từ người dùng Client lên Cloudinary và lưu thông tin vào DB.

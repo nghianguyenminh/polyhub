@@ -1,7 +1,7 @@
 package com.polyhub.controller.admin;
 
 import com.polyhub.entity.Product;
-import com.polyhub.repository.CategoryRepository;
+import com.polyhub.repository.jpa.CategoryRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.ProductService;
 import java.time.LocalDateTime;

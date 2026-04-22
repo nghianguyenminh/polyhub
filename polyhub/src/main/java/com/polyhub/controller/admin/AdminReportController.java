@@ -2,8 +2,8 @@ package com.polyhub.controller.admin;
 
 import com.polyhub.entity.Post;
 import com.polyhub.entity.PostReport;
-import com.polyhub.repository.PostReportRepository;
-import com.polyhub.repository.PostRepository;
+import com.polyhub.repository.jpa.PostReportRepository;
+import com.polyhub.repository.jpa.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

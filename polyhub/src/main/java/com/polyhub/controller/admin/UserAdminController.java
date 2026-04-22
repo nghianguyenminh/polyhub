@@ -2,8 +2,8 @@ package com.polyhub.controller.admin;
 
 import com.polyhub.entity.User;
 import com.polyhub.entity.Role;
-import com.polyhub.repository.UserRepository;
-import com.polyhub.repository.RoleRepository;
+import com.polyhub.repository.jpa.UserRepository;
+import com.polyhub.repository.jpa.RoleRepository;
 import com.polyhub.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -1,7 +1,7 @@
 package com.polyhub.service.impl;
 
 import com.polyhub.entity.Product;
-import com.polyhub.repository.ProductRepository;
+import com.polyhub.repository.jpa.ProductRepository;
 import com.polyhub.service.ProductService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

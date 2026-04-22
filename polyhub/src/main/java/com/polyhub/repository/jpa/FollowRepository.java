@@ -1,4 +1,4 @@
-package com.polyhub.repository;
+package com.polyhub.repository.jpa;
 
 import com.polyhub.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

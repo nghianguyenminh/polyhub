@@ -2,8 +2,8 @@ package com.polyhub.config;
 
 import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
-import com.polyhub.repository.RoleRepository;
-import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.jpa.RoleRepository;
+import com.polyhub.repository.jpa.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

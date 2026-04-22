@@ -12,7 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.polyhub.entity.MentorRequest;
 import com.polyhub.entity.User;
 import com.polyhub.entity.RequestStatus;
-import com.polyhub.repository.MentorRequestRepository;
+import com.polyhub.repository.jpa.MentorRequestRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.FileStorageService;
 import lombok.RequiredArgsConstructor;

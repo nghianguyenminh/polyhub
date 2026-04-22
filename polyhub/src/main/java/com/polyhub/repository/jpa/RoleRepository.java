@@ -1,4 +1,4 @@
-package com.polyhub.repository;
+package com.polyhub.repository.jpa;
 
 import com.polyhub.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,7 @@
 package com.polyhub.service;
 
 import com.polyhub.entity.User;
-import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

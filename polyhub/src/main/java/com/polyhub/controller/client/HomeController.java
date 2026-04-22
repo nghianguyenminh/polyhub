@@ -2,7 +2,7 @@ package com.polyhub.controller.client;
 
 import com.polyhub.entity.User;
 import com.polyhub.entity.Category;
-import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.jpa.UserRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class HomeController {
     private PostService postService;
 
     @Autowired
-    private com.polyhub.repository.PostRepository postRepository;
+    private com.polyhub.repository.jpa.PostRepository postRepository;
 
     @GetMapping("/")
     public String index(Principal principal, Model model) {

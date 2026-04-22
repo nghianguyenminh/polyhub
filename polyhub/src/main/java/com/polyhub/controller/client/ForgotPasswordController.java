@@ -1,7 +1,7 @@
 package com.polyhub.controller.client;
 
 import com.polyhub.entity.User;
-import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.jpa.UserRepository;
 import com.polyhub.service.EmailService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;

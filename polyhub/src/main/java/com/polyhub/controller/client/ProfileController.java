@@ -2,8 +2,8 @@ package com.polyhub.controller.client;
 
 import com.polyhub.entity.Post;
 import com.polyhub.entity.User;
-import com.polyhub.repository.PostRepository;
-import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.jpa.PostRepository;
+import com.polyhub.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;

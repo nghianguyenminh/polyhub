@@ -1,7 +1,7 @@
 package com.polyhub.service.impl;
 
 import com.polyhub.entity.Document;
-import com.polyhub.repository.DocumentRepository;
+import com.polyhub.repository.jpa.DocumentRepository;
 import com.polyhub.service.DocumentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
