@@ -213,159 +213,62 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Record 1: Normal Active -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Java&background=E0E7FF&color=4338CA" class="group-avatar">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-bold text-dark d-flex align-items-center gap-2" style="font-size: 14px;">
-                                            Cộng đồng Java Spring 
-                                            <span class="badge-privacy badge-public">Public</span>
-                                        </div>
-                                        <div class="text-muted" style="font-size: 12px; margin-top: 2px;">Tag: #UngDungPhanMem</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Thành+Lê&background=random" class="owner-avatar">
-                                    <div>
-                                        <div class="text-dark fw-medium" style="font-size: 13px;">Lê Văn Thành</div>
-                                        <div class="text-muted" style="font-size: 11px;">PS12345</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="fw-semibold text-dark"><i class="bi bi-people-fill text-muted me-1"></i> 156</span>
-                            </td>
-                            <td>
-                                <div class="activity-indicator">
-                                    <i class="bi bi-graph-up-arrow text-success"></i> 24 bài/tuần
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge status-active">
-                                    <span class="status-dot"></span> Hoạt động
-                                </span>
-                            </td>
-                            <td class="text-center" style="padding-right: 1.5rem;">
-                                <div class="dropdown">
-                                    <button class="btn-action-dots mx-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end action-menu shadow">
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-flag-fill text-primary"></i> Xem Reports</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item item-warning" href="#" data-bs-toggle="modal" data-bs-target="#warnModal"><i class="bi bi-exclamation-triangle"></i> Gửi cảnh cáo</a></li>
-                                        <li><a class="dropdown-item item-danger" href="#" data-bs-toggle="modal" data-bs-target="#lockModal"><i class="bi bi-lock-fill"></i> Khóa nhóm</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Record 2: Reported / Warned -->
-                        <tr style="background-color: #FEF2F2;">
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=H&background=FDE8E8&color=9B1C1C" class="group-avatar" style="border-color: #F8B4B4;">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-bold text-dark d-flex align-items-center gap-2" style="font-size: 14px;">
-                                            Hội Thuê Làm Assignment
-                                            <span class="badge-privacy badge-private">Private</span>
-                                            <i class="bi bi-flag-fill text-danger" title="Bị Report 15 lần"></i>
-                                        </div>
-                                        <div class="text-danger" style="font-size: 12px; margin-top: 2px;">15 Reports gần đây</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="https://ui-avatars.com/api/?name=Ẩn+Danh&background=random" class="owner-avatar">
-                                    <div>
-                                        <div class="text-dark fw-medium" style="font-size: 13px;">Nguyễn Tài</div>
-                                        <div class="text-muted" style="font-size: 11px;">PS55555</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="fw-semibold text-dark"><i class="bi bi-people-fill text-muted me-1"></i> 85</span>
-                            </td>
-                            <td>
-                                <div class="activity-indicator">
-                                    <i class="bi bi-lightning-charge-fill text-warning"></i> 50 bài/tuần
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge status-warning">
-                                    <span class="status-dot"></span> Bị Cảnh Cáo
-                                </span>
-                            </td>
-                            <td class="text-center" style="padding-right: 1.5rem;">
-                                <div class="dropdown">
-                                    <button class="btn-action-dots mx-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end action-menu shadow">
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-flag-fill text-primary"></i> Xem Reports (15)</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item item-warning" href="#" data-bs-toggle="modal" data-bs-target="#warnModal"><i class="bi bi-exclamation-triangle"></i> Gửi cảnh cáo</a></li>
-                                        <li><a class="dropdown-item item-danger" href="#" data-bs-toggle="modal" data-bs-target="#lockModal"><i class="bi bi-lock-fill"></i> Khóa nhóm</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Record 3: Inactive / Ghost -->
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=GD&background=F3F4F6&color=6B7280" class="group-avatar" style="opacity: 0.6;">
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-bold text-muted d-flex align-items-center gap-2" style="font-size: 14px;">
-                                            Nhóm Graphic Design 2024
-                                            <span class="badge-privacy badge-public">Public</span>
-                                        </div>
-                                        <div class="text-muted" style="font-size: 12px; margin-top: 2px;">Tag: #ThietKeDoHoa</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2 opacity-75">
-                                    <img src="https://ui-avatars.com/api/?name=Lan+A&background=random" class="owner-avatar">
-                                    <div>
-                                        <div class="text-muted fw-medium" style="font-size: 13px;">Hoàng Lan</div>
-                                        <div class="text-muted" style="font-size: 11px;">PS33333</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="fw-semibold text-muted"><i class="bi bi-people-fill text-muted me-1"></i> 5</span>
-                            </td>
-                            <td>
-                                <div class="activity-indicator" title="Không có bài viết trong 3 tháng">
-                                    <i class="bi bi-dash-circle text-muted"></i> 0 bài/tuần
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge" style="background-color: #F3F4F6; color: #4B5563;">
-                                    <span class="status-dot" style="background-color: #6B7280;"></span> Nhóm Ma
-                                </span>
-                            </td>
-                            <td class="text-center" style="padding-right: 1.5rem;">
-                                <div class="dropdown">
-                                    <button class="btn-action-dots mx-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end action-menu shadow">
-                                        <li><a class="dropdown-item" href="#"><i class="bi bi-flag-fill text-primary"></i> Xem Reports</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item item-warning" href="#" data-bs-toggle="modal" data-bs-target="#warnModal"><i class="bi bi-exclamation-triangle"></i> Gửi cảnh cáo</a></li>
-                                        <li><a class="dropdown-item item-danger" href="#" data-bs-toggle="modal" data-bs-target="#lockModal"><i class="bi bi-lock-fill"></i> Khóa nhóm</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
+						<tr th:each="group : ${groups}">
+						    <td class="ps-4">
+						        <div class="d-flex align-items-center gap-3">
+						            <img th:src="@{'/api/groups/' + ${group.id} + '/avatar'}" class="group-avatar">
+						            <div style="line-height: 1.4;">
+						                <div class="fw-bold text-dark d-flex align-items-center gap-2" style="font-size: 14px;">
+						                    [[${group.name}]]
+						                    <span th:if="${group.privacy == 'PUBLIC'}" class="badge-privacy badge-public">Public</span>
+						                    <span th:if="${group.privacy == 'PRIVATE'}" class="badge-privacy badge-private">Private</span>
+						                </div>
+						                <div class="text-muted" style="font-size: 12px; margin-top: 2px;">Tag: [[${group.tag}]]</div>
+						            </div>
+						        </div>
+						    </td>
+						    <td>
+						        <div class="d-flex align-items-center gap-2">
+						            <img th:src="@{'/api/users/' + ${group.owner.id} + '/avatar'}" class="owner-avatar">
+						            <div>
+						                <div class="text-dark fw-medium" style="font-size: 13px;">[[${group.owner.fullName}]]</div>
+						                <div class="text-muted" style="font-size: 11px;">[[${group.owner.studentId}]]</div>
+						            </div>
+						        </div>
+						    </td>
+						    <td>
+						        <span class="fw-semibold text-dark"><i class="bi bi-people-fill text-muted me-1"></i> [[${group.membersCount}]]</span>
+						    </td>
+						    <td>
+						        <div class="activity-indicator">
+						            <i class="bi bi-graph-up-arrow text-success"></i> [[${group.activityLevel}]]
+						        </div>
+						    </td>
+						    <td>
+						        <span th:if="${group.status == 'ACTIVE'}" class="status-badge status-active">
+						            <span class="status-dot"></span> Hoạt động
+						        </span>
+						        <span th:if="${group.status == 'WARNED'}" class="status-badge status-warning">
+						            <span class="status-dot"></span> Bị Cảnh Cáo
+						        </span>
+						         <span th:if="${group.status == 'LOCKED'}" class="status-badge status-locked">
+						            <span class="status-dot"></span> Bị Khóa
+						        </span>
+						    </td>
+						    <td class="text-center" style="padding-right: 1.5rem;">
+						        <div class="dropdown">
+						            <button class="btn-action-dots mx-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+						                <i class="bi bi-three-dots-vertical"></i>
+						            </button>
+						            <ul class="dropdown-menu dropdown-menu-end action-menu shadow">
+						                <li><a class="dropdown-item" href="#"><i class="bi bi-flag-fill text-primary"></i> Xem Reports</a></li>
+						                <li><hr class="dropdown-divider"></li>
+						                <li><a class="dropdown-item item-warning" href="#" data-bs-toggle="modal" data-bs-target="#warnModal"><i class="bi bi-exclamation-triangle"></i> Gửi cảnh cáo</a></li>
+						                <li><a class="dropdown-item item-danger" href="#" data-bs-toggle="modal" data-bs-target="#lockModal"><i class="bi bi-lock-fill"></i> Khóa nhóm</a></li>
+						            </ul>
+						        </div>
+						    </td>
+						</tr>
                     </tbody>
                 </table>
             </div>
