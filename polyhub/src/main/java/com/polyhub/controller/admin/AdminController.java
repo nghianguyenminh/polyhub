@@ -149,13 +149,22 @@ public class AdminController {
         return "redirect:/admin/mentors";
     }
 
-    @GetMapping("/mentors/detail")
-    public String mentorDetail() {
-        return "admin/mentor_detail"; 
+    @GetMapping("/mentors/{id}/detail")
+    public String mentorDetail(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        MentorRequest mentorRequest = mentorRequestRepository.findById(id).orElse(null);
+
+        if (mentorRequest == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy hồ sơ mentor với ID: " + id);
+            return "redirect:/admin/mentors";
+        }
+
+        model.addAttribute("mentorRequest", mentorRequest);
+        return "admin/mentor_detail";
     }
 
     @GetMapping("/groups")
     public String groups() {
         return "admin/groups"; 
     }
+
 }
