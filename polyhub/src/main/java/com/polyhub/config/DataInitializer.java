@@ -34,9 +34,7 @@ public class DataInitializer {
             });
 
             // Xóa tài khoản admin cũ nếu có
-            userRepository.findByUsername("admin
-
-").ifPresent(userRepository::delete);
+            userRepository.findByUsername("admin").ifPresent(userRepository::delete);
 
             // Tạo tài khoản admin mới với đầy đủ thông tin
             User admin = new User();
