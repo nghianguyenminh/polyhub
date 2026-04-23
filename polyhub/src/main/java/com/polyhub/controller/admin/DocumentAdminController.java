@@ -32,14 +32,14 @@ public class DocumentAdminController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             Model model) {
 
-        int size = 5; // Cập nhật số lượng tài liệu hiển thị trên một trang thành 5
+        int size = 5; 
         Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page, size);
-        List<Category> categories = categoryService.getAllCategoriesForAdmin();
+        List<Category> categories = categoryService.getAllCategoriesForAdmin(); 
         Map<String, Object> stats = documentAdminService.getDocumentStats();
 
         // Get filter stats
-        List<Object[]> typeStats = documentAdminService.getDocumentTypeStats();
-        List<Object[]> categoryStats = documentAdminService.getCategoryStats();
+        List<Object[]> typeStats = documentAdminService.getDocumentTypeStats(); //
+        List<Object[]> categoryStats = documentAdminService.getCategoryStats();// 
         List<Object[]> statusStats = documentAdminService.getStatusStats();
 
         model.addAttribute("documentPage", documentPage);

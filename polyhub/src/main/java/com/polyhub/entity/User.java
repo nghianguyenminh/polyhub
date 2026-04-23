@@ -1,5 +1,7 @@
 package com.polyhub.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,13 +15,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "Users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Tránh lỗi Lazy Loading
 public class User implements Serializable {
 
     @Id
     @Column(length = 20)
-    private String username; // Tên đăng nhập (ID)
+    private String username;
 
     @Column(nullable = false)
+    @JsonIgnore // Bảo mật: Không bao giờ trả mật khẩu về phía Client qua JSON
     private String password;
 
     @Column(columnDefinition = "nvarchar(100)", nullable = false)
@@ -31,34 +35,31 @@ public class User implements Serializable {
     @Column(length = 15)
     private String phone;
 
-    private Boolean gender = true; // True: Nam, False: Nữ
+    private Boolean gender = true;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
 
     @Column(columnDefinition = "nvarchar(100)")
-    private String major; // Chuyên ngành
+    private String major;
 
     private String avatar = "default.png";
 
-    // Ảnh bìa
     private String coverImage = "default-cover.jpg";
 
-    private Boolean active = true; // Trạng thái hoạt động
+    private Boolean active = true;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Thêm biến này vào danh sách các thuộc tính
     @Column(columnDefinition = "NVARCHAR(500)")
     private String bio; 
 
-    // --- KẾT NỐI VỚI BẢNG ROLE ---
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
 
-    // --- KẾT NỐI NGƯỜI DÙNG (FOLLOWERS/FOLLOWING) ---
+    // --- KẾT NỐI NGƯỜI DÙNG ---
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_follows",
@@ -67,10 +68,12 @@ public class User implements Serializable {
     )
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonIgnore // CHẶN VÒNG LẶP
     private java.util.Set<User> followers = new java.util.HashSet<>();
 
     @ManyToMany(mappedBy = "followers", fetch = FetchType.LAZY)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonIgnore // CHẶN VÒNG LẶP
     private java.util.Set<User> following = new java.util.HashSet<>();
 }

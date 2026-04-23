@@ -21,14 +21,16 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
 
-    // Công cụ được Spring Boot cung cấp để Server bắn tin nhắn xuống trình duyệt
+    // cong cu dc Bst cung cap de gui tin nhan qua websk
     private final SimpMessagingTemplate messagingTemplate;
     
     private final ChatRoomRepository chatRoomRepository;
@@ -38,66 +40,85 @@ public class ChatController {
     
     @GetMapping("/chat")
     public String chatPage(@ModelAttribute("currentUser") User currentUser,
-                           @RequestParam(value = "userId", required = false) String targetUserId, 
-                           Model model) {
-       
-        if (currentUser == null) {
-            return "redirect:/login";
+                       @RequestParam(value = "userId", required = false) String targetUserId, 
+                       Model model) {
+   
+    if (currentUser == null) {
+        return "redirect:/login";
+    }
+
+    ChatRoom room = null;
+    User targetUser = null;
+    
+    if (targetUserId != null) {
+        targetUser = userRepository.findById(targetUserId).orElse(null);
+        if (targetUser != null) {
+            room = chatRoomRepository.findByUsers(currentUser.getUsername(), targetUserId)
+                    .orElseGet(() -> {
+                        ChatRoom newRoom = ChatRoom.builder()
+                                .user1Id(currentUser.getUsername())
+                                .user2Id(targetUserId)
+                                .lastUpdated(new Date())
+                                .build();
+                        return chatRoomRepository.save(newRoom);
+                    });
+            model.addAttribute("roomId", room.getId());
+            model.addAttribute("targetUser", targetUser);
         }
+    }
+    
+   
+    List<ChatRoom> userRooms = chatRoomRepository.findByUserIdOrderByLastUpdatedDesc(currentUser.getUsername());
+    Map<String, ChatRoom> userRoomMap = new HashMap<>();
+    Set<String> chattedUserIds = new HashSet<>(); 
+    
+    for (ChatRoom r : userRooms) {
+        String otherUserId = r.getUser1Id().equals(currentUser.getUsername()) ? r.getUser2Id() : r.getUser1Id();
+        userRoomMap.put(otherUserId, r);
+        chattedUserIds.add(otherUserId);
+    }
 
-        ChatRoom room = null;
-        User targetUser = null;
-        
-        if (targetUserId != null) {
-            targetUser = userRepository.findById(targetUserId).orElse(null);
-            if (targetUser != null) {
-                room = chatRoomRepository.findByUsers(currentUser.getUsername(), targetUserId)
-                        .orElseGet(() -> {
-                            ChatRoom newRoom = ChatRoom.builder()
-                                    .user1Id(currentUser.getUsername())
-                                    .user2Id(targetUserId)
-                                    .lastUpdated(new Date())
-                                    .build();
-                            return chatRoomRepository.save(newRoom);
-                        });
-                model.addAttribute("roomId", room.getId());
-                model.addAttribute("targetUser", targetUser);
-            }
+
+    if (targetUser != null) {
+        chattedUserIds.add(targetUser.getUsername());
+        if (!userRoomMap.containsKey(targetUser.getUsername()) && room != null) {
+            userRoomMap.put(targetUser.getUsername(), room);
         }
-        
-        // Fetch all rooms for current user
-        List<ChatRoom> userRooms = chatRoomRepository.findByUserIdOrderByLastUpdatedDesc(currentUser.getUsername());
-        Map<String, ChatRoom> userRoomMap = new HashMap<>();
-        for (ChatRoom r : userRooms) {
-            String otherUserId = r.getUser1Id().equals(currentUser.getUsername()) ? r.getUser2Id() : r.getUser1Id();
-            userRoomMap.put(otherUserId, r);
-        }
+    }
 
-        List<User> allUsers = userRepository.findAll();
-        List<User> sortedUsers = allUsers.stream()
-                .filter(u -> !u.getUsername().equals(currentUser.getUsername())) // Bỏ qua chính mình
-                .sorted((u1, u2) -> {
-                    ChatRoom r1 = userRoomMap.get(u1.getUsername());
-                    ChatRoom r2 = userRoomMap.get(u2.getUsername());
-                    Date d1 = r1 != null ? r1.getLastUpdated() : null;
-                    Date d2 = r2 != null ? r2.getLastUpdated() : null;
+    
+    List<User> chattedUsers = chattedUserIds.isEmpty() ? List.of() : userRepository.findAllById(chattedUserIds);
 
-                    if (d1 != null && d2 != null) return d2.compareTo(d1); // Mới nhất lên đầu
-                    if (d1 != null) return -1;
-                    if (d2 != null) return 1;
-                    
-                    // Nếu chưa chat bao giờ, ai có tên trước thì lên trên
-                    return u1.getFullname() != null && u2.getFullname() != null 
-                        ? u1.getFullname().compareToIgnoreCase(u2.getFullname()) 
-                        : 0;
-                })
-                .collect(Collectors.toList());
+    List<User> followedUsers = userRepository.findByFollowers_Username(currentUser.getUsername());
+    Set<User> combinedUsers = new HashSet<>();
+    combinedUsers.addAll(chattedUsers); 
+    combinedUsers.addAll(followedUsers);
 
-        model.addAttribute("allUsers", sortedUsers);
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("userRoomMap", userRoomMap); // Truyền map xuống giao diện để lấy lastMessage (tuỳ chọn)
+    // 5. Lọc loại bỏ chính mình và sắp xếp
+    List<User> sortedUsers = combinedUsers.stream()
+            .filter(u -> !u.getUsername().equals(currentUser.getUsername())) // khong the chat voi chinh minh
+            .sorted((u1, u2) -> {
+                ChatRoom r1 = userRoomMap.get(u1.getUsername());
+                ChatRoom r2 = userRoomMap.get(u2.getUsername());
+                Date d1 = r1 != null ? r1.getLastUpdated() : null;
+                Date d2 = r2 != null ? r2.getLastUpdated() : null;
 
-        return "client/chat"; 
+                if (d1 != null && d2 != null) return d2.compareTo(d1); 
+                if (d1 != null) return -1;
+                if (d2 != null) return 1;
+                
+                
+                return u1.getFullname() != null && u2.getFullname() != null 
+                    ? u1.getFullname().compareToIgnoreCase(u2.getFullname()) 
+                    : 0;
+            })
+            .collect(Collectors.toList());
+
+    model.addAttribute("allUsers", sortedUsers);
+    model.addAttribute("currentUser", currentUser);
+    model.addAttribute("userRoomMap", userRoomMap);
+
+    return "client/chat";
     }
 
    

@@ -23,30 +23,27 @@ public class DocumentClientService {
     private final FileStorageService fileStorageService;
     private final com.polyhub.repository.SavedDocumentRepository savedDocumentRepository;
 
-    /**
-     * Upload tài liệu từ người dùng Client lên Cloudinary và lưu thông tin vào DB.
-     */
     @Transactional
     public Document shareDocument(String title, String description, Long categoryId, MultipartFile file, User uploader) throws IOException {
         
-        // 1. Kiểm tra Category có tồn tại
+       
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Chuyên ngành."));
 
-        // 2. Phân loại định dạng file dựa trên phần mở rộng (extension)
+       
         String originalFilename = file.getOriginalFilename();
         String fileExtension = getFileExtension(originalFilename);
-        String documentType = determineDocumentType(fileExtension); // Phân loại: PDF, WORD, ZIP, EXCEL...
+        String documentType = determineDocumentType(fileExtension); 
 
-        // 3. Upload file lên Cloudinary (qua service đã viết trước đó)
+      
         Map<String, Object> uploadResult = fileStorageService.uploadFile(file);
         
-        // Lấy các tham số về từ Cloudinary
-        String fileUrl = (String) uploadResult.get("url"); // Có thể đổi thành "secure_url" (https) nếu cần
+       
+        String fileUrl = (String) uploadResult.get("url"); 
         String publicId = (String) uploadResult.get("public_id");
-        Long fileSize = file.getSize(); // Hoặc lấy từ uploadResult.get("bytes")
+        Long fileSize = file.getSize(); 
 
-        // 4. Khởi tạo đối tượng Document và lưu DB
+       
         Document document = new Document();
         document.setTitle(title.trim());
         document.setDescription(description.trim());
@@ -55,8 +52,8 @@ public class DocumentClientService {
         document.setFileUrl(fileUrl);
         document.setFilePublicId(publicId);
         document.setFileSize(fileSize);
-        document.setUploader(uploader); // Bổ sung: Gán mác Sinh viên / Mentor đăng tài liệu
-        document.setDownloadCount(0); // Ban đầu chưa ai tải
+        document.setUploader(uploader); 
+        document.setDownloadCount(0); 
 
         return documentRepository.save(document);
     }
@@ -84,16 +81,12 @@ public class DocumentClientService {
         return setIds;
     }
 
-    /**
-     * Lấy tất cả tài liệu để render trang chủ (Tạm thời get All, sau này có thể thêm Paging/Sorting)
-     */
+   
     public java.util.List<Document> getAllDocuments() {
         return documentRepository.findByStatus(com.polyhub.entity.DocumentStatus.APPROVED);
     }
 
-    /**
-     * Lấy số lượng tài liệu đã duyệt theo từng loại tài liệu
-     */
+    
     public java.util.Map<String, Long> getApprovedDocumentTypeCounts() {
         java.util.List<Object[]> results = documentRepository.countApprovedByDocumentType();
         java.util.Map<String, Long> counts = new java.util.HashMap<>();
@@ -105,9 +98,7 @@ public class DocumentClientService {
         return counts;
     }
 
-    /**
-     * Lấy số lượng tài liệu đã duyệt theo từng Category ID
-     */
+    
     public java.util.Map<Long, Long> getApprovedCategoryCounts() {
         java.util.List<Object[]> results = documentRepository.countApprovedByCategory();
         java.util.Map<Long, Long> counts = new java.util.HashMap<>();
@@ -119,9 +110,7 @@ public class DocumentClientService {
         return counts;
     }
 
-    /**
-     * Xử lý Nghiệp vụ: Tăng lượt tải và trả về URL file
-     */
+    
     @Transactional
     public String getDownloadUrlAndIncrementCount(Long documentId) {
         Document document = documentRepository.findById(documentId)
@@ -134,9 +123,7 @@ public class DocumentClientService {
         return document.getFileUrl();
     }
 
-    // --- CÁC HÀM TIỆN ÍCH DÙNG CHUNG TRONG SERVICE ---
-
-    // Hàm lấy đuôi file (vd: pdf, docx, zip)
+    
     private String getFileExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "";
@@ -144,7 +131,7 @@ public class DocumentClientService {
         return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
 
-    // Hàm nhận diện loại tài liệu để gán Tag dễ lọc
+    
     private String determineDocumentType(String extension) {
         return switch (extension) {
             case "pdf" -> "PDF";
@@ -152,7 +139,7 @@ public class DocumentClientService {
             case "xls", "xlsx" -> "EXCEL";
             case "ppt", "pptx" -> "PPT";
             case "zip", "rar", "7z" -> "ZIP";
-            default -> "OTHER"; // File khác (txt, img, v.v...)
+            default -> "OTHER"; 
         };
     }
 }
