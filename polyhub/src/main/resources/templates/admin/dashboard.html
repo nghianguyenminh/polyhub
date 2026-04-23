@@ -126,43 +126,30 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr th:each="req : ${pendingRequests}">
                                     <td class="text-center align-middle"><input class="form-check-input shadow-none" type="checkbox"></td>
                                     <td class="align-middle">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="https://ui-avatars.com/api/?name=Lưu+Châu&background=random" class="rounded-circle" width="30" height="30">
+                                            <img th:src="${req.user.avatar != null and req.user.avatar.startsWith('http') ? req.user.avatar : '/client/images/avatars/' + (req.user.avatar ?: 'default.png')}" 
+                                                 class="rounded-circle" width="30" height="30" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
                                             <div style="line-height: 1.2;">
-                                                <div class="fw-semibold text-dark">Lưu Phan Bảo Châu</div>
-                                                <div class="text-muted" style="font-size: 11px;">chaultp@fpt.edu.vn</div>
+                                                <div class="fw-semibold text-dark" th:text="${req.fullname}">Tên ứng viên</div>
+                                                <div class="text-muted" style="font-size: 11px;" th:text="${req.email}">email@fpt.edu.vn</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="align-middle fw-medium text-dark">Ứng dụng phần mềm</td>
-                                    <td class="align-middle">Java / Spring Boot, SQL</td>
-                                    <td class="align-middle text-muted">2 giờ trước</td>
+                                    <td class="align-middle fw-medium text-dark" th:text="${req.user.major ?: 'Chưa cập nhật'}">Chuyên ngành</td>
+                                    <td class="align-middle text-truncate" style="max-width: 150px;" th:text="${req.introduction}">Giới thiệu</td>
+                                    <td class="align-middle text-muted" th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày gửi</td>
                                     <td class="align-middle">
-                                        <button class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</button>
-                                        <button class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</button>
+                                        <form th:action="@{/admin/mentors/{id}/approve(id=${req.id})}" method="post" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</button>
+                                        </form>
+                                        <a th:href="@{/admin/mentors(status='PENDING')}" class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</a>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td class="text-center align-middle"><input class="form-check-input shadow-none" type="checkbox"></td>
-                                    <td class="align-middle">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <img src="https://ui-avatars.com/api/?name=Anh+Khoa&background=random" class="rounded-circle" width="30" height="30">
-                                            <div style="line-height: 1.2;">
-                                                <div class="fw-semibold text-dark">Lương Anh Khoa</div>
-                                                <div class="text-muted" style="font-size: 11px;">khoala@fpt.edu.vn</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle fw-medium text-dark">Thiết kế đồ họa</td>
-                                    <td class="align-middle">UI/UX, Figma</td>
-                                    <td class="align-middle text-muted">Hôm qua</td>
-                                    <td class="align-middle">
-                                        <button class="btn btn-sm btn-poly-gradient rounded-pill px-3 fw-medium">Phê duyệt</button>
-                                        <button class="btn btn-sm btn-link text-muted fw-medium text-decoration-none">Hồ sơ</button>
-                                    </td>
+                                <tr th:if="${#lists.isEmpty(pendingRequests)}">
+                                    <td colspan="6" class="text-center py-3 text-muted">Hiện tại không có yêu cầu nào đang chờ xử lý.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -187,7 +174,7 @@
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 datasets: [{
                     label: 'Lượt truy cập',
-                    data: [2500, 2900, 3100, 2800, 3400, 3700, 4200, 4100, 3900, 4600, 4900, 5200],
+                    data: /*[[${trafficData}]]*/ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     borderColor: '#4F46E5', /* Indigo Primary */
                     backgroundColor: 'rgba(79, 70, 229, 0.1)', /* Indigo mờ */
                     borderWidth: 3,
