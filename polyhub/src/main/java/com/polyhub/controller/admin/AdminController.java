@@ -17,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -41,11 +42,30 @@ public class AdminController {
 
         List<Object[]> countByCategory = documentRepository.countByCategory();
 
+        // Lấy 5 yêu cầu Mentor mới nhất đang chờ duyệt
+        org.springframework.data.domain.Pageable topFive = org.springframework.data.domain.PageRequest.of(0, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        List<MentorRequest> pendingRequests = mentorRequestRepository.findByStatus(RequestStatus.PENDING, topFive).getContent();
+
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("totalDocuments", totalDocuments);
         model.addAttribute("pendingMentors", pendingMentors);
         model.addAttribute("totalReports", totalReports);
         model.addAttribute("countByCategory", countByCategory);
+        model.addAttribute("pendingRequests", pendingRequests);
+
+        // Lấy dữ liệu thực tế: Thống kê số lượng người dùng đăng ký mới theo từng tháng trong năm hiện tại
+        List<User> allUsers = userRepository.findAll();
+        int currentYear = LocalDate.now().getYear();
+        int[] monthlyTraffic = new int[12];
+        
+        for (User user : allUsers) {
+            if (user.getCreatedAt() != null && user.getCreatedAt().getYear() == currentYear) {
+                int monthIndex = user.getCreatedAt().getMonthValue() - 1;
+                monthlyTraffic[monthIndex]++;
+            }
+        }
+        
+        model.addAttribute("trafficData", monthlyTraffic);
 
         return "admin/dashboard"; // Mở file templates/admin/dashboard.html
     }

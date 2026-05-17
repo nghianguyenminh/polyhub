@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -18,7 +19,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @NoArgsConstructor
@@ -60,23 +63,27 @@ public class User implements Serializable {
 
 	@Column(name = "created_at", updatable = false)
 	private LocalDateTime createdAt = LocalDateTime.now();
-	
-    @ManyToMany
-    @JoinTable(
-        name = "user_follows",
-        joinColumns = @JoinColumn(name = "user_from"),
-        inverseJoinColumns = @JoinColumn(name = "user_to")
-    )
-    private Set<User> following = new HashSet<>();
-
-    @ManyToMany(mappedBy = "following")
-    private Set<User> followers = new HashSet<>();
-
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
 
 	@Column(columnDefinition = "nvarchar(255)")
 	private String bio;
 
+	@ManyToOne
+	@JoinColumn(name = "role_id")
+	private Role role;
+
+    // --- KẾT NỐI NGƯỜI DÙNG (FOLLOWERS/FOLLOWING) ---
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_follows",
+            joinColumns = @JoinColumn(name = "user_username"),
+            inverseJoinColumns = @JoinColumn(name = "follower_username")
+    )
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Set<User> followers = new HashSet<>();
+
+    @ManyToMany(mappedBy = "followers", fetch = FetchType.LAZY)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Set<User> following = new HashSet<>();
 }
