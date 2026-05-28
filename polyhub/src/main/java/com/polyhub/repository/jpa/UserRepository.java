@@ -25,4 +25,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     // Từ nhánh DemoASM1
     Page<User> findByFullnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
             String fullname, String email, Pageable pageable);
+
+    List<User> findByFollowers_Username(String username);
 }

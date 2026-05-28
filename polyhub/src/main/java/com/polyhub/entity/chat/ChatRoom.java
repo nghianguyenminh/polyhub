@@ -27,4 +27,6 @@ public class ChatRoom {
 
     // Thời gian cập nhật tin nhắn cuối cùng để sort phòng chat nào mới nhất lên đầu
     private Date lastUpdated;
+    private String lastSenderId; // Lưu ID người gửi tin nhắn cuối
+    private boolean isLastMessageRead;
 }

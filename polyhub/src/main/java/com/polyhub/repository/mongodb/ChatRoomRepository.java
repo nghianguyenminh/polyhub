@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,4 +16,7 @@ public interface ChatRoomRepository extends MongoRepository<ChatRoom, String> {
     // Đảm bảo giữa 2 người chỉ có duy nhất 1 phòng chat chung
     @Query("{ $or: [ { 'user1Id': ?0, 'user2Id': ?1 }, { 'user1Id': ?1, 'user2Id': ?0 } ] }")
     Optional<ChatRoom> findByUsers(String user1Id, String user2Id);
+
+    @Query(value = "{ $or: [ { 'user1Id': ?0 }, { 'user2Id': ?0 } ] }", sort = "{ 'lastUpdated': -1 }")
+    List<ChatRoom> findByUserIdOrderByLastUpdatedDesc(String userId);
 }

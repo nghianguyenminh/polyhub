@@ -180,6 +180,23 @@
             background-color: #f1f3f5;
             color: var(--poly-orange) !important;
         }
+
+        /* Styling cho tin nhắn chưa đọc */
+        .unread-text {
+            font-weight: 700 !important;
+            color: #1c1e21 !important; /* Màu đen đậm giống Messenger */
+            opacity: 1 !important;
+        }
+
+        .unread-dot {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, var(--poly-orange), #ff8a47);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 2px 5px rgba(242, 113, 37, 0.4);
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body class="bg-white">
@@ -205,11 +222,27 @@
                    th:classappend="${targetUser != null and targetUser.username == user.username ? 'active' : ''}">
                     <img th:src="${user.avatar != null ? user.avatar : 'https://ui-avatars.com/api/?name=' + user.fullname}" class="rounded-circle shadow-sm" width="48" height="48">
                     <div class="flex-grow-1 overflow-hidden">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-1 fw-bold text-truncate" th:text="${user.fullname}">Tên người dùng</h6>
-                            <span class="text-muted" style="font-size: 11px;"></span>
-                        </div>
-                        <p class="mb-0 text-muted small text-truncate opacity-75">Nhấn để trò chuyện</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-1 fw-bold text-truncate" th:text="${user.fullname}">Tên người dùng</h6>
+                        <span class="text-muted" style="font-size: 11px;"></span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-1 gap-2">
+                        <p class="mb-0 text-muted small text-truncate opacity-75"
+                        th:classappend="${userRoomMap.get(user.username) != null 
+                                            and userRoomMap.get(user.username).lastSenderId != currentUser.username 
+                                            and !userRoomMap.get(user.username).isLastMessageRead} ? 'unread-text' : ''"
+                        th:text="${userRoomMap.get(user.username) != null and userRoomMap.get(user.username).lastMessage != null 
+                                    ? userRoomMap.get(user.username).lastMessage : 'Nhấn để trò chuyện'}">
+                            Nhấn để trò chuyện
+                        </p>
+                        
+                        <span th:if="${userRoomMap.get(user.username) != null 
+                                    and userRoomMap.get(user.username).lastSenderId != currentUser.username 
+                                    and !userRoomMap.get(user.username).isLastMessageRead}"
+                            class="unread-dot">
+                        </span>
+                    </div>
                     </div>
                 </a>
             </div>

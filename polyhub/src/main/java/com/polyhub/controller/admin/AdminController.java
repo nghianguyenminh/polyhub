@@ -115,7 +115,7 @@ public class AdminController {
                     roleRepository.save(role);
                 }
                 user.setRole(role);
-                userRepository.save(user); // Cập nhật role trong CSDL ngay
+                userRepository.save(user); 
             }
 
             // Gửi email chúc mừng (phê duyệt Mentor)
@@ -157,7 +157,7 @@ public class AdminController {
                 Role role = roleRepository.findById("USER").orElse(null);
                 if (role != null) {
                     user.setRole(role);
-                    userRepository.save(user); // Cập nhật role về Sinh viên
+                    userRepository.save(user); 
                 }
             }
 

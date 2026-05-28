@@ -1,5 +1,12 @@
 package com.polyhub.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+
+
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +35,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Entity
 @Table(name = "Users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Tránh lỗi Lazy Loading
 public class User implements Serializable {
 
 	@Id
@@ -35,6 +43,7 @@ public class User implements Serializable {
 	private String username; // Tên đăng nhập (ID)
 
 	@Column(nullable = false)
+	@JsonIgnore // Bảo mật: Không bao giờ trả mật khẩu về phía Client qua JSON
 	private String password;
 
 	@Column(columnDefinition = "nvarchar(100)", nullable = false)
@@ -64,14 +73,14 @@ public class User implements Serializable {
 	@Column(name = "created_at", updatable = false)
 	private LocalDateTime createdAt = LocalDateTime.now();
 
-	@Column(columnDefinition = "nvarchar(255)")
+	@Column(columnDefinition = "NVARCHAR(500)")
 	private String bio;
 
 	@ManyToOne
 	@JoinColumn(name = "role_id")
 	private Role role;
 
-    // --- KẾT NỐI NGƯỜI DÙNG (FOLLOWERS/FOLLOWING) ---
+    // --- KẾT NỐI NGƯỜI DÙNG ---
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_follows",
@@ -80,10 +89,12 @@ public class User implements Serializable {
     )
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonIgnore // CHẶN VÒNG LẶP
     private Set<User> followers = new HashSet<>();
 
     @ManyToMany(mappedBy = "followers", fetch = FetchType.LAZY)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonIgnore // CHẶN VÒNG LẶP
     private Set<User> following = new HashSet<>();
 }
