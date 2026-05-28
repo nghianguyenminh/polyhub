@@ -1,6 +1,6 @@
 package com.polyhub.controller.admin;
 
-import com.polyhub.repository.jpa.UserRepository;
+import com.polyhub.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

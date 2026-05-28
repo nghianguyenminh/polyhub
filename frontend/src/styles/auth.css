@@ -1,0 +1,187 @@
+/* =========================================
+   POLYHUB - REFINED LOGIN UI
+   ========================================= */
+:root {
+    --poly-primary: #F27125;
+    --poly-primary-soft: rgba(242, 113, 37, 0.1);
+    --poly-primary-focus: rgba(242, 113, 37, 0.2);
+}
+
+.text-poly { color: var(--poly-primary) !important; }
+.bg-poly-soft { background-color: var(--poly-primary-soft) !important; }
+
+/* --- TỔNG THỂ LAYOUT --- */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px; /* Padding cho mobile */
+    position: relative; /* Thêm dòng này */
+    z-index: 10;        /* Thêm dòng này */
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: #ffffff;
+    border-radius: 14px;
+    padding: 32px 28px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* --- TYPOGRAPHY --- */
+.auth-title {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    margin-bottom: 8px;
+}
+
+.auth-subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 0;
+}
+
+/* --- FORM & SPACING --- */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* --- INPUT FIELDS --- */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 14px;
+    color: #9CA3AF;
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.form-control-custom {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px 0 40px; /* Chừa chỗ cho icon bên trái */
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    font-size: 14.5px;
+    color: #111827;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.form-control-custom::placeholder {
+    color: #9CA3AF;
+}
+
+/* Micro-interactions Input */
+.form-control-custom:hover {
+    border-color: #9CA3AF;
+}
+.form-control-custom:focus {
+    border-color: var(--poly-primary);
+    box-shadow: 0 0 0 2px var(--poly-primary-focus);
+    outline: none;
+}
+.input-wrapper:focus-within .input-icon {
+    color: var(--poly-primary);
+}
+
+/* --- BUTTON HIỆN ĐẠI --- */
+.btn-submit {
+    width: 100%;
+    height: 46px;
+    border-radius: 8px;
+    background-color: var(--poly-primary);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-submit:hover {
+    filter: brightness(0.95);
+}
+.btn-submit:active {
+    transform: scale(0.98);
+}
+
+/* Nút con mắt ẩn/hiện password */
+.btn-toggle-pass {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    padding: 4px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.btn-toggle-pass:hover { color: #4B5563; }
+.btn-toggle-pass:focus { outline: none; }
+
+/* --- CHECKBOX --- */
+.custom-check .form-check-label {
+    font-size: 13.5px;
+    color: #4B5563;
+    cursor: pointer;
+}
+.custom-check .form-check-input {
+    cursor: pointer;
+    border-color: #D1D5DB;
+}
+.custom-check .form-check-input:checked {
+    background-color: var(--poly-primary);
+    border-color: var(--poly-primary);
+}
+.custom-check .form-check-input:focus {
+    box-shadow: 0 0 0 2px var(--poly-primary-focus);
+    border-color: var(--poly-primary);
+}
+
+/* --- ALERTS --- */
+.alert-custom {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.alert-error {
+    background-color: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FCA5A5;
+}
+.alert-success {
+    background-color: #F0FDF4;
+    color: #16A34A;
+    border: 1px solid #86EFAC;
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 32px 24px;
+    }
+}

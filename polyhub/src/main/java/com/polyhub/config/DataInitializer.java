@@ -2,8 +2,8 @@ package com.polyhub.config;
 
 import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
-import com.polyhub.repository.jpa.RoleRepository;
-import com.polyhub.repository.jpa.UserRepository;
+import com.polyhub.repository.RoleRepository;
+import com.polyhub.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +19,7 @@ public class DataInitializer {
             // Tạo role nếu chưa có
             Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
                 Role newRole = new Role();
+                newRole.setId("ADMIN");
                 newRole.setName("ROLE_ADMIN");
                 roleRepository.save(newRole);
                 System.out.println("Created Role: ROLE_ADMIN");
@@ -27,6 +28,7 @@ public class DataInitializer {
 
             roleRepository.findByName("ROLE_USER").orElseGet(() -> {
                 Role newRole = new Role();
+                newRole.setId("USER");
                 newRole.setName("ROLE_USER");
                 roleRepository.save(newRole);
                 System.out.println("Created Role: ROLE_USER");

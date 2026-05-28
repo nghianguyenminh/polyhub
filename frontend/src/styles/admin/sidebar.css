@@ -1,0 +1,77 @@
+/* =========================================
+   POLYHUB ADMIN: LIGHT SIDEBAR
+   ========================================= */
+.admin-sidebar {
+    width: var(--sidebar-width);
+    background-color: #ffffff; 
+    border-right: 1px solid var(--admin-border); 
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    z-index: 1040;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    left: 0;
+}
+
+.sidebar-brand {
+    height: var(--header-height);
+    padding: 0 24px;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.menu-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #9CA3AF;
+    letter-spacing: 1px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    padding: 0 24px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px; 
+    margin: 4px 16px; 
+    color: #4B5563; 
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 8px; 
+    transition: all 0.15s ease;
+}
+
+.menu-item i {
+    font-size: 1.2rem;
+    margin-right: 14px;
+    color: #9CA3AF; 
+}
+
+.menu-item:hover {
+    background-color: #F3F4F6;
+    color: var(--admin-text-main);
+}
+.menu-item:hover i {
+    color: #6B7280;
+}
+
+.menu-item.active {
+    background-color: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    font-weight: 600;
+}
+.menu-item.active i {
+    color: var(--admin-primary);
+}
+
+/* Khi Sidebar thu gọn */
+.admin-sidebar.collapsed { width: var(--sidebar-collapsed-width); }
+.admin-sidebar.collapsed .brand-text, 
+.admin-sidebar.collapsed .menu-text, 
+.admin-sidebar.collapsed .menu-title,
+.admin-sidebar.collapsed .badge { display: none !important; }
+.admin-sidebar.collapsed .menu-item { margin: 4px 10px; justify-content: center; padding-left: 0; padding-right: 0;}
+.admin-sidebar.collapsed .menu-item i { margin-right: 0; font-size: 1.4rem; }

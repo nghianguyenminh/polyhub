@@ -27,6 +27,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Khai báo trạm kết nối chính cho Client (Trình duyệt) truy cập
         // `.withSockJS()` giúp tương thích chéo, trường hợp trình duyệt cũ ko hỗ trợ chuẩn WebSockets
-        registry.addEndpoint("/ws-chat").withSockJS();
+        registry.addEndpoint("/ws-chat")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 }

@@ -174,8 +174,8 @@ public class AdminController {
         return "admin/mentor_detail"; 
     }
 
-    @GetMapping("/groups")
-    public String groups() {
-        return "admin/groups"; 
-    }
+//    @GetMapping("/groups")
+//    public String groups() {
+//        return "admin/groups"; 
+//    }
 }

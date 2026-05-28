@@ -1,6 +1,7 @@
 package com.polyhub.repository;
 
 import com.polyhub.entity.Post;
+import com.polyhub.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,9 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-    
     /**
      * Lấy danh sách bài viết cho trang chủ:
      * - Ưu tiên 1: Bài viết của chính user đang xem HOẶC bài viết của những người mà user đang follow.
@@ -35,4 +37,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // Lấy bài ở profile giữ nguyên
     @Query("SELECT p FROM Post p WHERE p.user.username = :username ORDER BY p.createdAt DESC")
     Page<Post> findByUsernameOrderByCreatedAtDesc(String username, Pageable pageable);
+
+    List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
 }
