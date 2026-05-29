@@ -6,8 +6,8 @@ import java.util.regex.Pattern;
 
 public class UpdateProfile {
     public static void main(String[] args) throws IOException {
-        String homePath = "polyhub/src/main/resources/templates/client/home.html";
-        String profilePath = "polyhub/src/main/resources/templates/client/profile.html";
+        String homePath = "backend/src/main/resources/templates/client/home.html";
+        String profilePath = "backend/src/main/resources/templates/client/profile.html";
         
         String homeContent = new String(Files.readAllBytes(Paths.get(homePath)), "UTF-8");
         String profileContent = new String(Files.readAllBytes(Paths.get(profilePath)), "UTF-8");

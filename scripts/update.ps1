@@ -1,4 +1,4 @@
-$filePath = "h:\DA_PolyHUb\polyhub\polyhub\src\main\resources\templates\admin\documents.html"
+$filePath = "backend\src\main\resources\templates\admin\documents.html"
 $content = Get-Content -Path $filePath -Raw -Encoding UTF8
 
 $tbodyStart = $content.IndexOf("<tbody>")

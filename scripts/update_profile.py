@@ -1,6 +1,6 @@
 import re
 
-with open('h:\\DA_PolyHUb\\polyhub\\polyhub\\src\\main\\resources\\templates\\client\\home.html', 'r', encoding='utf-8') as f:
+with open('backend\\src\\main\\resources\\templates\\client\\home.html', 'r', encoding='utf-8') as f:
     home_content = f.read()
 
 # Extract post block from home.html
@@ -30,7 +30,7 @@ all_scripts = all_scripts_pattern.findall(home_content)
 final_scripts = "\n".join([s for s in all_scripts if 'showMajorPopup' not in s])
 
 # Now read profile.html
-with open('h:\\DA_PolyHUb\\polyhub\\polyhub\\src\\main\\resources\\templates\\client\\profile.html', 'r', encoding='utf-8') as f:
+with open('backend\\src\\main\\resources\\templates\\client\\profile.html', 'r', encoding='utf-8') as f:
     profile_content = f.read()
 
 # Replace post block in profile.html
@@ -44,7 +44,7 @@ profile_content = profile_post_pattern.sub(replacer, profile_content)
 # Add scripts at the end before </body>
 profile_content = profile_content.replace('</body>', f'{final_scripts}\n</body>')
 
-with open('h:\\DA_PolyHUb\\polyhub\\polyhub\\src\\main\\resources\\templates\\client\\profile.html', 'w', encoding='utf-8') as f:
+with open('backend\\src\\main\\resources\\templates\\client\\profile.html', 'w', encoding='utf-8') as f:
     f.write(profile_content)
 
 print("Done updating profile.html")

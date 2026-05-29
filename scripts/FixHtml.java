@@ -4,7 +4,7 @@ import java.nio.file.Paths;
 
 public class FixHtml {
     public static void main(String[] args) throws Exception {
-        Path path = Paths.get("h:/DA_PolyHUb/polyhub/polyhub/src/main/resources/templates/admin/documents.html");
+        Path path = Paths.get("backend/src/main/resources/templates/admin/documents.html");
         String content = new String(Files.readAllBytes(path), "UTF-8");
 
         String dropdownRegex = "(?s)<ul class=\"dropdown-menu dropdown-menu-end action-menu shadow\">.*?</ul>";
