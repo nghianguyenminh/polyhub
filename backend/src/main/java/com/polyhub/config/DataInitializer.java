@@ -35,19 +35,29 @@ public class DataInitializer {
                 return newRole;
             });
 
-            // Xóa tài khoản admin cũ nếu có
-            userRepository.findByUsername("admin").ifPresent(userRepository::delete);
-
-            // Tạo tài khoản admin mới với đầy đủ thông tin
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setFullname("Super Admin");
-            admin.setEmail("admin@polyhub.com");
-            admin.setPassword(passwordEncoder.encode("123456"));
-            admin.setRole(adminRole);
-            admin.setActive(true); // *** ĐÂY LÀ SỬA LỖI QUAN TRỌNG NHẤT ***
-            userRepository.save(admin);
-            System.out.println("Created ADMIN account with ACTIVE state.");
+            // Kiểm tra và khởi tạo hoặc cập nhật tài khoản admin (Khắc phục lỗi Foreign Key)
+            userRepository.findByUsername("admin").ifPresentOrElse(
+                existingAdmin -> {
+                    // Cập nhật lại các thông tin quan trọng nếu tài khoản đã tồn tại
+                    existingAdmin.setActive(true); 
+                    existingAdmin.setPassword(passwordEncoder.encode("123456"));
+                    existingAdmin.setRole(adminRole);
+                    userRepository.save(existingAdmin);
+                    System.out.println("Updated existing ADMIN account with ACTIVE state.");
+                },
+                () -> {
+                    // Nếu chưa có thì mới tạo mới hoàn toàn
+                    User admin = new User();
+                    admin.setUsername("admin");
+                    admin.setFullname("Super Admin");
+                    admin.setEmail("admin@polyhub.com");
+                    admin.setPassword(passwordEncoder.encode("123456"));
+                    admin.setRole(adminRole);
+                    admin.setActive(true); 
+                    userRepository.save(admin);
+                    System.out.println("Created new ADMIN account with ACTIVE state.");
+                }
+            );
 
         };
     }

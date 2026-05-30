@@ -1,0 +1,106 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.logoContainer {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #4F46E5; /* Primary Indigo */
+  letter-spacing: -0.025em;
+  text-decoration: none;
+}
+
+.logoHighlight {
+  color: #F27125; /* PolyHUB Orange */
+}
+
+.navContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Scrollbar styling for modern look */
+.navContainer::-webkit-scrollbar {
+  width: 6px;
+}
+.navContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+.navContainer::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 20px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #4b5563; /* Cool gray */
+  font-weight: 500;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.navLink:hover {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.navLinkActive {
+  background-color: #eef2ff; /* Light Indigo */
+  color: #4F46E5;
+  font-weight: 600;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.navLink:hover .icon {
+  color: #111827;
+}
+
+.navLinkActive .icon {
+  color: #4F46E5;
+}
+
+/* Responsive constraints */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+  }
+}
