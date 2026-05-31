@@ -15,7 +15,7 @@ import styles from './AdminSidebar.module.css';
 
 const navItems = [
   { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-  { name: 'Khóa học & Danh mục', path: '/admin/categories', icon: Tags },
+  { name: 'Danh mục', path: '/admin/categories', icon: Tags },
   { name: 'Người dùng', path: '/admin/users', icon: Users },
   { name: 'Tài liệu', path: '/admin/documents', icon: FileText },
   { name: 'Mentors', path: '/admin/mentors', icon: GraduationCap },
