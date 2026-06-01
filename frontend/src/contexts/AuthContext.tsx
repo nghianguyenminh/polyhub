@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const data = await fetchAPI('/api/auth/me');
-      setUser(data.user);
+      setUser(data);
     } catch (err) {
       console.error('Failed to fetch current user:', err);
       setAuthToken(null);

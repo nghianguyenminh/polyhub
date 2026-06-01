@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "categories") // Danh mục Chuyên ngành
 @Getter
@@ -34,10 +36,13 @@ public class Category {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    
     
     // Một chuyên ngành có thể có nhiều Tài liệu
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @JsonIgnore // 2. THÊM DÒNG NÀY VÀO TRƯỚC BIẾN documents
     private List<Document> documents = new ArrayList<>();
 
     @PrePersist

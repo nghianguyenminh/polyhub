@@ -29,7 +29,7 @@ export default function CategoryManagement() {
   );
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container}>  
       {/* Page Header */}
       <header className={styles.pageHeader}>
         <div>

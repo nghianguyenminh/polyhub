@@ -62,8 +62,8 @@ public class AdminDocumentApiController {
         }
     }
 
-    @PostMapping("/{id}/takedown")
-    public ResponseEntity<?> takedownDocument(@PathVariable Long id, 
+    @PostMapping("/{id}/hidden")
+    public ResponseEntity<?> hideDocument(@PathVariable Long id, 
                                               @RequestBody Map<String, String> body) {
         try {
             String reason = body.get("reason");

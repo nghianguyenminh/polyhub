@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -56,6 +59,7 @@ public class Document {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     @NotFound(action = NotFoundAction.IGNORE)
+    @JsonIgnoreProperties("documents") // Tránh vòng lặp vô hạn khi truy vấn Category kèm Document    
     private Category category;
 
     // Bổ sung: Liên kết với Người dùng upload (Sinh viên/Mentor)
