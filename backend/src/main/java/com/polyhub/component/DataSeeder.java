@@ -85,6 +85,8 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println(">> Username: admin");
             System.out.println(">> Password: 123456");
             System.out.println("=======================================================");
+            // cho tôi hỏi, role của user: admin này là role admin hay là superadmin?
+            // 
         }
     }
 }

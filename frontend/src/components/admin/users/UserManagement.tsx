@@ -5,7 +5,7 @@ import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User } from 'lu
 import styles from './UserManagement.module.css';
 
 // --- Types & Mock Data ---
-type Role = 'Admin' | 'Mentor' | 'Học viên';
+type Role = 'Admin' | 'Mentor' | 'Sinh viên';
 type Status = 'Hoạt động' | 'Bị khóa';
 
 interface UserData {
@@ -21,8 +21,8 @@ interface UserData {
 const mockUsers: UserData[] = [
   { id: '1', name: 'Nguyễn Văn Mạnh', email: 'manhnv@fpt.edu.vn', role: 'Admin', status: 'Hoạt động', joinDate: '12/01/2023' },
   { id: '2', name: 'Trần Thị Hà', email: 'hatt@fpt.edu.vn', role: 'Mentor', status: 'Hoạt động', joinDate: '24/05/2023' },
-  { id: '3', name: 'Lê Hoàng Phong', email: 'phonglh@fpt.edu.vn', role: 'Học viên', status: 'Hoạt động', joinDate: '02/09/2023' },
-  { id: '4', name: 'Phạm Bảo Nam', email: 'nampb@fpt.edu.vn', role: 'Học viên', status: 'Bị khóa', joinDate: '15/10/2023' },
+  { id: '3', name: 'Lê Hoàng Phong', email: 'phonglh@fpt.edu.vn', role: 'Sinh viên', status: 'Hoạt động', joinDate: '02/09/2023' },
+  { id: '4', name: 'Phạm Bảo Nam', email: 'nampb@fpt.edu.vn', role: 'Sinh viên', status: 'Bị khóa', joinDate: '15/10/2023' },
   { id: '5', name: 'Đinh Phương Thảo', email: 'thaodp@fpt.edu.vn', role: 'Mentor', status: 'Hoạt động', joinDate: '01/11/2023' },
 ];
 
@@ -45,7 +45,7 @@ export default function UserManagement() {
     switch (role) {
       case 'Admin': return <span className={`${styles.badge} ${styles.badgeAdmin}`}><ShieldAlert size={12} /> Admin</span>;
       case 'Mentor': return <span className={`${styles.badge} ${styles.badgeMentor}`}><GraduationCap size={12} /> Mentor</span>;
-      case 'Học viên': return <span className={`${styles.badge} ${styles.badgeStudent}`}><User size={12} /> Học viên</span>;
+      case 'Sinh viên': return <span className={`${styles.badge} ${styles.badgeStudent}`}><User size={12} /> Sinh viên</span>;
     }
   };
 

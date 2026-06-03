@@ -22,4 +22,8 @@ public interface MentorRequestRepository extends JpaRepository<MentorRequest, Lo
     // Thêm các hàm tìm kiếm theo tên hoặc email hoặc cccd
     @org.springframework.data.jpa.repository.Query("SELECT m FROM MentorRequest m WHERE m.status = :status AND (LOWER(m.fullname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.introduction) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     org.springframework.data.domain.Page<MentorRequest> findByStatusAndKeyword(@org.springframework.data.repository.query.Param("status") com.polyhub.entity.RequestStatus status, @org.springframework.data.repository.query.Param("keyword") String keyword, org.springframework.data.domain.Pageable pageable);
+
+   @org.springframework.data.jpa.repository.Query("SELECT m FROM MentorRequest m WHERE (LOWER(m.fullname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.introduction) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    org.springframework.data.domain.Page<MentorRequest> searchAllByKeyword(@org.springframework.data.repository.query.Param("keyword") String keyword, org.springframework.data.domain.Pageable pageable);
+    
 }

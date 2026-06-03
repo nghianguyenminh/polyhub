@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Check, X, ShieldOff } from 'lucide-react';
+import { Check, X, ShieldOff, Clock, UserCheck, UserX, Search } from 'lucide-react';
 import { fetchAPI } from '@/lib/api';
 import styles from './MentorManagement.module.css';
 
@@ -13,6 +13,7 @@ export default function MentorManagement() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'danger' } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Modal State
   const [rejectReason, setRejectReason] = useState('');
@@ -21,20 +22,36 @@ export default function MentorManagement() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const pageParam = searchParams.get('page');
   const statusParam = searchParams.get('status') || 'ALL';
+  const keywordParam = searchParams.get('keyword') || ''; // Lấy keyword từ URL
 
+  // 1. Xử lý tự động tìm kiếm (Debounce 0.5s)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchTerm !== keywordParam) {
+        // Cập nhật URL khi người dùng gõ xong
+        router.push(`/admin/mentors?page=1&status=${statusParam}&keyword=${encodeURIComponent(searchTerm)}`);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, statusParam, keywordParam, router]);
+
+  // 2. Load dữ liệu mỗi khi URL thay đổi (có page, status hoặc keyword mới)
   useEffect(() => {
     const page = pageParam ? parseInt(pageParam, 10) : 1;
     setCurrentPage(page);
-    loadRequests(page, statusParam);
-  }, [pageParam, statusParam]);
+    setSearchTerm(keywordParam); // Giữ cho ô input đồng bộ với URL
+    loadRequests(page, statusParam, keywordParam); // Truyền keyword vào hàm load
+  }, [pageParam, statusParam, keywordParam]);
 
-  const loadRequests = async (page: number, status: string) => {
+  // 3. Hàm gọi API (đã thêm keyword)
+  const loadRequests = async (page: number, status: string, keyword: string) => {
     setLoading(true);
     try {
-      const data = await fetchAPI(`/api/admin/mentors?page=${page}&status=${status}`);
+      const data = await fetchAPI(`/api/admin/mentors?page=${page}&status=${status}&keyword=${encodeURIComponent(keyword)}`);
       setRequests(data.requests || []);
       setTotalPages(data.totalPages || 1);
       setStats({
@@ -49,19 +66,20 @@ export default function MentorManagement() {
     }
   };
 
+  // 4. Giữ nguyên keyword khi đổi trang hoặc lọc trạng thái
   const handlePageChange = (page: number) => {
-    router.push(`/admin/mentors?page=${page}&status=${statusParam}`);
+    router.push(`/admin/mentors?page=${page}&status=${statusParam}&keyword=${encodeURIComponent(keywordParam)}`);
   };
 
   const handleStatusFilter = (status: string) => {
-    router.push(`/admin/mentors?page=1&status=${status}`);
+    router.push(`/admin/mentors?page=1&status=${status}&keyword=${encodeURIComponent(keywordParam)}`);
   };
 
   const handleApprove = async (id: number) => {
     try {
       const result = await fetchAPI(`/api/admin/mentors/${id}/approve`, { method: 'POST' });
       setMessage({ text: result.message, type: 'success' });
-      loadRequests(currentPage, statusParam);
+      loadRequests(currentPage, statusParam, keywordParam);
     } catch (err: any) {
       setMessage({ text: err.message || 'Lỗi phê duyệt', type: 'danger' });
     }
@@ -82,7 +100,7 @@ export default function MentorManagement() {
   const handleRejectOrRevoke = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReqId || !actionType || !rejectReason.trim()) return;
-    
+
     try {
       const endpoint = actionType === 'REJECT' ? 'reject' : 'revoke';
       const result = await fetchAPI(`/api/admin/mentors/${selectedReqId}/${endpoint}`, {
@@ -92,7 +110,7 @@ export default function MentorManagement() {
       });
       setMessage({ text: result.message, type: 'success' });
       closeModal();
-      loadRequests(currentPage, statusParam);
+      loadRequests(currentPage, statusParam, keywordParam);
     } catch (err: any) {
       setMessage({ text: err.message || 'Lỗi xử lý', type: 'danger' });
     }
@@ -117,45 +135,71 @@ export default function MentorManagement() {
       {/* Stats Cards */}
       <div className={styles.statsGrid}>
         <div className={`${styles.statCard} ${styles.statWarning}`}>
-          <div className={styles.statLabel}>Chờ phê duyệt</div>
-          <div className={styles.statValue}>{stats.pending}</div>
+          <div className={styles.statCardInner}>
+            <div className={styles.statInfo}>
+              <div className={styles.statLabel}>Chờ phê duyệt</div>
+              <div className={styles.statValue}>{stats.pending}</div>
+              <div className={styles.statDesc}>Đang chờ xem xét</div>
+            </div>
+            <div className={`${styles.statIconWrap} ${styles.statIconWarning}`}>
+              <Clock size={24} />
+            </div>
+          </div>
+          <div className={`${styles.statBar} ${styles.statBarWarning}`} />
         </div>
         <div className={`${styles.statCard} ${styles.statSuccess}`}>
-          <div className={styles.statLabel}>Mentor chính thức</div>
-          <div className={styles.statValue}>{stats.approved}</div>
+          <div className={styles.statCardInner}>
+            <div className={styles.statInfo}>
+              <div className={styles.statLabel}>Mentor chính thức</div>
+              <div className={styles.statValue}>{stats.approved}</div>
+              <div className={styles.statDesc}>Đã được phê duyệt</div>
+            </div>
+            <div className={`${styles.statIconWrap} ${styles.statIconSuccess}`}>
+              <UserCheck size={24} />
+            </div>
+          </div>
+          <div className={`${styles.statBar} ${styles.statBarSuccess}`} />
         </div>
         <div className={`${styles.statCard} ${styles.statDanger}`}>
-          <div className={styles.statLabel}>Từ chối / Tước quyền</div>
-          <div className={styles.statValue}>{stats.rejected}</div>
+          <div className={styles.statCardInner}>
+            <div className={styles.statInfo}>
+              <div className={styles.statLabel}>Từ chối / Tước quyền</div>
+              <div className={styles.statValue}>{stats.rejected}</div>
+              <div className={styles.statDesc}>Không được chấp thuận</div>
+            </div>
+            <div className={`${styles.statIconWrap} ${styles.statIconDanger}`}>
+              <UserX size={24} />
+            </div>
+          </div>
+          <div className={`${styles.statBar} ${styles.statBarDanger}`} />
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className={styles.filterBar}>
-        <button 
-          onClick={() => handleStatusFilter('ALL')} 
-          className={`${styles.filterBtn} ${statusParam === 'ALL' ? styles.filterActive : ''}`}
-        >
-          Tất cả
-        </button>
-        <button 
-          onClick={() => handleStatusFilter('PENDING')} 
-          className={`${styles.filterBtn} ${statusParam === 'PENDING' ? styles.filterWarning : ''}`}
-        >
-          Chờ duyệt
-        </button>
-        <button 
-          onClick={() => handleStatusFilter('APPROVED')} 
-          className={`${styles.filterBtn} ${statusParam === 'APPROVED' ? styles.filterSuccess : ''}`}
-        >
-          Đã duyệt
-        </button>
-        <button 
-          onClick={() => handleStatusFilter('REJECTED')} 
-          className={`${styles.filterBtn} ${statusParam === 'REJECTED' ? styles.filterDanger : ''}`}
-        >
-          Từ chối
-        </button>
+      {/* Toolbar */}
+      <div className={styles.toolbar}>
+        <div className={styles.filterGroup}>
+          <div className={styles.searchContainer}>
+            <Search className={styles.searchIcon} size={18} />
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tên hoặc email..."
+              className={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select
+            className={styles.selectInput}
+            value={statusParam}
+            onChange={(e) => handleStatusFilter(e.target.value)}
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="PENDING">Chờ duyệt</option>
+            <option value="APPROVED">Đã duyệt</option>
+            <option value="REJECTED">Từ chối</option>
+            <option value="REVOKED">Tước quyền</option>
+          </select>
+        </div>
       </div>
 
       {/* Data Table */}
@@ -190,10 +234,10 @@ export default function MentorManagement() {
                   <tr key={req.id}>
                     <td>
                       <div className={styles.userInfo}>
-                        <img 
-                          src={req.user?.avatar && req.user.avatar !== 'default.png' ? req.user.avatar : `https://ui-avatars.com/api/?name=${req.fullname}`} 
-                          className={styles.avatar} 
-                          alt="avatar" 
+                        <img
+                          src={req.user?.avatar && req.user.avatar !== 'default.png' ? req.user.avatar : `https://ui-avatars.com/api/?name=${req.fullname}`}
+                          className={styles.avatar}
+                          alt="avatar"
                         />
                         <div>
                           <div className={styles.userName}>{req.fullname}</div>
@@ -255,24 +299,24 @@ export default function MentorManagement() {
               Trang <strong>{currentPage}</strong> / {totalPages}
             </div>
             <div className={styles.pageControls}>
-              <button 
-                className={styles.pageBtn} 
+              <button
+                className={styles.pageBtn}
                 disabled={currentPage === 1}
                 onClick={() => handlePageChange(currentPage - 1)}
               >
                 Trước
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button 
-                  key={page} 
+                <button
+                  key={page}
                   className={`${styles.pageBtn} ${currentPage === page ? styles.pageBtnActive : ''}`}
                   onClick={() => handlePageChange(page)}
                 >
                   {page}
                 </button>
               ))}
-              <button 
-                className={styles.pageBtn} 
+              <button
+                className={styles.pageBtn}
                 disabled={currentPage === totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
               >
@@ -296,8 +340,8 @@ export default function MentorManagement() {
                   Vui lòng cung cấp lý do. Lý do này sẽ được gửi trực tiếp qua email cho người dùng.
                 </p>
                 <label className={styles.modalLabel}>Lý do</label>
-                <textarea 
-                  className={`${styles.modalTextarea} ${actionType === 'REVOKE' ? styles.modalTextareaRevoke : ''}`} 
+                <textarea
+                  className={`${styles.modalTextarea} ${actionType === 'REVOKE' ? styles.modalTextareaRevoke : ''}`}
                   required
                   placeholder="Nhập lý do tại đây..."
                   value={rejectReason}

@@ -33,17 +33,33 @@ public class AdminMentorApiController {
     @GetMapping
     public ResponseEntity<?> getMentorRequests(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(required = false, defaultValue="ALL") String status) {
+            @RequestParam(required = false, defaultValue="ALL") String status,
+            @RequestParam(required = false) String keyword) { // ĐIỂM SỬA 1: Bổ sung tham số keyword
         
         Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<MentorRequest> reqPage;
 
+        // ĐIỂM SỬA 2: Kiểm tra xem có từ khóa được gửi lên không
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+
         if ("ALL".equalsIgnoreCase(status)) {
-            reqPage = mentorRequestRepository.findAll(pageable);
+            if (hasKeyword) {
+                // Có từ khóa + Tất cả trạng thái
+                reqPage = mentorRequestRepository.searchAllByKeyword(keyword, pageable);
+            } else {
+                // Không có từ khóa + Tất cả trạng thái
+                reqPage = mentorRequestRepository.findAll(pageable);
+            }
         } else {
             try {
                 RequestStatus reqStatus = RequestStatus.valueOf(status.toUpperCase());
-                reqPage = mentorRequestRepository.findByStatus(reqStatus, pageable);
+                if (hasKeyword) {
+                    // Có từ khóa + Trạng thái cụ thể
+                    reqPage = mentorRequestRepository.findByStatusAndKeyword(reqStatus, keyword, pageable);
+                } else {
+                    // Không có từ khóa + Trạng thái cụ thể
+                    reqPage = mentorRequestRepository.findByStatus(reqStatus, pageable);
+                }
             } catch (IllegalArgumentException e) {
                 reqPage = mentorRequestRepository.findAll(pageable);
             }
@@ -58,13 +74,16 @@ public class AdminMentorApiController {
         response.put("currentPage", page);
         response.put("totalPages", reqPage.getTotalPages());
         response.put("currentStatus", status);
+        
+        // ĐIỂM SỬA 3: Trả về keyword cho Frontend
+        response.put("currentKeyword", keyword); 
+        
         response.put("pendingCount", pendingCount);
         response.put("approvedCount", approvedCount);
         response.put("rejectedCount", rejectedCount);
 
         return ResponseEntity.ok(response);
     }
-
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'USER_ADMIN')")
     @PostMapping("/{id}/approve")
     public ResponseEntity<?> approveMentor(@PathVariable Long id) {

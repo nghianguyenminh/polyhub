@@ -9,11 +9,11 @@ export default function Header() {
 
   return (
     <header className="poly-header fixed-top d-flex align-items-center px-3 px-md-4">
-      <div className="d-flex align-items-center w-100 mx-auto justify-content-between" style={{ maxWidth: '1400px' }}>
+      <div className="d-flex align-items-center w-100 mx-auto justify-content-between" style={{ maxWidth: '100%' }}>
         
         <Link href="/" className="text-decoration-none d-flex align-items-center me-4">
-          <h3 className="mb-0 fw-bold text-poly" style={{ letterSpacing: '-0.5px' }}>PolyHUB</h3>
-        </Link>
+      <h3 className="mb-0 fw-bold text-poly" style={{ letterSpacing: '-0.5px' }}>PolyHUB</h3>
+    </Link>
 
         <div className="d-flex align-items-center gap-3">
           {/* Notifications Dropdown */}
@@ -97,11 +97,13 @@ export default function Header() {
                 </li>
               </ul>
             </div>
-          ) : (
-            <Link href="/login" className="btn btn-poly-gradient text-white border-0 py-2 px-4" style={{ borderRadius: '8px', fontWeight: 600 }}>
-              Đăng Nhập
+          ) :
+           (
+            <Link href="/login"  style={{ borderRadius: '8px', fontWeight: 600 }}>
+              
             </Link>
-          )}
+          )
+          }
         </div>
       </div>
     </header>

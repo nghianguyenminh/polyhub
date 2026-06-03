@@ -7,6 +7,7 @@ import { Document, Category } from '@/lib/types';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import '@/styles/documents.css';
+import RightSidebar from '@/components/layout/RightSidebar';
 
 export default function DocumentsPage() {
   const { user, loading } = useAuth();
@@ -445,6 +446,8 @@ export default function DocumentsPage() {
         </div>
       </div>
       
+      
+
       <style jsx>{`
         .trendy-input {
           border: 1.5px solid #e9ecef;

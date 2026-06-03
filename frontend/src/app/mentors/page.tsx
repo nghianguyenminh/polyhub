@@ -8,6 +8,7 @@ import { Mentor } from '@/lib/types';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import '@/styles/mentors.css';
+import RightSidebar from '@/components/layout/RightSidebar';
 
 export default function MentorsPage() {
   const { user, loading } = useAuth();
@@ -56,7 +57,7 @@ export default function MentorsPage() {
         <main className="w-100 d-flex justify-content-between">
           <LeftSidebar activeMenu="mentors" />
           
-          <div className="poly-main-feed" style={{ maxWidth: '850px', width: '100%' }}>
+          <div className="poly-main-feed flex-grow-1 mx-4" style={{ maxWidth: '850px', minWidth: '0' }}>
             <div className="poly-card p-3 mb-4" style={{ background: 'linear-gradient(to right, #ffffff, #fffaf5)' }}>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <div>
@@ -174,6 +175,7 @@ export default function MentorsPage() {
             )}
 
           </div>
+                <RightSidebar/>
         </main>
       </div>
     </>

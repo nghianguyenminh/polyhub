@@ -71,7 +71,7 @@ body {
 .bg-poly { background-color: var(--poly-primary) !important; }
 
 .app-container {
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0 16px;
     display: flex;
@@ -87,13 +87,21 @@ body {
     margin: 16px auto;
 }
 
-.poly-card {
+/* .poly-card {
     background-color: var(--bg-card);
     border-radius: 12px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     border: 1px solid var(--border-color);
     margin-bottom: 16px;
     transition: box-shadow 0.2s ease;
+} */
+ .poly-card {
+    background-color: var(--bg-card);
+    border-radius: 16px; /* Bo góc mềm mại hơn (tăng từ 12px lên 16px) */
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03); /* Bóng đổ mờ, rộng và tự nhiên hơn */
+    border: 1px solid rgba(0, 0, 0, 0.015); /* Viền cực nhạt, gần như tàng hình */
+    margin-bottom: 20px; /* Tăng khoảng cách nhịp điệu (Rhythm) giữa các bài viết */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-ghost {
@@ -101,16 +109,20 @@ body {
     border: none;
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 13.5px;
+    font-size: 14px; /* Chữ to hơn một chút cho thao tác ngón tay (Touch target) */
     border-radius: 8px;
-    transition: 0.2s;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 0;
+    padding: 8px 0; /* Tăng vùng bấm */
 }
 .btn-ghost:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(243, 244, 246, 1); /* Hover hiện màu cam nhạt của brand */
+    color: rgb(47, 45, 45); /* Đổi màu chữ/icon sang màu thương hiệu */
+}
+.btn-ghost i {
+    font-size: 1.15rem; /* Icon to hơn text một chút */
 }
 
 .btn-icon-circle {

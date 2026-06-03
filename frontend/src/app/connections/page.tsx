@@ -8,6 +8,7 @@ import { ConnectionUser, Mentor } from '@/lib/types';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import '@/styles/mentors.css'; // connections.css shares styles with mentors
+import RightSidebar from '@/components/layout/RightSidebar';
 
 export default function ConnectionsPage() {
   const { user, loading } = useAuth();
@@ -68,19 +69,21 @@ export default function ConnectionsPage() {
 
   return (
     <>
-      <Header />
-      <div className="app-container">
-        <main className="w-100 d-flex justify-content-between">
-          <LeftSidebar activeMenu="connections" />
-          
-          <div className="poly-main-feed" style={{ maxWidth: '850px', width: '100%' }}>
-            <div className="poly-card p-3 mb-4" style={{ background: 'linear-gradient(to right, #ffffff, #f0f7ff)' }}>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                  <h5 className="fw-bold mb-1 text-dark">Góc Kết nối PolyHUB</h5>
-                  <div className="text-muted" style={{ fontSize: '13px' }}>Giao lưu, theo dõi và kết bạn với mọi người trong hệ thống</div>
-                </div>
+     <Header />
+    <div className="app-container">
+      {/* Thêm pt-4 nếu ở trang chủ bạn có dùng pt-4 để đẩy nội dung xuống một chút */}
+      <main className="w-100 d-flex justify-content-between pt-4">
+        <LeftSidebar activeMenu="connections" />
+        
+        {/* SỬA CHÍNH Ở ĐÂY: Thêm flex-grow-1, mx-4 và minWidth: '0' */}
+        <div className="poly-main-feed flex-grow-1 mx-4" style={{ maxWidth: '850px', minWidth: '0' }}>
+          <div className="poly-card p-3 mb-4" style={{ background: 'linear-gradient(to right, #ffffff, #f0f7ff)' }}>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                <h5 className="fw-bold mb-1 text-dark">Góc Kết nối PolyHUB</h5>
+                <div className="text-muted" style={{ fontSize: '13px' }}>Giao lưu, theo dõi và kết bạn với mọi người trong hệ thống</div>
               </div>
+            </div>
               
               <form onSubmit={handleSearch} className="input-group mt-3 shadow-sm" style={{ borderRadius: '50rem', border: '1px solid rgba(8, 102, 255, 0.2)', background: 'white' }}>
                 <span className="input-group-text bg-transparent border-0 text-primary ps-3 pe-2 py-2">
@@ -178,6 +181,9 @@ export default function ConnectionsPage() {
             )}
 
           </div>
+          <RightSidebar 
+      
+          />
         </main>
       </div>
     </>

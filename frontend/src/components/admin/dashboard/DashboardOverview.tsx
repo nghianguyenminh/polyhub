@@ -61,7 +61,7 @@ export default function DashboardOverview() {
               <div className={styles.statHeader}>
                 <h3 className={styles.statTitle}>{stat.title}</h3>
                 <div className={`${styles.iconWrapper} ${stat.colorClass}`}>
-                  <Icon size={20} />
+                  <Icon size={20} />  
                 </div>
               </div>
               <p className={styles.statValue}>{stat.value}</p>

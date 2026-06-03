@@ -172,25 +172,25 @@ export default function HomePage() {
             {/* Create Post trigger card */}
             <div className="poly-card p-3 bg-white">
               <div className="d-flex align-items-center gap-2">
-                <img 
-                  src={user.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'} 
-                  className="rounded-circle border" 
-                  width="40" 
-                  height="40" 
+                <img
+                  src={user.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                  className="rounded-circle border"
+                  width="40"
+                  height="40"
                   style={{ objectFit: 'cover' }}
-                  alt="user avatar" 
+                  alt="user avatar"
                 />
-                <input 
-                  type="text" 
-                  className="form-control rounded-pill bg-light border-0 py-2 px-3" 
-                  placeholder={`Bạn đang nghĩ gì, ${user.fullname}?`} 
-                  style={{ cursor: 'pointer', fontSize: '14.5px' }} 
-                  readOnly 
-                  data-bs-toggle="modal" 
-                  data-bs-target="#createPostModal" 
+                <input
+                  type="text"
+                  className="form-control rounded-pill bg-light border-0 py-2 px-3 "
+                  placeholder={`Bạn đang nghĩ gì, ${user.fullname}?`}
+                  style={{ cursor: 'pointer', fontSize: '14.5px' }}
+                  readOnly
+                  data-bs-toggle="modal"
+                  data-bs-target="#createPostModal"
                 />
               </div>
-              
+
               <div className="d-flex justify-content-between px-1 mt-3">
                 <button className="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal">
                   <i className="bi bi-camera-reels text-danger me-2 fs-5"></i> Video
@@ -222,8 +222,8 @@ export default function HomePage() {
 
                 {feedPage + 1 < totalPages && (
                   <div className="text-center my-4">
-                    <button 
-                      className="btn btn-outline-primary px-4 py-2" 
+                    <button
+                      className="btn btn-outline-primary px-4 py-2"
                       onClick={() => loadFeed(feedPage + 1)}
                       disabled={feedLoading}
                     >
@@ -246,11 +246,11 @@ export default function HomePage() {
             <form onSubmit={handleSubmitPost}>
               <div className="modal-header border-0 pb-0 position-relative">
                 <h5 className="modal-title fw-bolder w-100 text-center" id="createPostModalLabel">Tạo bài viết</h5>
-                <button 
-                  type="button" 
-                  className="btn border-0 shadow-none position-absolute rounded-circle p-2" 
-                  data-bs-dismiss="modal" 
-                  aria-label="Close" 
+                <button
+                  type="button"
+                  className="btn border-0 shadow-none position-absolute rounded-circle p-2"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
                   id="closeCreatePostModal"
                   style={{ right: '15px', top: '12px', backgroundColor: '#e4e6eb', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
@@ -260,13 +260,13 @@ export default function HomePage() {
               <hr className="w-100 mb-0 mt-3" style={{ borderTop: '1px solid #ced0d4' }} />
               <div className="modal-body pt-3 pb-2">
                 <div className="d-flex mb-2">
-                  <img 
-                    src={user.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'} 
-                    className="rounded-circle border border-light shadow-sm me-3" 
-                    width="46" 
-                    height="46" 
+                  <img
+                    src={user.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                    className="rounded-circle border border-light shadow-sm me-3"
+                    width="46"
+                    height="46"
                     style={{ objectFit: 'cover' }}
-                    alt="avatar" 
+                    alt="avatar"
                   />
                   <div className="flex-grow-1">
                     <div className="fw-bold" style={{ fontSize: '15px', color: '#050505' }}>{user.fullname}</div>
@@ -275,18 +275,18 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                
-                <textarea 
-                  id="post-content" 
-                  className="form-control border-0 px-0 shadow-none w-100 mt-2 text-dark" 
-                  rows={3} 
+
+                <textarea
+                  id="post-content"
+                  className="form-control border-0 px-0 shadow-none w-100 mt-2 text-dark"
+                  rows={3}
                   value={postContent}
                   onChange={(e) => setPostContent(e.target.value)}
-                  placeholder={`Bạn đang nghĩ gì, ${user.fullname}?`} 
-                  required 
+                  placeholder={`Bạn đang nghĩ gì, ${user.fullname}?`}
+                  required
                   style={{ resize: 'none', backgroundColor: 'transparent' }}
                 />
-                
+
                 <div className="d-flex flex-wrap gap-2 mt-2 mb-3" id="topic-tags">
                   <span className="badge rounded-pill topic-pill">Học tập</span>
                   <span className="badge rounded-pill topic-pill">Hỏi đáp</span>
@@ -297,10 +297,10 @@ export default function HomePage() {
                 {imagePreview && (
                   <div className="mt-2 position-relative rounded overflow-hidden border">
                     <img src={imagePreview} className="img-fluid w-100" style={{ maxHeight: '350px', objectFit: 'cover' }} alt="preview" />
-                    <button 
-                      type="button" 
-                      className="btn btn-light rounded-circle position-absolute shadow flex-center" 
-                      style={{ top: '10px', right: '10px', width: '34px', height: '34px', border: '1px solid #ced0d4', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                    <button
+                      type="button"
+                      className="btn btn-light rounded-circle position-absolute shadow flex-center"
+                      style={{ top: '10px', right: '10px', width: '34px', height: '34px', border: '1px solid #ced0d4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       onClick={handleRemoveImage}
                     >
                       <i className="bi bi-x-lg"></i>
@@ -310,9 +310,9 @@ export default function HomePage() {
 
                 {/* AI Auxiliary Buttons */}
                 <div className="d-flex align-items-center gap-2 mt-3">
-                  <button 
-                    type="button" 
-                    className="btn btn-outline-primary btn-sm rounded-pill fw-medium" 
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm rounded-pill fw-medium"
                     onClick={handleImproveText}
                     disabled={aiLoading || !postContent.trim()}
                     title="Yêu cầu AI cải thiện nội dung bạn vừa nhập"
@@ -320,9 +320,9 @@ export default function HomePage() {
                     <i className="bi bi-magic me-1"></i>Cải thiện văn bản
                   </button>
                   {postImage && (
-                    <button 
-                      type="button" 
-                      className="btn btn-outline-success btn-sm rounded-pill fw-medium" 
+                    <button
+                      type="button"
+                      className="btn btn-outline-success btn-sm rounded-pill fw-medium"
                       onClick={handleSuggestCaption}
                       disabled={aiLoading}
                       title="AI sẽ gợi ý nội dung phù hợp với bức ảnh"
@@ -331,11 +331,11 @@ export default function HomePage() {
                     </button>
                   )}
                 </div>
-                
+
                 {aiLoading && (
                   <p className="text-muted mt-2 mb-0" style={{ fontSize: '13px' }}><i className="spinner-border spinner-border-sm me-1" role="status"></i>AI đang suy nghĩ...</p>
                 )}
-                
+
                 {/* Toolbar */}
                 <div className="add-to-post-box p-2 d-flex align-items-center justify-content-between mt-3 border">
                   <span className="fw-semibold px-2" style={{ fontSize: '15px', color: '#050505' }}>Thêm vào bài viết</span>

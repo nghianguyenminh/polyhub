@@ -1,53 +1,107 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchAPI } from '@/lib/api';
 import Header from '@/components/layout/Header';
+import '@/styles/mentors.css';
+import '@/styles/mentorRegister.css';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface StepProps {
+  visible: boolean;
+  direction: 'forward' | 'backward';
+}
+
+// ─── Step definitions ─────────────────────────────────────────────────────────
+const STEPS = [
+  { id: 1, label: 'Cá nhân',    icon: '👤', title: 'Thông tin cá nhân' },
+  { id: 2, label: 'Kinh nghiệm', icon: '💼', title: 'Kinh nghiệm & Động lực' },
+  { id: 3, label: 'Hồ sơ',      icon: '📎', title: 'Hồ sơ đính kèm' },
+  { id: 4, label: 'Xác nhận',   icon: '✅', title: 'Xác nhận & Gửi' },
+];
+
+
+
+
 
 export default function MentorRegisterPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading, setLoading]       = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [error, setError]           = useState('');
   const [userStatus, setUserStatus] = useState<any>(null);
-  
+  const [currentStep, setCurrentStep] = useState(1);
+  const [direction, setDirection]   = useState<'forward' | 'backward'>('forward');
+  const [agreed, setAgreed]         = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
   // Form states
-  const [fullname, setFullname] = useState('');
-  const [cccdNumber, setCccdNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [birthday, setBirthday] = useState('');
-  const [introduction, setIntroduction] = useState('');
-  const [motivation, setMotivation] = useState('');
-  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [fullname, setFullname]             = useState('');
+  const [cccdNumber, setCccdNumber]         = useState('');
+  const [email, setEmail]                   = useState('');
+  const [phone, setPhone]                   = useState('');
+  const [birthday, setBirthday]             = useState('');
+  const [introduction, setIntroduction]     = useState('');
+  const [motivation, setMotivation]         = useState('');
+  const [cvFile, setCvFile]                 = useState<File | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const [degreeFile, setDegreeFile] = useState<File | null>(null);
+  const [degreeFile, setDegreeFile]         = useState<File | null>(null);
 
-  useEffect(() => {
-    checkStatus();
-  }, []);
+  useEffect(() => { checkStatus(); }, []);
 
   const checkStatus = async () => {
     try {
       const data = await fetchAPI('/api/mentors/status');
       setUserStatus(data);
-      if (data.isMentor) {
-        router.push('/mentors');
-      }
-    } catch (err) {
+      if (data.isMentor) router.push('/mentors');
+    } catch {
       router.push('/login');
+    } finally {
+      setPageLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cvFile) {
-      setError('Vui lòng đính kèm CV nộp hồ sơ.');
-      return;
+  // ── Validation ──────────────────────────────────────────────────────────────
+  const validateStep = (step: number): boolean => {
+    const errs: Record<string, string> = {};
+    if (step === 1) {
+      if (!fullname.trim())   errs.fullname  = 'Vui lòng nhập họ tên đầy đủ';
+      if (!cccdNumber.trim()) errs.cccdNumber = 'Vui lòng nhập số CCCD/CMND';
+      if (!email.trim())      errs.email     = 'Vui lòng nhập email';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Email không hợp lệ';
+      if (!phone.trim())      errs.phone     = 'Vui lòng nhập số điện thoại';
+      if (!birthday)          errs.birthday  = 'Vui lòng chọn ngày sinh';
     }
+    if (step === 2) {
+      if (!introduction.trim()) errs.introduction = 'Vui lòng điền phần giới thiệu bản thân';
+      if (!motivation.trim())   errs.motivation   = 'Vui lòng điền động lực của bạn';
+    }
+    if (step === 3) {
+      if (!cvFile) errs.cvFile = 'Vui lòng tải lên CV của bạn';
+    }
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
+  const goNext = () => {
+    if (!validateStep(currentStep)) return;
+    setDirection('forward');
+    setCurrentStep(s => Math.min(s + 1, 4));
+    setError('');
+  };
+
+  const goBack = () => {
+    setDirection('backward');
+    setCurrentStep(s => Math.max(s - 1, 1));
+    setFieldErrors({});
+    setError('');
+  };
+
+  // ── Submit ──────────────────────────────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!agreed) { setError('Vui lòng đồng ý với điều khoản trước khi gửi.'); return; }
     setLoading(true);
     setError('');
 
@@ -59,25 +113,20 @@ export default function MentorRegisterPage() {
     formData.append('birthday', birthday);
     formData.append('introduction', introduction);
     formData.append('motivation', motivation);
-    formData.append('cvFile', cvFile);
+    formData.append('cvFile', cvFile!);
     if (certificateFile) formData.append('certificateFile', certificateFile);
-    if (degreeFile) formData.append('degreeFile', degreeFile);
+    if (degreeFile)      formData.append('degreeFile', degreeFile);
 
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8080/api/mentors/register', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
       });
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Có lỗi xảy ra');
-
-      alert('Gửi hồ sơ thành công! Vui lòng chờ BQT xét duyệt.');
-      router.push('/mentors');
+      setUserStatus({ hasRequest: true, requestStatus: 'PENDING' });
     } catch (err: any) {
       setError(err.message || 'Lỗi khi gửi hồ sơ');
     } finally {
@@ -85,118 +134,446 @@ export default function MentorRegisterPage() {
     }
   };
 
-  if (!userStatus) return <div className="text-center mt-5"><div className="spinner-border text-primary" /></div>;
+  // ── Render helpers ──────────────────────────────────────────────────────────
+  const progressPct = ((currentStep - 1) / (STEPS.length - 1)) * 100;
+
+  const FileZone = ({
+    label, hint, required, file, onChange, accept, id
+  }: {
+    label: string; hint: string; required?: boolean;
+    file: File | null; onChange: (f: File | null) => void;
+    accept: string; id: string;
+  }) => (
+    <div className="mr-field">
+      <label className="mr-label">{label}{required && <span>*</span>}</label>
+      <div className={`mr-file-zone ${file ? 'has-file' : ''}`}>
+        <input
+          type="file" accept={accept} id={id}
+          onChange={e => onChange(e.target.files?.[0] || null)}
+        />
+        <div className="mr-file-icon">{file ? '✅' : '📁'}</div>
+        {file ? (
+          <div className="mr-file-name">📄 {file.name}</div>
+        ) : (
+          <>
+            <div className="mr-file-text">
+              <strong>Kéo thả file hoặc nhấn để chọn</strong>
+            </div>
+            <div className="mr-file-sub">{hint}</div>
+          </>
+        )}
+      </div>
+      {fieldErrors[id] && <div className="mr-field-error">⚠ {fieldErrors[id]}</div>}
+    </div>
+  );
+
+  // ── Page states ─────────────────────────────────────────────────────────────
+  if (pageLoading) {
+    return (
+      <>
+       
+        <Header />
+        <div className="mr-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div className="mr-spinner" style={{ width: 56, height: 56 }} />
+            <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: 16 }}>Đang tải...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Pending / Approved state
+  if (userStatus?.hasRequest && (userStatus.requestStatus === 'PENDING' || userStatus.requestStatus === 'APPROVED')) {
+    return (
+      <>
+        
+        <Header />
+        <div className="mr-root">
+          <div className="mr-particle mr-particle-1" />
+          <div className="mr-particle mr-particle-2" />
+          <div className="mr-wrapper" style={{ maxWidth: 560, textAlign: 'center' }}>
+            <div className="mr-card" style={{ animationDelay: '0.1s' }}>
+              <div className="mr-pending-icon">⏳</div>
+              <h2 style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+                Hồ sơ đang được xét duyệt
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 24 }}>
+                Cảm ơn bạn đã đăng ký! Ban Quản Trị đang xem xét hồ sơ của bạn.<br />
+                Quá trình này thường mất từ <strong style={{ color: '#c4b5fd' }}>1–3 ngày làm việc</strong>.
+              </p>
+              <Link href="/mentors" className="mr-btn mr-btn-primary" style={{ justifyContent: 'center' }}>
+                ← Quay lại trang Mentor
+              </Link>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
+     
       <Header />
-      <div className="container-fluid bg-light min-vh-100 py-5">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="card border-0 shadow-sm rounded-4 mb-4">
-                <div className="card-body p-4 p-md-5">
-                  <div className="text-center mb-5">
-                    <h2 className="fw-bold mb-3 text-dark">Đăng Ký Trở Thành Mentor</h2>
-                    <p className="text-muted fs-5">Chia sẻ kiến thức - Lan tỏa giá trị cộng đồng PolyHUB</p>
+      <div className="mr-root">
+        <div className="mr-particle mr-particle-1" />
+        <div className="mr-particle mr-particle-2" />
+
+        <div className="mr-wrapper">
+          {/* Hero */}
+          <div className="mr-hero">
+            <div className="mr-hero-badge">
+              <span>🎓</span> PolyHUB Mentor Program
+            </div>
+            <h1>Đăng Ký Trở Thành Mentor</h1>
+            <p>Chia sẻ kiến thức · Lan tỏa giá trị · Xây dựng cộng đồng PolyHUB</p>
+          </div>
+
+          {/* Stepper */}
+          <div className="mr-stepper">
+            {STEPS.map((step, idx) => (
+              <React.Fragment key={step.id}>
+                <div className="mr-step-item">
+                  <div className={`mr-step-circle ${currentStep === step.id ? 'active' : currentStep > step.id ? 'done' : ''}`}>
+                    {currentStep <= step.id ? step.icon : ''}
                   </div>
+                  <span className={`mr-step-label ${currentStep === step.id ? 'active' : currentStep > step.id ? 'done' : ''}`}>
+                    {step.label}
+                  </span>
+                </div>
+                {idx < STEPS.length - 1 && (
+                  <div className="mr-step-connector">
+                    <div
+                      className="mr-step-connector-fill"
+                      style={{ width: currentStep > step.id ? '100%' : '0%' }}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
 
-                  {userStatus.hasRequest && (userStatus.requestStatus === 'PENDING' || userStatus.requestStatus === 'APPROVED') ? (
-                    <div className="alert alert-info rounded-3 border-0 py-3 text-center">
-                      <i className="bi bi-info-circle-fill fs-4 d-block mb-2 text-info"></i>
-                      <h5 className="fw-bold">Bạn đã có yêu cầu đăng ký đang xử lý</h5>
-                      <p className="mb-0 text-muted">Vui lòng chờ Ban Quản Trị xem xét hồ sơ của bạn. Quá trình này có thể mất từ 1-3 ngày làm việc.</p>
-                      <Link href="/mentors" className="btn btn-outline-info mt-3 rounded-pill px-4">Quay lại danh sách</Link>
-                    </div>
-                  ) : (
-                    <>
-                      {userStatus.hasRequest && userStatus.requestStatus === 'REJECTED' && (
-                        <div className="alert alert-danger rounded-3 border-0 py-3 mb-4">
-                          <h6 className="fw-bold"><i className="bi bi-exclamation-triangle-fill me-2"></i> Hồ sơ trước đó của bạn đã bị từ chối</h6>
-                          <p className="mb-0 small">Lý do: {userStatus.rejectionReason}</p>
-                          <hr />
-                          <p className="mb-0 small">Bạn có thể điều chỉnh lại hồ sơ và nộp lại bên dưới.</p>
-                        </div>
-                      )}
-
-                      {error && (
-                        <div className="alert alert-danger rounded-3 border-0 py-2 mb-4" role="alert">
-                          <i className="bi bi-exclamation-circle-fill me-2"></i>{error}
-                        </div>
-                      )}
-
-                      <form onSubmit={handleSubmit} className="needs-validation">
-                        <h5 className="fw-bold mb-3 border-bottom pb-2">1. Thông tin cá nhân cơ bản</h5>
-                        <div className="row g-3 mb-4">
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Họ và tên đầy đủ <span className="text-danger">*</span></label>
-                            <input type="text" className="form-control rounded-3" value={fullname} onChange={e => setFullname(e.target.value)} required />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Số CCCD/CMND <span className="text-danger">*</span></label>
-                            <input type="text" className="form-control rounded-3" value={cccdNumber} onChange={e => setCccdNumber(e.target.value)} required />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Email liên hệ <span className="text-danger">*</span></label>
-                            <input type="email" className="form-control rounded-3" value={email} onChange={e => setEmail(e.target.value)} required />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Số điện thoại <span className="text-danger">*</span></label>
-                            <input type="tel" className="form-control rounded-3" value={phone} onChange={e => setPhone(e.target.value)} required />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Ngày sinh <span className="text-danger">*</span></label>
-                            <input type="date" className="form-control rounded-3" value={birthday} onChange={e => setBirthday(e.target.value)} required />
-                          </div>
-                        </div>
-
-                        <h5 className="fw-bold mb-3 border-bottom pb-2">2. Kinh nghiệm & Động lực</h5>
-                        <div className="mb-3">
-                          <label className="form-label fw-medium">Giới thiệu bản thân & Kinh nghiệm <span className="text-danger">*</span></label>
-                          <textarea className="form-control rounded-3" rows={4} placeholder="Ví dụ: Đã có 3 năm kinh nghiệm lập trình Java..." value={introduction} onChange={e => setIntroduction(e.target.value)} required></textarea>
-                          <div className="form-text text-muted">Mô tả ngắn gọn về chuyên môn, dự án đã làm hoặc thành tích học tập.</div>
-                        </div>
-                        <div className="mb-4">
-                          <label className="form-label fw-medium">Động lực trở thành Mentor <span className="text-danger">*</span></label>
-                          <textarea className="form-control rounded-3" rows={3} placeholder="Vì sao bạn muốn tham gia chia sẻ kiến thức..." value={motivation} onChange={e => setMotivation(e.target.value)} required></textarea>
-                        </div>
-
-                        <h5 className="fw-bold mb-3 border-bottom pb-2">3. Hồ sơ đính kèm (Xác thực năng lực)</h5>
-                        <div className="mb-3">
-                          <label className="form-label fw-medium">Tải lên CV (PDF/Word) <span className="text-danger">*</span></label>
-                          <input type="file" className="form-control rounded-3" accept=".pdf,.doc,.docx" onChange={e => setCvFile(e.target.files?.[0] || null)} required />
-                        </div>
-                        <div className="row g-3 mb-4">
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Chứng chỉ liên quan (nếu có)</label>
-                            <input type="file" className="form-control rounded-3" accept=".pdf,.jpg,.png" onChange={e => setCertificateFile(e.target.files?.[0] || null)} />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-medium">Bằng cấp chuyên môn (nếu có)</label>
-                            <input type="file" className="form-control rounded-3" accept=".pdf,.jpg,.png" onChange={e => setDegreeFile(e.target.files?.[0] || null)} />
-                          </div>
-                        </div>
-
-                        <div className="form-check mb-4">
-                          <input className="form-check-input" type="checkbox" id="agreeTerms" required />
-                          <label className="form-check-label text-muted" htmlFor="agreeTerms">
-                            Tôi cam kết những thông tin và tài liệu cung cấp là hoàn toàn chính xác. Tôi đồng ý với các điều khoản và quy định của PolyHUB đối với vai trò Mentor.
-                          </label>
-                        </div>
-
-                        <div className="d-flex gap-3 mt-4 pt-3 border-top">
-                          <Link href="/mentors" className="btn btn-light rounded-pill px-4 fw-medium">Hủy bỏ</Link>
-                          <button type="submit" className="btn btn-primary rounded-pill px-5 fw-medium" style={{ backgroundColor: '#4F46E5', border: 'none' }} disabled={loading}>
-                            {loading ? <><span className="spinner-border spinner-border-sm me-2"></span> Đang xử lý...</> : 'Gửi Yêu Cầu'}
-                          </button>
-                        </div>
-                      </form>
-                    </>
-                  )}
+          {/* Rejected banner */}
+          {userStatus?.hasRequest && userStatus.requestStatus === 'REJECTED' && (
+            <div className="mr-alert mr-alert-warning" style={{ marginBottom: 24 }}>
+              <span className="mr-alert-icon">⚠️</span>
+              <div>
+                <div className="mr-alert-title">Hồ sơ trước đó đã bị từ chối</div>
+                <div className="mr-alert-body">
+                  Lý do: {userStatus.rejectionReason}<br />
+                  Bạn có thể điều chỉnh và nộp lại hồ sơ bên dưới.
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Error banner */}
+          {error && (
+            <div className="mr-alert mr-alert-danger" style={{ marginBottom: 24 }}>
+              <span className="mr-alert-icon">❌</span>
+              <div>
+                <div className="mr-alert-title">Có lỗi xảy ra</div>
+                <div className="mr-alert-body">{error}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Main Card */}
+          <div className="mr-card">
+
+            {/* ── STEP 1: Personal info ── */}
+            {currentStep === 1 && (
+              <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
+                <div className="mr-step-header">
+                  <div className="mr-step-icon">👤</div>
+                  <div>
+                    <div className="mr-step-title">Thông tin cá nhân</div>
+                    <div className="mr-step-subtitle">Cung cấp thông tin định danh cơ bản của bạn</div>
+                  </div>
+                </div>
+
+                <div className="mr-row">
+                  <div className="mr-field">
+                    <label className="mr-label">Họ và tên đầy đủ <span>*</span></label>
+                    <input
+                      className={`mr-input ${fieldErrors.fullname ? 'error-field' : ''}`}
+                      placeholder="Nguyễn Văn A"
+                      value={fullname}
+                      onChange={e => { setFullname(e.target.value); setFieldErrors(p => ({...p, fullname: ''})); }}
+                    />
+                    {fieldErrors.fullname && <div className="mr-field-error">⚠ {fieldErrors.fullname}</div>}
+                  </div>
+                  <div className="mr-field">
+                    <label className="mr-label">Số CCCD / CMND <span>*</span></label>
+                    <input
+                      className={`mr-input ${fieldErrors.cccdNumber ? 'error-field' : ''}`}
+                      placeholder="012345678901"
+                      value={cccdNumber}
+                      onChange={e => { setCccdNumber(e.target.value); setFieldErrors(p => ({...p, cccdNumber: ''})); }}
+                    />
+                    {fieldErrors.cccdNumber && <div className="mr-field-error">⚠ {fieldErrors.cccdNumber}</div>}
+                  </div>
+                </div>
+
+                <div className="mr-row">
+                  <div className="mr-field">
+                    <label className="mr-label">Email liên hệ <span>*</span></label>
+                    <input
+                      type="email"
+                      className={`mr-input ${fieldErrors.email ? 'error-field' : ''}`}
+                      placeholder="example@gmail.com"
+                      value={email}
+                      onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({...p, email: ''})); }}
+                    />
+                    {fieldErrors.email && <div className="mr-field-error">⚠ {fieldErrors.email}</div>}
+                  </div>
+                  <div className="mr-field">
+                    <label className="mr-label">Số điện thoại <span>*</span></label>
+                    <input
+                      type="tel"
+                      className={`mr-input ${fieldErrors.phone ? 'error-field' : ''}`}
+                      placeholder="0901 234 567"
+                      value={phone}
+                      onChange={e => { setPhone(e.target.value); setFieldErrors(p => ({...p, phone: ''})); }}
+                    />
+                    {fieldErrors.phone && <div className="mr-field-error">⚠ {fieldErrors.phone}</div>}
+                  </div>
+                </div>
+
+                <div className="mr-field" style={{ maxWidth: 280 }}>
+                  <label className="mr-label">Ngày sinh <span>*</span></label>
+                  <input
+                    type="date"
+                    className={`mr-input ${fieldErrors.birthday ? 'error-field' : ''}`}
+                    value={birthday}
+                    onChange={e => { setBirthday(e.target.value); setFieldErrors(p => ({...p, birthday: ''})); }}
+                  />
+                  {fieldErrors.birthday && <div className="mr-field-error">⚠ {fieldErrors.birthday}</div>}
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 2: Experience ── */}
+            {currentStep === 2 && (
+              <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
+                <div className="mr-step-header">
+                  <div className="mr-step-icon">💼</div>
+                  <div>
+                    <div className="mr-step-title">Kinh nghiệm & Động lực</div>
+                    <div className="mr-step-subtitle">Chia sẻ về chuyên môn và lý do bạn muốn trở thành Mentor</div>
+                  </div>
+                </div>
+
+                <div className="mr-field">
+                  <label className="mr-label">Giới thiệu bản thân & Kinh nghiệm <span>*</span></label>
+                  <textarea
+                    className={`mr-input mr-textarea ${fieldErrors.introduction ? 'error-field' : ''}`}
+                    placeholder="Ví dụ: Tôi đã có 3 năm kinh nghiệm lập trình Java, từng tham gia dự án thương mại điện tử cho công ty ABC..."
+                    value={introduction}
+                    onChange={e => { setIntroduction(e.target.value); setFieldErrors(p => ({...p, introduction: ''})); }}
+                    rows={5}
+                  />
+                  <div className="mr-hint">Mô tả ngắn về chuyên môn, dự án đã làm hoặc thành tích nổi bật.</div>
+                  {fieldErrors.introduction && <div className="mr-field-error">⚠ {fieldErrors.introduction}</div>}
+                </div>
+
+                <div className="mr-field">
+                  <label className="mr-label">Động lực trở thành Mentor <span>*</span></label>
+                  <textarea
+                    className={`mr-input mr-textarea ${fieldErrors.motivation ? 'error-field' : ''}`}
+                    placeholder="Vì sao bạn muốn tham gia chia sẻ kiến thức cùng cộng đồng PolyHUB?"
+                    value={motivation}
+                    onChange={e => { setMotivation(e.target.value); setFieldErrors(p => ({...p, motivation: ''})); }}
+                    rows={4}
+                  />
+                  {fieldErrors.motivation && <div className="mr-field-error">⚠ {fieldErrors.motivation}</div>}
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 3: Documents ── */}
+            {currentStep === 3 && (
+              <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
+                <div className="mr-step-header">
+                  <div className="mr-step-icon">📎</div>
+                  <div>
+                    <div className="mr-step-title">Hồ sơ đính kèm</div>
+                    <div className="mr-step-subtitle">Tải lên tài liệu xác thực năng lực của bạn</div>
+                  </div>
+                </div>
+
+                <FileZone
+                  id="cvFile" label="Tải lên CV" required
+                  hint="PDF, DOC, DOCX — Tối đa 10MB"
+                  accept=".pdf,.doc,.docx"
+                  file={cvFile}
+                  onChange={f => { setCvFile(f); setFieldErrors(p => ({...p, cvFile: ''})); }}
+                />
+
+                <div className="mr-row">
+                  <FileZone
+                    id="certificateFile" label="Chứng chỉ liên quan (nếu có)"
+                    hint="PDF, JPG, PNG — Tối đa 5MB"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    file={certificateFile}
+                    onChange={setCertificateFile}
+                  />
+                  <FileZone
+                    id="degreeFile" label="Bằng cấp chuyên môn (nếu có)"
+                    hint="PDF, JPG, PNG — Tối đa 5MB"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    file={degreeFile}
+                    onChange={setDegreeFile}
+                  />
+                </div>
+
+                <div className="mr-alert mr-alert-info" style={{ marginTop: 8 }}>
+                  <span className="mr-alert-icon">💡</span>
+                  <div className="mr-alert-body">
+                    Các tài liệu của bạn được bảo mật và chỉ dùng để xét duyệt nội bộ. Chỉ CV là bắt buộc — chứng chỉ và bằng cấp là không bắt buộc nhưng sẽ giúp hồ sơ của bạn nổi bật hơn.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 4: Review & Submit ── */}
+            {currentStep === 4 && (
+              <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
+                <div className="mr-step-header">
+                  <div className="mr-step-icon">✅</div>
+                  <div>
+                    <div className="mr-step-title">Xác nhận thông tin</div>
+                    <div className="mr-step-subtitle">Kiểm tra lại toàn bộ thông tin trước khi gửi</div>
+                  </div>
+                </div>
+
+                {/* Personal review */}
+                <div className="mr-review-card">
+                  <div className="mr-review-header">👤 Thông tin cá nhân</div>
+                  {[
+                    ['Họ tên', fullname],
+                    ['CCCD/CMND', cccdNumber],
+                    ['Email', email],
+                    ['Điện thoại', phone],
+                    ['Ngày sinh', birthday],
+                  ].map(([k, v]) => (
+                    <div className="mr-review-row" key={k}>
+                      <span className="mr-review-key">{k}</span>
+                      <span className="mr-review-val">{v || '—'}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Experience review */}
+                <div className="mr-review-card">
+                  <div className="mr-review-header">💼 Kinh nghiệm & Động lực</div>
+                  <div className="mr-review-row">
+                    <span className="mr-review-key">Giới thiệu</span>
+                    <span className="mr-review-val long">{introduction.slice(0, 150)}{introduction.length > 150 ? '...' : ''}</span>
+                  </div>
+                  <div className="mr-review-row">
+                    <span className="mr-review-key">Động lực</span>
+                    <span className="mr-review-val long">{motivation.slice(0, 120)}{motivation.length > 120 ? '...' : ''}</span>
+                  </div>
+                </div>
+
+                {/* Documents review */}
+                <div className="mr-review-card">
+                  <div className="mr-review-header">📎 Hồ sơ đính kèm</div>
+                  {[
+                    ['CV', cvFile?.name],
+                    ['Chứng chỉ', certificateFile?.name],
+                    ['Bằng cấp', degreeFile?.name],
+                  ].map(([k, v]) => (
+                    <div className="mr-review-row" key={k}>
+                      <span className="mr-review-key">{k}</span>
+                      <span className="mr-review-val" style={{ color: v ? '#6ee7b7' : 'rgba(255,255,255,0.25)' }}>
+                        {v ? `📄 ${v}` : 'Không có'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Agreement */}
+                <div
+                  className={`mr-check-wrapper ${agreed ? 'checked' : ''}`}
+                  onClick={() => setAgreed(!agreed)}
+                  style={{ marginTop: 20 }}
+                >
+                  <div className={`mr-check-box ${agreed ? 'checked' : ''}`}>
+                    {agreed && <span style={{ color: '#fff', fontSize: 12 }}>✓</span>}
+                  </div>
+                  <span className="mr-check-text">
+                    Tôi cam kết những thông tin và tài liệu cung cấp là <strong style={{ color: 'rgba(255,255,255,0.85)' }}>hoàn toàn chính xác</strong>. Tôi đồng ý với các điều khoản và quy định của PolyHUB đối với vai trò Mentor.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="mr-nav">
+              <div>
+                {currentStep > 1 ? (
+                  <button className="mr-btn mr-btn-ghost" onClick={goBack}>
+                    ← Quay lại
+                  </button>
+                ) : (
+                  <Link href="/mentors" className="mr-btn mr-btn-ghost">
+                    ✕ Hủy bỏ
+                  </Link>
+                )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                  Bước {currentStep}/{STEPS.length}
+                </span>
+                {currentStep < 4 ? (
+                  <button className="mr-btn mr-btn-primary" onClick={goNext}>
+                    Tiếp theo →
+                  </button>
+                ) : (
+                  <button
+                    className="mr-btn mr-btn-success"
+                    onClick={handleSubmit}
+                    disabled={loading || !agreed}
+                  >
+                    {loading ? (
+                      <>
+                        <span style={{
+                          display: 'inline-block',
+                          width: 16, height: 16,
+                          border: '2px solid rgba(255,255,255,0.3)',
+                          borderTopColor: '#fff',
+                          borderRadius: '50%',
+                          animation: 'spin 0.7s linear infinite',
+                        }} />
+                        Đang gửi...
+                      </>
+                    ) : (
+                      '🚀 Gửi Hồ Sơ'
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* Step indicator dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
+            {STEPS.map(s => (
+              <div key={s.id} style={{
+                width: currentStep === s.id ? 24 : 8,
+                height: 8,
+                borderRadius: 4,
+                background: currentStep === s.id
+                  ? 'linear-gradient(90deg,#7c3aed,#4f46e5)'
+                  : currentStep > s.id ? '#10b981' : 'rgba(136, 63, 63, 0.15)',
+                transition: 'all 0.3s ease',
+              }} />
+            ))}
+          </div>
+
         </div>
       </div>
     </>
