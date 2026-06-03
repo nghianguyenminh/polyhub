@@ -142,7 +142,7 @@ export default function MentorsPage() {
                         </div>
                         
                         <div className="d-flex gap-2 mt-auto">
-                          <Link href={`/mentors/${req.id}`} className="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">
+                          <Link href={`/profile/${req.user?.username}`} className="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">
                             Hồ sơ
                           </Link>
                           <Link href={`/chat?userId=${req.user?.username}`} className="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none">

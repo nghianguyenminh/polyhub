@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Check, X, ShieldOff, Clock, UserCheck, UserX, Search } from 'lucide-react';
+import { Check, X, ShieldOff, Clock, UserCheck, UserX, Search, Eye, User, Mail, Phone, CreditCard, Calendar, BookOpen, Lightbulb, Link2, FileText } from 'lucide-react';
 import { fetchAPI } from '@/lib/api';
 import styles from './MentorManagement.module.css';
 
@@ -19,6 +19,9 @@ export default function MentorManagement() {
   const [rejectReason, setRejectReason] = useState('');
   const [selectedReqId, setSelectedReqId] = useState<number | null>(null);
   const [actionType, setActionType] = useState<'REJECT' | 'REVOKE' | null>(null);
+
+  // Detail View Modal State
+  const [viewingMentor, setViewingMentor] = useState<any | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -96,6 +99,9 @@ export default function MentorManagement() {
     setActionType(null);
     setRejectReason('');
   };
+
+  const openDetailModal = (req: any) => setViewingMentor(req);
+  const closeDetailModal = () => setViewingMentor(null);
 
   const handleRejectOrRevoke = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,6 +274,9 @@ export default function MentorManagement() {
                     </td>
                     <td>
                       <div className={styles.actionCell}>
+                        <button onClick={() => openDetailModal(req)} className={`${styles.btnAction} ${styles.btnDetail}`} title="Xem chi tiết">
+                          <Eye size={16} /> Chi tiết
+                        </button>
                         {req.status === 'PENDING' && (
                           <>
                             <button onClick={() => handleApprove(req.id)} className={`${styles.btnAction} ${styles.btnApprove}`} title="Duyệt">
@@ -357,6 +366,197 @@ export default function MentorManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mentor Detail Modal ── */}
+      {viewingMentor && (
+        <div className={styles.detailOverlay} onClick={closeDetailModal}>
+          <div className={styles.detailModal} onClick={(e) => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className={styles.detailHeader}>
+              <div className={styles.detailHeaderLeft}>
+                <img
+                  src={viewingMentor.user?.avatar && viewingMentor.user.avatar !== 'default.png'
+                    ? viewingMentor.user.avatar
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(viewingMentor.fullname)}&size=80&background=4F46E5&color=fff`}
+                  className={styles.detailAvatar}
+                  alt="avatar"
+                />
+                <div>
+                  <div className={styles.detailName}>{viewingMentor.fullname}</div>
+                  <div className={styles.detailEmail}>{viewingMentor.email}</div>
+                  <div style={{ marginTop: 8 }}>
+                    {viewingMentor.status === 'PENDING' && <span className={`${styles.badge} ${styles.badgePending}`}>⏳ Chờ duyệt</span>}
+                    {viewingMentor.status === 'APPROVED' && <span className={`${styles.badge} ${styles.badgeApproved}`}>✅ Đã duyệt</span>}
+                    {viewingMentor.status === 'REJECTED' && <span className={`${styles.badge} ${styles.badgeRejected}`}>❌ Từ chối</span>}
+                    {viewingMentor.status === 'REVOKED' && <span className={`${styles.badge} ${styles.badgeRevoked}`}>🚫 Tước quyền</span>}
+                  </div>
+                </div>
+              </div>
+              <button className={styles.detailClose} onClick={closeDetailModal} title="Đóng">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className={styles.detailBody}>
+
+              {/* Section: Thông tin cá nhân */}
+              <div className={styles.detailSection}>
+                <div className={styles.detailSectionTitle}>
+                  <User size={15} /> Thông tin cá nhân
+                </div>
+                <div className={styles.detailGrid}>
+                  <div className={styles.detailField}>
+                    <div className={styles.detailFieldLabel}><CreditCard size={13} /> Số CCCD / CMND</div>
+                    <div className={styles.detailFieldValue}>{viewingMentor.cccdNumber || '—'}</div>
+                  </div>
+                  <div className={styles.detailField}>
+                    <div className={styles.detailFieldLabel}><Phone size={13} /> Số điện thoại</div>
+                    <div className={styles.detailFieldValue}>{viewingMentor.phone || '—'}</div>
+                  </div>
+                  <div className={styles.detailField}>
+                    <div className={styles.detailFieldLabel}><Calendar size={13} /> Ngày sinh</div>
+                    <div className={styles.detailFieldValue}>
+                      {viewingMentor.birthday
+                        ? new Date(viewingMentor.birthday).toLocaleDateString('vi-VN')
+                        : '—'}
+                    </div>
+                  </div>
+                  <div className={styles.detailField}>
+                    <div className={styles.detailFieldLabel}><Calendar size={13} /> Ngày đăng ký</div>
+                    <div className={styles.detailFieldValue}>
+                      {new Date(viewingMentor.createdAt).toLocaleDateString('vi-VN')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: Kinh nghiệm & Động lực */}
+              <div className={styles.detailSection}>
+                <div className={styles.detailSectionTitle}>
+                  <BookOpen size={15} /> Kinh nghiệm &amp; Động lực
+                </div>
+                {viewingMentor.experience && (
+                  <div className={styles.detailField} style={{ gridColumn: '1 / -1' }}>
+                    <div className={styles.detailFieldLabel}><BookOpen size={13} /> Giới thiệu &amp; Kinh nghiệm</div>
+                    <div className={`${styles.detailFieldValue} ${styles.detailTextBlock}`}>{viewingMentor.experience}</div>
+                  </div>
+                )}
+                {viewingMentor.introduction && (
+                  <div className={styles.detailField} style={{ gridColumn: '1 / -1' }}>
+                    <div className={styles.detailFieldLabel}><BookOpen size={13} /> Giới thiệu bản thân</div>
+                    <div className={`${styles.detailFieldValue} ${styles.detailTextBlock}`}>{viewingMentor.introduction}</div>
+                  </div>
+                )}
+                {viewingMentor.motivation && (
+                  <div className={styles.detailField} style={{ gridColumn: '1 / -1' }}>
+                    <div className={styles.detailFieldLabel}><Lightbulb size={13} /> Động lực trở thành Mentor</div>
+                    <div className={`${styles.detailFieldValue} ${styles.detailTextBlock}`}>{viewingMentor.motivation}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Section: Hồ sơ & Liên kết */}
+              <div className={styles.detailSection}>
+                <div className={styles.detailSectionTitle}>
+                  <FileText size={15} /> Hồ sơ &amp; Liên kết
+                </div>
+                <div className={styles.detailGrid}>
+                  {viewingMentor.portfolioLink && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><Link2 size={13} /> Link Portfolio / LinkedIn</div>
+                      <a
+                        href={viewingMentor.portfolioLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.detailLink}
+                      >
+                        {viewingMentor.portfolioLink}
+                      </a>
+                    </div>
+                  )}
+                  {viewingMentor.cvUrl && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> CV</div>
+                      <a href={viewingMentor.cvUrl} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                        📄 Xem CV
+                      </a>
+                    </div>
+                  )}
+                  {viewingMentor.certificateUrl && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Chứng chỉ</div>
+                      <a href={viewingMentor.certificateUrl} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                        📜 Xem Chứng chỉ
+                      </a>
+                    </div>
+                  )}
+                  {viewingMentor.degreeUrl && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Bằng cấp</div>
+                      <a href={viewingMentor.degreeUrl} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                        🎓 Xem Bằng cấp
+                      </a>
+                    </div>
+                  )}
+                  {!viewingMentor.portfolioLink && !viewingMentor.cvUrl && !viewingMentor.certificateUrl && !viewingMentor.degreeUrl && (
+                    <div style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.875rem', padding: '8px 0' }}>
+                      Không có tài liệu đính kèm.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Rejection reason if any */}
+              {(viewingMentor.status === 'REJECTED' || viewingMentor.status === 'REVOKED') && viewingMentor.rejectionReason && (
+                <div className={styles.detailSection}>
+                  <div className={styles.detailSectionTitle} style={{ color: '#b91c1c' }}>
+                    <X size={15} /> Lý do từ chối / tước quyền
+                  </div>
+                  <div className={`${styles.detailFieldValue} ${styles.detailTextBlock} ${styles.detailRejectBlock}`}>
+                    {viewingMentor.rejectionReason}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer actions */}
+            <div className={styles.detailFooter}>
+              <button className={styles.modalBtnCancel} onClick={closeDetailModal}>
+                Đóng
+              </button>
+              {viewingMentor.status === 'PENDING' && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    className={`${styles.btnAction} ${styles.btnApprove}`}
+                    style={{ padding: '8px 16px' }}
+                    onClick={() => { closeDetailModal(); handleApprove(viewingMentor.id); }}
+                  >
+                    <Check size={16} /> Duyệt ngay
+                  </button>
+                  <button
+                    className={`${styles.btnAction} ${styles.btnReject}`}
+                    style={{ padding: '8px 16px' }}
+                    onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REJECT'); }}
+                  >
+                    <X size={16} /> Từ chối
+                  </button>
+                </div>
+              )}
+              {viewingMentor.status === 'APPROVED' && (
+                <button
+                  className={`${styles.btnAction} ${styles.btnRevoke}`}
+                  style={{ padding: '8px 16px' }}
+                  onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REVOKE'); }}
+                >
+                  <ShieldOff size={16} /> Tước quyền
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
