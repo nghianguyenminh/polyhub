@@ -67,8 +67,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/verify-otp", "/api/auth/reset-password").permitAll()
                 // Cho phép kết nối WebSocket chat
                 .requestMatchers("/ws-chat/**").permitAll()
-                // API công khai: xem feed, xem bài viết, tài liệu, mentors (không cần đăng nhập)
+                // API công khai: xem feed, xem bài viết, tài liệu, mentors, categories (không cần đăng nhập)
                 .requestMatchers("/api/v2/posts/feed", "/api/v2/posts/user/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/categories").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/documents").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/documents/download/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mentors").permitAll()

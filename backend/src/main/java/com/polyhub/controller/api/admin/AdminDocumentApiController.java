@@ -28,26 +28,33 @@ public class AdminDocumentApiController {
             @RequestParam(value = "category_id", required = false) Long categoryId,
             @RequestParam(value = "status", required = false) DocumentStatus status,
             @RequestParam(value = "document_type", required = false) String documentType,
-            @RequestParam(value = "page", defaultValue = "1") int page) {
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "include_stats", defaultValue = "false") boolean includeStats,
+            @RequestParam(value = "include_categories", defaultValue = "false") boolean includeCategories) {
 
         int size = 10; 
         Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page, size);
-        List<Category> categories = categoryService.getAllCategoriesForAdmin(); 
-        Map<String, Object> stats = documentAdminService.getDocumentStats();
-
-        List<Object[]> typeStats = documentAdminService.getDocumentTypeStats();
-        List<Object[]> categoryStats = documentAdminService.getCategoryStats();
-        List<Object[]> statusStats = documentAdminService.getStatusStats();
 
         Map<String, Object> response = new HashMap<>();
         response.put("documents", documentPage.getContent());
         response.put("currentPage", page);
         response.put("totalPages", documentPage.getTotalPages());
-        response.put("categories", categories);
-        response.put("stats", stats);
-        response.put("typeStats", typeStats);
-        response.put("categoryStats", categoryStats);
-        response.put("statusStats", statusStats);
+
+        if (includeCategories) {
+            List<Category> categories = categoryService.getAllCategoriesForAdmin();
+            response.put("categories", categories);
+        }
+
+        if (includeStats) {
+            Map<String, Object> stats = documentAdminService.getDocumentStats();
+            List<Object[]> typeStats = documentAdminService.getDocumentTypeStats();
+            List<Object[]> categoryStats = documentAdminService.getCategoryStats();
+            List<Object[]> statusStats = documentAdminService.getStatusStats();
+            response.put("stats", stats);
+            response.put("typeStats", typeStats);
+            response.put("categoryStats", categoryStats);
+            response.put("statusStats", statusStats);
+        }
 
         return ResponseEntity.ok(response);
     }

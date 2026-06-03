@@ -7,6 +7,38 @@ import { fetchAPI } from '@/lib/api';
 
 import { Suspense } from 'react';
 
+function TableSkeletonRow() {
+  return (
+    <tr className="placeholder-glow">
+      <td className="ps-4 py-3">
+        <div className="d-flex align-items-center gap-3">
+          <div className="placeholder bg-secondary rounded" style={{ width: '40px', height: '40px', opacity: 0.15 }} />
+          <div style={{ width: '100%' }}>
+            <span className="placeholder col-8 bg-secondary rounded d-block mb-1" style={{ height: '15px', opacity: 0.15 }} />
+            <span className="placeholder col-5 bg-secondary rounded d-block" style={{ height: '12px', opacity: 0.15 }} />
+          </div>
+        </div>
+      </td>
+      <td>
+        <span className="placeholder col-6 bg-secondary rounded d-block mb-1" style={{ height: '15px', opacity: 0.15 }} />
+        <span className="placeholder col-8 bg-secondary rounded d-block" style={{ height: '12px', opacity: 0.15 }} />
+      </td>
+      <td>
+        <span className="placeholder col-4 bg-secondary rounded d-block" style={{ height: '15px', opacity: 0.15 }} />
+      </td>
+      <td>
+        <span className="placeholder col-6 bg-secondary rounded-pill d-block" style={{ height: '22px', opacity: 0.15 }} />
+      </td>
+      <td>
+        <span className="placeholder col-8 bg-secondary rounded d-block" style={{ height: '15px', opacity: 0.15 }} />
+      </td>
+      <td className="text-end pe-4">
+        <span className="placeholder col-8 bg-secondary rounded d-inline-block" style={{ height: '30px', width: '80px', opacity: 0.15 }} />
+      </td>
+    </tr>
+  );
+}
+
 function AdminDocumentsContent() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,6 +49,10 @@ function AdminDocumentsContent() {
   const [takedownReason, setTakedownReason] = useState('');
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
 
+  // Cache categories list for filter dropdown
+  const [categories, setCategories] = useState<any[]>([]);
+  const [hasLoadedCategories, setHasLoadedCategories] = useState(false);
+
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -25,10 +61,23 @@ function AdminDocumentsContent() {
   const categoryIdParam = searchParams.get('category_id') || '';
   const statusParam = searchParams.get('status') || '';
 
+  // Form inputs
+  const [keywordInput, setKeywordInput] = useState(keywordParam);
+  const [statusInput, setStatusInput] = useState(statusParam);
+  const [categoryInput, setCategoryInput] = useState(categoryIdParam);
+
+  // Sync inputs when params change
+  useEffect(() => {
+    setKeywordInput(keywordParam);
+    setStatusInput(statusParam);
+    setCategoryInput(categoryIdParam);
+  }, [keywordParam, categoryIdParam, statusParam]);
+
   useEffect(() => {
     const page = pageParam ? parseInt(pageParam, 10) : 1;
     setCurrentPage(page);
     loadDocuments(page, keywordParam, categoryIdParam, statusParam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageParam, keywordParam, categoryIdParam, statusParam]);
 
   const loadDocuments = async (page: number, keyword: string, categoryId: string, status: string) => {
@@ -38,15 +87,39 @@ function AdminDocumentsContent() {
       if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
       if (categoryId) url += `&category_id=${categoryId}`;
       if (status) url += `&status=${status}`;
+      if (!hasLoadedCategories) {
+        url += `&include_categories=true`;
+      }
 
       const data = await fetchAPI(url);
       setDocuments(data.documents || []);
       setTotalPages(data.totalPages || 1);
+      if (data.categories) {
+        setCategories(data.categories);
+        setHasLoadedCategories(true);
+      }
     } catch (err) {
       console.error('Failed to fetch documents', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    if (keywordInput.trim()) params.set('keyword', keywordInput.trim());
+    if (categoryInput) params.set('category_id', categoryInput);
+    if (statusInput) params.set('status', statusInput);
+    router.push(`/admin/documents?${params.toString()}`);
+  };
+
+  const handleClearFilters = () => {
+    setKeywordInput('');
+    setStatusInput('');
+    setCategoryInput('');
+    router.push('/admin/documents?page=1');
   };
 
   const handlePageChange = (page: number) => {
@@ -142,6 +215,56 @@ function AdminDocumentsContent() {
         </div>
       )}
 
+      {/* Search and Filters */}
+      <div className="poly-card p-3 mb-4 bg-white rounded-3 shadow-sm border border-light">
+        <form onSubmit={handleFilterSubmit} className="row g-3 align-items-center">
+          <div className="col-12 col-md-4">
+            <div className="input-group">
+              <span className="input-group-text bg-transparent border-end-0 text-muted"><i className="bi bi-search"></i></span>
+              <input 
+                type="text" 
+                className="form-control border-start-0 shadow-none" 
+                placeholder="Tìm mã môn, tên tài liệu..." 
+                value={keywordInput}
+                onChange={e => setKeywordInput(e.target.value)}
+                style={{ fontSize: '13.5px' }}
+              />
+            </div>
+          </div>
+          <div className="col-12 col-sm-6 col-md-3">
+            <select 
+              className="form-select shadow-none text-muted" 
+              value={statusInput}
+              onChange={e => setStatusInput(e.target.value)}
+              style={{ fontSize: '13.5px' }}
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="PENDING">Chờ duyệt</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Bị từ chối</option>
+              <option value="TAKEDOWN">Đã gỡ</option>
+            </select>
+          </div>
+          <div className="col-12 col-sm-6 col-md-3">
+            <select 
+              className="form-select shadow-none text-muted" 
+              value={categoryInput}
+              onChange={e => setCategoryInput(e.target.value)}
+              style={{ fontSize: '13.5px' }}
+            >
+              <option value="">Tất cả chuyên ngành</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-12 col-md-2 d-flex gap-2">
+            <button type="submit" className="btn btn-poly-gradient w-100 fw-bold px-3 py-2 text-white border-0" style={{ fontSize: '13.5px', borderRadius: '6px' }}>Lọc</button>
+            <button type="button" onClick={handleClearFilters} className="btn btn-light border px-3" style={{ borderRadius: '6px' }} title="Xóa bộ lọc"><i className="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </form>
+      </div>
+
       <div className="table-container bg-white rounded-3 shadow-sm border border-light overflow-hidden mb-4">
         <div className="table-responsive">
           <table className="table table-hover mb-0 align-middle" style={{ fontSize: '13.5px' }}>
@@ -157,7 +280,9 @@ function AdminDocumentsContent() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-5"><div className="spinner-border text-primary" /></td></tr>
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <TableSkeletonRow key={idx} />
+                ))
               ) : documents.length === 0 ? (
                 <tr><td colSpan={6} className="text-center py-4 text-muted">Không có tài liệu nào.</td></tr>
               ) : (
@@ -172,7 +297,7 @@ function AdminDocumentsContent() {
                           <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="fw-semibold text-dark text-decoration-none d-block text-truncate" style={{ maxWidth: '250px' }}>
                             {doc.title}
                           </a>
-                          <div className="text-muted" style={{ fontSize: '12px' }}>Bởi: {doc.user?.fullname || doc.user?.username}</div>
+                          <div className="text-muted" style={{ fontSize: '12px' }}>Bởi: {doc.uploader?.fullname || doc.uploader?.username}</div>
                         </div>
                       </div>
                     </td>

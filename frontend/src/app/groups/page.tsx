@@ -13,9 +13,8 @@ export default function GroupsPage() {
     // Nếu có token, ta dùng token để lấy danh sách category
     const fetchCategories = async () => {
       try {
-        const data = await fetchAPI('/api/documents');
-        // Filter active categories for UI
-        setCategories(data.categories || []);
+        const data = await fetchAPI('/api/categories');
+        setCategories(data || []);
       } catch (err) {
         console.error(err);
       }

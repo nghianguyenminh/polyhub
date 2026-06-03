@@ -210,6 +210,7 @@ export default function RegisterPage() {
           username,
           email,
           password,
+          confirmPassword,
         }),
       });
       setSuccessMsg('Đăng ký thành công! Đang chuyển hướng...');

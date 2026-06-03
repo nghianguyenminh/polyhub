@@ -58,7 +58,7 @@ export default function AdminGroupsPage() {
           </div>
         </div>
         <div className="col-12 col-md-3">
-          <div class="kpi-card kpi-new">
+          <div className="kpi-card kpi-new">
             <div className="kpi-icon"><i className="bi bi-stars"></i></div>
             <div>
               <div className="kpi-value text-success">+34</div>
