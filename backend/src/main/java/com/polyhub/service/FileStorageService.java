@@ -17,17 +17,27 @@ public class FileStorageService {
     // Inject đối tượng Cloudinary chúng ta đã cấu hình ở CloudinaryConfig
     private final Cloudinary cloudinary;
 
+    private Map<String, Object> cachedUsage = null;
+    private long lastCacheTime = 0;
+    private static final long CACHE_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+
     /**
-     * LẤY THÔNG TIN SỬ DỤNG DUNG LƯỢNG (USAGE) TỪ CLOUDINARY
+     * LẤY THÔNG TIN SỬ DỤNG DUNG LƯỢNG (USAGE) TỪ CLOUDINARY (Có Cache 10 phút)
      */
     @SuppressWarnings("unchecked")
-    public Map<String, Object> getStorageUsage() {
+    public synchronized Map<String, Object> getStorageUsage() {
+        long now = System.currentTimeMillis();
+        if (cachedUsage != null && (now - lastCacheTime) < CACHE_DURATION_MS) {
+            return cachedUsage;
+        }
         try {
             ApiResponse usage = cloudinary.api().usage(ObjectUtils.emptyMap());
-            return (Map<String, Object>) (Map<?, ?>) usage;
+            cachedUsage = (Map<String, Object>) (Map<?, ?>) usage;
+            lastCacheTime = now;
+            return cachedUsage;
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return cachedUsage; // Trả về cache cũ nếu có lỗi gọi API
         }
     }
 

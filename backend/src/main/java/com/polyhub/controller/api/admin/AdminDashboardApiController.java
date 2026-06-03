@@ -46,15 +46,17 @@ public class AdminDashboardApiController {
                 PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt"))
         ).getContent();
 
-        // Monthly traffic
-        List<User> allUsers = userRepository.findAll();
+        // Monthly traffic (Optimized database aggregation)
         int currentYear = LocalDate.now().getYear();
         int[] monthlyTraffic = new int[12];
-        
-        for (User user : allUsers) {
-            if (user.getCreatedAt() != null && user.getCreatedAt().getYear() == currentYear) {
-                int monthIndex = user.getCreatedAt().getMonthValue() - 1;
-                monthlyTraffic[monthIndex]++;
+        List<Object[]> monthlyCounts = userRepository.countRegistrationsByMonth(currentYear);
+        for (Object[] row : monthlyCounts) {
+            if (row[0] != null) {
+                int month = ((Number) row[0]).intValue();
+                long count = ((Number) row[1]).longValue();
+                if (month >= 1 && month <= 12) {
+                    monthlyTraffic[month - 1] = (int) count;
+                }
             }
         }
 

@@ -118,15 +118,14 @@ export default function MentorRegisterPage() {
     if (degreeFile)      formData.append('degreeFile', degreeFile);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8080/api/mentors/register', {
+      await fetchAPI('/api/mentors/register', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Có lỗi xảy ra');
+
       setUserStatus({ hasRequest: true, requestStatus: 'PENDING' });
+      alert('Gửi hồ sơ thành công! Vui lòng chờ BQT xét duyệt.');
+      router.push('/mentors');
     } catch (err: any) {
       setError(err.message || 'Lỗi khi gửi hồ sơ');
     } finally {

@@ -88,6 +88,7 @@ public class SavedApiController {
                     .collect(Collectors.toList());
 
             response.put("savedDocs", docsList);
+            response.put("content", docsList);
             response.put("currentPage", savedDocsPage.getNumber() + 1);
             response.put("totalPages", savedDocsPage.getTotalPages());
             response.put("hasNext", savedDocsPage.hasNext());
@@ -119,6 +120,7 @@ public class SavedApiController {
                     .collect(Collectors.toList());
 
             response.put("savedPosts", postsList);
+            response.put("content", postsList);
             response.put("currentPage", savedPostsPage.getNumber() + 1);
             response.put("totalPages", savedPostsPage.getTotalPages());
             response.put("hasNext", savedPostsPage.hasNext());
@@ -127,7 +129,7 @@ public class SavedApiController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/posts/toggle")
+    @PostMapping({"/posts/toggle", "/togglePost"})
     public ResponseEntity<?> toggleSavedPost(
             @RequestParam("postId") Long postId,
             Principal principal) {
@@ -154,7 +156,7 @@ public class SavedApiController {
         }
     }
 
-    @PostMapping("/documents/toggle")
+    @PostMapping({"/documents/toggle", "/toggle"})
     public ResponseEntity<?> toggleSavedDocument(
             @RequestParam("documentId") Long documentId,
             Principal principal) {
