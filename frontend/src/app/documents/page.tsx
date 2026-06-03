@@ -77,7 +77,7 @@ export default function DocumentsPage() {
     e.stopPropagation();
     if (!user) return;
     try {
-      await fetchAPI(`/api/saved/posts/${docId}/toggle`, { method: 'POST' }); // Adjust endpoint if needed
+      await fetchAPI(`/api/saved/documents/toggle?documentId=${docId}`, { method: 'POST' });
       setDocuments(prev => prev.map(d => d.id === docId ? { ...d, isSaved: !d.isSaved } : d));
     } catch (err) {
       console.error('Save failed', err);

@@ -2,28 +2,31 @@ package com.polyhub.controller.api;
 
 import com.polyhub.entity.User;
 import com.polyhub.entity.chat.ChatRoom;
+import com.polyhub.entity.chat.ChatMessage;
 import com.polyhub.repository.ChatRoomRepository;
 import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/chat-data")
 @RequiredArgsConstructor
 public class ChatApiController {
 
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    @GetMapping
+    @GetMapping("/api/chat-data")
     public ResponseEntity<?> getChatData(@RequestParam(value = "userId", required = false) String targetUserId, Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(401).body("Unauthorized");
@@ -125,4 +128,25 @@ public class ChatApiController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/api/chat/history")
+    public List<ChatMessage> getChatHistory(@RequestParam String roomId) {
+        return chatMessageRepository.findByRoomIdOrderByTimestampAsc(roomId);
+    }
+
+    @MessageMapping("/chat.sendMessage")
+    public void processMessage(@Payload ChatMessage chatMessage) {
+        chatMessage.setTimestamp(new Date());
+        
+        ChatMessage savedMsg = chatMessageRepository.save(chatMessage);
+        
+        chatRoomRepository.findById(chatMessage.getRoomId()).ifPresent(room -> {
+            room.setLastMessage(chatMessage.getContent());
+            room.setLastUpdated(new Date());
+            chatRoomRepository.save(room);
+        });
+
+        messagingTemplate.convertAndSend("/topic/chat/" + chatMessage.getRoomId(), savedMsg);
+    }
 }
+

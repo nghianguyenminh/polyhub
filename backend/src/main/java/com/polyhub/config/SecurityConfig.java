@@ -54,19 +54,19 @@ public class SecurityConfig {
     }
 
     /**
-     * Security chain cho REST API (/api/**) — Stateless + JWT.
+     * Security chain áp dụng cho toàn bộ ứng dụng — Stateless + JWT.
      */
     @Bean
-    @Order(1)
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/**")
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Các endpoint auth công khai
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/verify-otp", "/api/auth/reset-password").permitAll()
+                // Cho phép kết nối WebSocket chat
+                .requestMatchers("/ws-chat/**").permitAll()
                 // API công khai: xem feed, xem bài viết, tài liệu, mentors (không cần đăng nhập)
                 .requestMatchers("/api/v2/posts/feed", "/api/v2/posts/user/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/documents").permitAll()
@@ -76,53 +76,18 @@ public class SecurityConfig {
                 .requestMatchers("/api/comments/**").permitAll()
                 // Admin API
                 .requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "USER_ADMIN", "CONTENT_ADMIN")
-                // Tất cả API còn lại cần đăng nhập
+                // Tất cả các request còn lại cần đăng nhập
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(401);
+                    response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\"}");
+                })
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
-    }
-
-    /**
-     * Security chain cho trang web truyền thống (Thymeleaf admin, form login) — Session-based.
-     */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeHttpRequests(auth -> auth
-                // Cấp quyền tự do truy cập tài nguyên tĩnh, đăng ký và đăng nhập, và websocket chat
-                .requestMatchers("/client/**", "/admin/css/**", "/admin/js/**", "/css/**", "/js/**", "/images/**", "/register", "/login", "/forgot-password", "/verify-otp", "/error", "/ws-chat/**").permitAll()
-                // Phân quyền cho trang Quản trị: Chỉ những user có role SUPER_ADMIN hoặc ADMIN mới được phép truy cập
-                .requestMatchers("/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "USER_ADMIN", "CONTENT_ADMIN")
-                // Bắt buộc đăng nhập cho các chức năng và trang chủ (/ và /home)
-                .anyRequest().authenticated() 
-            )
-            .formLogin(login -> login
-                .loginPage("/login") 
-                // Cấu hình chuyển hướng theo Role sau khi đăng nhập thành công
-                .successHandler((request, response, authentication) -> {
-                    boolean isAdmin = authentication.getAuthorities().stream()
-                            .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN") || 
-                                           a.getAuthority().equals("ROLE_ADMIN") ||
-                                           a.getAuthority().equals("ROLE_USER_ADMIN") ||
-                                           a.getAuthority().equals("ROLE_CONTENT_ADMIN"));
-                    if (isAdmin) {
-                        response.sendRedirect("/admin/dashboard");
-                    } else {
-                        response.sendRedirect("/");
-                    }
-                })
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .permitAll()
-            )
-            .csrf(csrf -> csrf.disable()); // Tạm tắt CSRF để test dễ dàng
 
         return http.build();
     }

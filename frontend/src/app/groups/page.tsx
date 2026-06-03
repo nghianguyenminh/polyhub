@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '@/components/layout/Header';
 import Link from 'next/link';
+import { fetchAPI } from '@/lib/api';
 
 export default function GroupsPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -12,16 +13,9 @@ export default function GroupsPage() {
     // Nếu có token, ta dùng token để lấy danh sách category
     const fetchCategories = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:8080/api/admin/categories', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-        if (res.ok) {
-          const data = await res.json();
-          // Filter active categories for UI
-          const activeCategories = data.categories?.filter((c: any) => c.status === 'ACTIVE') || [];
-          setCategories(activeCategories);
-        }
+        const data = await fetchAPI('/api/documents');
+        // Filter active categories for UI
+        setCategories(data.categories || []);
       } catch (err) {
         console.error(err);
       }

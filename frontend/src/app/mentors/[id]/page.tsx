@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { fetchAPI } from '@/lib/api';
+import { fetchAPI, API_BASE_URL } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import { useParams } from 'next/navigation';
 
@@ -32,7 +32,7 @@ export default function MentorDetailPage() {
   const getFullImageUrl = (path: string | undefined) => {
     if (!path) return '/default-avatar.png';
     if (path.startsWith('http')) return path;
-    return `http://localhost:8080${path.startsWith('/') ? '' : '/'}${path}`;
+    return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
   };
 
   const formatDate = (dateString: string) => {

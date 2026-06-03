@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchAPI } from '@/lib/api';
+import '@/styles/admin-mentors.css';
 
 import { Suspense } from 'react';
 
@@ -18,6 +19,7 @@ function AdminMentorsContent() {
   const [rejectReason, setRejectReason] = useState('');
   const [selectedReqId, setSelectedReqId] = useState<number | null>(null);
   const [actionType, setActionType] = useState<'REJECT' | 'REVOKE' | null>(null);
+  const [selectedReqForDetail, setSelectedReqForDetail] = useState<any | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -188,6 +190,15 @@ function AdminMentorsContent() {
                       {req.status === 'REVOKED' && <span className="badge bg-secondary bg-opacity-10 text-secondary border-0 px-2 py-1">Bị tước quyền</span>}
                     </td>
                     <td className="text-end pe-4">
+                      <button 
+                        onClick={() => setSelectedReqForDetail(req)} 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#detailModal" 
+                        className="btn btn-sm btn-outline-primary me-2"
+                        title="Xem chi tiết"
+                      >
+                        <i className="bi bi-eye"></i>
+                      </button>
                       {req.status === 'PENDING' && (
                         <>
                           <button onClick={() => handleApprove(req.id)} className="btn btn-sm btn-outline-success me-2"><i className="bi bi-check-lg"></i> Duyệt</button>
@@ -257,7 +268,93 @@ function AdminMentorsContent() {
           </div>
         </div>
       </div>
+      <MentorDetailModal req={selectedReqForDetail} />
     </>
+  );
+}
+
+{/* Mentor Detail Modal */}
+function MentorDetailModal({ req }: { req: any }) {
+  if (!req) return null;
+  return (
+    <div className="modal fade" id="detailModal" tabIndex={-1} aria-hidden="true">
+      <div className="modal-dialog modal-dialog-centered modal-xl">
+        <div className="modal-content rounded-4 border-0 shadow" style={{ backgroundColor: '#f8f9fa' }}>
+          <div className="modal-header border-0 pb-0 z-3">
+            <button type="button" className="btn-close bg-white rounded-circle shadow-sm p-2" data-bs-dismiss="modal" aria-label="Close" style={{ position: 'absolute', right: '15px', top: '15px' }}></button>
+          </div>
+          <div className="modal-body p-0">
+            {/* Profile Cover */}
+            <div className="profile-cover mb-5 rounded-top-4" style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, margin: 0, height: '160px' }}>
+                <div className="profile-avatar-wrap" style={{ bottom: '-40px' }}>
+                    <img src={req.user?.avatar && req.user.avatar !== 'default.png' ? req.user.avatar : `https://ui-avatars.com/api/?name=${req.fullname}`} className="profile-avatar" alt="Avatar" />
+                    <div style={{ marginBottom: '-15px' }}>
+                        <div className="profile-name text-dark mt-4" style={{ textShadow: 'none' }}>{req.fullname}</div>
+                        <div className="badge bg-primary px-3 py-2 mt-1 rounded-pill">{req.email}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-4 pt-5 row g-4 mt-2">
+                <div className="col-12 col-xl-4">
+                    <div className="info-card h-100">
+                        <h5 className="card-title-custom"><i className="bi bi-person-badge"></i> Thông tin ứng tuyển</h5>
+                        
+                        <div className="info-label-sm">Kinh nghiệm</div>
+                        <div className="info-value-sm">{req.experience || 'Không có'}</div>
+                        
+                        <div className="info-label-sm">Link Portfolio / CV</div>
+                        <div className="info-value-sm">
+                            {req.portfolioLink ? <a href={req.portfolioLink} target="_blank" rel="noopener noreferrer">{req.portfolioLink}</a> : 'Không có'}
+                        </div>
+
+                        <div className="info-label-sm">Ngày nộp đơn</div>
+                        <div className="info-value-sm">{new Date(req.createdAt).toLocaleDateString('vi-VN')}</div>
+                        
+                        <div className="info-label-sm">Trạng thái</div>
+                        <div className="info-value-sm">
+                            {req.status === 'PENDING' && <span className="badge bg-warning text-dark">Chờ duyệt</span>}
+                            {req.status === 'APPROVED' && <span className="badge bg-success">Đã duyệt</span>}
+                            {req.status === 'REJECTED' && <span className="badge bg-danger">Từ chối</span>}
+                            {req.status === 'REVOKED' && <span className="badge bg-secondary">Bị tước quyền</span>}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-12 col-xl-8">
+                    {req.status === 'REJECTED' && (
+                        <div className="rejection-banner">
+                            <i className="bi bi-x-circle-fill"></i>
+                            <div>
+                                <h6 className="fw-bold text-danger mb-1" style={{ fontSize: '15px' }}>Hồ sơ này đã bị Từ chối</h6>
+                                <p className="mb-0" style={{ fontSize: '14px', color: '#9B1C1C' }}>
+                                    Lý do: Không đạt yêu cầu chuyên môn.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="info-card mb-4">
+                        <h5 className="card-title-custom"><i className="bi bi-chat-quote"></i> Lý do / Giới thiệu bản thân</h5>
+                        <div className="reason-box">
+                            "{req.reason || 'Ứng viên không cung cấp lời giới thiệu chi tiết.'}"
+                        </div>
+                    </div>
+
+                    <div className="info-card">
+                        <h5 className="card-title-custom"><i className="bi bi-tools"></i> Bộ Kỹ năng (Tags)</h5>
+                        <div>
+                            {req.skills ? req.skills.split(',').map((skill: string, index: number) => (
+                                <span key={index} className="skill-tag">#{skill.trim()}</span>
+                            )) : <span className="text-muted italic">Chưa cập nhật kỹ năng</span>}
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -265,6 +362,8 @@ export default function AdminMentorsPage() {
   return (
     <Suspense fallback={<div className="p-4 text-center"><div className="spinner-border text-primary" /></div>}>
       <AdminMentorsContent />
+      {/* Container cho Modal chi tiết, tránh mount lại liên tục */}
+      <div id="mentor-detail-modal-root"></div>
     </Suspense>
   );
 }
