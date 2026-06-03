@@ -22,7 +22,17 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     List<Document> findByStatus(DocumentStatus status);
 
-    @Query("SELECT d FROM Document d LEFT JOIN d.category c WHERE " +
+    long countByStatus(DocumentStatus status);
+
+    @Query("SELECT COALESCE(SUM(d.fileSize), 0) FROM Document d")
+    long sumFileSize();
+
+    @Query(value = "SELECT d FROM Document d LEFT JOIN FETCH d.category c LEFT JOIN FETCH d.uploader u WHERE " +
+           "(:status IS NULL OR d.status = :status) AND " +
+           "(:documentType IS NULL OR :documentType = '' OR d.documentType = :documentType) AND " +
+           "(:keyword IS NULL OR :keyword = '' OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:categoryId IS NULL OR d.category.id = :categoryId)",
+           countQuery = "SELECT COUNT(d) FROM Document d LEFT JOIN d.category c WHERE " +
            "(:status IS NULL OR d.status = :status) AND " +
            "(:documentType IS NULL OR :documentType = '' OR d.documentType = :documentType) AND " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +

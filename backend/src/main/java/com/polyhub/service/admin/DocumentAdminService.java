@@ -90,9 +90,9 @@ public class DocumentAdminService {
     public Map<String, Object> getDocumentStats() {
         Map<String, Object> stats = new HashMap<>();
         long total = documentRepository.count();
-        long pending = documentRepository.findByStatus(DocumentStatus.PENDING).size();
-        long approved = documentRepository.findByStatus(DocumentStatus.APPROVED).size();
-        long hidden = documentRepository.findByStatus(DocumentStatus.HIDDEN).size();
+        long pending = documentRepository.countByStatus(DocumentStatus.PENDING);
+        long approved = documentRepository.countByStatus(DocumentStatus.APPROVED);
+        long hidden = documentRepository.countByStatus(DocumentStatus.HIDDEN);
         
         stats.put("total", total);
         stats.put("pending", pending);
@@ -148,10 +148,7 @@ public class DocumentAdminService {
     }
 
     private long getStorageFromDB() {
-        return documentRepository.findAll().stream()
-                .filter(d -> d.getFileSize() != null)
-                .mapToLong(Document::getFileSize)
-                .sum();
+        return documentRepository.sumFileSize();
     }
 
     private void handleStorageFallback(Map<String, Object> stats) {

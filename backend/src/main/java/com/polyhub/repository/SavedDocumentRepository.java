@@ -24,4 +24,7 @@ public interface SavedDocumentRepository extends JpaRepository<SavedDocument, Lo
     
     // Đếm tổng số tài liệu mà User đã lưu
     long countByUser(User user);
+
+    @org.springframework.data.jpa.repository.Query("SELECT sd.document.id FROM SavedDocument sd WHERE sd.user = :user")
+    java.util.List<Long> findDocumentIdsByUser(@org.springframework.data.repository.query.Param("user") User user);
 }

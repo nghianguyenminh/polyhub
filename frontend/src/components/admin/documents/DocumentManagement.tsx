@@ -25,14 +25,19 @@ export default function DocumentManagement() {
   const pageParam = searchParams.get('page');
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [categoryId, setCategoryId] = useState(searchParams.get('category_id') || '');
+  const [categories, setCategories] = useState<any[]>([]);
+  const [hasLoadedCategories, setHasLoadedCategories] = useState(false);
 
   useEffect(() => {
     const page = pageParam ? parseInt(pageParam, 10) : 1;
+    const catParam = searchParams.get('category_id') || '';
     setCurrentPage(page);
-    loadDocuments(page, searchParams.get('keyword') || '', searchParams.get('status') || '');
+    setCategoryId(catParam);
+    loadDocuments(page, searchParams.get('keyword') || '', searchParams.get('status') || '', catParam);
   }, [pageParam, searchParams]);
 
-  const loadDocuments = async (page: number, currentKeyword: string, currentStatus: string) => {
+  const loadDocuments = async (page: number, currentKeyword: string, currentStatus: string, currentCategoryId: string = categoryId) => {
   setLoading(true);
   try {
     
@@ -40,6 +45,8 @@ export default function DocumentManagement() {
     
     if (currentKeyword) url += `&keyword=${encodeURIComponent(currentKeyword)}`;
     if (currentStatus) url += `&status=${currentStatus}`;
+    if (currentCategoryId) url += `&category_id=${currentCategoryId}`;
+    if (!hasLoadedCategories) url += `&include_categories=true`;
 
     const res = await fetchAPI(url);
     
@@ -49,6 +56,11 @@ export default function DocumentManagement() {
 
     setDocuments(documentList); 
     setTotalPages(totalPagesCount);
+
+    if (!hasLoadedCategories && res.categories) {
+      setCategories(res.categories);
+      setHasLoadedCategories(true);
+    }
   } catch (err) {
     console.error('Failed to fetch documents', err);
     setDocuments([]); // Làm sạch state nếu API lỗi để tránh crash bảng
@@ -63,6 +75,7 @@ export default function DocumentManagement() {
     params.set('page', '1');
     if (keyword) params.set('keyword', keyword);
     if (status) params.set('status', status);
+    if (categoryId) params.set('category_id', categoryId);
     router.push(`/admin/documents?${params.toString()}`);
   };
 
@@ -183,7 +196,6 @@ export default function DocumentManagement() {
             value={status}
             onChange={(e) => {
               setStatus(e.target.value);
-              /* Optional: Trigger applyFilters right away on change if desired */
             }}
             onBlur={applyFilters}
           >
@@ -192,6 +204,20 @@ export default function DocumentManagement() {
             <option value="APPROVED">Đã duyệt</option>
             <option value="REJECTED">Từ chối</option>
             <option value="TAKEDOWN">Tạm gỡ</option>
+          </select>
+
+          <select 
+            className={styles.selectInput}
+            value={categoryId}
+            onChange={(e) => {
+              setCategoryId(e.target.value);
+            }}
+            onBlur={applyFilters}
+          >
+            <option value="">Tất cả Chuyên ngành</option>
+            {categories.map((cat: any) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -233,7 +259,7 @@ export default function DocumentManagement() {
                           <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.docTitle}>
                             {doc.title}
                           </a>
-                          <span className={styles.docAuthor}>Bởi: {doc.user?.fullname || doc.user?.username}</span>
+                          <span className={styles.docAuthor}>Bởi: {doc.uploader?.fullname || doc.uploader?.username}</span>
                         </div>
                       </div>
                     </td>

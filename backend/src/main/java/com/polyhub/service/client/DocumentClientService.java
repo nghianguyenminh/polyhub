@@ -23,6 +23,12 @@ public class DocumentClientService {
     private final FileStorageService fileStorageService;
     private final com.polyhub.repository.SavedDocumentRepository savedDocumentRepository;
 
+    private java.util.Map<String, Long> cachedTypeCounts = null;
+    private long lastTypeCountsTime = 0;
+    private java.util.Map<Long, Long> cachedCategoryCounts = null;
+    private long lastCategoryCountsTime = 0;
+    private static final long COUNTS_CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
     @Transactional
     public Document shareDocument(String title, String description, Long categoryId, MultipartFile file, User uploader) throws IOException {
         
@@ -68,17 +74,10 @@ public class DocumentClientService {
     }
 
     /**
-     * Lấy danh sách ID document mà User đã lưu
+     * Lấy danh sách ID document mà User đã lưu (Tối ưu hóa chỉ lấy ID từ DB)
      */
     public java.util.Set<Long> getSavedDocumentIds(User user) {
-        org.springframework.data.domain.Page<com.polyhub.entity.SavedDocument> filterPage = 
-            savedDocumentRepository.findByUserOrderBySavedAtDesc(user, org.springframework.data.domain.PageRequest.of(0, 9999));
-        
-        java.util.Set<Long> setIds = new java.util.HashSet<>();
-        for (com.polyhub.entity.SavedDocument s : filterPage.getContent()) {
-            setIds.add(s.getDocument().getId());
-        }
-        return setIds;
+        return new java.util.HashSet<>(savedDocumentRepository.findDocumentIdsByUser(user));
     }
 
    
@@ -87,7 +86,11 @@ public class DocumentClientService {
     }
 
     
-    public java.util.Map<String, Long> getApprovedDocumentTypeCounts() {
+    public synchronized java.util.Map<String, Long> getApprovedDocumentTypeCounts() {
+        long now = System.currentTimeMillis();
+        if (cachedTypeCounts != null && (now - lastTypeCountsTime) < COUNTS_CACHE_DURATION_MS) {
+            return cachedTypeCounts;
+        }
         java.util.List<Object[]> results = documentRepository.countApprovedByDocumentType();
         java.util.Map<String, Long> counts = new java.util.HashMap<>();
         for (Object[] result : results) {
@@ -95,11 +98,17 @@ public class DocumentClientService {
             Long count = ((Number) result[1]).longValue();
             counts.put(type, count);
         }
+        cachedTypeCounts = counts;
+        lastTypeCountsTime = now;
         return counts;
     }
 
     
-    public java.util.Map<Long, Long> getApprovedCategoryCounts() {
+    public synchronized java.util.Map<Long, Long> getApprovedCategoryCounts() {
+        long now = System.currentTimeMillis();
+        if (cachedCategoryCounts != null && (now - lastCategoryCountsTime) < COUNTS_CACHE_DURATION_MS) {
+            return cachedCategoryCounts;
+        }
         java.util.List<Object[]> results = documentRepository.countApprovedByCategory();
         java.util.Map<Long, Long> counts = new java.util.HashMap<>();
         for (Object[] result : results) {
@@ -107,6 +116,8 @@ public class DocumentClientService {
             Long count = ((Number) result[1]).longValue();
             counts.put(categoryId, count);
         }
+        cachedCategoryCounts = counts;
+        lastCategoryCountsTime = now;
         return counts;
     }
 

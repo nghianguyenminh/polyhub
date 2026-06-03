@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import DocumentManagement from '@/components/admin/documents/DocumentManagement';
 
 export const metadata = {
@@ -6,5 +7,13 @@ export const metadata = {
 };
 
 export default function DocumentManagementPage() {
-  return <DocumentManagement />;
+  return (
+    <Suspense fallback={
+      <div style={{ padding: '48px', textAlign: 'center', color: '#4F46E5', fontWeight: 500 }}>
+        Đang tải giao diện quản lý...
+      </div>
+    }>
+      <DocumentManagement />
+    </Suspense>
+  );
 }

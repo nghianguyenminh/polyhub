@@ -9,6 +9,32 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import '@/styles/documents.css';
 import RightSidebar from '@/components/layout/RightSidebar';
 
+function DocumentCardSkeleton() {
+  return (
+    <div className="col">
+      <div className="doc-card h-100 d-flex flex-column position-relative placeholder-glow" style={{ pointerEvents: 'none', minHeight: '200px' }}>
+        <div className="d-flex justify-content-between align-items-start mb-2">
+          <div className="placeholder bg-secondary rounded" style={{ width: '38px', height: '38px', opacity: 0.15 }}></div>
+          <div className="placeholder bg-secondary rounded-circle" style={{ width: '20px', height: '20px', opacity: 0.15 }}></div>
+        </div>
+        <div className="mb-2 flex-grow-1">
+          <span className="placeholder col-6 bg-secondary mb-2 rounded" style={{ height: '18px', opacity: 0.15 }}></span>
+          <h6 className="placeholder col-12 bg-secondary rounded mb-1" style={{ height: '16px', opacity: 0.15 }}></h6>
+          <h6 className="placeholder col-8 bg-secondary rounded" style={{ height: '16px', opacity: 0.15 }}></h6>
+        </div>
+        <div className="doc-meta text-muted mb-3 d-flex align-items-center">
+          <div className="placeholder bg-secondary rounded-circle me-2" style={{ width: '22px', height: '22px', opacity: 0.15 }}></div>
+          <span className="placeholder col-5 bg-secondary rounded" style={{ height: '14px', opacity: 0.15 }}></span>
+        </div>
+        <div className="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+          <span className="placeholder col-3 bg-secondary rounded" style={{ height: '14px', opacity: 0.15 }}></span>
+          <span className="placeholder col-4 bg-secondary rounded-pill" style={{ height: '26px', opacity: 0.15 }}></span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DocumentsPage() {
   const { user, loading } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -78,7 +104,7 @@ export default function DocumentsPage() {
     e.stopPropagation();
     if (!user) return;
     try {
-      await fetchAPI(`/api/saved/posts/${docId}/toggle`, { method: 'POST' }); // Adjust endpoint if needed
+      await fetchAPI(`/api/saved/documents/toggle?documentId=${docId}`, { method: 'POST' });
       setDocuments(prev => prev.map(d => d.id === docId ? { ...d, isSaved: !d.isSaved } : d));
     } catch (err) {
       console.error('Save failed', err);
@@ -238,9 +264,9 @@ export default function DocumentsPage() {
 
             <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3 mb-4">
               {isFetching ? (
-                <div className="col-12 text-center my-5">
-                  <div className="spinner-border text-primary" role="status"></div>
-                </div>
+                Array.from({ length: 8 }).map((_, idx) => (
+                  <DocumentCardSkeleton key={idx} />
+                ))
               ) : documents.length === 0 ? (
                 <div className="col-12 text-center my-5 text-muted">
                   Không tìm thấy tài liệu nào phù hợp.

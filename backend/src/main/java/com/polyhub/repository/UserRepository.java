@@ -27,4 +27,7 @@ public interface UserRepository extends JpaRepository<User, String> {
             String fullname, String email, Pageable pageable);
 
     List<User> findByFollowers_Username(String username);
+
+    @org.springframework.data.jpa.repository.Query("SELECT MONTH(u.createdAt) as month, COUNT(u) as count FROM User u WHERE YEAR(u.createdAt) = :year GROUP BY MONTH(u.createdAt)")
+    List<Object[]> countRegistrationsByMonth(@org.springframework.data.repository.query.Param("year") int year);
 }
