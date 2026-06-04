@@ -330,3 +330,273 @@
   color: #ffffff;
   border-color: #4F46E5;
 }
+
+/* View Details Button */
+.viewDetailsBtn {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewDetailsBtn:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+  border-color: #9ca3af;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeInModal 0.2s ease;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modalContent {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.btnCloseModal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.btnCloseModal:hover {
+  color: #374151;
+}
+
+.modalBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modalSection {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.modalSectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 6px;
+}
+
+/* User Profile Layout in Modal */
+.profileGrid {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.profileAvatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #eef2ff;
+  color: #4F46E5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.25rem;
+  font-weight: 700;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.profileAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+@media (max-width: 600px) {
+  .profileGrid {
+    grid-template-columns: 1fr;
+    text-align: center;
+    justify-items: center;
+  }
+  .profileInfo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.infoValue {
+  font-size: 0.875rem;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Modal Actions and forms */
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.formInput {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.formInput:focus {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.btnSubmit {
+  background-color: #4F46E5;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btnSubmit:hover {
+  background-color: #4338ca;
+}
+
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnLock {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.btnLock:hover {
+  background-color: #dc2626;
+}
+
+.btnUnlock {
+  background-color: #10b981;
+  color: #ffffff;
+}
+
+.btnUnlock:hover {
+  background-color: #059669;
+}
+
+.alertBox {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 12px;
+}
+
+.alertSuccess {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.alertError {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.limitBadge {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+  display: block;
+}
