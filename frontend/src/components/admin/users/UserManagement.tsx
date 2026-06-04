@@ -1,64 +1,88 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User } from 'lucide-react';
+import { fetchAPI } from '@/lib/api';
 import styles from './UserManagement.module.css';
 
-// --- Types & Mock Data ---
-type Role = 'Admin' | 'Mentor' | 'Sinh viên';
-type Status = 'Hoạt động' | 'Bị khóa';
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl?: string; // Optional image URL
-  role: Role;
-  status: Status;
-  joinDate: string;
-}
-
-const mockUsers: UserData[] = [
-  { id: '1', name: 'Nguyễn Văn Mạnh', email: 'manhnv@fpt.edu.vn', role: 'Admin', status: 'Hoạt động', joinDate: '12/01/2023' },
-  { id: '2', name: 'Trần Thị Hà', email: 'hatt@fpt.edu.vn', role: 'Mentor', status: 'Hoạt động', joinDate: '24/05/2023' },
-  { id: '3', name: 'Lê Hoàng Phong', email: 'phonglh@fpt.edu.vn', role: 'Sinh viên', status: 'Hoạt động', joinDate: '02/09/2023' },
-  { id: '4', name: 'Phạm Bảo Nam', email: 'nampb@fpt.edu.vn', role: 'Sinh viên', status: 'Bị khóa', joinDate: '15/10/2023' },
-  { id: '5', name: 'Đinh Phương Thảo', email: 'thaodp@fpt.edu.vn', role: 'Mentor', status: 'Hoạt động', joinDate: '01/11/2023' },
-];
-
 export default function UserManagement() {
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [users, setUsers] = useState<any[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  // Filtering Logic
-  const displayUsers = mockUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'All' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  useEffect(() => {
+    loadUsers();
+  }, [currentPage, searchTerm, roleFilter, statusFilter]);
 
-  const getRoleBadge = (role: Role) => {
-    switch (role) {
-      case 'Admin': return <span className={`${styles.badge} ${styles.badgeAdmin}`}><ShieldAlert size={12} /> Admin</span>;
-      case 'Mentor': return <span className={`${styles.badge} ${styles.badgeMentor}`}><GraduationCap size={12} /> Mentor</span>;
-      case 'Sinh viên': return <span className={`${styles.badge} ${styles.badgeStudent}`}><User size={12} /> Sinh viên</span>;
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      let url = `/api/admin/users?page=${currentPage}`;
+      if (searchTerm.trim() !== '') {
+        url += `&keyword=${encodeURIComponent(searchTerm.trim())}`;
+      }
+      if (roleFilter !== 'All') {
+        url += `&role=${encodeURIComponent(roleFilter)}`;
+      }
+      if (statusFilter !== 'All') {
+        const isActive = statusFilter === 'active';
+        url += `&active=${isActive}`;
+      }
+      
+      const res = await fetchAPI(url);
+      setUsers(res.users || []);
+      setTotalPages(res.totalPages || 1);
+    } catch (err) {
+      console.error('Failed to load users', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusBadge = (status: Status) => {
-    const isActive = status === 'Hoạt động';
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setCurrentPage(1);
+      setSearchTerm(searchInput);
+    }
+  };
+
+  const handleSearchBlur = () => {
+    setCurrentPage(1);
+    setSearchTerm(searchInput);
+  };
+
+  const getRoleBadge = (roleId: string, roleName: string) => {
+    switch (roleId) {
+      case 'SUPER_ADMIN': 
+        return <span className={`${styles.badge} ${styles.badgeAdmin}`}><ShieldAlert size={12} /> Super Admin</span>;
+      case 'USER_ADMIN':
+        return <span className={`${styles.badge} ${styles.badgeAdmin}`}><ShieldAlert size={12} /> Admin Người dùng</span>;
+      case 'CONTENT_ADMIN':
+        return <span className={`${styles.badge} ${styles.badgeAdmin}`}><ShieldAlert size={12} /> Admin Nội dung</span>;
+      case 'ADMIN':
+        return <span className={`${styles.badge} ${styles.badgeAdmin}`}><ShieldAlert size={12} /> Admin</span>;
+      case 'MENTOR': 
+        return <span className={`${styles.badge} ${styles.badgeMentor}`}><GraduationCap size={12} /> Mentor</span>;
+      case 'USER': 
+      default:
+        return <span className={`${styles.badge} ${styles.badgeStudent}`}><User size={12} /> Sinh viên</span>;
+    }
+  };
+
+  const getStatusBadge = (active: boolean) => {
     return (
-      <span className={`${styles.badge} ${isActive ? styles.statusActive : styles.statusBanned}`}>
-        {status}
+      <span className={`${styles.badge} ${active ? styles.statusActive : styles.statusBanned}`}>
+        {active ? 'Hoạt động' : 'Bị khóa'}
       </span>
     );
   };
 
-  const getInitial = (name: string) => name.charAt(0).toUpperCase();
+  const getInitial = (name: string) => name ? name.charAt(0).toUpperCase() : 'U';
 
   return (
     <div className={styles.container}>
@@ -77,32 +101,43 @@ export default function UserManagement() {
             <Search className={styles.searchIcon} size={18} />
             <input
               type="text"
-              placeholder="Tìm kiếm theo Tên hoặc Email..."
+              placeholder="Tìm kiếm theo Tên, Email hoặc Username... (Ấn Enter)"
               className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              onBlur={handleSearchBlur}
             />
           </div>
           
           <select 
             className={styles.selectInput}
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="All">Tất cả Vai trò</option>
-            <option value="Admin">Admin</option>
-            <option value="Mentor">Mentor</option>
-            <option value="Học viên">Học viên</option>
+            <option value="SUPER_ADMIN">Super Admin</option>
+            <option value="ADMIN">Admin</option>
+            <option value="USER_ADMIN">Admin Người dùng</option>
+            <option value="CONTENT_ADMIN">Admin Nội dung</option>
+            <option value="MENTOR">Mentor</option>
+            <option value="USER">Sinh viên</option>
           </select>
 
           <select 
             className={styles.selectInput}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="All">Tất cả Trạng thái</option>
-            <option value="Hoạt động">Hoạt động</option>
-            <option value="Bị khóa">Bị khóa</option>
+            <option value="active">Hoạt động</option>
+            <option value="locked">Bị khóa</option>
           </select>
         </div>
 
@@ -126,28 +161,40 @@ export default function UserManagement() {
               </tr>
             </thead>
             <tbody>
-              {displayUsers.length > 0 ? (
-                displayUsers.map((user) => (
-                  <tr key={user.id}>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '48px 24px', color: '#6b7280' }}>
+                    Đang tải dữ liệu người dùng...
+                  </td>
+                </tr>
+              ) : users.length > 0 ? (
+                users.map((user) => (
+                  <tr key={user.username}>
                     <td>
                       <div className={styles.userInfo}>
                         <div className={styles.avatar}>
-                          {user.avatarUrl ? (
-                            <img src={user.avatarUrl} alt={user.name} className={styles.avatarImg} />
+                          {user.avatar && user.avatar !== 'default.png' ? (
+                            <img 
+                              src={user.avatar.startsWith('http') ? user.avatar : `https://ui-avatars.com/api/?name=${user.fullname}`} 
+                              alt={user.fullname} 
+                              className={styles.avatarImg} 
+                            />
                           ) : (
-                            getInitial(user.name)
+                            getInitial(user.fullname)
                           )}
                         </div>
                         <div className={styles.userDetails}>
-                          <span className={styles.userName}>{user.name}</span>
+                          <span className={styles.userName}>{user.fullname}</span>
                           <span className={styles.userEmail}>{user.email}</span>
                         </div>
                       </div>
                     </td>
-                    <td>{getRoleBadge(user.role)}</td>
-                    <td>{getStatusBadge(user.status)}</td>
+                    <td>{getRoleBadge(user.role?.id, user.role?.name)}</td>
+                    <td>{getStatusBadge(user.active)}</td>
                     <td>
-                      <span className={styles.joinDate}>{user.joinDate}</span>
+                      <span className={styles.joinDate}>
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'Chưa rõ'}
+                      </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <button className={styles.actionBtn} aria-label="Tùy chọn">
@@ -166,6 +213,40 @@ export default function UserManagement() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className={styles.pagination}>
+            <span className={styles.pageInfo}>
+              Trang {currentPage} trên {totalPages}
+            </span>
+            <div className={styles.pageControls}>
+              <button 
+                className={styles.pageBtn}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Trước
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                <button
+                  key={pageNum}
+                  className={`${styles.pageBtn} ${pageNum === currentPage ? styles.pageBtnActive : ''}`}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              <button 
+                className={styles.pageBtn}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
