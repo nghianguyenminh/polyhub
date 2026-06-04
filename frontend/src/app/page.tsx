@@ -10,8 +10,11 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import PostCard from '@/components/post/PostCard';
 import '@/styles/home.css';
+import SplashScreen from '@/components/layout/SplashScreen';
+
 
 export default function HomePage() {
+  
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -50,6 +53,8 @@ export default function HomePage() {
       setFeedLoading(false);
     }
   };
+
+  
 
   useEffect(() => {
     if (user) {
@@ -161,6 +166,7 @@ export default function HomePage() {
 
   return (
     <>
+   
       <Header />
 
       <div className="app-container">

@@ -6,12 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_BASE_URL } from '@/lib/api';
 import '@/styles/auth.css';
+import SplashScreen from '@/components/layout/SplashScreen';
 
 function LoginContent() {
   const { login, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const [showSplash, setShowSplash] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +37,13 @@ function LoginContent() {
     }
   }, [user, router]);
 
+    useEffect(() => {
+    const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
+    if (!hasSeenSplash) {
+      setShowSplash(true);
+      sessionStorage.setItem('hasSeenSplash', 'true');
+    }
+  }, []);
   // Particle background effect
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -212,6 +220,7 @@ function LoginContent() {
 
   return (
     <>
+     {showSplash && <SplashScreen />}
       <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0, pointerEvents: 'none' }} />
 
       <div className="auth-wrapper">
