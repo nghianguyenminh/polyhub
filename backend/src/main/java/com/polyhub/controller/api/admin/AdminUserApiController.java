@@ -28,9 +28,18 @@ public class AdminUserApiController {
     private final EmailService emailService;
 
     @GetMapping
-    public ResponseEntity<?> getUsers(@RequestParam(defaultValue = "1") int page) {
+    public ResponseEntity<?> getUsers(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Boolean active) {
+            
         Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<User> userPage = userRepository.findAll(pageable);
+        
+        String searchKeyword = (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim();
+        String searchRole = (role == null || role.trim().isEmpty() || role.equalsIgnoreCase("All")) ? null : role.trim();
+
+        Page<User> userPage = userRepository.findByFilters(searchKeyword, searchRole, active, pageable);
         
         Map<String, Object> response = new HashMap<>();
         response.put("users", userPage.getContent());
