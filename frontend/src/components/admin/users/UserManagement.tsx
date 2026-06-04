@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User, X } from 'lucide-react';
 import { fetchAPI } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
 import styles from './UserManagement.module.css';
 
 export default function UserManagement() {
-  const { user: currentUser } = useAuth();
+  const [canModifyRole, setCanModifyRole] = useState(false);
   
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,6 +16,21 @@ export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  // Fetch current user's role on client-side mount only
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const currentUser = await fetchAPI('/api/auth/me');
+        if (currentUser && (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN')) {
+          setCanModifyRole(true);
+        }
+      } catch (err) {
+        console.error('Failed to load current user role:', err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   // Modal States
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -189,8 +203,7 @@ export default function UserManagement() {
 
   const getInitial = (name: string) => name ? name.charAt(0).toUpperCase() : 'U';
 
-  // Check if current user is SUPER_ADMIN or ADMIN
-  const canModifyRole = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
+
 
   return (
     <div className={styles.container}>

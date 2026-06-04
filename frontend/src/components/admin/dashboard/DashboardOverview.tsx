@@ -133,16 +133,16 @@ export default function DashboardOverview() {
     labels: data?.weeklyTraffic?.labels || ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'],
     datasets: [
       {
-        label: 'Lượt xem trang (Pageviews)',
-        data: data?.weeklyTraffic?.pageviews || [0, 0, 0, 0, 0, 0, 0],
+        label: 'Lượt truy cập duy nhất (Unique Visitors)',
+        data: data?.weeklyTraffic?.visitors || [0, 0, 0, 0, 0, 0, 0],
         borderColor: '#4F46E5',
         backgroundColor: 'rgba(79, 70, 229, 0.1)',
         tension: 0.35,
         fill: true,
       },
       {
-        label: 'Tương tác (Interactions)',
-        data: data?.weeklyTraffic?.interactions || [0, 0, 0, 0, 0, 0, 0],
+        label: 'Đăng ký mới (Tài khoản & Mentor)',
+        data: data?.weeklyTraffic?.registrations || [0, 0, 0, 0, 0, 0, 0],
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         tension: 0.35,

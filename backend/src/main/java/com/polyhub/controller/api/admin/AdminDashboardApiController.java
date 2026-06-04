@@ -71,11 +71,11 @@ public class AdminDashboardApiController {
         response.put("countByCategory", countByCategory);
         response.put("trafficData", monthlyTraffic);
 
-        // Weekly traffic (Pageviews vs Interactions for the past 7 days)
+        // Weekly traffic (Unique Visitors vs Total Registrations for the past 7 days)
         Map<String, Object> weeklyTraffic = new HashMap<>();
         weeklyTraffic.put("labels", List.of("Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"));
-        weeklyTraffic.put("pageviews", List.of(320, 450, 410, 600, 580, 720, 800));
-        weeklyTraffic.put("interactions", List.of(150, 220, 190, 310, 280, 420, 510));
+        weeklyTraffic.put("visitors", List.of(120, 150, 140, 200, 180, 240, 280)); // Lượt truy cập duy nhất (UV)
+        weeklyTraffic.put("registrations", List.of(15, 22, 18, 30, 25, 38, 45)); // Tổng lượt đăng ký mới (Tài khoản + Mentor)
         response.put("weeklyTraffic", weeklyTraffic);
         
         List<Map<String, Object>> requestsList = pendingRequests.stream().map(req -> {
