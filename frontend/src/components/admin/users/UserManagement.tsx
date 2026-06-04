@@ -464,11 +464,8 @@ export default function UserManagement() {
                           style={{ flex: 1 }}
                         >
                           <option value="USER">Sinh viên</option>
-                          <option value="MENTOR">Mentor / Giảng viên</option>
                           <option value="USER_ADMIN">Admin Người dùng (Tối đa 2)</option>
                           <option value="CONTENT_ADMIN">Admin Nội dung (Tối đa 2)</option>
-                          <option value="ADMIN">Admin</option>
-                          <option value="SUPER_ADMIN">Super Admin</option>
                         </select>
                         <button type="submit" className={styles.btnSubmit}>
                           Cập nhật vai trò
