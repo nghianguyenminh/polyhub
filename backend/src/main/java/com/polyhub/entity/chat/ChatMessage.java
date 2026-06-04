@@ -31,6 +31,9 @@ public class ChatMessage {
     @Builder.Default
     private Boolean isRead = false;
 
+    @Builder.Default
+    private String type = "TEXT";
+
     // Thời gian gửi
     private Date timestamp;
 }

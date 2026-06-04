@@ -8,6 +8,7 @@ import Header from '@/components/layout/Header';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import '@/styles/chat.css';
+import VideoCallRoom from '@/components/chat/VideoCallRoom';
 
 function ChatContent() {
   const { user } = useAuth();
@@ -20,9 +21,12 @@ function ChatContent() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [messageInput, setMessageInput] = useState('');
-  
+
   const stompClientRef = useRef<Client | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const roomIdRef = useRef<string | null>(null);
+  const [inCall, setInCall] = useState(false);
+  const [incomingCall, setIncomingCall] = useState<any>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,11 +41,12 @@ function ChatContent() {
       try {
         const url = `/api/chat-data${userIdParam ? `?userId=${userIdParam}` : ''}`;
         const data = await fetchAPI(url);
-        
+
         setAllUsers(data.allUsers || []);
         if (data.targetUser) setTargetUser(data.targetUser);
         if (data.roomId) {
           setRoomId(data.roomId);
+          roomIdRef.current = data.roomId;
           loadChatHistory(data.roomId);
         }
       } catch (err) {
@@ -66,26 +71,50 @@ function ChatContent() {
     const socket = new SockJS(`${API_BASE_URL}/ws-chat`);
     const stompClient = new Client({
       webSocketFactory: () => socket as any,
-      debug: (str) => {
-        // console.log(str);
-      },
+      debug: (_str) => { },
       onConnect: () => {
+        // Lắng nghe tin nhắn từ kênh chat
         stompClient.subscribe(`/topic/chat/${roomId}`, (message) => {
-          const receivedMessage = JSON.parse(message.body);
-          setMessages((prev) => [...prev, receivedMessage]);
-          
-          // Update last message in sidebar
-          setAllUsers(prev => prev.map(u => {
-            if (u.roomId === roomId) {
-              return {
-                ...u,
-                lastMessage: receivedMessage.content,
-                lastSenderId: receivedMessage.senderId,
-                isLastMessageRead: false
-              };
-            }
-            return u;
-          }));
+          const newMsg = JSON.parse(message.body);
+
+          // 1. Kiểm tra nếu là lời mời gọi video
+          if (newMsg.type === 'CALL_OFFER' && newMsg.senderId !== user.username) {
+            setIncomingCall(newMsg);
+            return; 
+          }
+
+          // 2. Kiểm tra nếu đối phương từ chối
+          if (newMsg.type === 'CALL_REJECT' && newMsg.senderId !== user.username) {
+            setInCall(false);
+            alert("Đối phương đang bận hoặc đã từ chối cuộc gọi.");
+            return;
+          }
+
+          // 3. Nếu là tin nhắn TEXT bình thường thì cập nhật vào khung chat
+          setMessages((prev) => [...prev, newMsg]);
+
+          // Cập nhật lại danh sách người dùng bên Sidebar
+          const now = new Date().toISOString();
+          setAllUsers(prev => {
+            const updated = prev.map(u => {
+              if (u.roomId === roomId) {
+                return {
+                  ...u,
+                  lastMessage: newMsg.content,
+                  lastSenderId: newMsg.senderId,
+                  lastUpdated: now,
+                  isLastMessageRead: false
+                };
+              }
+              return u;
+            });
+            // Sắp xếp lại người nhắn gần nhất lên đầu
+            return [...updated].sort((a, b) => {
+              const da = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0;
+              const db = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0;
+              return db - da;
+            });
+          });
         });
       },
     });
@@ -97,6 +126,28 @@ function ChatContent() {
       stompClient.deactivate();
     };
   }, [roomId, user]);
+
+
+  const handleStartVideoCall = () => {
+    // Thêm !user vào câu điều kiện
+    if (!roomId || !targetUser || !user || !stompClientRef.current) return;
+
+    // 1. Gửi tín hiệu gọi video qua WebSocket
+    const callOfferMsg = {
+      roomId: roomId,
+      senderId: user.username, // Bây giờ TypeScript đã hiểu user chắc chắn có dữ liệu
+      content: "Đang gọi video...",
+      type: "CALL_OFFER"
+    };
+    stompClientRef.current.publish({
+      destination: '/app/chat.sendMessage',
+      body: JSON.stringify(callOfferMsg)
+    });
+
+    // 2. Mở thẳng phòng chờ video
+    setInCall(true);
+  };
+
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,156 +169,207 @@ function ChatContent() {
     setMessageInput('');
   };
 
+  const getAvatarUrl = (avatar: string | null, fullname: string) =>
+    avatar && avatar !== 'default.png'
+      ? avatar
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(fullname)}&background=F27125&color=fff&bold=true`;
+
   return (
-    <div className="chat-container vh-100 d-flex flex-column" style={{ paddingTop: '60px' }}>
-      <div className="d-flex flex-grow-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="chat-sidebar border-end d-flex flex-column" style={{ width: '320px', flexShrink: 0 }}>
-          <div className="p-3">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <div className="d-flex align-items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-                <i className="bi bi-chevron-left fs-5"></i>
-                <h5 className="fw-bold mb-0">Tin Nhắn</h5>
-              </div>
-            </div>
-            <div className="search-box mb-3">
-              <input type="text" className="form-control form-control-sm border-0 bg-light" placeholder="Tìm kiếm tin nhắn" />
-            </div>
-          </div>
+    <div className="chat-page-wrapper">
+      {/* ── Sidebar ── */}
+      <aside className="chat-sidebar">
+        <div className="sidebar-header">
+          <button className="sidebar-back-btn" onClick={() => router.push('/')}>
+            <i className="bi bi-chevron-left" />
+            <span>Tin Nhắn</span>
+          </button>
 
-          <div className="chat-list overflow-y-auto flex-grow-1 pb-3">
-            {allUsers.map((u) => {
-              const isActive = targetUser?.username === u.username;
-              const isUnread = u.lastSenderId !== user?.username && !u.isLastMessageRead && u.lastMessage;
-              
-              return (
-                <div 
-                  key={u.username}
-                  onClick={() => router.push(`/chat?userId=${u.username}`)}
-                  className={`chat-item-card d-flex gap-3 p-3 text-decoration-none text-dark cursor-pointer mx-2 ${isActive ? 'active' : ''}`}
-                >
-                  <img 
-                    src={u.avatar && u.avatar !== 'default.png' ? u.avatar : `https://ui-avatars.com/api/?name=${u.fullname}`} 
-                    className="rounded-circle shadow-sm" 
-                    width="48" 
-                    height="48" 
-                    alt="avatar"
+          <div className="sidebar-search">
+            <i className="bi bi-search" />
+            <input type="text" placeholder="Tìm kiếm tin nhắn…" />
+          </div>
+        </div>
+
+        <div className="chat-list">
+          {allUsers.map((u) => {
+            const isActive = targetUser?.username === u.username;
+            const isUnread =
+              u.lastSenderId !== user?.username &&
+              !u.isLastMessageRead &&
+              u.lastMessage;
+
+            return (
+              <div
+                key={u.username}
+                onClick={() => router.push(`/chat?userId=${u.username}`)}
+                className={`chat-item-card${isActive ? ' active' : ''}`}
+              >
+                <div className="avatar-wrapper">
+                  <img
+                    src={getAvatarUrl(u.avatar, u.fullname)}
+                    alt={u.fullname}
                   />
-                  <div className="flex-grow-1 overflow-hidden">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-1 fw-bold text-truncate">{u.fullname}</h6>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center mt-1 gap-2">
-                      <p className={`mb-0 text-muted small text-truncate opacity-75 ${isUnread ? 'unread-text' : ''}`}>
-                        {u.lastMessage || 'Nhấn để trò chuyện'}
-                      </p>
-                      {isUnread && <span className="unread-dot"></span>}
-                    </div>
+                  {/* Uncomment to show online status: */}
+                  {/* <span className="online-dot" /> */}
+                </div>
+
+                <div className="chat-item-info">
+                  <div className="chat-item-name">{u.fullname}</div>
+                  <div className={`chat-item-preview${isUnread ? ' unread-text' : ''}`}>
+                    <span>{u.lastMessage || 'Nhấn để trò chuyện'}</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </aside>
 
-        {/* Main Chat Area */}
-        <main className="chat-main d-flex flex-column flex-grow-1 overflow-hidden position-relative">
-          {targetUser ? (
-            <>
-              <header className="chat-header border-bottom p-3 d-flex justify-content-between align-items-center">
-                <div className="d-flex align-items-center gap-2">
-                  <img 
-                    src={targetUser.avatar && targetUser.avatar !== 'default.png' ? targetUser.avatar : `https://ui-avatars.com/api/?name=${targetUser.fullname}`} 
-                    className="rounded-circle shadow-sm" 
-                    width="40" 
-                    height="40" 
-                    alt="avatar"
-                  />
-                  <div>
-                    <h6 className="mb-0 fw-bold">{targetUser.fullname}</h6>
-                    <span className="text-success small"><i className="bi bi-circle-fill me-1" style={{ fontSize: '8px' }}></i> Online</span>
+                {isUnread && <span className="unread-dot" />}
+              </div>
+            );
+          })}
+        </div>
+      </aside>
+
+      {/* ── Main chat ── */}
+      <main className="chat-main">
+        {targetUser ? (
+          <>
+            {/* Header */}
+            <header className="chat-header">
+              <div className="chat-header-info">
+                <img
+                  src={getAvatarUrl(targetUser.avatar, targetUser.fullname)}
+                  alt={targetUser.fullname}
+                  className="chat-header-avatar"
+                />
+                <div>
+                  <div className="chat-header-name">{targetUser.fullname}</div>
+                  <div className="chat-header-status">
+                    <i className="bi bi-circle-fill" />
+                    Online
                   </div>
                 </div>
-              </header>
-
-              <div className="chat-messages p-4 flex-grow-1 overflow-y-auto">
-                {messages.length === 0 ? (
-                  <div className="text-center mt-5 opacity-50">
-                    <br/><br/>
-                    <i className="bi bi-chat-square-quote fs-2" style={{ color: 'var(--poly-orange)' }}></i>
-                    <p className="mt-3 fw-medium">Chưa có tin nhắn. Hãy là người bắt đầu câu chuyện! 👋</p>
-                  </div>
-                ) : (
-                  messages.map((msg, idx) => {
-                    const isSent = msg.senderId === user?.username;
-                    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    if (isSent) {
-                      return (
-                        <div key={idx} className="d-flex flex-row-reverse gap-2 mb-3">
-                          <div className="d-flex flex-column align-items-end" style={{ maxWidth: '75%' }}>
-                            <div className="msg-bubble msg-sent">{msg.content}</div>
-                            <div className="small mt-1 text-end text-muted opacity-75" style={{ fontSize: '10.5px', marginRight: '4px' }}>
-                              {timeStr}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div key={idx} className="d-flex gap-2 mb-3">
-                          <img 
-                            src={targetUser.avatar && targetUser.avatar !== 'default.png' ? targetUser.avatar : `https://ui-avatars.com/api/?name=${targetUser.fullname}`} 
-                            className="rounded-circle shadow-sm flex-shrink-0" 
-                            width="36" 
-                            height="36" 
-                            style={{ marginTop: '4px' }} 
-                            alt="avatar"
-                          />
-                          <div className="d-flex flex-column align-items-start" style={{ maxWidth: '75%' }}>
-                            <div className="msg-bubble msg-received">{msg.content}</div>
-                            <div className="small mt-1 text-muted opacity-75" style={{ fontSize: '10.5px', marginLeft: '4px' }}>
-                              {timeStr}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                  })
-                )}
-                <div ref={messagesEndRef} />
               </div>
 
-              <footer className="chat-footer p-3 border-top">
-                <form onSubmit={sendMessage} className="chat-input-wrapper d-flex align-items-center bg-white rounded-pill px-2 w-100 m-0">
-                  <span className="attach-icon text-muted cursor-pointer me-2">
-                    <i className="bi bi-paperclip fs-5"></i>
-                  </span>
-                  <input 
-                    type="text" 
+              <div className="chat-header-actions">
+                <button className="header-action-btn" onClick={handleStartVideoCall}  title="Gọi video">
+                  <i className="bi bi-camera-video-fill" />
+                </button>
+              </div>
+            </header>
+
+            {/* Messages */}
+            <div className="chat-messages">
+              {messages.length === 0 ? (
+                <div className="chat-empty-state">
+                  <div className="empty-icon">
+                    <i className="bi bi-chat-square-quote-fill" />
+                  </div>
+                  <p>Chưa có tin nhắn nào. Hãy là người bắt đầu câu chuyện! 👋</p>
+                </div>
+              ) : (
+                messages.map((msg, idx) => {
+                  const isSent = msg.senderId === user?.username;
+                  const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+
+                  return (
+                    <div key={idx} className={`msg-row${isSent ? ' sent' : ' recv'}`}>
+                      {!isSent && (
+                        <img
+                          src={getAvatarUrl(targetUser.avatar, targetUser.fullname)}
+                          alt="avatar"
+                          className="msg-avatar"
+                        />
+                      )}
+                      <div className="msg-group">
+                        <div className={`msg-bubble${isSent ? ' msg-sent' : ' msg-received'}`}>
+                          {msg.content}
+                        </div>
+                        <div className="msg-time">{timeStr}</div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Footer input */}
+            <footer className="chat-footer">
+              <form onSubmit={sendMessage}>
+                <div className="chat-input-bar">
+                  <button type="button" className="attach-btn" title="Đính kèm tệp">
+                    <i className="bi bi-paperclip" />
+                  </button>
+
+                  <input
+                    type="text"
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    className="form-control border-0 bg-transparent shadow-none flex-grow-1 px-1" 
-                    placeholder="Nhập tin nhắn..." 
-                    autoComplete="off" 
-                    style={{ outline: 'none' }} 
+                    placeholder="Nhập tin nhắn…"
+                    autoComplete="off"
                   />
-                  <button type="submit" className="btn send-btn p-0 border-0 shadow-none ms-2" disabled={!messageInput.trim()}>
-                    <i className="bi bi-send-fill"></i>
+
+                  <button
+                    type="submit"
+                    className="send-btn"
+                    disabled={!messageInput.trim()}
+                    title="Gửi"
+                  >
+                    <i className="bi bi-send-fill" />
                   </button>
-                </form>
-              </footer>
-            </>
-          ) : (
-            <div className="d-flex align-items-center justify-content-center h-100">
-              <div className="text-center opacity-50">
-                <i className="bi bi-chat-heart-fill" style={{ fontSize: '4rem', color: 'var(--poly-orange)' }}></i>
-                <p className="mt-3 fw-medium fs-5">Chọn một người trong danh sách để bắt đầu trò chuyện</p>
-              </div>
+                </div>
+              </form>
+            </footer>
+          </>
+        ) : (
+          /* No conversation selected */
+          <div className="chat-no-selection">
+            <div className="no-sel-icon">
+              <i className="bi bi-chat-heart-fill" />
             </div>
-          )}
-        </main>
+            <h5>Chào mừng đến PolyHUB Chat</h5>
+            <p>Chọn một người trong danh sách để bắt đầu cuộc trò chuyện</p>
+          </div>
+        )}
+
+        {/* POP-UP CÓ NGƯỜI GỌI TỚI */}
+    {incomingCall && !inCall && (
+      <div className="incoming-call-modal shadow-lg rounded-4 p-4 text-center bg-white" style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
+        <h5 className="mb-3 text-dark fw-bold">Có cuộc gọi video tới</h5>
+        <div className="d-flex gap-3 justify-content-center">
+          <button 
+            className="btn btn-success rounded-pill px-4" 
+            onClick={() => { setInCall(true); setIncomingCall(null); }}
+          >
+            <i className="bi bi-telephone-fill me-2"></i> Trả lời
+          </button>
+          <button 
+            className="btn btn-danger rounded-pill px-4" 
+            onClick={() => {
+              setIncomingCall(null);
+              if (!user) return; // Thêm dòng này để loại bỏ lỗi 'user' is possibly 'null'
+              stompClientRef.current?.publish({
+                destination: '/app/chat.sendMessage',
+                body: JSON.stringify({ roomId, senderId: user.username, content: "Đã từ chối cuộc gọi", type: "CALL_REJECT" })
+              });
+            }}
+          >
+            Từ chối
+          </button>
+        </div>
       </div>
+    )}
+
+    {/* COMPONENT VIDEO CALL (Thêm && user vào điều kiện hiển thị) */}
+    {inCall && roomId && user && (
+      <VideoCallRoom 
+        roomId={roomId} 
+        user={user} 
+        onLeaveRoom={() => setInCall(false)} 
+      />
+    )}
+      </main>
     </div>
   );
 }
@@ -276,7 +378,30 @@ export default function ChatPage() {
   return (
     <>
       <Header />
-      <Suspense fallback={<div className="p-4 text-center"><div className="spinner-border text-primary" /></div>}>
+      <Suspense
+        fallback={
+          <div
+            style={{
+              height: 'calc(100vh - 60px)',
+              marginTop: 60,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                border: '3px solid #F0F2F5',
+                borderTop: '3px solid #F27125',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
+          </div>
+        }
+      >
         <ChatContent />
       </Suspense>
     </>

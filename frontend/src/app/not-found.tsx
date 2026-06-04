@@ -18,7 +18,7 @@ export default function NotFound() {
       <p style={{ color: '#6B7280', marginBottom: '32px', textAlign: 'center', maxWidth: '400px' }}>
         Có vẻ như đường dẫn bạn đang tìm kiếm đã bị xóa, thay đổi tên hoặc tạm thời không thể truy cập được.
       </p>
-      <Link href="/" style={{
+      <Link href="/admin" style={{
         backgroundColor: '#4F46E5',
         color: 'white',
         padding: '10px 24px',

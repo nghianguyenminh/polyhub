@@ -106,6 +106,7 @@ public class ChatApiController {
                         map.put("lastSenderId", r.getLastSenderId());
                         map.put("isLastMessageRead", r.isLastMessageRead());
                         map.put("roomId", r.getId());
+                        map.put("lastUpdated", r.getLastUpdated()); // Fix: thêm để frontend sort sidebar đúng khi load
                     }
                     return map;
                 })
@@ -142,7 +143,9 @@ public class ChatApiController {
         
         chatRoomRepository.findById(chatMessage.getRoomId()).ifPresent(room -> {
             room.setLastMessage(chatMessage.getContent());
+            room.setLastSenderId(chatMessage.getSenderId()); // Fix: lưu người gửi cuối
             room.setLastUpdated(new Date());
+            room.setLastMessageRead(false); // Fix: reset trạng thái đọc khi có tin mới
             chatRoomRepository.save(room);
         });
 
