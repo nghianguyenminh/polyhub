@@ -42,4 +42,7 @@ public interface UserRepository extends JpaRepository<User, String> {
             @Param("roleId") String roleId,
             @Param("active") Boolean active,
             Pageable pageable);
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :start AND u.createdAt < :end")
+    long countByCreatedAtBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
 }

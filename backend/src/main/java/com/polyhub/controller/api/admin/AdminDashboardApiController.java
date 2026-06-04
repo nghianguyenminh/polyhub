@@ -8,6 +8,7 @@ import com.polyhub.repository.DocumentRepository;
 import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.PostReportRepository;
 import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.VisitorLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -31,6 +32,7 @@ public class AdminDashboardApiController {
     private final DocumentRepository documentRepository;
     private final MentorRequestRepository mentorRequestRepository;
     private final PostReportRepository postReportRepository;
+    private final VisitorLogRepository visitorLogRepository;
 
     @GetMapping
     public ResponseEntity<?> getDashboardStats() {
@@ -73,9 +75,43 @@ public class AdminDashboardApiController {
 
         // Weekly traffic (Unique Visitors vs Total Registrations for the past 7 days)
         Map<String, Object> weeklyTraffic = new HashMap<>();
-        weeklyTraffic.put("labels", List.of("Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"));
-        weeklyTraffic.put("visitors", List.of(120, 150, 140, 200, 180, 240, 280)); // Lượt truy cập duy nhất (UV)
-        weeklyTraffic.put("registrations", List.of(15, 22, 18, 30, 25, 38, 45)); // Tổng lượt đăng ký mới (Tài khoản + Mentor)
+        List<String> labels = new java.util.ArrayList<>();
+        List<Long> visitors = new java.util.ArrayList<>();
+        List<Long> registrations = new java.util.ArrayList<>();
+        
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM");
+        
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            
+            // Format label (e.g. "Thứ 5 (04/06)")
+            String dayLabel = switch (date.getDayOfWeek()) {
+                case MONDAY -> "Thứ 2";
+                case TUESDAY -> "Thứ 3";
+                case WEDNESDAY -> "Thứ 4";
+                case THURSDAY -> "Thứ 5";
+                case FRIDAY -> "Thứ 6";
+                case SATURDAY -> "Thứ 7";
+                case SUNDAY -> "Chủ Nhật";
+            };
+            labels.add(dayLabel + " (" + date.format(formatter) + ")");
+            
+            // Count unique visitors for this day from DB
+            long uniqueVisitors = visitorLogRepository.countByAccessDate(date);
+            visitors.add(uniqueVisitors);
+            
+            // Count registrations (Users + Mentors) for this day from DB
+            java.time.LocalDateTime start = date.atStartOfDay();
+            java.time.LocalDateTime end = date.plusDays(1).atStartOfDay();
+            
+            long userRegs = userRepository.countByCreatedAtBetween(start, end);
+            long mentorRegs = mentorRequestRepository.countByCreatedAtBetween(start, end);
+            registrations.add(userRegs + mentorRegs);
+        }
+        
+        weeklyTraffic.put("labels", labels);
+        weeklyTraffic.put("visitors", visitors);
+        weeklyTraffic.put("registrations", registrations);
         response.put("weeklyTraffic", weeklyTraffic);
         
         List<Map<String, Object>> requestsList = pendingRequests.stream().map(req -> {
