@@ -78,17 +78,42 @@
 }
 
 .post-btn {
-    background-color: var(--poly-primary, #f27125);
+    background: linear-gradient(135deg, var(--poly-primary, #F27125) 0%, #FFC371 100%);
     border-radius: 50rem;
+    border: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(242, 113, 37, 0.3);
+    box-shadow: 0 4px 14px rgba(242, 113, 37, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+}
+.post-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+    transition: left 0.5s ease;
+}
+.post-btn:hover::before {
+    left: 150%;
 }
 .post-btn:hover {
-    background-color: #e06015;
+    background: linear-gradient(135deg, #ff8a3d 0%, #ffd08a 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(242, 113, 37, 0.45);
+    box-shadow: 0 8px 20px rgba(242, 113, 37, 0.45), inset 0 1px 0 rgba(255,255,255,0.25);
 }
 .post-btn:active {
-    transform: translateY(0);
+    transform: translateY(0px) scale(0.98);
     box-shadow: 0 2px 8px rgba(242, 113, 37, 0.3);
 }
+.post-btn:disabled {
+    background: linear-gradient(135deg, #f5c08a 0%, #ffd9a0 100%);
+    box-shadow: none;
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+}
+

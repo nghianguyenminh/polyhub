@@ -355,7 +355,16 @@ export default function HomePage() {
               </div>
               <div className="modal-footer border-0 pt-0 pb-3 px-3">
                 <button type="submit" className="btn w-100 fw-bold post-btn text-white fs-6 py-2" disabled={submitLoading}>
-                  {submitLoading ? 'Đang đăng...' : 'Đăng'}
+                  {submitLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Đang đăng...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-send-fill me-2"></i>Đăng
+                    </>
+                  )}
                 </button>
               </div>
             </form>
