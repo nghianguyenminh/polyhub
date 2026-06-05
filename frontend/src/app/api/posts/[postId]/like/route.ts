@@ -27,9 +27,10 @@ function getUsernameFromToken(authHeader: string | null): string | null {
 // GET /api/posts/[postId]/like — lấy trạng thái like
 export async function GET(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
-  const postId = Number(params.postId);
+  const resolvedParams = await params;
+  const postId = Number(resolvedParams.postId);
   const username = getUsernameFromToken(request.headers.get('authorization'));
   const likers = getLikers(postId);
 
@@ -42,9 +43,10 @@ export async function GET(
 // POST /api/posts/[postId]/like — toggle like
 export async function POST(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
-  const postId = Number(params.postId);
+  const resolvedParams = await params;
+  const postId = Number(resolvedParams.postId);
   const username = getUsernameFromToken(request.headers.get('authorization'));
 
   if (!username) {

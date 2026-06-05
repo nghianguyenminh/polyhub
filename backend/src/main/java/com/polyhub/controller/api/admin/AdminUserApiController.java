@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -26,6 +27,7 @@ public class AdminUserApiController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     public ResponseEntity<?> getUsers(
@@ -124,5 +126,64 @@ public class AdminUserApiController {
             return ResponseEntity.ok(Map.of("message", "Đã cập nhật quyền thành công."));
         }
         return ResponseEntity.status(400).body("Cập nhật quyền thất bại.");
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody Map<String, String> body) {
+        String username = body.get("username");
+        String fullname = body.get("fullname");
+        String email = body.get("email");
+        String password = body.get("password");
+        String roleId = body.get("roleId");
+
+        if (username == null || username.trim().isEmpty() ||
+            fullname == null || fullname.trim().isEmpty() ||
+            email == null || email.trim().isEmpty() ||
+            password == null || password.trim().isEmpty() ||
+            roleId == null || roleId.trim().isEmpty()) {
+            return ResponseEntity.status(400).body("Vui lòng điền đầy đủ các thông tin bắt buộc.");
+        }
+
+        username = username.trim().toLowerCase();
+        email = email.trim().toLowerCase();
+
+        if (userRepository.existsById(username)) {
+            return ResponseEntity.status(400).body("Tên đăng nhập đã tồn tại.");
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            return ResponseEntity.status(400).body("Email đã tồn tại.");
+        }
+
+        Role role = roleRepository.findById(roleId).orElse(null);
+        if (role == null) {
+            return ResponseEntity.status(400).body("Vai trò không hợp lệ.");
+        }
+
+        // Limit validation for USER_ADMIN and CONTENT_ADMIN
+        if (roleId.equals("USER_ADMIN")) {
+            long current = userRepository.countByRole_Id("USER_ADMIN");
+            if (current >= 2) {
+                return ResponseEntity.status(400).body("Đã đạt giới hạn số lượng Admin Quản lý Người dùng (Maximum 2).");
+            }
+        } else if (roleId.equals("CONTENT_ADMIN")) {
+            long current = userRepository.countByRole_Id("CONTENT_ADMIN");
+            if (current >= 2) {
+                return ResponseEntity.status(400).body("Đã đạt giới hạn số lượng Admin Quản lý Nội dung (Maximum 2).");
+            }
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setFullname(fullname.trim());
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole(role);
+        user.setActive(true);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of("message", "Tạo tài khoản thành công."));
     }
 }
