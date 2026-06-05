@@ -54,6 +54,8 @@ export default function UserManagement() {
     email: '',
     password: '',
     roleId: 'USER_ADMIN',
+    phone: '',
+    birthday: '',
   });
   const [addError, setAddError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState<string | null>(null);
@@ -210,6 +212,8 @@ export default function UserManagement() {
         email: '',
         password: '',
         roleId: 'USER_ADMIN',
+        phone: '',
+        birthday: '',
       });
       // Reload user list
       loadUsers();
@@ -702,6 +706,29 @@ export default function UserManagement() {
                     value={addForm.password}
                     onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
                     required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="addPhone" className={styles.cyberFormLabel}>Số điện thoại</label>
+                  <input
+                    id="addPhone"
+                    type="tel"
+                    placeholder="Nhập số điện thoại..."
+                    className={styles.cyberInput}
+                    value={addForm.phone}
+                    onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="addBirthday" className={styles.cyberFormLabel}>Ngày sinh</label>
+                  <input
+                    id="addBirthday"
+                    type="date"
+                    className={styles.cyberInput}
+                    value={addForm.birthday}
+                    onChange={(e) => setAddForm({ ...addForm, birthday: e.target.value })}
                   />
                 </div>
 

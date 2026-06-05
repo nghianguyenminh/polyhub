@@ -174,6 +174,9 @@ public class AdminUserApiController {
             }
         }
 
+        String phone = body.get("phone");
+        String birthdayStr = body.get("birthday");
+
         User user = new User();
         user.setUsername(username);
         user.setFullname(fullname.trim());
@@ -181,6 +184,17 @@ public class AdminUserApiController {
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
         user.setActive(true);
+
+        if (phone != null && !phone.trim().isEmpty()) {
+            user.setPhone(phone.trim());
+        }
+        if (birthdayStr != null && !birthdayStr.trim().isEmpty()) {
+            try {
+                user.setBirthday(java.time.LocalDate.parse(birthdayStr));
+            } catch (Exception e) {
+                return ResponseEntity.status(400).body("Ngày sinh không đúng định dạng (yyyy-MM-dd).");
+            }
+        }
 
         userRepository.save(user);
 
