@@ -600,3 +600,448 @@
   margin-top: 4px;
   display: block;
 }
+
+/* Cyberpunk Details Modal Theme (Option 2) */
+.cyberOverlay {
+  background: rgba(8, 10, 15, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: 1000 !important;
+}
+
+.cyberModal {
+  background: radial-gradient(circle at 50% 0%, #151d30 0%, #0a0e17 100%) !important;
+  border: 1px solid #00f0ff !important;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 240, 255, 0.05) !important;
+  color: #e2e8f0;
+}
+
+.cyberHeader {
+  border-bottom: 1px solid rgba(0, 240, 255, 0.3) !important;
+  background: rgba(10, 14, 23, 0.8) !important;
+}
+
+.cyberModalTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #00f0ff;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+  margin: 0;
+}
+
+.cyberCloseBtn {
+  background: rgba(0, 240, 255, 0.1) !important;
+  border: 1px solid #00f0ff !important;
+  color: #00f0ff !important;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cyberCloseBtn:hover {
+  background: #00f0ff !important;
+  color: #0a0e17 !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.cyberBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: transparent;
+}
+
+.cyberAlert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+  font-family: monospace;
+}
+
+.cyberAlertSuccess {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid #10b981;
+  color: #10b981;
+  text-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
+}
+
+.cyberAlertError {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  text-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+}
+
+.cyberSection {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  padding: 18px;
+  position: relative;
+  transition: border-color 0.25s ease;
+}
+
+.cyberSection:hover {
+  border-color: rgba(0, 240, 255, 0.3);
+}
+
+.cyberSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #00f0ff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(0, 240, 255, 0.2);
+  margin-bottom: 16px;
+}
+
+.cyberProfileGrid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 600px) {
+  .cyberProfileGrid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+}
+
+.cyberAvatarWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cyberAvatarHexagon {
+  width: 90px;
+  height: 90px;
+  position: relative;
+  background: #0f172a;
+  border: 2px solid #00f0ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  overflow: hidden;
+}
+
+.cyberAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cyberAvatarInitial {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00f0ff;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+}
+
+.cyberStatusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dotActive {
+  background-color: #00ff66;
+  box-shadow: 0 0 8px #00ff66;
+}
+
+.dotLocked {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.statusText {
+  color: #94a3b8;
+}
+
+.cyberProfileInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+@media (max-width: 480px) {
+  .cyberProfileInfo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cyberInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cyberInfoLabel {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cyberInfoValue {
+  font-size: 0.875rem;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.cyberBioBlock {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.cyberBioLabel {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.cyberBioText {
+  font-size: 0.813rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cyberForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cyberFormLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cyberActionRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .cyberActionRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.cyberSelect {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.cyberSelect:focus {
+  border-color: #00f0ff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+.cyberBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #00f0ff;
+  background: rgba(0, 240, 255, 0.1);
+  color: #00f0ff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cyberBtn:hover:not(:disabled) {
+  background: #00f0ff;
+  color: #0a0e17;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.cyberBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cyberBtnLock {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.cyberBtnLock:hover:not(:disabled) {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.cyberBtnUnlock {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.cyberBtnUnlock:hover:not(:disabled) {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.cyberLimitGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .cyberLimitGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cyberLimitItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.cyberLimitItem strong {
+  color: #00f0ff;
+  font-weight: 700;
+}
+
+.cyberInput {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cyberInput:focus {
+  border-color: #00f0ff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+.cyberUnlockRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .cyberUnlockRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.cyberStatusMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e2e8f0;
+  font-size: 0.813rem;
+}
+
+.warnIcon {
+  color: #f59e0b;
+}
+
+.pulseIcon {
+  animation: cyberPulse 2s infinite;
+}
+
+.spinIcon {
+  animation: cyberSpin 2s linear infinite;
+}
+
+@keyframes cyberPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+@keyframes cyberSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

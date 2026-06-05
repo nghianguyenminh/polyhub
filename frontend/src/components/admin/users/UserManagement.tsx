@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User, X } from 'lucide-react';
+import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User, X, Mail, Phone, Calendar, Shield, Lock, Unlock, Settings, KeyRound, Cpu, Layers, FileText } from 'lucide-react';
 import { fetchAPI } from '@/lib/api';
 import styles from './UserManagement.module.css';
 
@@ -426,123 +426,135 @@ export default function UserManagement() {
 
       {/* Modal Chi tiết người dùng */}
       {(selectedUser || detailLoading) && (
-        <div className={styles.modalOverlay} onClick={closeDetailModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>
-                {detailLoading ? 'Đang tải thông tin...' : `Chi tiết tài khoản: ${selectedUser.username}`}
+        <div className={`${styles.modalOverlay} ${styles.cyberOverlay}`} onClick={closeDetailModal}>
+          <div className={`${styles.modalContent} ${styles.cyberModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={`${styles.modalHeader} ${styles.cyberHeader}`}>
+              <h2 className={styles.cyberModalTitle}>
+                {detailLoading ? 'SYSTEM CHECKING...' : `CORE INTERFACE: ${selectedUser.username}`}
               </h2>
-              <button className={styles.btnCloseModal} onClick={closeDetailModal}>
+              <button className={styles.cyberCloseBtn} onClick={closeDetailModal}>
                 <X size={20} />
               </button>
             </div>
             
             {detailLoading ? (
-              <div className={styles.modalBody} style={{ textAlign: 'center', padding: '48px 24px' }}>
-                Đang tải dữ liệu chi tiết người dùng...
+              <div className={styles.cyberBody} style={{ textAlign: 'center', padding: '48px 24px', fontFamily: 'monospace', color: '#06b6d4' }}>
+                <Cpu size={24} className={styles.spinIcon} /> ĐANG TRUY XUẤT CƠ SỞ DỮ LIỆU...
               </div>
             ) : selectedUser && (
-              <div className={styles.modalBody}>
+              <div className={styles.cyberBody}>
                 {actionMessage && (
-                  <div className={`${styles.alertBox} ${actionMessage.type === 'success' ? styles.alertSuccess : styles.alertError}`}>
-                    {actionMessage.text}
+                  <div className={`${styles.cyberAlert} ${actionMessage.type === 'success' ? styles.cyberAlertSuccess : styles.cyberAlertError}`}>
+                    <Cpu size={14} className={styles.pulseIcon} /> {actionMessage.text}
                   </div>
                 )}
 
                 {/* Section 1: Thông tin cá nhân */}
-                <div className={styles.modalSection}>
-                  <h3 className={styles.modalSectionTitle}>Thông tin cá nhân</h3>
-                  <div className={styles.profileGrid}>
-                    <div className={styles.profileAvatar}>
-                      {selectedUser.avatar && selectedUser.avatar !== 'default.png' ? (
-                        <img 
-                          src={selectedUser.avatar.startsWith('http') ? selectedUser.avatar : `https://ui-avatars.com/api/?name=${selectedUser.fullname}`} 
-                          alt={selectedUser.fullname} 
-                          className={styles.profileAvatarImg} 
-                        />
-                      ) : (
-                        getInitial(selectedUser.fullname)
-                      )}
+                <div className={styles.cyberSection}>
+                  <div className={styles.cyberSectionTitle}>
+                    <Cpu size={14} /> SYSTEM CORE: PROFILE DATA
+                  </div>
+                  <div className={styles.cyberProfileGrid}>
+                    <div className={styles.cyberAvatarWrapper}>
+                      <div className={styles.cyberAvatarHexagon}>
+                        {selectedUser.avatar && selectedUser.avatar !== 'default.png' ? (
+                          <img 
+                            src={selectedUser.avatar.startsWith('http') ? selectedUser.avatar : `https://ui-avatars.com/api/?name=${selectedUser.fullname}`} 
+                            alt={selectedUser.fullname} 
+                            className={styles.cyberAvatarImg} 
+                          />
+                        ) : (
+                          <span className={styles.cyberAvatarInitial}>{getInitial(selectedUser.fullname)}</span>
+                        )}
+                      </div>
+                      <div className={styles.cyberStatusIndicator}>
+                        <span className={`${styles.statusDot} ${selectedUser.active ? styles.dotActive : styles.dotLocked}`} />
+                        <span className={styles.statusText}>{selectedUser.active ? 'ACTIVE' : 'LOCKED'}</span>
+                      </div>
                     </div>
-                    <div className={styles.profileInfo}>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Họ và Tên</span>
-                        <span className={styles.infoValue}>{selectedUser.fullname}</span>
+
+                    <div className={styles.cyberProfileInfo}>
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><User size={12} /> HỌ VÀ TÊN</span>
+                        <span className={styles.cyberInfoValue}>{selectedUser.fullname}</span>
                       </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Email</span>
-                        <span className={styles.infoValue}>{selectedUser.email}</span>
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><Mail size={12} /> EMAIL ĐĂNG KÝ</span>
+                        <span className={styles.cyberInfoValue}>{selectedUser.email}</span>
                       </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Số điện thoại</span>
-                        <span className={styles.infoValue}>{selectedUser.phone || 'Chưa cung cấp'}</span>
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><Phone size={12} /> SỐ ĐIỆN THOẠI</span>
+                        <span className={styles.cyberInfoValue}>{selectedUser.phone || 'CHƯA CUNG CẤP'}</span>
                       </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Giới tính</span>
-                        <span className={styles.infoValue}>
-                          {selectedUser.gender === true ? 'Nam' : selectedUser.gender === false ? 'Nữ' : 'Chưa cung cấp'}
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><User size={12} /> GIỚI TÍNH</span>
+                        <span className={styles.cyberInfoValue}>
+                          {selectedUser.gender === true ? 'Nam' : selectedUser.gender === false ? 'Nữ' : 'CHƯA CUNG CẤP'}
                         </span>
                       </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Ngày sinh</span>
-                        <span className={styles.infoValue}>
-                          {selectedUser.birthday ? new Date(selectedUser.birthday).toLocaleDateString('vi-VN') : 'Chưa cung cấp'}
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><Calendar size={12} /> NGÀY SINH</span>
+                        <span className={styles.cyberInfoValue}>
+                          {selectedUser.birthday ? new Date(selectedUser.birthday).toLocaleDateString('vi-VN') : 'CHƯA CUNG CẤP'}
                         </span>
                       </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Chuyên ngành</span>
-                        <span className={styles.infoValue}>{selectedUser.major || 'Chưa chọn'}</span>
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><Layers size={12} /> CHUYÊN NGÀNH</span>
+                        <span className={styles.cyberInfoValue}>{selectedUser.major || 'CHƯA CUNG CẤP'}</span>
                       </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Ngày tham gia</span>
-                        <span className={styles.infoValue}>
-                          {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('vi-VN') : 'Chưa rõ'}
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><Calendar size={12} /> NGÀY THAM GIA</span>
+                        <span className={styles.cyberInfoValue}>
+                          {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
                         </span>
                       </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Trạng thái</span>
-                        <span className={styles.infoValue}>{getStatusBadge(selectedUser.active)}</span>
+                      <div className={styles.cyberInfoItem}>
+                        <span className={styles.cyberInfoLabel}><Shield size={12} /> VAI TRÒ HỆ THỐNG</span>
+                        <span className={styles.cyberInfoValue}>{getRoleBadge(selectedUser.role?.id, selectedUser.role?.name)}</span>
                       </div>
                     </div>
                   </div>
                   {selectedUser.bio && (
-                    <div className={styles.infoItem} style={{ marginTop: '16px' }}>
-                      <span className={styles.infoLabel}>Tiểu sử (Bio)</span>
-                      <span className={styles.infoValue} style={{ fontWeight: 'normal', color: '#4b5563' }}>{selectedUser.bio}</span>
+                    <div className={styles.cyberBioBlock}>
+                      <span className={styles.cyberBioLabel}><FileText size={12} /> TIỂU SỬ / BIOGRAPHY</span>
+                      <p className={styles.cyberBioText}>{selectedUser.bio}</p>
                     </div>
                   )}
                 </div>
 
-                {/* Section 2: Phân quyền (SUPER_ADMIN / ADMIN) */}
+                {/* Section 2: Phân quyền */}
                 {canModifyRole && (
-                  <div className={styles.modalSection}>
-                    <h3 className={styles.modalSectionTitle}>Thay đổi phân quyền</h3>
-                    <form onSubmit={handleChangeRole} className={styles.formGroup}>
-                      <label htmlFor="roleSelect" className={styles.formLabel}>Vai trò người dùng</label>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <div className={styles.cyberSection}>
+                    <div className={styles.cyberSectionTitle}>
+                      <Settings size={14} /> MODULE QUẢN TRỊ: DELEGATE ROLE
+                    </div>
+                    <form onSubmit={handleChangeRole} className={styles.cyberForm}>
+                      <label htmlFor="roleSelect" className={styles.cyberFormLabel}>CẬP NHẬT PHÂN QUYỀN HỆ THỐNG</label>
+                      <div className={styles.cyberActionRow}>
                         <select
                           id="roleSelect"
-                          className={styles.selectInput}
+                          className={styles.cyberSelect}
                           value={selectedRole}
                           onChange={(e) => setSelectedRole(e.target.value)}
-                          style={{ flex: 1 }}
                         >
-                          <option value="USER">Sinh viên</option>
-                          <option value="USER_ADMIN">Admin Người dùng (Tối đa 2)</option>
-                          <option value="CONTENT_ADMIN">Admin Nội dung (Tối đa 2)</option>
+                          <option value="USER">Sinh viên (USER)</option>
+                          <option value="USER_ADMIN">Admin Người dùng (USER_ADMIN)</option>
+                          <option value="CONTENT_ADMIN">Admin Nội dung (CONTENT_ADMIN)</option>
                         </select>
-                        <button type="submit" className={styles.btnSubmit}>
-                          Cập nhật vai trò
+                        <button type="submit" className={styles.cyberBtn}>
+                          <KeyRound size={14} /> GHI ĐÈ
                         </button>
                       </div>
                       {rolesCountInfo && (
-                        <div style={{ marginTop: '8px' }}>
-                          <span className={styles.limitBadge}>
-                            Admin Người dùng hiện tại: <strong>{rolesCountInfo.userAdminCount} / {rolesCountInfo.MAX_USER_ADMIN}</strong>
-                          </span>
-                          <span className={styles.limitBadge}>
-                            Admin Nội dung hiện tại: <strong>{rolesCountInfo.contentAdminCount} / {rolesCountInfo.MAX_CONTENT_ADMIN}</strong>
-                          </span>
+                        <div className={styles.cyberLimitGrid}>
+                          <div className={styles.cyberLimitItem}>
+                            <span>USER_ADMIN CORE SLOTS:</span>
+                            <strong>{rolesCountInfo.userAdminCount} / {rolesCountInfo.MAX_USER_ADMIN}</strong>
+                          </div>
+                          <div className={styles.cyberLimitItem}>
+                            <span>CONTENT_ADMIN CORE SLOTS:</span>
+                            <strong>{rolesCountInfo.contentAdminCount} / {rolesCountInfo.MAX_CONTENT_ADMIN}</strong>
+                          </div>
                         </div>
                       )}
                     </form>
@@ -550,38 +562,40 @@ export default function UserManagement() {
                 )}
 
                 {/* Section 3: Thao tác khóa/mở khóa */}
-                <div className={styles.modalSection}>
-                  <h3 className={styles.modalSectionTitle}>Trạng thái tài khoản</h3>
+                <div className={styles.cyberSection}>
+                  <div className={styles.cyberSectionTitle}>
+                    <Lock size={14} /> MODULE BẢO MẬT: ACCOUNT SECURITY
+                  </div>
                   {selectedUser.active ? (
-                    <form onSubmit={handleLockUser} className={styles.formGroup}>
-                      <label htmlFor="lockReasonInput" className={styles.formLabel}>Lý do khóa tài khoản</label>
-                      <div style={{ display: 'flex', gap: '12px' }}>
+                    <form onSubmit={handleLockUser} className={styles.cyberForm}>
+                      <label htmlFor="lockReasonInput" className={styles.cyberFormLabel}>LÝ DO KHÓA TÀI KHOẢN (LOG ENTRY)</label>
+                      <div className={styles.cyberActionRow}>
                         <input
                           id="lockReasonInput"
                           type="text"
-                          placeholder="Nhập lý do khóa tài khoản..."
-                          className={styles.formInput}
+                          placeholder="Nhập lý do thực hiện đình chỉ..."
+                          className={styles.cyberInput}
                           value={lockReason}
                           onChange={(e) => setLockReason(e.target.value)}
-                          style={{ flex: 1 }}
                           required
                         />
-                        <button type="submit" className={`${styles.btnSubmit} ${styles.btnLock}`}>
-                          Khóa tài khoản
+                        <button type="submit" className={`${styles.cyberBtn} ${styles.cyberBtnLock}`}>
+                          <Lock size={14} /> ĐÌNH CHỈ
                         </button>
                       </div>
                     </form>
                   ) : (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.875rem', color: '#ef4444', fontWeight: 500 }}>
-                        Tài khoản này đang bị khóa.
-                      </span>
+                    <div className={styles.cyberUnlockRow}>
+                      <div className={styles.cyberStatusMessage}>
+                        <ShieldAlert size={16} className={styles.warnIcon} />
+                        <span>Tài khoản hiện đang bị đình chỉ quyền truy cập hệ thống.</span>
+                      </div>
                       <button 
                         type="button" 
                         onClick={handleUnlockUser} 
-                        className={`${styles.btnSubmit} ${styles.btnUnlock}`}
+                        className={`${styles.cyberBtn} ${styles.cyberBtnUnlock}`}
                       >
-                        Mở khóa tài khoản
+                        <Unlock size={14} /> BÃI BỎ ĐÌNH CHỈ
                       </button>
                     </div>
                   )}
