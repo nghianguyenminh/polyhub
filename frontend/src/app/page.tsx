@@ -168,7 +168,7 @@ export default function HomePage() {
     <>
    
       <Header />
-
+    
       <div className="app-container">
         <main className="w-100 d-flex justify-content-between">
           <LeftSidebar activeMenu="home" />

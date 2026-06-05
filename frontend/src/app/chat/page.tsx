@@ -59,7 +59,11 @@ function ChatContent() {
   const loadChatHistory = async (id: string) => {
     try {
       const history = await fetchAPI(`/api/chat/history?roomId=${id}`);
-      setMessages(history || []);
+      // Lọc: chỉ hiển thị TEXT và CALL_ENDED, loại bỏ CALL_OFFER/CALL_REJECT khỏi lịch sử
+      const filtered = (history || []).filter(
+        (m: any) => !m.type || m.type === 'TEXT' || m.type === 'CALL_ENDED'
+      );
+      setMessages(filtered);
     } catch (err) {
       console.error('Failed to load history', err);
     }
@@ -77,23 +81,34 @@ function ChatContent() {
         stompClient.subscribe(`/topic/chat/${roomId}`, (message) => {
           const newMsg = JSON.parse(message.body);
 
-          // 1. Kiểm tra nếu là lời mời gọi video
-          if (newMsg.type === 'CALL_OFFER' && newMsg.senderId !== user.username) {
-            setIncomingCall(newMsg);
-            return; 
-          }
-
-          // 2. Kiểm tra nếu đối phương từ chối
-          if (newMsg.type === 'CALL_REJECT' && newMsg.senderId !== user.username) {
-            setInCall(false);
-            alert("Đối phương đang bận hoặc đã từ chối cuộc gọi.");
+          // 1. Tín hiệu mời gọi video - chỉ hiện popup, KHÔNG thêm vào messages
+          if (newMsg.type === 'CALL_OFFER') {
+            if (newMsg.senderId !== user.username) {
+              setIncomingCall(newMsg);
+            }
             return;
           }
 
-          // 3. Nếu là tin nhắn TEXT bình thường thì cập nhật vào khung chat
+          // 2. Tín hiệu từ chối/hủy cuộc gọi - chỉ relay, KHÔNG thêm vào messages
+          if (newMsg.type === 'CALL_REJECT') {
+            if (newMsg.senderId !== user.username) {
+              setInCall(false);
+              setIncomingCall(null);
+            }
+            return;
+          }
+
+          // 3. Thông báo kết thúc cuộc gọi (CALL_ENDED) - hiển thị trong lịch sử chat
+          if (newMsg.type === 'CALL_ENDED') {
+            setMessages((prev) => [...prev, newMsg]);
+            setInCall(false);
+            return;
+          }
+
+          // 4. Tin nhắn TEXT bình thường
           setMessages((prev) => [...prev, newMsg]);
 
-          // Cập nhật lại danh sách người dùng bên Sidebar
+          // Cập nhật lại danh sách người dùng bên Sidebar (chỉ cho TEXT)
           const now = new Date().toISOString();
           setAllUsers(prev => {
             const updated = prev.map(u => {
@@ -129,14 +144,13 @@ function ChatContent() {
 
 
   const handleStartVideoCall = () => {
-    // Thêm !user vào câu điều kiện
     if (!roomId || !targetUser || !user || !stompClientRef.current) return;
 
-    // 1. Gửi tín hiệu gọi video qua WebSocket
+    // Gửi tín hiệu CALL_OFFER qua WebSocket (backend sẽ relay, không lưu DB)
     const callOfferMsg = {
       roomId: roomId,
-      senderId: user.username, // Bây giờ TypeScript đã hiểu user chắc chắn có dữ liệu
-      content: "Đang gọi video...",
+      senderId: user.username,
+      content: `${user.fullname || user.username} đang gọi video cho bạn`,
       type: "CALL_OFFER"
     };
     stompClientRef.current.publish({
@@ -144,8 +158,25 @@ function ChatContent() {
       body: JSON.stringify(callOfferMsg)
     });
 
-    // 2. Mở thẳng phòng chờ video
+    // Mở phòng chờ video
     setInCall(true);
+  };
+
+  // Gọi khi người dùng rời phòng video - lưu bản ghi CALL_ENDED vào lịch sử
+  const handleLeaveRoom = () => {
+    if (roomId && user && stompClientRef.current) {
+      const callEndedMsg = {
+        roomId: roomId,
+        senderId: user.username,
+        content: "Cuộc gọi video đã kết thúc",
+        type: "CALL_ENDED"
+      };
+      stompClientRef.current.publish({
+        destination: '/app/chat.sendMessage',
+        body: JSON.stringify(callEndedMsg)
+      });
+    }
+    setInCall(false);
   };
 
 
@@ -249,7 +280,7 @@ function ChatContent() {
               </div>
 
               <div className="chat-header-actions">
-                <button className="header-action-btn" onClick={handleStartVideoCall}  title="Gọi video">
+                <button className="header-action-btn" onClick={handleStartVideoCall} title="Gọi video">
                   <i className="bi bi-camera-video-fill" />
                 </button>
               </div>
@@ -272,6 +303,22 @@ function ChatContent() {
                     minute: '2-digit',
                   });
 
+                  // ── Render thông báo cuộc gọi (CALL_ENDED) ────────────────────────
+                  if (msg.type === 'CALL_ENDED') {
+                    return (
+                      <div key={idx} className="call-event-row">
+                        <div className="call-event-badge">
+                          <i className="bi bi-camera-video-fill" />
+                          <span>
+                            {isSent ? 'Bạn đã kết thúc cuộc gọi video' : `${targetUser.fullname} đã kết thúc cuộc gọi video`}
+                          </span>
+                          <span className="call-event-time">{timeStr}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // ── Render tin nhắn TEXT bình thường ──────────────────────────────
                   return (
                     <div key={idx} className={`msg-row${isSent ? ' sent' : ' recv'}`}>
                       {!isSent && (
@@ -333,42 +380,63 @@ function ChatContent() {
           </div>
         )}
 
-        {/* POP-UP CÓ NGƯỜI GỌI TỚI */}
-    {incomingCall && !inCall && (
-      <div className="incoming-call-modal shadow-lg rounded-4 p-4 text-center bg-white" style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
-        <h5 className="mb-3 text-dark fw-bold">Có cuộc gọi video tới</h5>
-        <div className="d-flex gap-3 justify-content-center">
-          <button 
-            className="btn btn-success rounded-pill px-4" 
-            onClick={() => { setInCall(true); setIncomingCall(null); }}
-          >
-            <i className="bi bi-telephone-fill me-2"></i> Trả lời
-          </button>
-          <button 
-            className="btn btn-danger rounded-pill px-4" 
-            onClick={() => {
-              setIncomingCall(null);
-              if (!user) return; // Thêm dòng này để loại bỏ lỗi 'user' is possibly 'null'
-              stompClientRef.current?.publish({
-                destination: '/app/chat.sendMessage',
-                body: JSON.stringify({ roomId, senderId: user.username, content: "Đã từ chối cuộc gọi", type: "CALL_REJECT" })
-              });
-            }}
-          >
-            Từ chối
-          </button>
-        </div>
-      </div>
-    )}
+        {/* POP-UP CÓ NGƯỜI GỌI TỚI - PolyHUB Design */}
+        {incomingCall && !inCall && (
+          <div className="incoming-call-overlay">
+            <div className="incoming-call-card">
+              {/* Vòng sóng animation */}
+              <div className="incoming-call-rings">
+                <div className="ring ring-1" />
+                <div className="ring ring-2" />
+                <div className="ring ring-3" />
+                <img
+                  src={getAvatarUrl(targetUser?.avatar, targetUser?.fullname || 'Người dùng')}
+                  alt={targetUser?.fullname}
+                  className="incoming-call-avatar"
+                />
+              </div>
+              <div className="incoming-call-info">
+                <div className="incoming-call-name">{targetUser?.fullname || 'Ai đó'}</div>
+                <div className="incoming-call-label">
+                  <i className="bi bi-camera-video-fill" />
+                  Đang gọi video cho bạn…
+                </div>
+              </div>
+              <div className="incoming-call-actions">
+                <button
+                  className="call-action-btn call-reject"
+                  title="Từ chối"
+                  onClick={() => {
+                    setIncomingCall(null);
+                    if (!user) return;
+                    stompClientRef.current?.publish({
+                      destination: '/app/chat.sendMessage',
+                      body: JSON.stringify({ roomId, senderId: user.username, content: "Đã từ chối cuộc gọi", type: "CALL_REJECT" })
+                    });
+                  }}
+                >
+                  <i className="bi bi-telephone-x-fill" />
+                </button>
+                <button
+                  className="call-action-btn call-accept"
+                  title="Trả lời"
+                  onClick={() => { setInCall(true); setIncomingCall(null); }}
+                >
+                  <i className="bi bi-camera-video-fill" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-    {/* COMPONENT VIDEO CALL (Thêm && user vào điều kiện hiển thị) */}
-    {inCall && roomId && user && (
-      <VideoCallRoom 
-        roomId={roomId} 
-        user={user} 
-        onLeaveRoom={() => setInCall(false)} 
-      />
-    )}
+        {/* COMPONENT VIDEO CALL */}
+        {inCall && roomId && user && (
+          <VideoCallRoom
+            roomId={roomId}
+            user={user}
+            onLeaveRoom={handleLeaveRoom}
+          />
+        )}
       </main>
     </div>
   );

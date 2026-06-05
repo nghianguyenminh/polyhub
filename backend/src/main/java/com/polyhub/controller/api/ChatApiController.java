@@ -138,14 +138,29 @@ public class ChatApiController {
     @MessageMapping("/chat.sendMessage")
     public void processMessage(@Payload ChatMessage chatMessage) {
         chatMessage.setTimestamp(new Date());
-        
+
+        String type = chatMessage.getType() != null ? chatMessage.getType() : "TEXT";
+
+        // ── Tín hiệu điều khiển: CALL_OFFER, CALL_REJECT ──────────────────────────
+        // Chỉ relay qua WebSocket, KHÔNG lưu vào Database và KHÔNG cập nhật sidebar.
+        if ("CALL_OFFER".equals(type) || "CALL_REJECT".equals(type)) {
+            messagingTemplate.convertAndSend("/topic/chat/" + chatMessage.getRoomId(), chatMessage);
+            return;
+        }
+
+        // ── Lưu vào Database ────────────────────────────────────────────────────────
         ChatMessage savedMsg = chatMessageRepository.save(chatMessage);
-        
+
+        // ── Cập nhật ChatRoom (chỉ cho TEXT và CALL_ENDED) ─────────────────────────
         chatRoomRepository.findById(chatMessage.getRoomId()).ifPresent(room -> {
-            room.setLastMessage(chatMessage.getContent());
-            room.setLastSenderId(chatMessage.getSenderId()); // Fix: lưu người gửi cuối
+            if ("TEXT".equals(type)) {
+                // Chỉ tin nhắn TEXT mới được hiển thị ở preview sidebar
+                room.setLastMessage(chatMessage.getContent());
+                room.setLastSenderId(chatMessage.getSenderId());
+                room.setLastMessageRead(false);
+            }
+            // Luôn cập nhật lastUpdated để đẩy conversation lên đầu sidebar
             room.setLastUpdated(new Date());
-            room.setLastMessageRead(false); // Fix: reset trạng thái đọc khi có tin mới
             chatRoomRepository.save(room);
         });
 

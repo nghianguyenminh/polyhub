@@ -285,6 +285,7 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-main);
+  position: relative; /* THÊM DÒNG NÀY NHÉ */
 }
 
 /* Chat header */
@@ -679,4 +680,183 @@
     padding: 10px;
     margin: 2px 4px;
   }
+}
+
+/* ── Call Event Notification (CALL_ENDED) ────────────────── */
+/* Giống Messenger: dòng thông báo căn giữa, không phải bong bóng */
+.call-event-row {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.call-event-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(242, 113, 37, 0.08);
+  border: 1px solid rgba(242, 113, 37, 0.20);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.call-event-badge i {
+  color: var(--poly-orange);
+  font-size: 13px;
+}
+
+.call-event-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+/* ── Incoming Call Popup ─────────────────────────────────── */
+.incoming-call-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center; /* Đổi từ flex-start thành center */
+  justify-content: center;  
+  z-index: 50;
+  pointer-events: none; /* overlay trong suốt, chỉ card nhận click */
+}
+
+.incoming-call-card {
+  pointer-events: all;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18), 0 2px 12px rgba(242, 113, 37, 0.15);
+  padding: 28px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-width: 240px;
+  animation: slideDownCard 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1.5px solid rgba(242, 113, 37, 0.12);
+}
+
+@keyframes slideDownCard {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Avatar với vòng sóng rung */
+.incoming-call-rings {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--poly-orange);
+  opacity: 0;
+  animation: ripple 2.4s ease-out infinite;
+}
+
+.ring-1 { width: 80px; height: 80px; animation-delay: 0s; }
+.ring-2 { width: 80px; height: 80px; animation-delay: 0.6s; }
+.ring-3 { width: 80px; height: 80px; animation-delay: 1.2s; }
+
+@keyframes ripple {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  100% { transform: scale(2.2);  opacity: 0; }
+}
+
+.incoming-call-avatar {
+  position: relative;
+  z-index: 2;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--poly-orange);
+  box-shadow: 0 0 0 4px var(--poly-orange-glow);
+}
+
+/* Thông tin người gọi */
+.incoming-call-info {
+  text-align: center;
+}
+
+.incoming-call-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.incoming-call-label {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-weight: 500;
+}
+
+.incoming-call-label i {
+  color: var(--poly-orange);
+  font-size: 13px;
+}
+
+/* Nút từ chối / chấp nhận */
+.incoming-call-actions {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.call-action-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  color: #fff;
+}
+
+.call-action-btn.call-reject {
+  background: #E53935;
+  box-shadow: 0 4px 16px rgba(229, 57, 53, 0.35);
+}
+
+.call-action-btn.call-reject:hover {
+  background: #C62828;
+  transform: scale(1.1) rotate(-15deg);
+}
+
+.call-action-btn.call-accept {
+  background: #2E7D32;
+  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.35);
+}
+
+.call-action-btn.call-accept:hover {
+  background: #1B5E20;
+  transform: scale(1.1);
 }

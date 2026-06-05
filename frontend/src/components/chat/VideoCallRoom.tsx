@@ -11,32 +11,29 @@ interface VideoCallRoomProps {
 
 export default function VideoCallRoom({ roomId, user, onLeaveRoom }: VideoCallRoomProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // 1. CHỐT CHẶN: Đảm bảo ZegoCloud chỉ joinRoom đúng 1 lần duy nhất
   const joinedRef = useRef(false);
+  const zpRef = useRef<any>(null); // Lưu trữ instance để dọn dẹp
+  
 
   useEffect(() => {
-    // Nếu chưa render DOM hoặc đã join phòng rồi thì bỏ qua
     if (!containerRef.current || joinedRef.current) return;
-    
-    // Đánh dấu là đã join phòng
     joinedRef.current = true;
 
     const initZego = async () => {
       try {
-        // BẠN THAY 2 THÔNG SỐ NÀY BẰNG APP_ID VÀ SERVER_SECRET LẤY TỪ ZEGOCLOUD NHÉ
-        const appID = 123456789; 
-        const serverSecret = "chuoi_ky_tu_secret_cua_ban"; 
+        const appID = 1435055187; 
+        const serverSecret = "b4651fdf344e4930bff5005595c6c0a4";
 
         const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
           appID,
           serverSecret,
           roomId,
           user.username,
-          user.fullname || "Người dùng PolyHUB"
+          user.fullname || "Người dùng"
         );
 
         const zp = ZegoUIKitPrebuilt.create(kitToken);
+        zpRef.current = zp; // Lưu lại
 
         zp.joinRoom({
           container: containerRef.current,
@@ -44,32 +41,42 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom }: VideoCallRo
             mode: ZegoUIKitPrebuilt.OneONoneCall, 
           },
           showScreenSharingButton: true,
-          
-          // 2. KHẮC PHỤC LỖI THIẾT BỊ (NotFoundError)
-          turnOnMicrophoneWhenJoining: false, // Vào phòng sẽ mặc định tắt mic
-          turnOnCameraWhenJoining: false,     // Vào phòng sẽ mặc định tắt camera
-          showPreJoinView: true,              // Hiện màn hình chờ để user tự test camera trước
-          
+          turnOnMicrophoneWhenJoining: false,
+          turnOnCameraWhenJoining: false,
+          showPreJoinView: true,
           onLeaveRoom: () => {
-            joinedRef.current = false; // Reset lại trạng thái nếu user rời phòng
-            onLeaveRoom();
+            joinedRef.current = false;
+            setTimeout(() => {
+              onLeaveRoom(); 
+            }, 500);
           },
         });
       } catch (err) {
         console.error("Lỗi khởi tạo ZegoCloud: ", err);
+        joinedRef.current = false;
+
+       // THÊM ĐOẠN NÀY ĐỂ DỌN RÁC NẾU XẢY RA LỖI GIỮA CHỪNG
+       try {
+          if (zpRef.current) zpRef.current.destroy();
+        } catch (e) {}
+
       }
     };
 
     initZego();
 
-    // Hàm dọn dẹp khi Component bị tắt đi
+    // Dọn dẹp an toàn khi Component unmount
     return () => {
+      try {
+        if (zpRef.current) {
+          zpRef.current.destroy(); 
+        }
+      } catch (error) {
+        // Bỏ qua lỗi của Zego để không làm crash (sập) trang React
+        console.warn("ZegoCloud tự dọn dẹp bị lỗi, nhưng React đã an toàn.");
+      }
       joinedRef.current = false;
     };
-    
-  // 3. Xóa hàm onLeaveRoom và user dạng object nguyên khối khỏi mảng dependency
-  // Chỉ nên phụ thuộc vào các giá trị string (primitive values)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, user.username, user.fullname]);
 
   return (
