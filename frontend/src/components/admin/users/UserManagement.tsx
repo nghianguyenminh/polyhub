@@ -434,7 +434,7 @@ export default function UserManagement() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
           >
             <motion.div 
               className={`${styles.modalContent} ${styles.cyberModal}`} 
@@ -442,7 +442,7 @@ export default function UserManagement() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             >
             <div className={`${styles.modalHeader} ${styles.cyberHeader}`}>
               <h2 className={styles.cyberModalTitle}>
@@ -632,7 +632,7 @@ export default function UserManagement() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
           >
             <motion.div 
               className={`${styles.modalContent} ${styles.cyberModal}`} 
@@ -640,7 +640,7 @@ export default function UserManagement() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             >
             <div className={`${styles.modalHeader} ${styles.cyberHeader}`}>
               <h2 className={styles.cyberModalTitle}>Tạo tài khoản Admin con</h2>
