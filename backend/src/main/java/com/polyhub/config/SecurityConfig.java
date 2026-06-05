@@ -75,6 +75,11 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mentors").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mentors/*").permitAll()
                 .requestMatchers("/api/comments/**").permitAll()
+                // Các action bài viết (like, share, create...): JWT filter tự xác thực,
+                // controller tự kiểm tra Principal — tương tự pattern của /api/comments/**
+                .requestMatchers("/api/posts/**").permitAll()
+                .requestMatchers("/api/v2/posts/**").permitAll()
+                .requestMatchers("/api/saved/**").permitAll()
                 // Admin API
                 .requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "USER_ADMIN", "CONTENT_ADMIN")
                 // Tất cả các request còn lại cần đăng nhập

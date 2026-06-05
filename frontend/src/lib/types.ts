@@ -28,10 +28,24 @@ export interface Post {
   isPrivate: boolean;
   createdAt: string;
   isSaved?: boolean;
+  isLiked?: boolean;
+  likesCount: number;
   user: SimpleUser;
   commentsCount: number;
   sharesCount: number;
-  sharedPost?: Omit<Post, 'commentsCount' | 'sharesCount' | 'isSaved' | 'sharedPost'>;
+  sharedPost?: Omit<Post, 'commentsCount' | 'sharesCount' | 'isSaved' | 'sharedPost' | 'isLiked' | 'likesCount'>;
+}
+
+export interface Comment {
+  id: number;
+  content: string;
+  postId: number;
+  username: string;
+  fullname: string;
+  avatar?: string;
+  parentId?: number;
+  createdAt: string;
+  replies?: Comment[];
 }
 
 export interface Category {
