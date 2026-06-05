@@ -608,26 +608,25 @@ export default function UserManagement() {
 
       {/* Modal Thêm tài khoản mới (Chỉ dành cho SUPER_ADMIN và ADMIN) */}
       {isAddModalOpen && canModifyRole && (
-        <div className={styles.modalOverlay} onClick={() => setIsAddModalOpen(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Tạo tài khoản Admin con</h2>
-              <button className={styles.btnCloseModal} onClick={() => setIsAddModalOpen(false)}>
+        <div className={`${styles.modalOverlay} ${styles.cyberOverlay}`} onClick={() => setIsAddModalOpen(false)}>
+          <div className={`${styles.modalContent} ${styles.cyberModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={`${styles.modalHeader} ${styles.cyberHeader}`}>
+              <h2 className={styles.cyberModalTitle}>Tạo tài khoản Admin con</h2>
+              <button className={styles.cyberCloseBtn} onClick={() => setIsAddModalOpen(false)}>
                 <X size={20} />
               </button>
             </div>
-            <div className={styles.modalBody}>
-              {addError && <div className={`${styles.alertBox} ${styles.alertError}`}>{addError}</div>}
-              {addSuccess && <div className={`${styles.alertBox} ${styles.alertSuccess}`}>{addSuccess}</div>}
-
-              <form onSubmit={handleAddUser} className={styles.actionGroup}>
+            <div className={styles.cyberBody}>
+              {addError && <div className={`${styles.cyberAlert} ${styles.cyberAlertError}`}>{addError}</div>}
+              {addSuccess && <div className={`${styles.cyberAlert} ${styles.cyberAlertSuccess}`}>{addSuccess}</div>}
+              <form onSubmit={handleAddUser} className={styles.cyberForm}>
                 <div className={styles.formGroup}>
-                  <label htmlFor="addUsername" className={styles.formLabel}>Tên đăng nhập (Username) *</label>
+                  <label htmlFor="addUsername" className={styles.cyberFormLabel}>Tên đăng nhập (Username) *</label>
                   <input
                     id="addUsername"
                     type="text"
                     placeholder="Nhập tên đăng nhập..."
-                    className={styles.formInput}
+                    className={styles.cyberInput}
                     value={addForm.username}
                     onChange={(e) => setAddForm({ ...addForm, username: e.target.value })}
                     required
@@ -636,12 +635,12 @@ export default function UserManagement() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="addFullname" className={styles.formLabel}>Họ và tên *</label>
+                  <label htmlFor="addFullname" className={styles.cyberFormLabel}>Họ và tên *</label>
                   <input
                     id="addFullname"
                     type="text"
                     placeholder="Nhập họ và tên..."
-                    className={styles.formInput}
+                    className={styles.cyberInput}
                     value={addForm.fullname}
                     onChange={(e) => setAddForm({ ...addForm, fullname: e.target.value })}
                     required
@@ -649,12 +648,12 @@ export default function UserManagement() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="addEmail" className={styles.formLabel}>Email *</label>
+                  <label htmlFor="addEmail" className={styles.cyberFormLabel}>Email *</label>
                   <input
                     id="addEmail"
                     type="email"
                     placeholder="Nhập địa chỉ email..."
-                    className={styles.formInput}
+                    className={styles.cyberInput}
                     value={addForm.email}
                     onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
                     required
@@ -662,12 +661,12 @@ export default function UserManagement() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="addPassword" className={styles.formLabel}>Mật khẩu *</label>
+                  <label htmlFor="addPassword" className={styles.cyberFormLabel}>Mật khẩu *</label>
                   <input
                     id="addPassword"
                     type="password"
                     placeholder="Nhập mật khẩu..."
-                    className={styles.formInput}
+                    className={styles.cyberInput}
                     value={addForm.password}
                     onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
                     required
@@ -675,10 +674,10 @@ export default function UserManagement() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="addRole" className={styles.formLabel}>Vai trò Admin con *</label>
+                  <label htmlFor="addRole" className={styles.cyberFormLabel}>Vai trò Admin con *</label>
                   <select
                     id="addRole"
-                    className={styles.selectInput}
+                    className={styles.cyberSelect}
                     value={addForm.roleId}
                     onChange={(e) => setAddForm({ ...addForm, roleId: e.target.value })}
                   >
@@ -690,7 +689,7 @@ export default function UserManagement() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
                   <button 
                     type="button" 
-                    className={styles.viewDetailsBtn} 
+                    className={styles.cyberBtnCancel} 
                     onClick={() => setIsAddModalOpen(false)}
                     disabled={isSubmittingAdd}
                   >
@@ -698,7 +697,7 @@ export default function UserManagement() {
                   </button>
                   <button 
                     type="submit" 
-                    className={styles.btnSubmit}
+                    className={styles.cyberBtn}
                     disabled={isSubmittingAdd}
                   >
                     {isSubmittingAdd ? 'Đang tạo...' : 'Tạo tài khoản'}

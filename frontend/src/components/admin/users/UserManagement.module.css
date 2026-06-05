@@ -603,54 +603,67 @@
 
 /* Cyberpunk Details Modal Theme (Option 2) */
 .cyberOverlay {
-  background: rgba(8, 10, 15, 0.85) !important;
-  backdrop-filter: blur(8px) !important;
+  background: rgba(15, 23, 42, 0.25) !important;
+  backdrop-filter: blur(12px) !important;
   z-index: 1000 !important;
+  animation: fadeInOverlay 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .cyberModal {
-  background: radial-gradient(circle at 50% 0%, #151d30 0%, #0a0e17 100%) !important;
-  border: 1px solid #00f0ff !important;
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 240, 255, 0.05) !important;
-  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(242, 113, 37, 0.2) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 60px -15px rgba(242, 113, 37, 0.12), 
+              0 0 50px -10px rgba(0, 0, 0, 0.08), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  color: #1f2937;
+  overflow: hidden;
+  animation: slideUpModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .cyberHeader {
-  border-bottom: 1px solid rgba(0, 240, 255, 0.3) !important;
-  background: rgba(10, 14, 23, 0.8) !important;
+  border-bottom: 1px solid rgba(242, 113, 37, 0.15) !important;
+  background: linear-gradient(135deg, rgba(242, 113, 37, 0.08) 0%, rgba(255, 195, 113, 0.05) 100%) !important;
+  padding: 20px 28px !important;
 }
 
 .cyberModalTitle {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 800;
-  color: #00f0ff;
+  background: linear-gradient(135deg, #F27125 0%, #ff8c42 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+  letter-spacing: 0.08em;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .cyberCloseBtn {
-  background: rgba(0, 240, 255, 0.1) !important;
-  border: 1px solid #00f0ff !important;
-  color: #00f0ff !important;
-  border-radius: 4px;
-  padding: 6px;
+  background: rgba(242, 113, 37, 0.06) !important;
+  border: 1px solid rgba(242, 113, 37, 0.2) !important;
+  color: #F27125 !important;
+  border-radius: 8px;
+  padding: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .cyberCloseBtn:hover {
-  background: #00f0ff !important;
-  color: #0a0e17 !important;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+  background: #F27125 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(242, 113, 37, 0.25);
+  transform: rotate(90deg);
 }
 
 .cyberBody {
-  padding: 24px;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -662,37 +675,38 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.875rem;
-  margin-bottom: 16px;
-  font-family: monospace;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
 .cyberAlertSuccess {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid #10b981;
-  color: #10b981;
-  text-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #065f46;
 }
 
 .cyberAlertError {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid #ef4444;
-  color: #ef4444;
-  text-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #991b1b;
 }
 
 .cyberSection {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(0, 240, 255, 0.15);
-  border-radius: 8px;
-  padding: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(242, 113, 37, 0.08);
+  border-radius: 14px;
+  padding: 20px;
   position: relative;
-  transition: border-color 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s ease;
 }
 
 .cyberSection:hover {
-  border-color: rgba(0, 240, 255, 0.3);
+  border-color: rgba(242, 113, 37, 0.2);
+  box-shadow: 0 8px 30px rgba(242, 113, 37, 0.05);
+  transform: translateY(-2px);
 }
 
 .cyberSectionTitle {
@@ -700,20 +714,20 @@
   align-items: center;
   gap: 8px;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #00f0ff;
+  font-weight: 750;
+  color: #F27125;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed rgba(0, 240, 255, 0.2);
-  margin-bottom: 16px;
+  letter-spacing: 0.06em;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(242, 113, 37, 0.08);
+  margin-bottom: 18px;
 }
 
 .cyberProfileGrid {
   display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 24px;
-  align-items: start;
+  grid-template-columns: 110px 1fr;
+  gap: 28px;
+  align-items: center;
 }
 
 @media (max-width: 600px) {
@@ -735,14 +749,19 @@
   width: 90px;
   height: 90px;
   position: relative;
-  background: #0f172a;
-  border: 2px solid #00f0ff;
+  background: #f8fafc;
+  border: 2px solid #F27125;
   display: flex;
   align-items: center;
   justify-content: center;
   clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(242, 113, 37, 0.15);
   overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.cyberAvatarHexagon:hover {
+  transform: scale(1.05) rotate(5deg);
 }
 
 .cyberAvatarImg {
@@ -752,10 +771,9 @@
 }
 
 .cyberAvatarInitial {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #00f0ff;
-  text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #F27125;
 }
 
 .cyberStatusIndicator {
@@ -765,6 +783,9 @@
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 4px 10px;
+  border-radius: 20px;
 }
 
 .statusDot {
@@ -775,23 +796,25 @@
 }
 
 .dotActive {
-  background-color: #00ff66;
-  box-shadow: 0 0 8px #00ff66;
+  background-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+  animation: cyberPulseActive 2s infinite;
 }
 
 .dotLocked {
   background-color: #ef4444;
-  box-shadow: 0 0 8px #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+  animation: cyberPulseLocked 2s infinite;
 }
 
 .statusText {
-  color: #94a3b8;
+  color: #4b5563;
 }
 
 .cyberProfileInfo {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 20px;
+  gap: 16px 24px;
 }
 
 @media (max-width: 480px) {
@@ -807,50 +830,50 @@
 }
 
 .cyberInfoLabel {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.72rem;
+  color: #9ca3af;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .cyberInfoValue {
   font-size: 0.875rem;
-  color: #f1f5f9;
+  color: #1f2937;
   font-weight: 600;
 }
 
 .cyberBioBlock {
-  margin-top: 16px;
+  margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-top: 1px dashed rgba(242, 113, 37, 0.15);
   width: 100%;
 }
 
 .cyberBioLabel {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.72rem;
+  color: #9ca3af;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 6px;
+  gap: 5px;
+  margin-bottom: 8px;
 }
 
 .cyberBioText {
   font-size: 0.813rem;
-  color: #cbd5e1;
-  line-height: 1.5;
+  color: #4b5563;
+  line-height: 1.6;
   margin: 0;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(242, 113, 37, 0.03);
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 113, 37, 0.06);
 }
 
 .cyberForm {
@@ -861,8 +884,8 @@
 
 .cyberFormLabel {
   font-size: 0.75rem;
-  font-weight: 700;
-  color: #94a3b8;
+  font-weight: 750;
+  color: #4b5563;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -882,20 +905,20 @@
 
 .cyberSelect {
   flex: 1;
-  background: #0f172a;
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   padding: 10px 14px;
-  color: #cbd5e1;
+  color: #1f2937;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .cyberSelect:focus {
-  border-color: #00f0ff;
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+  border-color: #F27125;
+  box-shadow: 0 0 0 3px rgba(242, 113, 37, 0.12);
 }
 
 .cyberBtn {
@@ -906,52 +929,77 @@
   padding: 10px 20px;
   font-size: 0.875rem;
   font-weight: 700;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #00f0ff;
-  background: rgba(0, 240, 255, 0.1);
-  color: #00f0ff;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  background: linear-gradient(135deg, #F27125 0%, #ff8c42 100%);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  box-shadow: 0 4px 14px rgba(242, 113, 37, 0.2);
 }
 
 .cyberBtn:hover:not(:disabled) {
-  background: #00f0ff;
-  color: #0a0e17;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(242, 113, 37, 0.3);
+  filter: brightness(1.05);
 }
 
 .cyberBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #64748b;
-  background: rgba(255, 255, 255, 0.05);
+  transform: none !important;
+  box-shadow: none !important;
+  background: #e5e7eb;
+  color: #9ca3af;
 }
 
 .cyberBtnLock {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%) !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2) !important;
 }
 
 .cyberBtnLock:hover:not(:disabled) {
-  background: #ef4444;
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3) !important;
 }
 
 .cyberBtnUnlock {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2) !important;
 }
 
 .cyberBtnUnlock:hover:not(:disabled) {
-  background: #10b981;
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+.cyberBtnCancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #d1d5db;
+  background: transparent;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cyberBtnCancel:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #1f2937;
+  border-color: #9ca3af;
+}
+
+.cyberBtnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .cyberLimitGrid {
@@ -971,34 +1019,34 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(242, 113, 37, 0.08);
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #4b5563;
 }
 
 .cyberLimitItem strong {
-  color: #00f0ff;
+  color: #F27125;
   font-weight: 700;
 }
 
 .cyberInput {
   flex: 1;
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   padding: 10px 14px;
-  color: #cbd5e1;
+  color: #1f2937;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .cyberInput:focus {
-  border-color: #00f0ff;
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+  border-color: #F27125;
+  box-shadow: 0 0 0 3px rgba(242, 113, 37, 0.12);
 }
 
 .cyberUnlockRow {
@@ -1019,8 +1067,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #e2e8f0;
-  font-size: 0.813rem;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .warnIcon {
@@ -1035,10 +1084,56 @@
   animation: cyberSpin 2s linear infinite;
 }
 
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(30px) scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cyberPulseActive {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes cyberPulseLocked {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
 @keyframes cyberPulse {
-  0% { opacity: 0.6; }
+  0% { opacity: 0.7; }
   50% { opacity: 1; }
-  100% { opacity: 0.6; }
+  100% { opacity: 0.7; }
 }
 
 @keyframes cyberSpin {
