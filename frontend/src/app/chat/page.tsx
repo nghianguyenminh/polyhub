@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI, API_BASE_URL } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import '@/styles/chat.css';
 import VideoCallRoom from '@/components/chat/VideoCallRoom';
 
@@ -72,6 +71,7 @@ function ChatContent() {
   useEffect(() => {
     if (!roomId || !user) return;
 
+    const SockJS = require('sockjs-client');
     const socket = new SockJS(`${API_BASE_URL}/ws-chat`);
     const stompClient = new Client({
       webSocketFactory: () => socket as any,
