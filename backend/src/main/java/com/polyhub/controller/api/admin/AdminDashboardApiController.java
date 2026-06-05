@@ -1,5 +1,6 @@
 package com.polyhub.controller.api.admin;
 
+import com.polyhub.entity.DocumentStatus;
 import com.polyhub.entity.MentorRequest;
 import com.polyhub.entity.RequestStatus;
 import com.polyhub.entity.User;
@@ -7,6 +8,7 @@ import com.polyhub.repository.DocumentRepository;
 import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.PostReportRepository;
 import com.polyhub.repository.UserRepository;
+import com.polyhub.repository.VisitorLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -30,6 +32,7 @@ public class AdminDashboardApiController {
     private final DocumentRepository documentRepository;
     private final MentorRequestRepository mentorRequestRepository;
     private final PostReportRepository postReportRepository;
+    private final VisitorLogRepository visitorLogRepository;
 
     @GetMapping
     public ResponseEntity<?> getDashboardStats() {
@@ -37,6 +40,7 @@ public class AdminDashboardApiController {
         long totalDocuments = documentRepository.count();
         long pendingMentors = mentorRequestRepository.countByStatus(RequestStatus.PENDING);
         long totalReports = postReportRepository.count();
+        long pendingDocuments = documentRepository.countByStatus(DocumentStatus.PENDING);
 
         List<Object[]> countByCategory = documentRepository.countByCategory();
 
@@ -65,8 +69,50 @@ public class AdminDashboardApiController {
         response.put("totalDocuments", totalDocuments);
         response.put("pendingMentors", pendingMentors);
         response.put("totalReports", totalReports);
+        response.put("pendingDocuments", pendingDocuments);
         response.put("countByCategory", countByCategory);
         response.put("trafficData", monthlyTraffic);
+
+        // Weekly traffic (Unique Visitors vs Total Registrations for the past 7 days)
+        Map<String, Object> weeklyTraffic = new HashMap<>();
+        List<String> labels = new java.util.ArrayList<>();
+        List<Long> visitors = new java.util.ArrayList<>();
+        List<Long> registrations = new java.util.ArrayList<>();
+        
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM");
+        
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            
+            // Format label (e.g. "Thứ 5 (04/06)")
+            String dayLabel = switch (date.getDayOfWeek()) {
+                case MONDAY -> "Thứ 2";
+                case TUESDAY -> "Thứ 3";
+                case WEDNESDAY -> "Thứ 4";
+                case THURSDAY -> "Thứ 5";
+                case FRIDAY -> "Thứ 6";
+                case SATURDAY -> "Thứ 7";
+                case SUNDAY -> "Chủ Nhật";
+            };
+            labels.add(dayLabel + " (" + date.format(formatter) + ")");
+            
+            // Count unique visitors for this day from DB
+            long uniqueVisitors = visitorLogRepository.countByAccessDate(date);
+            visitors.add(uniqueVisitors);
+            
+            // Count registrations (Users + Mentors) for this day from DB
+            java.time.LocalDateTime start = date.atStartOfDay();
+            java.time.LocalDateTime end = date.plusDays(1).atStartOfDay();
+            
+            long userRegs = userRepository.countByCreatedAtBetween(start, end);
+            long mentorRegs = mentorRequestRepository.countByCreatedAtBetween(start, end);
+            registrations.add(userRegs + mentorRegs);
+        }
+        
+        weeklyTraffic.put("labels", labels);
+        weeklyTraffic.put("visitors", visitors);
+        weeklyTraffic.put("registrations", registrations);
+        response.put("weeklyTraffic", weeklyTraffic);
         
         List<Map<String, Object>> requestsList = pendingRequests.stream().map(req -> {
             Map<String, Object> map = new HashMap<>();
