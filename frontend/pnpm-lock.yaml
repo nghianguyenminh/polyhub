@@ -11,6 +11,9 @@ importers:
       '@stomp/stompjs':
         specifier: ^7.3.0
         version: 7.3.0
+      '@zegocloud/zego-uikit-prebuilt':
+        specifier: ^2.17.3
+        version: 2.17.3
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
@@ -659,6 +662,9 @@ packages:
     resolution: {integrity: sha512-nAB74NfSNKknqQ1RrYj6uz8FcXEomu/MATJZxh/x+BArzN2U3JbOYC0APYzUIGhVY3m5hRxA8VPNdPBoG8txlA==}
     cpu: [x64]
     os: [win32]
+
+  '@zegocloud/zego-uikit-prebuilt@2.17.3':
+    resolution: {integrity: sha512-PxRCLwPkwDudRiruHKVDodMZaOrvqW7cXv75RgZITmDpYD33vPLHaXmgZZ0uDhmQUpBZxJ63pj8mzdk/wC+WKA==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -2419,6 +2425,8 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
+
+  '@zegocloud/zego-uikit-prebuilt@2.17.3': {}
 
   acorn-jsx@5.3.2(acorn@8.16.0):
     dependencies:
