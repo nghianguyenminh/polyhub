@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI, API_BASE_URL } from '@/lib/api';
@@ -18,7 +18,12 @@ export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
   const [feedLoading, setFeedLoading] = useState(true);
+
+  // Infinite scroll sentinel
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef(false);
 
   // Create post form states
   const [postContent, setPostContent] = useState('');
@@ -33,7 +38,9 @@ export default function HomePage() {
     }
   }, [user, loading, router]);
 
-  const loadFeed = async (page = 0) => {
+  const loadFeed = useCallback(async (page = 0) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     setFeedLoading(true);
     try {
       const data = await fetchAPI(`/api/v2/posts/feed?page=${page}&size=10`);
@@ -44,18 +51,39 @@ export default function HomePage() {
       }
       setFeedPage(data.currentPage || 0);
       setTotalPages(data.totalPages || 0);
+      setHasNext(!!data.hasNext);
     } catch (err) {
       console.error('Failed to load feed', err);
     } finally {
       setFeedLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (user) {
       loadFeed(0);
     }
-  }, [user]);
+  }, [user, loadFeed]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasNext && !loadingRef.current) {
+          loadFeed(feedPage + 1);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNext, feedPage, loadFeed]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -221,17 +249,20 @@ export default function HomePage() {
                   <PostCard key={post.id} post={post} onPostUpdated={() => loadFeed(0)} />
                 ))}
 
-                {feedPage + 1 < totalPages && (
-                  <div className="text-center my-4">
-                    <button
-                      className="btn btn-outline-primary px-4 py-2"
-                      onClick={() => loadFeed(feedPage + 1)}
-                      disabled={feedLoading}
-                    >
-                      {feedLoading ? 'Đang tải...' : 'Xem thêm bài viết'}
-                    </button>
-                  </div>
-                )}
+                {/* Infinite scroll sentinel */}
+                <div ref={sentinelRef} className="text-center py-4">
+                  {feedLoading && posts.length > 0 && (
+                    <div className="d-flex align-items-center justify-content-center gap-2 text-muted">
+                      <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                      <span style={{ fontSize: '14px' }}>Đang tải thêm bài viết...</span>
+                    </div>
+                  )}
+                  {!hasNext && posts.length > 0 && !feedLoading && (
+                    <p className="text-muted mb-0" style={{ fontSize: '14px' }}>
+                      <i className="bi bi-check-circle me-1"></i>Bạn đã xem hết bài viết
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>
