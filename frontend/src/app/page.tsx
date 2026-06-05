@@ -126,9 +126,10 @@ export default function HomePage() {
         formData.append('image', postImage);
       }
 
-      await fetchAPI('/api/posts/create', {
+      await fetchAPI('/api/v2/posts/create', {
         method: 'POST',
         body: formData,
+        noRedirectOn401: true,
       });
 
       // Clear form
