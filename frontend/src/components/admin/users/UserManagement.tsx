@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User, X, Mail, Phone, Calendar, Shield, Lock, Unlock, Settings, KeyRound, Cpu, Layers, FileText } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fetchAPI } from '@/lib/api';
 import styles from './UserManagement.module.css';
 
@@ -425,9 +426,24 @@ export default function UserManagement() {
       </div>
 
       {/* Modal Chi tiết người dùng */}
-      {(selectedUser || detailLoading) && (
-        <div className={`${styles.modalOverlay} ${styles.cyberOverlay}`} onClick={closeDetailModal}>
-          <div className={`${styles.modalContent} ${styles.cyberModal}`} onClick={(e) => e.stopPropagation()}>
+      <AnimatePresence>
+        {(selectedUser || detailLoading) && (
+          <motion.div 
+            className={`${styles.modalOverlay} ${styles.cyberOverlay}`} 
+            onClick={closeDetailModal}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+          >
+            <motion.div 
+              className={`${styles.modalContent} ${styles.cyberModal}`} 
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+            >
             <div className={`${styles.modalHeader} ${styles.cyberHeader}`}>
               <h2 className={styles.cyberModalTitle}>
                 {detailLoading ? 'SYSTEM CHECKING...' : `CORE INTERFACE: ${selectedUser.username}`}
@@ -602,14 +618,30 @@ export default function UserManagement() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+    </AnimatePresence>
 
       {/* Modal Thêm tài khoản mới (Chỉ dành cho SUPER_ADMIN và ADMIN) */}
-      {isAddModalOpen && canModifyRole && (
-        <div className={`${styles.modalOverlay} ${styles.cyberOverlay}`} onClick={() => setIsAddModalOpen(false)}>
-          <div className={`${styles.modalContent} ${styles.cyberModal}`} onClick={(e) => e.stopPropagation()}>
+      <AnimatePresence>
+        {isAddModalOpen && canModifyRole && (
+          <motion.div 
+            className={`${styles.modalOverlay} ${styles.cyberOverlay}`} 
+            onClick={() => setIsAddModalOpen(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+          >
+            <motion.div 
+              className={`${styles.modalContent} ${styles.cyberModal}`} 
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+            >
             <div className={`${styles.modalHeader} ${styles.cyberHeader}`}>
               <h2 className={styles.cyberModalTitle}>Tạo tài khoản Admin con</h2>
               <button className={styles.cyberCloseBtn} onClick={() => setIsAddModalOpen(false)}>
@@ -705,9 +737,10 @@ export default function UserManagement() {
                 </div>
               </form>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+    </AnimatePresence>
     </div>
   );
 }
