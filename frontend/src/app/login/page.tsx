@@ -29,7 +29,7 @@ function LoginContent() {
   useEffect(() => {
     // If already logged in, redirect based on role
     if (user) {
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      if (user.role && ['SUPER_ADMIN', 'ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN'].includes(user.role)) {
         router.push('/admin');
       } else {
         router.push('/');

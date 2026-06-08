@@ -101,6 +101,21 @@
     color: var(--poly-primary);
 }
 
+.form-control-custom.input-placeholder-color {
+    color: #9CA3AF;
+}
+
+/* Make native date picker indicator faded and matching theme */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.35;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 0.75;
+}
+
 /* --- BUTTON HIỆN ĐẠI --- */
 .btn-submit {
     width: 100%;

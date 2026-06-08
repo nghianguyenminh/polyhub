@@ -79,6 +79,13 @@ export default function Header() {
                 />
               </a>
               <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser" style={{ borderRadius: '10px' }}>
+                {user && user.role && ['SUPER_ADMIN', 'ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN'].includes(user.role) && (
+                  <li>
+                    <Link className="dropdown-item py-2 fw-medium d-flex align-items-center" href="/admin">
+                      <i className="bi bi-shield-lock fs-5 me-2 text-muted"></i> Trang quản trị (Admin)
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link className="dropdown-item py-2 fw-medium d-flex align-items-center" href={`/profile/${user.username}`}>
                     <i className="bi bi-person-circle fs-5 me-2 text-muted"></i> Trang cá nhân

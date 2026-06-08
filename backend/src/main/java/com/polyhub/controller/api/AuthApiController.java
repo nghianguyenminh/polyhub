@@ -132,6 +132,9 @@ public class AuthApiController {
             roleRepository.save(clientRole);
         }
 
+        String phone = request.get("phone");
+        String birthdayStr = request.get("birthday");
+
         // Tạo user mới
         User user = new User();
         user.setUsername(username);
@@ -142,6 +145,17 @@ public class AuthApiController {
         user.setAvatar("default.png");
         user.setActive(true);
         user.setCreatedAt(LocalDateTime.now());
+
+        if (phone != null && !phone.trim().isEmpty()) {
+            user.setPhone(phone.trim());
+        }
+        if (birthdayStr != null && !birthdayStr.trim().isEmpty()) {
+            try {
+                user.setBirthday(java.time.LocalDate.parse(birthdayStr));
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Ngày sinh không đúng định dạng (yyyy-MM-dd)."));
+            }
+        }
 
         userRepository.save(user);
 

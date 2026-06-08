@@ -14,6 +14,8 @@ export default function RegisterPage() {
   const [fullname, setFullname] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [birthday, setBirthday] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -211,6 +213,8 @@ export default function RegisterPage() {
           email,
           password,
           confirmPassword,
+          phone,
+          birthday,
         }),
       });
       setSuccessMsg('Đăng ký thành công! Đang chuyển hướng...');
@@ -298,6 +302,36 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="VD: email@fpt.edu.vn" 
                     required 
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6 form-group">
+                <label className="form-label" htmlFor="phone">Số điện thoại</label>
+                <div className="input-wrapper">
+                  <i className="bi bi-telephone input-icon"></i>
+                  <input 
+                    type="tel" 
+                    className="form-control-custom" 
+                    id="phone" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="VD: 0912345678" 
+                  />
+                </div>
+              </div>
+              <div className="col-md-6 form-group">
+                <label className="form-label" htmlFor="birthday">Ngày sinh</label>
+                <div className="input-wrapper">
+                  <i className="bi bi-calendar-event input-icon"></i>
+                  <input 
+                    type="date" 
+                    className={`form-control-custom ${!birthday ? 'input-placeholder-color' : ''}`} 
+                    id="birthday" 
+                    value={birthday}
+                    onChange={(e) => setBirthday(e.target.value)}
                   />
                 </div>
               </div>
