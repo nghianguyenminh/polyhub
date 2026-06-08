@@ -9,8 +9,10 @@ import {
   Tags,
   GraduationCap,
   Flag,
-  Settings
+  Settings,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import styles from './AdminSidebar.module.css';
 
 const navItems = [
@@ -29,6 +31,7 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen = false }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
@@ -63,6 +66,14 @@ export default function AdminSidebar({ isOpen = false }: AdminSidebarProps) {
           );
         })}
       </nav>
+
+      {/* Logout Button */}
+      <div className={styles.logoutContainer}>
+        <button className={styles.logoutButton} onClick={logout}>
+          <LogOut className={styles.icon} />
+          <span>Đăng xuất</span>
+        </button>
+      </div>
     </aside>
   );
 }

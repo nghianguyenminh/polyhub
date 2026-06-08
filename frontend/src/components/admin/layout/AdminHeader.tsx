@@ -1,6 +1,8 @@
 'use client';
 
-import { Menu, Search, Bell } from 'lucide-react';
+import Link from 'next/link';
+import { Menu, Search, Bell, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import styles from './AdminHeader.module.css';
 
 interface AdminHeaderProps {
@@ -8,6 +10,18 @@ interface AdminHeaderProps {
 }
 
 export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
+  const { user, logout } = useAuth();
+
+  const getRoleName = (roleId?: string) => {
+    switch (roleId) {
+      case 'SUPER_ADMIN': return 'Quản trị viên cấp cao';
+      case 'ADMIN': return 'Quản trị viên';
+      case 'USER_ADMIN': return 'Quản lý người dùng';
+      case 'CONTENT_ADMIN': return 'Quản lý nội dung';
+      default: return 'Quản trị viên';
+    }
+  };
+
   return (
     <header className={styles.header}>
       {/* Left Section: Mobile Menu & Search */}
@@ -39,12 +53,28 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
 
         <div className={styles.divider}></div>
 
-        <button className={styles.profileButton}>
-          <div className={styles.avatar}>A</div>
-          <div className={styles.profileInfo}>
-            <span className={styles.profileName}>Admin User</span>
-            <span className={styles.profileRole}>Quản trị viên</span>
+        <Link href={`/profile/${user?.username}`} className={styles.profileButton} style={{ textDecoration: 'none' }}>
+          <div className={styles.avatar}>
+            {user?.avatar && user.avatar !== 'default.png' ? (
+              <img 
+                src={user.avatar.startsWith('http') ? user.avatar : `https://ui-avatars.com/api/?name=${user.fullname}`} 
+                alt={user.fullname} 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
+              />
+            ) : (
+              user?.fullname ? user.fullname.charAt(0).toUpperCase() : 'A'
+            )}
           </div>
+          <div className={styles.profileInfo}>
+            <span className={styles.profileName}>{user?.fullname || 'Admin User'}</span>
+            <span className={styles.profileRole}>{getRoleName(user?.role)}</span>
+          </div>
+        </Link>
+
+        <div className={styles.divider}></div>
+
+        <button className={styles.iconButton} onClick={logout} title="Đăng xuất" aria-label="Logout">
+          <LogOut size={20} />
         </button>
       </div>
     </header>
