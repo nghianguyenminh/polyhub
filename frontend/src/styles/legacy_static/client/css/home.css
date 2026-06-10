@@ -1,0 +1,96 @@
+
+            /* Custom CSS for Create Post Modal - Glassmorphism & Trendy Gen Z */
+            #createPostModal .modal-content {
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+                overflow: hidden;
+            }
+            #createPostModal .modal-header {
+                font-family: 'Inter', sans-serif;
+            }
+            #createPostModal .modal-title {
+                color: #050505;
+                font-size: 1.25rem;
+                letter-spacing: -0.3px;
+            }
+            #createPostModal .btn-close {
+                background-color: #e4e6eb;
+                border-radius: 50%;
+                opacity: 1;
+                padding: 0.6rem;
+                margin-right: 0.2rem;
+                transition: background-color 0.2s;
+            }
+            #createPostModal .btn-close:hover {
+                background-color: #d8dadf;
+            }
+
+            #post-content {
+                font-family: 'Inter', sans-serif;
+                font-size: 16px;
+                color: #050505;
+                line-height: 1.5;
+                transition: all 0.3s;
+            }
+            #post-content::placeholder {
+                color: #65676b;
+                font-size: 18px;
+                font-weight: 400;
+            }
+
+            .topic-pill {
+                background-color: #f0f2f5;
+                color: #050505;
+                font-weight: 500;
+                padding: 6px 14px;
+                font-size: 13.5px;
+                cursor: pointer;
+                transition: all 0.25s ease;
+                border: 1px solid transparent;
+            }
+            .topic-pill:hover {
+                background-color: #e4e6eb;
+            }
+            .topic-pill.active {
+                background-color: #fce1d3;
+                color: var(--poly-primary, #f27125);
+                border-color: rgba(242, 113, 37, 0.4);
+                box-shadow: 0 0 0 3px rgba(242, 113, 37, 0.1);
+            }
+
+            .add-to-post-box {
+                border-color: #ced0d4 !important;
+                border-radius: 12px !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            }
+
+            .modal-tool-icon {
+                width: 38px;
+                height: 38px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: background-color 0.2s;
+            }
+            .modal-tool-icon:hover {
+                background-color: #f2f2f2;
+            }
+
+            .post-btn {
+                background-color: var(--poly-primary, #f27125);
+                border-radius: 50rem;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(242, 113, 37, 0.3);
+            }
+            .post-btn:hover {
+                background-color: #e06015;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(242, 113, 37, 0.45);
+            }
+            .post-btn:active {
+                transform: translateY(0);
+                box-shadow: 0 2px 8px rgba(242, 113, 37, 0.3);
+            }
+     

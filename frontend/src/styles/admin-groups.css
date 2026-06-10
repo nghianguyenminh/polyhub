@@ -1,0 +1,72 @@
+/* KPI Cards */
+.kpi-card {
+    background: #fff; border-radius: 12px; border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 1.25rem; display: flex; align-items: center; gap: 1rem;
+    transition: transform 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+.kpi-icon {
+    width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+}
+.kpi-total .kpi-icon { background-color: #EEF2FF; color: #4F46E5; }
+.kpi-new .kpi-icon { background-color: #DEF7EC; color: #057A55; }
+.kpi-reported .kpi-icon { background-color: #FDE8E8; color: #C81E1E; }
+.kpi-inactive .kpi-icon { background-color: #F3F4F6; color: #4B5563; }
+
+.kpi-value { font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.2; }
+.kpi-label { font-size: 0.85rem; color: #6B7280; font-weight: 500; }
+
+/* Filters */
+.filter-card {
+    background: #fff; border-radius: 12px; border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 1.25rem; margin-bottom: 1.5rem;
+}
+.search-input-wrapper { position: relative; }
+.search-input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+.search-input-wrapper input { padding-left: 40px; background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 13.5px; }
+.search-input-wrapper input:focus { background-color: #ffffff; border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+.bs-select-mock {
+    background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 13.5px; color: #4B5563; padding: 8px 16px; min-width: 140px; transition: all 0.2s;
+}
+.bs-select-mock:hover, .bs-select-mock:focus { background-color: #ffffff; border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); color: #111827; }
+
+/* Table Styles */
+.table-container {
+    border: 1px solid #E5E7EB; border-radius: 12px; overflow: visible; background-color: #ffffff; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.group-avatar { width: 44px; height: 44px; object-fit: cover; border-radius: 12px; border: 1px solid #E5E7EB; }
+.owner-avatar { width: 28px; height: 28px; object-fit: cover; border-radius: 50%; }
+
+.badge-privacy { padding: 0.25em 0.6em; font-size: 0.7em; font-weight: 600; border-radius: 4px; text-transform: uppercase; }
+.badge-public { background-color: #E0E7FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.badge-private { background-color: #F3F4F6; color: #4B5563; border: 1px solid #E5E7EB; }
+
+.status-badge { padding: 0.35em 0.65em; font-size: 0.75em; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; }
+.status-active { background-color: #DEF7EC; color: #03543F; }
+.status-warning { background-color: #FEF3C7; color: #92400E; }
+.status-locked { background-color: #FDE8E8; color: #9B1C1C; }
+
+.status-dot { width: 6px; height: 6px; border-radius: 50%; }
+.status-active .status-dot { background-color: #057A55; }
+.status-warning .status-dot { background-color: #D97706; }
+.status-locked .status-dot { background-color: #C81E1E; }
+
+.activity-indicator {
+    font-size: 12.5px; color: #6B7280; font-weight: 500; display: flex; align-items: center; gap: 6px;
+}
+
+/* Dropdown Actions 3 chấm */
+.btn-action-dots {
+    width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; color: #6B7280; background: transparent; border: none; transition: all 0.2s;
+}
+.btn-action-dots:hover, .btn-action-dots:focus { background-color: #F3F4F6; color: #111827; }
+
+.action-menu { min-width: 200px; padding: 8px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border: 1px solid #E5E7EB; }
+.action-menu .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13.5px; }
+.action-menu .dropdown-item i { font-size: 1.1rem; }
+.item-danger { color: #DC2626 !important; }
+.item-danger:hover { background-color: #FEF2F2 !important; color: #B91C1C !important; }
+.item-warning { color: #D97706 !important; }
+.item-warning:hover { background-color: #FFFBEB !important; color: #B45309 !important; }

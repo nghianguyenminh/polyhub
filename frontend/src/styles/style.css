@@ -1,0 +1,380 @@
+/* =========================================
+   1. CORE & VARIABLES
+   ========================================= */
+:root {
+    --poly-primary: #F27125; /* Cam FPT */
+    --poly-primary-soft: rgba(242, 113, 37, 0.08);
+    --bg-body: #F0F2F5; 
+    --bg-card: #FFFFFF;
+    --text-main: #050505;
+    --text-muted: #65676B;
+    --border-color: rgba(0, 0, 0, 0.05);
+    --header-height: 60px;
+}
+
+body {
+    background-color: var(--bg-body);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    padding-top: var(--header-height); 
+}
+
+/* Blurred Background Letterboxing for Images */
+.image-letterbox-container {
+    position: relative;
+    width: 100%;
+    background-color: #e4e6eb; /* Fallback background */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.image-letterbox-container.large {
+    height: 550px;
+}
+.image-letterbox-container.small {
+    height: 400px;
+    border-top: 1px solid #dee2e6;
+}
+
+.image-letterbox-bg {
+    position: absolute;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(15px) brightness(0.85); /* Blur and slightly darken */
+    z-index: 1;
+}
+
+.image-letterbox-main {
+    position: relative;
+    z-index: 2;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* =========================================
+   2. HEADER & TỔNG THỂ
+   ========================================= */
+.poly-header {
+    height: var(--header-height);
+    background-color: var(--bg-card) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border-bottom: none;
+}
+.text-poly { color: var(--poly-primary) !important; }
+.bg-poly { background-color: var(--poly-primary) !important; }
+
+.app-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 16px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* =========================================
+   3. COMPONENTS DÙNG CHUNG (Cards, Buttons, Icons)
+   ========================================= */
+.poly-main-feed {
+    flex: 1;
+    max-width: 580px; /* Sẽ được ghi đè bằng style inline ở trang Groups nếu cần */
+    margin: 16px auto;
+}
+
+/* .poly-card {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border-color);
+    margin-bottom: 16px;
+    transition: box-shadow 0.2s ease;
+} */
+ .poly-card {
+    background-color: var(--bg-card);
+    border-radius: 16px; /* Bo góc mềm mại hơn (tăng từ 12px lên 16px) */
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03); /* Bóng đổ mờ, rộng và tự nhiên hơn */
+    border: 1px solid rgba(0, 0, 0, 0.015); /* Viền cực nhạt, gần như tàng hình */
+    margin-bottom: 20px; /* Tăng khoảng cách nhịp điệu (Rhythm) giữa các bài viết */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 14px; /* Chữ to hơn một chút cho thao tác ngón tay (Touch target) */
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0; /* Tăng vùng bấm */
+}
+.btn-ghost:hover {
+    background-color: rgba(243, 244, 246, 1); /* Hover hiện màu cam nhạt của brand */
+    color: rgb(47, 45, 45); /* Đổi màu chữ/icon sang màu thương hiệu */
+}
+.btn-ghost i {
+    font-size: 1.15rem; /* Icon to hơn text một chút */
+}
+
+.btn-icon-circle {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: inline-flex; justify-content: center; align-items: center;
+    background: #E4E6EB;
+    color: var(--text-main);
+    text-decoration: none;
+    border: none;
+    transition: background 0.2s;
+}
+.btn-icon-circle:hover { background: #D8DADF; }
+
+.btn-poly-gradient {
+    background: linear-gradient(135deg, #F27125, #FFC371);
+    color: white !important;
+    border: none;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+.btn-poly-gradient:hover { opacity: 0.9; }
+
+/* Icon Gradient */
+.icon-grad {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+.icon-grad-main { background-image: linear-gradient(135deg, #F27125, #FFC371); }
+.icon-grad-red { background-image: linear-gradient(135deg, #FF512F, #DD2476); }
+.icon-grad-warm { background-image: linear-gradient(135deg, #F27125, #E94057); }
+
+/* =========================================
+   [GLOBAL] 1. BỘ LỌC THÔNG MINH (NÚT BẤM)
+   ========================================= */
+.filter-coursera {
+    background-color: #ffffff;
+    color: var(--text-main);
+    border: 1px solid #d1d5db; 
+    padding: 8px 18px;
+    border-radius: 50rem; 
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.filter-coursera:hover, .filter-coursera:focus {
+    background-color: #fcfcfc;
+    border-color: #b1b5ba;
+    color: var(--poly-primary);
+    outline: none;
+}
+.filter-coursera::after { display: none !important; }
+
+/* =========================================
+   [GLOBAL] 2. MENU DROPDOWN & CHECKBOX CAM
+   ========================================= */
+.coursera-dropdown-menu {
+    position: absolute;
+    z-index: 1050 !important; /* Ưu tiên hiển thị trên cùng */
+    min-width: 260px;
+    padding: 0;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    overflow: hidden; 
+    margin-top: 8px !important;
+}
+
+.coursera-filter-header {
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    background-color: #fcfcfc;
+}
+
+.coursera-filter-body {
+    padding: 12px 16px;
+    max-height: 250px;
+    overflow-y: auto; 
+}
+.coursera-filter-body::-webkit-scrollbar { width: 6px; }
+.coursera-filter-body::-webkit-scrollbar-track { background: transparent; }
+.coursera-filter-body::-webkit-scrollbar-thumb { background: #cbd0d6; border-radius: 10px; }
+
+.custom-checkbox .form-check-label {
+    font-size: 13.5px;
+    color: #4b5563;
+    cursor: pointer;
+    user-select: none;
+}
+.custom-checkbox .form-check-input {
+    cursor: pointer;
+    border-color: #cbd0d6;
+}
+/* Ép Checkbox thành màu cam PolyHUB */
+.custom-checkbox .form-check-input:checked {
+    background-color: var(--poly-primary) !important;
+    border-color: var(--poly-primary) !important;
+}
+.custom-checkbox .form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(242, 113, 37, 0.25) !important;
+    border-color: var(--poly-primary) !important;
+}
+
+.coursera-filter-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    bottom: 0;
+}
+
+/* =========================================
+   [GLOBAL] 3. PHÂN TRANG (PAGINATION)
+   ========================================= */
+.poly-pagination {
+    gap: 6px;
+}
+.poly-pagination .page-link {
+    color: #4b5563; 
+    border: none;
+    background-color: #f8f9fa; 
+    border-radius: 8px !important; 
+    font-weight: 600;
+    width: 36px; 
+    height: 36px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.poly-pagination .page-link:hover { 
+    background-color: rgba(242, 113, 37, 0.1); 
+    color: var(--poly-primary);
+}
+/* Ghi đè màu xanh mặc định của Bootstrap */
+.poly-pagination .page-item.active .page-link {
+    background-color: rgba(242, 113, 37, 0.15) !important; 
+    color: var(--poly-primary) !important;
+    box-shadow: none !important; 
+    transform: none !important; 
+}
+.poly-pagination .page-item.disabled .page-link {
+    background-color: transparent;
+    color: #adb5bd;
+}
+.poly-pagination .page-link:focus {
+    box-shadow: none;
+}
+
+/* =========================================
+   4. NOTIFICATION POPUP (DROPDOWN)
+   ========================================= */
+
+/* Container chính của Dropdown */
+.poly-noti-dropdown {
+    width: 360px;
+    max-height: 85vh;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 8px 10px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden;
+    margin-top: 10px !important;
+    background-color: var(--bg-card);
+    animation: polyFadeIn 0.2s ease-out;
+}
+
+@keyframes polyFadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Danh sách cuộn thông báo */
+.noti-list {
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+/* Từng dòng thông báo */
+.noti-item {
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    gap: 12px;
+    position: relative;
+    text-decoration: none !important;
+}
+
+.noti-item:hover {
+    background-color: var(--poly-primary-soft);
+}
+
+.noti-item p {
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+/* Chấm xanh báo hiệu chưa đọc */
+.unread-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #0866FF; /* Màu xanh tương tác */
+    border-radius: 50%;
+    flex-shrink: 0;
+    align-self: center;
+    box-shadow: 0 0 0 3px rgba(8, 102, 255, 0.1);
+}
+
+/* Nút bấm Accept/Ignore trong thông báo */
+.noti-item .btn {
+    font-size: 13px;
+    padding: 5px 12px;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+/* Tùy chỉnh thanh cuộn cho danh sách */
+.noti-list::-webkit-scrollbar {
+    width: 6px;
+}
+.noti-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.noti-list::-webkit-scrollbar-thumb {
+    background: #ced0d4;
+    border-radius: 10px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+    .poly-noti-dropdown {
+        width: calc(100vw - 20px) !important;
+        position: fixed !important;
+        left: 10px !important;
+        right: 10px !important;
+        top: var(--header-height) !important;
+    }
+}
