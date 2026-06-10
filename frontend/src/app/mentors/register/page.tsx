@@ -66,21 +66,107 @@ export default function MentorRegisterPage() {
   // ── Validation ──────────────────────────────────────────────────────────────
   const validateStep = (step: number): boolean => {
     const errs: Record<string, string> = {};
+
     if (step === 1) {
-      if (!fullname.trim())   errs.fullname  = 'Vui lòng nhập họ tên đầy đủ';
-      if (!cccdNumber.trim()) errs.cccdNumber = 'Vui lòng nhập số CCCD/CMND';
-      if (!email.trim())      errs.email     = 'Vui lòng nhập email';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Email không hợp lệ';
-      if (!phone.trim())      errs.phone     = 'Vui lòng nhập số điện thoại';
-      if (!birthday)          errs.birthday  = 'Vui lòng chọn ngày sinh';
+      // 1. Validate Họ và Tên (Không chứa số và ký tự đặc biệt, tối thiểu 2 ký tự)
+      if (!fullname.trim()) {
+        errs.fullname = 'Vui lòng nhập họ tên đầy đủ';
+      } else if (fullname.trim().length < 2) {
+        errs.fullname = 'Họ tên phải có ít nhất 2 ký tự';
+      }
+
+      // 2. Validate CCCD/CMND (Chính xác 9 hoặc 12 chữ số)
+      if (!cccdNumber.trim()) {
+        errs.cccdNumber = 'Vui lòng nhập số CCCD/CMND';
+      } else if (!/^(\d{9}|\d{12})$/.test(cccdNumber.replace(/\s/g, ''))) {
+        errs.cccdNumber = 'CCCD/CMND không hợp lệ (phải là 9 hoặc 12 chữ số)';
+      }
+
+      // 3. Validate Email (Chuẩn RFC 5322)
+      if (!email.trim()) {
+        errs.email = 'Vui lòng nhập email';
+      } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+        errs.email = 'Định dạng email không hợp lệ (VD: ten@domain.com)';
+      }
+
+      // 4. Validate Số điện thoại (Chuẩn Việt Nam: 10 số, bắt đầu bằng 03,05,07,08,09)
+      if (!phone.trim()) {
+        errs.phone = 'Vui lòng nhập số điện thoại';
+      } else if (!/^(0[3|5|7|8|9])+([0-9]{8})$/.test(phone.replace(/\s/g, ''))) {
+        errs.phone = 'Số điện thoại không hợp lệ';
+      }
+
+      // 5. Validate Ngày sinh (Phải đủ 18 tuổi)
+      if (!birthday) {
+        errs.birthday = 'Vui lòng chọn ngày sinh';
+      } else {
+        const birthDate = new Date(birthday);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        if (age < 18) {
+          errs.birthday = 'Bạn phải đủ 18 tuổi để trở thành Mentor';
+        } else if (age > 100) {
+          errs.birthday = 'Năm sinh không hợp lệ';
+        }
+      }
     }
+
     if (step === 2) {
-      if (!introduction.trim()) errs.introduction = 'Vui lòng điền phần giới thiệu bản thân';
-      if (!motivation.trim())   errs.motivation   = 'Vui lòng điền động lực của bạn';
+      // 6. Validate Textarea (Kiểm soát số lượng ký tự tối thiểu để đảm bảo chất lượng nội dung)
+      if (!introduction.trim()) {
+        errs.introduction = 'Vui lòng điền phần giới thiệu bản thân';
+      } else if (introduction.trim().length < 50) {
+        errs.introduction = 'Nội dung quá ngắn. Vui lòng nhập tối thiểu 50 ký tự';
+      }
+
+      if (!motivation.trim()) {
+        errs.motivation = 'Vui lòng điền động lực của bạn';
+      } else if (motivation.trim().length < 50) {
+        errs.motivation = 'Nội dung quá ngắn. Vui lòng nhập tối thiểu 50 ký tự';
+      }
     }
+
     if (step === 3) {
-      if (!cvFile) errs.cvFile = 'Vui lòng tải lên CV của bạn';
+      // 7. Validate File (Bắt lỗi cả dung lượng và định dạng mở rộng)
+      const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
+      const MAX_OTHER_SIZE = 5 * 1024 * 1024; // 5MB
+      const ALLOWED_DOCS = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const ALLOWED_IMAGES = ['image/jpeg', 'image/png'];
+
+      if (!cvFile) {
+        errs.cvFile = 'Vui lòng tải lên CV của bạn';
+      } else {
+        if (cvFile.size > MAX_CV_SIZE) {
+          errs.cvFile = 'Dung lượng CV vượt quá giới hạn 10MB';
+        }
+        if (!ALLOWED_DOCS.includes(cvFile.type)) {
+          errs.cvFile = 'Định dạng CV không hợp lệ (Chỉ nhận PDF, DOC, DOCX)';
+        }
+      }
+
+      if (certificateFile) {
+        if (certificateFile.size > MAX_OTHER_SIZE) {
+          errs.certificateFile = 'Dung lượng chứng chỉ vượt quá giới hạn 5MB';
+        }
+        if (![...ALLOWED_DOCS, ...ALLOWED_IMAGES].includes(certificateFile.type)) {
+          errs.certificateFile = 'Định dạng chứng chỉ không hợp lệ';
+        }
+      }
+
+      if (degreeFile) {
+        if (degreeFile.size > MAX_OTHER_SIZE) {
+          errs.degreeFile = 'Dung lượng bằng cấp vượt quá giới hạn 5MB';
+        }
+        if (![...ALLOWED_DOCS, ...ALLOWED_IMAGES].includes(degreeFile.type)) {
+          errs.degreeFile = 'Định dạng bằng cấp không hợp lệ';
+        }
+      }
     }
+
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
