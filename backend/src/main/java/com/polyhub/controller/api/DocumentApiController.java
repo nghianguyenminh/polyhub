@@ -6,6 +6,9 @@ import com.polyhub.entity.User;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.client.DocumentClientService;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -41,7 +44,8 @@ public class DocumentApiController {
             Principal principal) {
 
         List<Category> categories = categoryService.getActiveCategoriesForDropdown();
-        Page<Document> documentPage = documentClientService.getDocumentsForClient(keyword, categoryId, documentType, page, size);
+        Page<Document> documentPage = documentClientService.getDocumentsForClient(keyword, categoryId, documentType,
+                page, size);
 
         final Set<Long> savedDocIds;
         if (principal != null) {
@@ -73,15 +77,13 @@ public class DocumentApiController {
                     if (doc.getCategory() != null) {
                         map.put("category", Map.of(
                                 "id", doc.getCategory().getId(),
-                                "name", doc.getCategory().getName()
-                        ));
+                                "name", doc.getCategory().getName()));
                     }
                     if (doc.getUploader() != null) {
                         map.put("uploader", Map.of(
                                 "username", doc.getUploader().getUsername(),
                                 "fullname", doc.getUploader().getFullname(),
-                                "avatar", doc.getUploader().getAvatar()
-                        ));
+                                "avatar", doc.getUploader().getAvatar()));
                     }
                     return map;
                 })
@@ -137,8 +139,7 @@ public class DocumentApiController {
             Document doc = documentClientService.shareDocument(title, description, categoryId, file, currentUser);
             return ResponseEntity.ok(Map.of(
                     "message", "Tải tài liệu thành công! Tài liệu của bạn đã được đưa lên hệ thống chờ duyệt.",
-                    "documentId", doc.getId()
-            ));
+                    "documentId", doc.getId()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Đã xảy ra lỗi mạng khi tải file. Thử lại sau nhé!"));
@@ -148,12 +149,12 @@ public class DocumentApiController {
     }
 
     @GetMapping("/download/{id}")
-    public ResponseEntity<?> downloadDocument(@PathVariable("id") Long id) {
+    public void downloadDocument(@PathVariable("id") Long id, HttpServletResponse response) throws IOException {
         try {
-            String fileUrl = documentClientService.getDownloadUrlAndIncrementCount(id);
-            return ResponseEntity.ok(Map.of("fileUrl", fileUrl));
+            documentClientService.getDownloadUrlAndIncrementCount(id, response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Không thể tải tài liệu: " + e.getMessage()));
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Không thể tải tài liệu: " + e.getMessage());
         }
     }
 }

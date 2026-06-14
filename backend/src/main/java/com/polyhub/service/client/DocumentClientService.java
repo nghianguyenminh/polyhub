@@ -6,6 +6,8 @@ import com.polyhub.entity.Document;
 import com.polyhub.repository.CategoryRepository;
 import com.polyhub.repository.DocumentRepository;
 import com.polyhub.service.FileStorageService;
+
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,26 +32,22 @@ public class DocumentClientService {
     private static final long COUNTS_CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
     @Transactional
-    public Document shareDocument(String title, String description, Long categoryId, MultipartFile file, User uploader) throws IOException {
-        
-       
+    public Document shareDocument(String title, String description, Long categoryId, MultipartFile file, User uploader)
+            throws IOException {
+
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Chuyên ngành."));
 
-       
         String originalFilename = file.getOriginalFilename();
         String fileExtension = getFileExtension(originalFilename);
-        String documentType = determineDocumentType(fileExtension); 
+        String documentType = determineDocumentType(fileExtension);
 
-      
         Map<String, Object> uploadResult = fileStorageService.uploadFile(file);
-        
-       
-        String fileUrl = (String) uploadResult.get("url"); 
-        String publicId = (String) uploadResult.get("public_id");
-        Long fileSize = file.getSize(); 
 
-       
+        String fileUrl = (String) uploadResult.get("url");
+        String publicId = (String) uploadResult.get("public_id");
+        Long fileSize = file.getSize();
+
         Document document = new Document();
         document.setTitle(title.trim());
         document.setDescription(description.trim());
@@ -58,8 +56,8 @@ public class DocumentClientService {
         document.setFileUrl(fileUrl);
         document.setFilePublicId(publicId);
         document.setFileSize(fileSize);
-        document.setUploader(uploader); 
-        document.setDownloadCount(0); 
+        document.setUploader(uploader);
+        document.setDownloadCount(0);
 
         return documentRepository.save(document);
     }
@@ -68,9 +66,13 @@ public class DocumentClientService {
      * Lấy danh sách tài liệu hiển thị bên Client (Hỗ trợ phân trang và lọc)
      * Trạng thái mặc định là APPROVED
      */
-    public org.springframework.data.domain.Page<Document> getDocumentsForClient(String keyword, Long categoryId, String documentType, int page, int size) {
-        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page - 1, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
-        return documentRepository.searchAndFilterDocuments(com.polyhub.entity.DocumentStatus.APPROVED, documentType, keyword, categoryId, pageRequest);
+    public org.springframework.data.domain.Page<Document> getDocumentsForClient(String keyword, Long categoryId,
+            String documentType, int page, int size) {
+        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest
+                .of(page - 1, size, org.springframework.data.domain.Sort
+                        .by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        return documentRepository.searchAndFilterDocuments(com.polyhub.entity.DocumentStatus.APPROVED, documentType,
+                keyword, categoryId, pageRequest);
     }
 
     /**
@@ -80,12 +82,10 @@ public class DocumentClientService {
         return new java.util.HashSet<>(savedDocumentRepository.findDocumentIdsByUser(user));
     }
 
-   
     public java.util.List<Document> getAllDocuments() {
         return documentRepository.findByStatus(com.polyhub.entity.DocumentStatus.APPROVED);
     }
 
-    
     public synchronized java.util.Map<String, Long> getApprovedDocumentTypeCounts() {
         long now = System.currentTimeMillis();
         if (cachedTypeCounts != null && (now - lastTypeCountsTime) < COUNTS_CACHE_DURATION_MS) {
@@ -103,7 +103,6 @@ public class DocumentClientService {
         return counts;
     }
 
-    
     public synchronized java.util.Map<Long, Long> getApprovedCategoryCounts() {
         long now = System.currentTimeMillis();
         if (cachedCategoryCounts != null && (now - lastCategoryCountsTime) < COUNTS_CACHE_DURATION_MS) {
@@ -121,20 +120,51 @@ public class DocumentClientService {
         return counts;
     }
 
-    
     @Transactional
-    public String getDownloadUrlAndIncrementCount(Long documentId) {
-        Document document = documentRepository.findById(documentId)
+    public void getDownloadUrlAndIncrementCount(Long documentId, HttpServletResponse response) throws IOException {
+        Document doc = documentRepository.findById(documentId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài liệu này."));
-        
+
         // Tăng lượt tải
-        document.setDownloadCount(document.getDownloadCount() + 1);
-        documentRepository.save(document);
-        
-        return document.getFileUrl();
+        doc.setDownloadCount(doc.getDownloadCount() + 1);
+        documentRepository.save(doc);
+
+        // Xác định đuôi file
+        String extension = switch (doc.getDocumentType()) {
+            case "WORD" -> ".docx";
+            case "EXCEL" -> ".xlsx";
+            case "PDF" -> ".pdf";
+            case "ZIP" -> ".zip";
+            default -> "";
+        };
+
+        // Tên file = tiêu đề + đuôi
+        String fileName = doc.getTitle()
+                .replaceAll("[^a-zA-Z0-9À-ỹ\\s]", "").trim() + extension;
+
+        // Stream file từ Cloudinary về máy client
+        java.net.URL url = new java.net.URL(doc.getFileUrl());
+        java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.connect();
+
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition",
+                "attachment; filename*=UTF-8''" +
+                        java.net.URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
+        response.setHeader("Content-Length", String.valueOf(connection.getContentLength()));
+
+        try (java.io.InputStream inputStream = connection.getInputStream();
+                java.io.OutputStream outputStream = response.getOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            outputStream.flush();
+        }
     }
 
-    
     private String getFileExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "";
@@ -142,7 +172,6 @@ public class DocumentClientService {
         return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
 
-    
     private String determineDocumentType(String extension) {
         return switch (extension) {
             case "pdf" -> "PDF";
@@ -150,7 +179,7 @@ public class DocumentClientService {
             case "xls", "xlsx" -> "EXCEL";
             case "ppt", "pptx" -> "PPT";
             case "zip", "rar", "7z" -> "ZIP";
-            default -> "OTHER"; 
+            default -> "OTHER";
         };
     }
 }
