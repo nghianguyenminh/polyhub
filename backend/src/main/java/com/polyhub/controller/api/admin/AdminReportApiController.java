@@ -19,7 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/reports")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN')")
 public class AdminReportApiController {
 
     private final PostReportRepository postReportRepository;
@@ -45,6 +45,7 @@ public class AdminReportApiController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/approve")
     public ResponseEntity<?> approveReport(@PathVariable Long id) {
         PostReport report = postReportRepository.findById(id).orElse(null);
@@ -56,6 +57,7 @@ public class AdminReportApiController {
         return ResponseEntity.status(400).body(Map.of("message", "Lỗi xử lý báo cáo."));
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/reject")
     public ResponseEntity<?> rejectReport(@PathVariable Long id) {
         if (postReportRepository.existsById(id)) {

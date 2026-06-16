@@ -22,6 +22,7 @@ export default function MentorManagement() {
 
   // Detail View Modal State
   const [viewingMentor, setViewingMentor] = useState<any | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -50,6 +51,21 @@ export default function MentorManagement() {
     loadRequests(page, statusParam, keywordParam); // Truyền keyword vào hàm load
   }, [pageParam, statusParam, keywordParam]);
 
+  // Fetch current user's role on client-side mount only
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const currentUser = await fetchAPI('/api/auth/me');
+        if (currentUser) {
+          setCurrentUserRole(currentUser.role);
+        }
+      } catch (err) {
+        console.error('Failed to load current user role:', err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
   // 3. Hàm gọi API (đã thêm keyword)
   const loadRequests = async (page: number, status: string, keyword: string) => {
     setLoading(true);
@@ -62,8 +78,11 @@ export default function MentorManagement() {
         approved: data.approvedCount || 0,
         rejected: data.rejectedCount || 0
       });
-    } catch (err) {
+      setMessage(null);
+    } catch (err: any) {
       console.error('Failed to fetch mentor requests', err);
+      setMessage({ text: err.message || 'Lỗi tải danh sách yêu cầu Mentor', type: 'danger' });
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -277,20 +296,24 @@ export default function MentorManagement() {
                         <button onClick={() => openDetailModal(req)} className={`${styles.btnAction} ${styles.btnDetail}`} title="Xem chi tiết">
                           <Eye size={16} /> Chi tiết
                         </button>
-                        {req.status === 'PENDING' && (
+                        {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN' || currentUserRole === 'USER_ADMIN') && (
                           <>
-                            <button onClick={() => handleApprove(req.id)} className={`${styles.btnAction} ${styles.btnApprove}`} title="Duyệt">
-                              <Check size={16} /> Duyệt
-                            </button>
-                            <button onClick={() => openModal(req.id, 'REJECT')} className={`${styles.btnAction} ${styles.btnReject}`} title="Từ chối">
-                              <X size={16} /> Từ chối
-                            </button>
+                            {req.status === 'PENDING' && (
+                              <>
+                                <button onClick={() => handleApprove(req.id)} className={`${styles.btnAction} ${styles.btnApprove}`} title="Duyệt">
+                                  <Check size={16} /> Duyệt
+                                </button>
+                                <button onClick={() => openModal(req.id, 'REJECT')} className={`${styles.btnAction} ${styles.btnReject}`} title="Từ chối">
+                                  <X size={16} /> Từ chối
+                                </button>
+                              </>
+                            )}
+                            {req.status === 'APPROVED' && (
+                              <button onClick={() => openModal(req.id, 'REVOKE')} className={`${styles.btnAction} ${styles.btnRevoke}`} title="Tước quyền">
+                                <ShieldOff size={16} /> Tước quyền
+                              </button>
+                            )}
                           </>
-                        )}
-                        {req.status === 'APPROVED' && (
-                          <button onClick={() => openModal(req.id, 'REVOKE')} className={`${styles.btnAction} ${styles.btnRevoke}`} title="Tước quyền">
-                            <ShieldOff size={16} /> Tước quyền
-                          </button>
                         )}
                       </div>
                     </td>
@@ -529,32 +552,36 @@ export default function MentorManagement() {
               <button className={styles.modalBtnCancel} onClick={closeDetailModal}>
                 Đóng
               </button>
-              {viewingMentor.status === 'PENDING' && (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button
-                    className={`${styles.btnAction} ${styles.btnApprove}`}
-                    style={{ padding: '8px 16px' }}
-                    onClick={() => { closeDetailModal(); handleApprove(viewingMentor.id); }}
-                  >
-                    <Check size={16} /> Duyệt ngay
-                  </button>
-                  <button
-                    className={`${styles.btnAction} ${styles.btnReject}`}
-                    style={{ padding: '8px 16px' }}
-                    onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REJECT'); }}
-                  >
-                    <X size={16} /> Từ chối
-                  </button>
-                </div>
-              )}
-              {viewingMentor.status === 'APPROVED' && (
-                <button
-                  className={`${styles.btnAction} ${styles.btnRevoke}`}
-                  style={{ padding: '8px 16px' }}
-                  onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REVOKE'); }}
-                >
-                  <ShieldOff size={16} /> Tước quyền
-                </button>
+              {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN' || currentUserRole === 'USER_ADMIN') && (
+                <>
+                  {viewingMentor.status === 'PENDING' && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnApprove}`}
+                        style={{ padding: '8px 16px' }}
+                        onClick={() => { closeDetailModal(); handleApprove(viewingMentor.id); }}
+                      >
+                        <Check size={16} /> Duyệt ngay
+                      </button>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnReject}`}
+                        style={{ padding: '8px 16px' }}
+                        onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REJECT'); }}
+                      >
+                        <X size={16} /> Từ chối
+                      </button>
+                    </div>
+                  )}
+                  {viewingMentor.status === 'APPROVED' && (
+                    <button
+                      className={`${styles.btnAction} ${styles.btnRevoke}`}
+                      style={{ padding: '8px 16px' }}
+                      onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REVOKE'); }}
+                    >
+                      <ShieldOff size={16} /> Tước quyền
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>

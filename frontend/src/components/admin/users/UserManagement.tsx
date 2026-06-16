@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User, X, Mail, Phone, Calendar, Shield, Lock, Unlock, Settings, KeyRound, Cpu, Layers, FileText } from 'lucide-react';
+import { Search, Plus, MoreVertical, ShieldAlert, GraduationCap, User, X, Mail, Phone, Calendar, Shield, Lock, Unlock, Settings, KeyRound, Cpu, Layers, FileText, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchAPI } from '@/lib/api';
 import styles from './UserManagement.module.css';
@@ -17,14 +17,19 @@ export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [pageMessage, setPageMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   // Fetch current user's role on client-side mount only
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const currentUser = await fetchAPI('/api/auth/me');
-        if (currentUser && (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN')) {
-          setCanModifyRole(true);
+        if (currentUser) {
+          setCurrentUserRole(currentUser.role);
+          if (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN') {
+            setCanModifyRole(true);
+          }
         }
       } catch (err) {
         console.error('Failed to load current user role:', err);
@@ -83,8 +88,11 @@ export default function UserManagement() {
       const res = await fetchAPI(url);
       setUsers(res.users || []);
       setTotalPages(res.totalPages || 1);
-    } catch (err) {
+      setPageMessage(null);
+    } catch (err: any) {
       console.error('Failed to load users', err);
+      setPageMessage({ text: err.message || 'Không thể tải dữ liệu người dùng.', type: 'error' });
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -269,6 +277,43 @@ export default function UserManagement() {
         </div>
       </header>
 
+      {/* Messages */}
+      {pageMessage && (
+        <div 
+          className={`${styles.alert} ${pageMessage.type === 'success' ? styles.alertSuccess : styles.alertDanger}`}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            background: pageMessage.type === 'success' ? '#def7ec' : '#fde8e8',
+            color: pageMessage.type === 'success' ? '#03543f' : '#9b1c1c',
+            border: pageMessage.type === 'success' ? '1px solid #bcf0da' : '1px solid #fbd5d5',
+            fontSize: '0.875rem',
+            fontWeight: 500
+          }}
+        >
+          <span>{pageMessage.text}</span>
+          <button 
+            style={{ 
+              marginLeft: 'auto', 
+              background: 'none', 
+              border: 'none', 
+              cursor: 'pointer', 
+              color: 'inherit',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center'
+            }} 
+            onClick={() => setPageMessage(null)}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.filterGroup}>
@@ -378,7 +423,7 @@ export default function UserManagement() {
                         className={styles.viewDetailsBtn} 
                         onClick={() => openDetailModal(user.username)}
                       >
-                        Chi tiết
+                        <Eye size={14} /> Chi tiết
                       </button>
                     </td>
                   </tr>
@@ -582,44 +627,46 @@ export default function UserManagement() {
                 )}
 
                 {/* Section 3: Thao tác khóa/mở khóa */}
-                <div className={styles.cyberSection}>
-                  <div className={styles.cyberSectionTitle}>
-                    <Lock size={14} /> MODULE BẢO MẬT: ACCOUNT SECURITY
-                  </div>
-                  {selectedUser.active ? (
-                    <form onSubmit={handleLockUser} className={styles.cyberForm}>
-                      <label htmlFor="lockReasonInput" className={styles.cyberFormLabel}>LÝ DO KHÓA TÀI KHOẢN (LOG ENTRY)</label>
-                      <div className={styles.cyberActionRow}>
-                        <input
-                          id="lockReasonInput"
-                          type="text"
-                          placeholder="Nhập lý do thực hiện đình chỉ..."
-                          className={styles.cyberInput}
-                          value={lockReason}
-                          onChange={(e) => setLockReason(e.target.value)}
-                          required
-                        />
-                        <button type="submit" className={`${styles.cyberBtn} ${styles.cyberBtnLock}`}>
-                          <Lock size={14} /> ĐÌNH CHỈ
+                {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN' || currentUserRole === 'USER_ADMIN') && (
+                  <div className={styles.cyberSection}>
+                    <div className={styles.cyberSectionTitle}>
+                      <Lock size={14} /> MODULE BẢO MẬT: ACCOUNT SECURITY
+                    </div>
+                    {selectedUser.active ? (
+                      <form onSubmit={handleLockUser} className={styles.cyberForm}>
+                        <label htmlFor="lockReasonInput" className={styles.cyberFormLabel}>LÝ DO KHÓA TÀI KHOẢN (LOG ENTRY)</label>
+                        <div className={styles.cyberActionRow}>
+                          <input
+                            id="lockReasonInput"
+                            type="text"
+                            placeholder="Nhập lý do thực hiện đình chỉ..."
+                            className={styles.cyberInput}
+                            value={lockReason}
+                            onChange={(e) => setLockReason(e.target.value)}
+                            required
+                          />
+                          <button type="submit" className={`${styles.cyberBtn} ${styles.cyberBtnLock}`}>
+                            <Lock size={14} /> ĐÌNH CHỈ
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className={styles.cyberUnlockRow}>
+                        <div className={styles.cyberStatusMessage}>
+                          <ShieldAlert size={16} className={styles.warnIcon} />
+                          <span>Tài khoản hiện đang bị đình chỉ quyền truy cập hệ thống.</span>
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={handleUnlockUser} 
+                          className={`${styles.cyberBtn} ${styles.cyberBtnUnlock}`}
+                        >
+                          <Unlock size={14} /> BÃI BỎ ĐÌNH CHỈ
                         </button>
                       </div>
-                    </form>
-                  ) : (
-                    <div className={styles.cyberUnlockRow}>
-                      <div className={styles.cyberStatusMessage}>
-                        <ShieldAlert size={16} className={styles.warnIcon} />
-                        <span>Tài khoản hiện đang bị đình chỉ quyền truy cập hệ thống.</span>
-                      </div>
-                      <button 
-                        type="button" 
-                        onClick={handleUnlockUser} 
-                        className={`${styles.cyberBtn} ${styles.cyberBtnUnlock}`}
-                      >
-                        <Unlock size={14} /> BÃI BỎ ĐÌNH CHỈ
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </motion.div>

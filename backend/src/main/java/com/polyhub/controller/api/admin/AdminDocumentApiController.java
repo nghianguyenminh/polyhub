@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/documents")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN')")
 public class AdminDocumentApiController {
 
     private final DocumentAdminService documentAdminService;
@@ -61,6 +61,7 @@ public class AdminDocumentApiController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/approve")
     public ResponseEntity<?> approveDocument(@PathVariable Long id) {
         try {
@@ -71,9 +72,10 @@ public class AdminDocumentApiController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/hidden")
     public ResponseEntity<?> hideDocument(@PathVariable Long id, 
-                                              @RequestBody Map<String, String> body) {
+                                               @RequestBody Map<String, String> body) {
         try {
             String reason = body.get("reason");
             documentAdminService.rejectOrTakedownDocument(id, reason);
@@ -83,6 +85,7 @@ public class AdminDocumentApiController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/delete")
     public ResponseEntity<?> hardDeleteDocument(@PathVariable Long id) {
         try {
@@ -93,6 +96,7 @@ public class AdminDocumentApiController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/restore")
     public ResponseEntity<?> restoreDocument(@PathVariable Long id) {
         try {

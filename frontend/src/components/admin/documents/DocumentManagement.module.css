@@ -287,6 +287,9 @@
 .btnRestore { border-color: #3b82f6; color: #1d4ed8; }
 .btnRestore:hover { background-color: #3b82f6; color: white; }
 
+.btnDetail { border-color: #6366f1; color: #4f46e5; }
+.btnDetail:hover { background-color: #6366f1; color: white; }
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -420,4 +423,96 @@
 }
 .modalBtnSubmit:hover {
   background: #dc2626;
+}
+
+/* Details Modal Styles */
+.detailModalContent {
+  max-width: 600px;
+}
+
+.detailGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detailItemFull {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detailLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+}
+
+.labelDanger {
+  color: #b91c1c;
+}
+
+.detailValueTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  word-break: break-word;
+}
+
+.detailValueDescription {
+  font-size: 0.875rem;
+  color: #4b5563;
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.detailValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.detailValueReason {
+  font-size: 0.875rem;
+  color: #b91c1c;
+  background-color: #fef2f2;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.detailLink {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.detailLink:hover {
+  text-decoration: underline;
+  color: #3730a3;
 }
