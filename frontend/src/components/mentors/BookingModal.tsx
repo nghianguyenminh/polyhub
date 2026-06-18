@@ -47,12 +47,37 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
     const handleWheelNative = (e: WheelEvent) => {
       e.preventDefault();
+      const container = el.parentElement;
+      if (!container) return;
+
+      // Calculate mouse position relative to container and scrollable content
+      const rect = container.getBoundingClientRect();
+      const mouseXInContainer = e.clientX - rect.left;
+      const mouseXInContent = mouseXInContainer + container.scrollLeft;
+
+      const oldZoom = zoom;
+      let newZoom = oldZoom;
+
       if (e.deltaY < 0) {
         // Scroll up -> Zoom in
-        setZoom(prev => Math.min(prev + 0.5, 5));
+        newZoom = Math.min(oldZoom + 0.5, 5);
       } else {
         // Scroll down -> Zoom out
-        setZoom(prev => Math.max(prev - 0.5, 1));
+        newZoom = Math.max(oldZoom - 0.5, 1);
+      }
+
+      if (newZoom !== oldZoom) {
+        setZoom(newZoom);
+
+        // Calculate new scroll position to center zoom on mouse cursor
+        const ratio = newZoom / oldZoom;
+        const newMouseXInContent = mouseXInContent * ratio;
+        const newScrollLeft = newMouseXInContent - mouseXInContainer;
+
+        // Apply scroll offset instantly on the next frame to match the layout update
+        requestAnimationFrame(() => {
+          container.scrollLeft = newScrollLeft;
+        });
       }
     };
 
@@ -60,7 +85,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
     return () => {
       el.removeEventListener('wheel', handleWheelNative);
     };
-  }, [selectedDay, loading]);
+  }, [zoom, selectedDay, loading]);
 
   useEffect(() => {
     if (isOpen && mentor.user?.username) {
@@ -441,7 +466,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                         {/* Zoomable timeline element */}
                         <div 
                           ref={timelineRef}
-                          className="position-relative h-100 transition-all" 
+                          className="position-relative h-100" 
                           style={{ 
                             width: `${100 * zoom}%`, 
                             minWidth: '100%',
