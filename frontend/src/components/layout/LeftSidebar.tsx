@@ -27,6 +27,11 @@ export default function LeftSidebar({ activeMenu = 'home' }: LeftSidebarProps) {
         <span className="nav-text">Poly Mentors</span>
       </Link>
       
+      <Link href="/bookings" className={`poly-nav-item ${activeMenu === 'bookings' ? 'active' : ''}`}>
+        <div className="nav-icon-box"><i className="bi bi-calendar-check-fill icon-grad icon-grad-main"></i></div>
+        <span className="nav-text">Lịch hẹn Call video</span>
+      </Link>
+      
       <Link href="/documents" className={`poly-nav-item ${activeMenu === 'documents' ? 'active' : ''}`}>
         <div className="nav-icon-box"><i className="bi bi-journal-bookmark-fill icon-grad icon-grad-main"></i></div>
         <span className="nav-text">Góc Tài liệu</span>

@@ -9,6 +9,7 @@ import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import '@/styles/mentors.css';
 import RightSidebar from '@/components/layout/RightSidebar';
+import BookingModal from '@/components/mentors/BookingModal';
 
 export default function MentorsPage() {
   const { user, loading } = useAuth();
@@ -18,6 +19,8 @@ export default function MentorsPage() {
   const [keyword, setKeyword] = useState('');
   const [sort, setSort] = useState('newest');
   const [isFetching, setIsFetching] = useState(true);
+  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const loadMentors = async (p = 1) => {
     setIsFetching(true);
@@ -141,13 +144,25 @@ export default function MentorsPage() {
                           <span className="mentor-tag">Polyhub</span>
                         </div>
                         
-                        <div className="d-flex gap-2 mt-auto">
-                          <Link href={`/profile/${req.user?.username}`} className="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">
-                            Hồ sơ
-                          </Link>
-                          <Link href={`/chat?userId=${req.user?.username}`} className="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none">
-                            <i className="bi bi-chat-dots-fill me-1"></i> Nhắn tin
-                          </Link>
+                        <div className="d-flex flex-column gap-2 mt-auto w-100">
+                          <div className="d-flex gap-2">
+                            <Link href={`/profile/${req.user?.username}`} className="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action text-center text-decoration-none">
+                              Hồ sơ
+                            </Link>
+                            <Link href={`/chat?userId=${req.user?.username}`} className="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none text-center">
+                              <i className="bi bi-chat-dots-fill me-1"></i> Nhắn tin
+                            </Link>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              setSelectedMentor(req);
+                              setIsBookingOpen(true);
+                            }}
+                            className="btn w-100 rounded-pill fw-bold btn-action text-white border-0 shadow-sm"
+                            style={{ background: 'linear-gradient(135deg, #F27125 0%, #FF9E67 100%)' }}
+                          >
+                            <i className="bi bi-calendar-check-fill me-1"></i> Đặt lịch hẹn
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -175,9 +190,20 @@ export default function MentorsPage() {
             )}
 
           </div>
-                <RightSidebar/>
+          <RightSidebar/>
         </main>
       </div>
+
+      {selectedMentor && (
+        <BookingModal 
+          isOpen={isBookingOpen}
+          onClose={() => {
+            setIsBookingOpen(false);
+            setSelectedMentor(null);
+          }}
+          mentor={selectedMentor}
+        />
+      )}
     </>
   );
 }
