@@ -257,4 +257,45 @@ public class EmailService {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendBookingStatusEmail(String toEmail, String studentName, String mentorName, String date, String time, String status, String reason) {
+        try {
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            String statusText = "APPROVED".equalsIgnoreCase(status) ? "ĐÃ ĐƯỢC PHÊ DUYỆT" : "BỊ TỪ CHỐI";
+            String subject = "PolyHUB - Thông báo: Lịch hẹn với Mentor " + ("APPROVED".equalsIgnoreCase(status) ? "Được chấp nhận" : "Bị từ chối");
+            helper.setSubject(subject);
+
+            String color = "APPROVED".equalsIgnoreCase(status) ? "#057A55" : "#e02424";
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: " + color + "; text-align: center;\">Lịch Hẹn Call Video " + statusText + "</h2>"
+                    + "<p>Chào <strong>" + studentName + "</strong>,</p>"
+                    + "<p>Yêu cầu đặt lịch call video của bạn với Mentor <strong>" + mentorName + "</strong> vào ngày <strong>" + date + "</strong> lúc <strong>" + time + "</strong>:</p>"
+                    + "<h3 style=\"color: " + color + ";\">Trạng thái: " + ("APPROVED".equalsIgnoreCase(status) ? "Chấp nhận cuộc hẹn" : "Từ chối cuộc hẹn") + "</h3>";
+
+            if ("REJECTED".equalsIgnoreCase(status) && reason != null && !reason.isEmpty()) {
+                htmlContent += "<p>Lý do từ chối từ Mentor:</p>"
+                        + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                        +   "<em>\"" + reason + "\"</em>"
+                        + "</div>";
+            } else if ("APPROVED".equalsIgnoreCase(status)) {
+                htmlContent += "<p>Cuộc gọi video được tích hợp trực tiếp trên hệ thống PolyHUB. Bạn vui lòng truy cập trang <strong>Lịch hẹn Call video</strong> khi đến giờ hẹn để tham gia cuộc gọi.</p>";
+            }
+
+            htmlContent += "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+
+        } catch (jakarta.mail.MessagingException e) {
+            System.err.println("Lỗi gửi Email thông báo lịch hẹn: " + e.getMessage());
+        }
+    }
 }

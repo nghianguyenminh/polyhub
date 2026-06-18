@@ -24,6 +24,9 @@ interface Booking {
   note: string;
   roomId?: string;
   rejectionReason?: string;
+  mentorJoined?: boolean;
+  studentJoined?: boolean;
+  startedAt?: string;
   createdAt: string;
 }
 
@@ -41,8 +44,12 @@ export default function BookingsPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Call video state
+  // Real-time ticking clock for countdowns
+  const [now, setNow] = useState<Date>(new Date());
+
+  // Call video states
   const [activeCallRoomId, setActiveCallRoomId] = useState<string | null>(null);
+  const [selectedBookingForCall, setSelectedBookingForCall] = useState<Booking | null>(null);
 
   // Mentor availability config states
   const [selectedDays, setSelectedDays] = useState<number[]>([]); // 2 to 8
@@ -58,8 +65,15 @@ export default function BookingsPage() {
   const [submittingRejection, setSubmittingRejection] = useState(false);
 
   useEffect(() => {
+    // Tick every second to update countdowns
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     if (user) {
-      // Set default tab based on role
       if (user.role === 'MENTOR') {
         setActiveTab('mentor-bookings');
       } else {
@@ -114,7 +128,6 @@ export default function BookingsPage() {
       const slots: ScheduleSlot[] = data || [];
       setScheduleSlots(slots);
       
-      // Trích xuất các ngày có lịch rảnh
       const days = Array.from(new Set(slots.map(s => s.dayOfWeek)));
       setSelectedDays(days);
       if (days.length > 0) {
@@ -157,7 +170,7 @@ export default function BookingsPage() {
         method: 'PUT',
         body: JSON.stringify({ status: 'APPROVED' }),
       });
-      setSuccessMsg('Đã phê duyệt lịch hẹn thành công.');
+      setSuccessMsg('Đã phê duyệt lịch hẹn thành công. Hệ thống đã gửi email và thông báo đến sinh viên.');
       setTimeout(() => setSuccessMsg(''), 3000);
       loadMentorBookings();
     } catch (err: any) {
@@ -183,7 +196,7 @@ export default function BookingsPage() {
           reason: rejectionReason || 'Mentor không sắp xếp được thời gian',
         }),
       });
-      setSuccessMsg('Đã từ chối lịch hẹn.');
+      setSuccessMsg('Đã từ chối lịch hẹn và gửi thông báo đến sinh viên.');
       setTimeout(() => setSuccessMsg(''), 3000);
       setRejectingBooking(null);
       loadMentorBookings();
@@ -194,11 +207,23 @@ export default function BookingsPage() {
     }
   };
 
+  // Join Call Video API Handler
+  const handleJoinCall = async (booking: Booking) => {
+    try {
+      const updatedBooking = await fetchAPI(`/api/bookings/${booking.id}/join`, {
+        method: 'POST',
+      });
+      setSelectedBookingForCall(updatedBooking);
+      setActiveCallRoomId(updatedBooking.roomId || `booking_${updatedBooking.id}`);
+    } catch (err: any) {
+      alert(err.message || 'Không thể tham gia cuộc gọi vào lúc này.');
+    }
+  };
+
   // Mentor schedule settings functions
   const handleToggleDay = (day: number) => {
     if (selectedDays.includes(day)) {
       setSelectedDays(selectedDays.filter(d => d !== day));
-      // Xóa tất cả slot của ngày này
       setScheduleSlots(scheduleSlots.filter(s => s.dayOfWeek !== day));
     } else {
       setSelectedDays([...selectedDays, day]);
@@ -209,7 +234,6 @@ export default function BookingsPage() {
   const handleAddSlot = () => {
     if (!newSlotStart || !newSlotEnd) return;
     
-    // Validate start before end
     const [sh, sm] = newSlotStart.split(':').map(Number);
     const [eh, em] = newSlotEnd.split(':').map(Number);
     if (sh * 60 + sm >= eh * 60 + em) {
@@ -217,7 +241,6 @@ export default function BookingsPage() {
       return;
     }
 
-    // Check overlap with existing slots of activeScheduleDay
     const daySlots = scheduleSlots.filter(s => s.dayOfWeek === activeScheduleDay);
     const newStartMin = sh * 60 + sm;
     const newEndMin = eh * 60 + em;
@@ -252,7 +275,6 @@ export default function BookingsPage() {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-      // Chỉ gửi lên các slot thuộc về những ngày đang được check chọn rảnh
       const filteredSlots = scheduleSlots.filter(s => selectedDays.includes(s.dayOfWeek));
       await fetchAPI('/api/mentor/schedule', {
         method: 'POST',
@@ -278,6 +300,7 @@ export default function BookingsPage() {
       case 'APPROVED': return 'bg-success bg-opacity-10 text-success border border-success border-opacity-20';
       case 'PENDING': return 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20';
       case 'REJECTED': return 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20';
+      case 'CLOSED': return 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20';
       default: return 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20';
     }
   };
@@ -288,7 +311,51 @@ export default function BookingsPage() {
       case 'PENDING': return 'Đang chờ duyệt';
       case 'REJECTED': return 'Đã từ chối';
       case 'CANCELLED': return 'Đã hủy';
+      case 'CLOSED': return 'Đã kết thúc';
       default: return status;
+    }
+  };
+
+  // Helper to compute countdown text and joinable states
+  const getCountdownStatus = (booking: Booking) => {
+    if (booking.status !== 'APPROVED') return { text: '', isJoinable: false, isClosed: false };
+
+    const startDateTime = new Date(`${booking.bookingDate}T${booking.startTime}`);
+    const limitDateTime = new Date(startDateTime.getTime() + 10 * 60 * 1000); // 10 mins point
+    const diff = startDateTime.getTime() - now.getTime();
+
+    if (diff > 0) {
+      // Show ticking countdown in HH:mm:ss if under 24 hours
+      const totalSecs = Math.floor(diff / 1000);
+      const hrs = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+
+      if (hrs >= 24) {
+        const days = Math.floor(hrs / 24);
+        return { text: `Bắt đầu sau: ${days} ngày`, isJoinable: false, isClosed: false };
+      } else {
+        const hStr = String(hrs).padStart(2, '0');
+        const mStr = String(mins).padStart(2, '0');
+        const sStr = String(secs).padStart(2, '0');
+        return { text: `Bắt đầu sau: ${hStr}:${mStr}:${sStr}`, isJoinable: false, isClosed: false };
+      }
+    } else {
+      // Time has reached
+      if (booking.startedAt != null) {
+        // Meeting already started
+        const actualEnd = new Date(new Date(booking.startedAt).getTime() + booking.duration * 60 * 1000);
+        if (now.getTime() > actualEnd.getTime()) {
+          return { text: 'Cuộc gọi đã hết thời lượng', isJoinable: false, isClosed: true };
+        }
+        return { text: 'Cuộc gọi đang diễn ra', isJoinable: true, isClosed: false };
+      } else {
+        // Meeting hasn't started yet. Check 10-minutes point
+        if (now.getTime() > limitDateTime.getTime()) {
+          return { text: 'Đã đóng do quá hạn 10 phút không tham gia', isJoinable: false, isClosed: true };
+        }
+        return { text: 'Bắt đầu ngay - Vào phòng call!', isJoinable: true, isClosed: false };
+      }
     }
   };
 
@@ -308,7 +375,7 @@ export default function BookingsPage() {
             <div className="poly-card p-3 mb-4 bg-white">
               <h4 className="fw-bold text-dark mb-1">Quản lý Lịch hẹn Call Video</h4>
               <p className="text-muted mb-0" style={{ fontSize: '13px' }}>
-                Đặt lịch call trực tiếp với chuyên gia qua hệ thống camera video tích hợp.
+                Đọc thông báo hệ thống, đếm ngược giây, và tham gia cuộc gọi video trực tuyến trực tiếp.
               </p>
             </div>
 
@@ -318,7 +385,6 @@ export default function BookingsPage() {
 
             {/* Navigation Tabs */}
             <div className="d-flex border-bottom mb-4 bg-white p-2 rounded-3 border">
-              {/* Sinh viên tab: always visible */}
               <button
                 className={`btn flex-grow-1 rounded-pill fw-bold py-2 ${activeTab === 'student' ? 'btn-poly-gradient text-white border-0' : 'btn-light text-dark'}`}
                 style={{
@@ -330,7 +396,6 @@ export default function BookingsPage() {
                 <i className="bi bi-person me-1"></i> Lịch hẹn đã đặt (Vai trò Sinh viên)
               </button>
 
-              {/* Mentor tabs: only visible if user is a Mentor */}
               {user?.role === 'MENTOR' && (
                 <>
                   <button
@@ -377,6 +442,8 @@ export default function BookingsPage() {
                     const dateObj = new Date(booking.bookingDate);
                     const formattedDate = dateObj.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                     
+                    const cdt = getCountdownStatus(booking);
+
                     return (
                       <div key={booking.id} className="poly-card p-3 bg-white border shadow-sm transition-all" style={{ borderLeft: '5px solid #F27125 !important' }}>
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
@@ -403,6 +470,18 @@ export default function BookingsPage() {
                                 <i className="bi bi-clock me-1 text-primary" style={{ color: '#F27125' }}></i>
                                 {booking.startTime} - {booking.endTime} ({booking.duration} phút) &bull; {formattedDate}
                               </div>
+                              {/* Show ticking countdown warning */}
+                              {booking.status === 'APPROVED' && (
+                                <div className="mt-2 fs-8 fw-semibold">
+                                  {cdt.isClosed ? (
+                                    <span className="text-danger"><i className="bi bi-x-circle-fill me-1"></i>{cdt.text}</span>
+                                  ) : cdt.isJoinable ? (
+                                    <span className="text-success text-blink"><i className="bi bi-broadcast-pin me-1 text-blink"></i>{cdt.text}</span>
+                                  ) : (
+                                    <span className="text-muted"><i className="bi bi-hourglass-split me-1"></i>{cdt.text}</span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -410,17 +489,26 @@ export default function BookingsPage() {
                           <div className="d-flex gap-2 w-100 w-md-auto justify-content-end align-self-stretch align-self-md-center">
                             {booking.status === 'APPROVED' && (
                               <button 
-                                onClick={() => setActiveCallRoomId(booking.roomId || `booking_${booking.id}`)}
-                                className="btn rounded-pill fw-bold text-white px-3 d-flex align-items-center gap-1 shadow-sm"
-                                style={{ background: 'linear-gradient(135deg, #F27125 0%, #FF9E67 100%)', border: 'none', fontSize: '13.5px' }}
+                                onClick={() => handleJoinCall(booking)}
+                                disabled={!cdt.isJoinable || cdt.isClosed}
+                                className="btn rounded-pill fw-bold text-white px-3 d-flex align-items-center gap-1 shadow-sm transition-all"
+                                style={{ 
+                                  background: (cdt.isJoinable && !cdt.isClosed) 
+                                    ? 'linear-gradient(135deg, #F27125 0%, #FF9E67 100%)' 
+                                    : '#e4e6eb', 
+                                  color: (cdt.isJoinable && !cdt.isClosed) ? '#fff' : '#6c757d',
+                                  border: 'none', 
+                                  fontSize: '13.5px',
+                                  opacity: (cdt.isJoinable && !cdt.isClosed) ? 1 : 0.6,
+                                  cursor: (cdt.isJoinable && !cdt.isClosed) ? 'pointer' : 'not-allowed'
+                                }}
                               >
                                 <i className="bi bi-camera-video-fill"></i> Tham gia Call Video
                               </button>
                             )}
 
                             {isStudentView ? (
-                              // Student views: can cancel pending or approved calls
-                              (booking.status === 'PENDING' || booking.status === 'APPROVED') && (
+                              (booking.status === 'PENDING' || booking.status === 'APPROVED') && !cdt.isClosed && (
                                 <button 
                                   onClick={() => handleCancelBooking(booking.id)}
                                   className="btn btn-outline-danger rounded-pill fw-bold px-3 fs-7"
@@ -429,7 +517,6 @@ export default function BookingsPage() {
                                 </button>
                               )
                             ) : (
-                              // Mentor views: can approve or reject pending calls
                               booking.status === 'PENDING' && (
                                 <>
                                   <button 
@@ -450,17 +537,21 @@ export default function BookingsPage() {
                           </div>
                         </div>
 
-                        {/* Note area */}
                         {booking.note && (
                           <div className="mt-3 p-3 bg-light rounded-3 text-dark fs-7" style={{ borderLeft: '3px solid #dee2e6' }}>
                             <strong>Ghi chú câu hỏi:</strong> {booking.note}
                           </div>
                         )}
 
-                        {/* Rejection reason area */}
                         {booking.status === 'REJECTED' && booking.rejectionReason && (
                           <div className="mt-3 p-3 bg-danger bg-opacity-10 text-danger rounded-3 fs-7">
                             <strong>Lý do từ chối:</strong> {booking.rejectionReason}
+                          </div>
+                        )}
+
+                        {booking.status === 'CLOSED' && booking.rejectionReason && (
+                          <div className="mt-3 p-3 bg-secondary bg-opacity-10 text-secondary rounded-3 fs-7">
+                            <strong>Chi tiết đóng lịch:</strong> {booking.rejectionReason}
                           </div>
                         )}
                       </div>
@@ -473,7 +564,7 @@ export default function BookingsPage() {
               <div className="poly-card p-4 bg-white border shadow-sm mb-5">
                 <h5 className="fw-bold mb-3 text-dark">Thiết lập Lịch rảnh hàng tuần</h5>
                 <p className="text-muted fs-7 mb-4">
-                  Chọn các ngày bạn rảnh trong tuần từ Thứ 2 đến Chủ Nhật. Với mỗi ngày được chọn, hãy cấu hình các khung giờ rảnh để sinh viên có thể chọn đặt lịch hẹn.
+                  Chọn các ngày bạn rảnh trong tuần từ Thứ 2 đến Chủ Nhật. Với mỗi ngày được chọn, hãy cấu hình các khung giờ rảnh để sinh viên có thể chọn đặt lịch hẹn. Hệ thống hỗ trợ Mentor cài đặt nhiều khung giờ rảnh khác nhau trong cùng 1 ngày (ví dụ: sáng & chiều).
                 </p>
 
                 {/* 1. Chọn ngày rảnh trong tuần */}
@@ -627,7 +718,7 @@ export default function BookingsPage() {
               </div>
               <div className="modal-body p-4 bg-light text-dark">
                 <p className="fs-7 text-secondary mb-3">
-                  Vui lòng cung cấp lý do từ chối yêu cầu đặt lịch của sinh viên <strong>{rejectingBooking.student.fullname}</strong>. Sinh viên sẽ nhận được email phản hồi kèm lý do này.
+                  Vui lòng cung cấp lý do từ chối yêu cầu đặt lịch của sinh viên <strong>{rejectingBooking.student.fullname}</strong>. Sinh viên sẽ nhận được email và thông báo hệ thống kèm lý do này.
                 </p>
                 <textarea
                   value={rejectionReason}
@@ -655,11 +746,22 @@ export default function BookingsPage() {
       )}
 
       {/* Phòng họp Video call overlay */}
-      {activeCallRoomId && user && (
+      {activeCallRoomId && user && selectedBookingForCall && (
         <VideoCallRoom
           roomId={activeCallRoomId}
           user={{ username: user.username, fullname: user.fullname }}
-          onLeaveRoom={() => setActiveCallRoomId(null)}
+          onLeaveRoom={() => {
+            setActiveCallRoomId(null);
+            setSelectedBookingForCall(null);
+            if (activeTab === 'student') {
+              loadStudentBookings();
+            } else {
+              loadMentorBookings();
+            }
+          }}
+          bookingId={selectedBookingForCall.id}
+          duration={selectedBookingForCall.duration}
+          startedAt={selectedBookingForCall.startedAt || new Date().toISOString()}
         />
       )}
     </>

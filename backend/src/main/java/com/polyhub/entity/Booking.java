@@ -55,6 +55,15 @@ public class Booking implements Serializable {
     @Column(name = "rejection_reason", columnDefinition = "nvarchar(500)")
     private String rejectionReason;
 
+    @Column(name = "mentor_joined")
+    private Boolean mentorJoined = false;
+
+    @Column(name = "student_joined")
+    private Boolean studentJoined = false;
+
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -67,6 +76,8 @@ public class Booking implements Serializable {
         if (status == null) {
             status = BookingStatus.PENDING;
         }
+        if (mentorJoined == null) mentorJoined = false;
+        if (studentJoined == null) studentJoined = false;
     }
 
     @PreUpdate

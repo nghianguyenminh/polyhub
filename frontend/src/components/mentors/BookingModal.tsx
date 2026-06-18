@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchAPI } from '@/lib/api';
 import { Mentor } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -33,19 +33,45 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // Zoom state (timeline)
+  const [zoom, setZoom] = useState<number>(1);
+  const timelineRef = useRef<HTMLDivElement>(null);
+
   // Validation feedback
   const [validationMsg, setValidationMsg] = useState({ text: '', isValid: false });
+
+  // Native wheel event binding to allow preventDefault (React passive listener bypass)
+  useEffect(() => {
+    const el = timelineRef.current;
+    if (!el) return;
+
+    const handleWheelNative = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        // Scroll up -> Zoom in
+        setZoom(prev => Math.min(prev + 0.5, 5));
+      } else {
+        // Scroll down -> Zoom out
+        setZoom(prev => Math.max(prev - 0.5, 1));
+      }
+    };
+
+    el.addEventListener('wheel', handleWheelNative, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheelNative);
+    };
+  }, [selectedDay, loading]);
 
   useEffect(() => {
     if (isOpen && mentor.user?.username) {
       loadAvailability();
-      // Reset form states
       setStartTime('09:00');
       setDuration(30);
       setNote('');
       setError('');
       setSuccess(false);
       setSelectedDay(null);
+      setZoom(1);
     }
   }, [isOpen, mentor]);
 
@@ -55,7 +81,6 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
     try {
       const data = await fetchAPI(`/api/bookings/mentor/${mentor.user?.username}/availability`);
       setAvailability(data);
-      // Tự động chọn ngày khả dụng đầu tiên
       const firstAvailable = data.find((d: DayAvailability) => d.isAvailable);
       if (firstAvailable) {
         setSelectedDay(firstAvailable);
@@ -67,6 +92,59 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       setLoading(false);
     }
   };
+
+  // Helper: Find earliest available start time
+  const getEarliestAvailableTime = (day: DayAvailability, dur: number): string | null => {
+    if (!day || day.slots.length === 0) return null;
+
+    // Standard business hours: loop through slots
+    for (const slot of day.slots) {
+      const [slotSh, slotSm] = slot.startTime.split(':').map(Number);
+      const [slotEh, slotEm] = slot.endTime.split(':').map(Number);
+      const slotStartMin = slotSh * 60 + slotSm;
+      const slotEndMin = slotEh * 60 + slotEm;
+
+      // Try times in 5-minute increments
+      for (let timeMin = slotStartMin; timeMin + dur <= slotEndMin; timeMin += 5) {
+        const testEndMin = timeMin + dur;
+        let isOverlap = false;
+
+        // Check against busy slots
+        for (const busy of day.busySlots) {
+          const [busySh, busySm] = busy.startTime.split(':').map(Number);
+          const [busyEh, busyEm] = busy.endTime.split(':').map(Number);
+          const busyStartMin = busySh * 60 + busySm;
+          const busyEndMin = busyEh * 60 + busyEm;
+
+          if (timeMin < busyEndMin && testEndMin > busyStartMin) {
+            isOverlap = true;
+            break;
+          }
+        }
+
+        if (!isOverlap) {
+          const h = Math.floor(timeMin / 60);
+          const m = timeMin % 60;
+          return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  // Automatically suggest earliest available slot when day or duration changes
+  useEffect(() => {
+    if (selectedDay) {
+      const suggested = getEarliestAvailableTime(selectedDay, duration);
+      if (suggested) {
+        setStartTime(suggested);
+        setError('');
+      } else {
+        setValidationMsg({ text: 'Ngày được chọn đã bận hoàn toàn, vui lòng chọn ngày khác.', isValid: false });
+      }
+    }
+  }, [selectedDay, duration]);
 
   // Real-time client-side validation
   useEffect(() => {
@@ -84,7 +162,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       const em = endMinutes % 60;
       const endTimeStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
 
-      // 1. Kiểm tra có nằm trong khung giờ rảnh của mentor không
+      // 1. Check if inside scheduled range
       let isWithinRange = false;
       for (const slot of selectedDay.slots) {
         const [slotSh, slotSm] = slot.startTime.split(':').map(Number);
@@ -106,7 +184,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
         return;
       }
 
-      // 2. Kiểm tra có đè lên lịch bận nào không
+      // 2. Check for overlaps
       for (const busy of selectedDay.busySlots) {
         const [busySh, busySm] = busy.startTime.split(':').map(Number);
         const [busyEh, busyEm] = busy.endTime.split(':').map(Number);
@@ -123,12 +201,12 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       }
 
       setValidationMsg({
-        text: `Thời gian đặt lịch hợp lệ: ${startTime} - ${endTimeStr}`,
+        text: `Thời gian chọn hợp lệ: ${startTime} - ${endTimeStr}`,
         isValid: true
       });
 
     } catch (e) {
-      setValidationMsg({ text: 'Thời gian nhập không đúng định dạng.', isValid: false });
+      setValidationMsg({ text: 'Thời gian nhập không hợp lệ.', isValid: false });
     }
   }, [selectedDay, startTime, duration]);
 
@@ -174,10 +252,55 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   };
 
+  const formatFullDateVietnamese = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    return `${dayNames[d.getDay()]}, Ngày ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  };
+
+  const getEndTimeString = () => {
+    if (!startTime) return '';
+    const [sh, sm] = startTime.split(':').map(Number);
+    const endMinutes = sh * 60 + sm + duration;
+    const eh = Math.floor(endMinutes / 60);
+    const em = endMinutes % 60;
+    return `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+  };
+
+  // Render scale ticks for zoomable timeline
+  const renderTimelineTicks = () => {
+    const ticks = [];
+    const minStart = 480;  // 08:00
+    const minEnd = 1260;   // 21:00
+    const totalMins = minEnd - minStart;
+
+    // Define tick intervals based on zoom level
+    let interval = 60; // default 60 minutes
+    if (zoom >= 4.5) {
+      interval = 10;
+    } else if (zoom >= 3) {
+      interval = 30;
+    }
+
+    for (let time = minStart; time <= minEnd; time += interval) {
+      const pct = ((time - minStart) / totalMins) * 100;
+      const h = Math.floor(time / 60);
+      const m = time % 60;
+      const label = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      ticks.push(
+        <div key={time} className="position-absolute d-flex flex-column align-items-center" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
+          <div style={{ width: '1px', height: '6px', backgroundColor: '#a1a8b3', marginBottom: '2px' }}></div>
+          <span style={{ fontSize: '9px', color: '#6c757d', fontWeight: 500 }}>{label}</span>
+        </div>
+      );
+    }
+    return ticks;
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} tabIndex={-1}>
+    <div className="modal show d-block animate-fade-in" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} tabIndex={-1}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '16px', overflow: 'hidden' }}>
           
@@ -190,7 +313,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
           </div>
 
           {/* Body */}
-          <div className="modal-body p-4 bg-light text-dark">
+          <div className="modal-body p-4 bg-light text-dark" style={{ maxHeight: '85vh', overflowY: 'auto' }}>
             {/* Mentor Short Info */}
             <div className="d-flex align-items-center gap-3 p-3 bg-white rounded-3 border mb-4 shadow-sm">
               <img 
@@ -277,110 +400,131 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
                 {selectedDay && (
                   <>
-                    {/* 2. Biểu đồ lịch rảnh/bận */}
+                    {/* 2. Biểu đồ lịch rảnh/bận có ZOOM cuộn chuột */}
                     <div className="mb-4 bg-white p-3 rounded-3 border shadow-sm">
-                      <label className="fw-bold mb-2 text-secondary" style={{ fontSize: '14px' }}>
-                        2. Lịch rảnh & bận của Mentor hôm nay:
-                      </label>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <label className="fw-bold text-secondary" style={{ fontSize: '14px' }}>
+                          2. Biểu đồ lịch rảnh/bận trong ngày:
+                        </label>
+                        <span className="badge bg-poly-soft text-poly border border-opacity-10 fs-8">
+                          <i className="bi bi-mouse me-1"></i> Cuộn chuột để Zoom ({zoom.toFixed(1)}x)
+                        </span>
+                      </div>
 
-                      {/* Thông tin khung rảnh */}
                       <div className="mb-2 d-flex flex-wrap gap-2">
-                        <span className="text-muted fs-7 me-1">Khung rảnh:</span>
+                        <span className="text-muted fs-8 me-1">Khung rảnh:</span>
                         {selectedDay.slots.map((s, idx) => (
-                          <span key={idx} className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-7 px-2 py-1">
+                          <span key={idx} className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 fs-8 px-2 py-1">
                             <i className="bi bi-clock me-1"></i> {s.startTime} - {s.endTime}
                           </span>
                         ))}
                       </div>
 
-                      {/* Thông tin lịch đã bận (Pending/Approved) */}
-                      <div className="d-flex flex-wrap gap-2">
-                        <span className="text-muted fs-7 me-1">Lịch bận:</span>
+                      <div className="mb-3 d-flex flex-wrap gap-2">
+                        <span className="text-muted fs-8 me-1">Lịch bận:</span>
                         {selectedDay.busySlots.length === 0 ? (
-                          <span className="text-success fs-7 fw-medium"><i className="bi bi-patch-check-fill me-1"></i>Chưa có lịch hẹn nào trùng - Trống lịch cả ngày</span>
+                          <span className="text-success fs-8 fw-medium"><i className="bi bi-check-circle-fill me-1"></i>Mentor trống lịch cả ngày</span>
                         ) : (
                           selectedDay.busySlots.map((b, idx) => (
-                            <span key={idx} className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 fs-7 px-2 py-1" style={{ textDecoration: 'line-through' }}>
-                              <i className="bi bi-x-circle me-1"></i> {b.startTime} - {b.endTime}
+                            <span key={idx} className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 fs-8 px-2 py-1">
+                              <i className="bi bi-x-circle me-1"></i> {b.startTime} - {b.endTime} ({b.status === 'PENDING' ? 'Chờ duyệt' : 'Đã đặt'})
                             </span>
                           ))
                         )}
                       </div>
 
-                      {/* Visual Progress/Timeline Bar */}
-                      <div className="mt-3">
-                        <div className="d-flex justify-content-between text-muted fs-8 px-1 mb-1">
-                          <span>08:00</span>
-                          <span>12:00</span>
-                          <span>14:00</span>
-                          <span>17:00</span>
-                          <span>21:00</span>
-                        </div>
-                        <div className="progress" style={{ height: '12px', borderRadius: '50rem', backgroundColor: '#e9ecef' }}>
-                          {/* We draw a simple visual representation */}
-                          {selectedDay.slots.map((s, idx) => {
-                            const [sh, sm] = s.startTime.split(':').map(Number);
-                            const [eh, em] = s.endTime.split(':').map(Number);
-                            // Normalize to minutes between 08:00 (480 mins) and 21:00 (1260 mins)
-                            const minStart = 480;
-                            const minEnd = 1260;
-                            const total = minEnd - minStart;
+                      {/* Timeline Wrapper with Horizontal Scroll */}
+                      <div 
+                        className="position-relative border rounded p-2 bg-light overflow-x-auto" 
+                        style={{ height: '110px' }}
+                      >
+                        {/* Zoomable timeline element */}
+                        <div 
+                          ref={timelineRef}
+                          className="position-relative h-100 transition-all" 
+                          style={{ 
+                            width: `${100 * zoom}%`, 
+                            minWidth: '100%',
+                            height: '50px',
+                            cursor: 'zoom-in'
+                          }}
+                        >
+                          {/* Base Progress Bar */}
+                          <div className="progress w-100" style={{ height: '24px', borderRadius: '6px', backgroundColor: '#e9ecef', position: 'relative', marginTop: '10px' }}>
                             
-                            const sMin = sh * 60 + sm - minStart;
-                            const eMin = eh * 60 + em - minStart;
-                            
-                            const leftPct = Math.max(0, (sMin / total) * 100);
-                            const widthPct = Math.min(100 - leftPct, ((eMin - sMin) / total) * 100);
+                            {/* Available Slots */}
+                            {selectedDay.slots.map((s, idx) => {
+                              const [sh, sm] = s.startTime.split(':').map(Number);
+                              const [eh, em] = s.endTime.split(':').map(Number);
+                              const minStart = 480;  // 08:00
+                              const minEnd = 1260;   // 21:00
+                              const total = minEnd - minStart;
+                              
+                              const sMin = sh * 60 + sm - minStart;
+                              const eMin = eh * 60 + em - minStart;
+                              
+                              const leftPct = Math.max(0, (sMin / total) * 100);
+                              const widthPct = Math.min(100 - leftPct, ((eMin - sMin) / total) * 100);
 
-                            return (
-                              <div
-                                key={idx}
-                                className="progress-bar bg-success bg-opacity-25"
-                                style={{
-                                  position: 'absolute',
-                                  left: `${leftPct}%`,
-                                  width: `${widthPct}%`,
-                                  height: '12px'
-                                }}
-                              />
-                            );
-                          })}
-                          
-                          {selectedDay.busySlots.map((b, idx) => {
-                            const [sh, sm] = b.startTime.split(':').map(Number);
-                            const [eh, em] = b.endTime.split(':').map(Number);
-                            const minStart = 480;
-                            const minEnd = 1260;
-                            const total = minEnd - minStart;
+                              return (
+                                <div
+                                  key={idx}
+                                  className="progress-bar bg-success bg-opacity-25 border border-success border-opacity-50"
+                                  style={{
+                                    position: 'absolute',
+                                    left: `${leftPct}%`,
+                                    width: `${widthPct}%`,
+                                    height: '24px',
+                                    zIndex: 1
+                                  }}
+                                />
+                              );
+                            })}
                             
-                            const sMin = sh * 60 + sm - minStart;
-                            const eMin = eh * 60 + em - minStart;
-                            
-                            const leftPct = Math.max(0, (sMin / total) * 100);
-                            const widthPct = Math.min(100 - leftPct, ((eMin - sMin) / total) * 100);
+                            {/* Busy Slots */}
+                            {selectedDay.busySlots.map((b, idx) => {
+                              const [sh, sm] = b.startTime.split(':').map(Number);
+                              const [eh, em] = b.endTime.split(':').map(Number);
+                              const minStart = 480;
+                              const minEnd = 1260;
+                              const total = minEnd - minStart;
+                              
+                              const sMin = sh * 60 + sm - minStart;
+                              const eMin = eh * 60 + em - minStart;
+                              
+                              const leftPct = Math.max(0, (sMin / total) * 100);
+                              const widthPct = Math.min(100 - leftPct, ((eMin - sMin) / total) * 100);
 
-                            return (
-                              <div
-                                key={idx}
-                                className="progress-bar bg-danger"
-                                style={{
-                                  position: 'absolute',
-                                  left: `${leftPct}%`,
-                                  width: `${widthPct}%`,
-                                  height: '12px',
-                                  zIndex: 3
-                                }}
-                              />
-                            );
-                          })}
+                              return (
+                                <div
+                                  key={idx}
+                                  className="progress-bar bg-danger bg-opacity-50 border border-danger border-opacity-75"
+                                  style={{
+                                    position: 'absolute',
+                                    left: `${leftPct}%`,
+                                    width: `${widthPct}%`,
+                                    height: '24px',
+                                    zIndex: 3
+                                  }}
+                                  title={`Bận: ${b.startTime} - ${b.endTime}`}
+                                />
+                              );
+                            })}
+                          </div>
+
+                          {/* Render Scale ticks below bar */}
+                          <div className="position-relative w-100" style={{ height: '20px', marginTop: '10px' }}>
+                            {renderTimelineTicks()}
+                          </div>
                         </div>
-                        <div className="d-flex align-items-center gap-3 mt-2 text-muted" style={{ fontSize: '11px' }}>
-                          <div className="d-flex align-items-center gap-1">
-                            <span className="d-inline-block rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: 'rgba(25, 135, 84, 0.25)' }}></span> Lịch rảnh của Mentor
-                          </div>
-                          <div className="d-flex align-items-center gap-1">
-                            <span className="d-inline-block rounded-circle bg-danger" style={{ width: '8px', height: '8px' }}></span> Lịch đã có người đặt
-                          </div>
+                      </div>
+
+                      <div className="d-flex align-items-center gap-3 mt-2 text-muted" style={{ fontSize: '11px' }}>
+                        <div className="d-flex align-items-center gap-1">
+                          <span className="d-inline-block rounded" style={{ width: '12px', height: '12px', backgroundColor: 'rgba(25, 135, 84, 0.25)', border: '1px solid rgba(25, 135, 84, 0.5)' }}></span> Lịch rảnh
+                        </div>
+                        <div className="d-flex align-items-center gap-1">
+                          <span className="d-inline-block rounded" style={{ width: '12px', height: '12px', backgroundColor: 'rgba(220, 53, 69, 0.5)', border: '1px solid rgba(220, 53, 69, 0.75)' }}></span> Đã bận
                         </div>
                       </div>
                     </div>
@@ -392,7 +536,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                           3. Nhập giờ bắt đầu:
                         </label>
                         <div className="input-group">
-                          <span className="input-group-text bg-white"><i className="bi bi-clock"></i></span>
+                          <span className="input-group-text bg-white"><i className="bi bi-clock-fill text-muted"></i></span>
                           <input
                             type="time"
                             value={startTime}
@@ -401,6 +545,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                             required
                           />
                         </div>
+                        <small className="text-muted mt-1 d-block fs-8"><i className="bi bi-info-circle me-1"></i>Hệ thống đã tự gợi ý giờ trống khả dụng sớm nhất.</small>
                       </div>
 
                       <div className="col-md-6">
@@ -432,7 +577,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                     </div>
 
                     {/* Hiển thị kết quả kiểm tra thời gian */}
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <div 
                         className={`alert py-2 px-3 rounded-3 d-flex align-items-center fs-7 ${validationMsg.isValid ? 'alert-success text-success' : 'alert-warning text-warning'}`}
                         style={{ border: 'none', backgroundColor: validationMsg.isValid ? '#d1e7dd' : '#fff3cd' }}
@@ -441,6 +586,22 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                         <span>{validationMsg.text || 'Đang xác thực thời gian...'}</span>
                       </div>
                     </div>
+
+                    {/* Tóm tắt khung giờ chọn (Selected slot Summary) */}
+                    {validationMsg.isValid && (
+                      <div className="mb-4 p-3 rounded-3 text-white shadow-sm border-0 d-flex align-items-center gap-3" style={{ background: 'linear-gradient(135deg, #F27125, #FF8E4F)' }}>
+                        <i className="bi bi-clock-history fs-3"></i>
+                        <div>
+                          <div className="fw-bold fs-7">Bạn đã chọn cuộc hẹn:</div>
+                          <div className="fs-6 fw-bold mt-1">
+                            {startTime} - {getEndTimeString()} ({duration} phút)
+                          </div>
+                          <div className="fs-8 mt-1 opacity-90">
+                            <i className="bi bi-calendar-check me-1"></i> {formatFullDateVietnamese(selectedDay.date)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* 4. Ghi chú */}
                     <div className="mb-4">
