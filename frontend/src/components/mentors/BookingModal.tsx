@@ -561,12 +561,17 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                           3. Nhập giờ bắt đầu:
                         </label>
                         <div className="input-group">
-                          <span className="input-group-text bg-white"><i className="bi bi-clock-fill text-muted"></i></span>
+                          <span className="input-group-text bg-white" style={{ borderColor: startTime ? (validationMsg.isValid ? '#198754' : '#dc3545') : undefined, transition: 'border-color 0.15s' }}><i className="bi bi-clock-fill text-muted"></i></span>
                           <input
                             type="time"
                             value={startTime}
                             onChange={(e) => setStartTime(e.target.value)}
-                            className="form-control bg-white shadow-none"
+                            className={`form-control bg-white shadow-none ${startTime ? (validationMsg.isValid ? 'is-valid' : 'is-invalid') : ''}`}
+                            style={{
+                              borderColor: startTime ? (validationMsg.isValid ? '#198754' : '#dc3545') : undefined,
+                              boxShadow: startTime ? (validationMsg.isValid ? '0 0 0 0.15rem rgba(25, 135, 84, 0.15)' : '0 0 0 0.15rem rgba(220, 53, 69, 0.15)') : undefined,
+                              transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out'
+                            }}
                             required
                           />
                         </div>
