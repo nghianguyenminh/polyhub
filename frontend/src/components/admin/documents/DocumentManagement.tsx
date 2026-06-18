@@ -2,9 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, FileText, FileText as FileGeneric, Check, X, ShieldOff, RotateCcw, Trash2 } from 'lucide-react';
+import { Search, FileText, FileText as FileGeneric, Check, X, ShieldOff, RotateCcw, Trash2, Eye } from 'lucide-react';
 import { fetchAPI } from '@/lib/api';
 import styles from './DocumentManagement.module.css';
+
+const formatFileSize = (bytes: number) => {
+  if (!bytes) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 export default function DocumentManagement() {
   const router = useRouter();
@@ -20,6 +28,10 @@ export default function DocumentManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [takedownReason, setTakedownReason] = useState('');
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  
+  // States cho vai trò người dùng và Modal Chi tiết tài liệu
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<any | null>(null);
 
   // Lấy params ra khỏi URL
   const pageParam = searchParams.get('page');
@@ -36,6 +48,20 @@ export default function DocumentManagement() {
     setCategoryId(catParam);
     loadDocuments(page, searchParams.get('keyword') || '', searchParams.get('status') || '', catParam);
   }, [pageParam, searchParams]);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const currentUser = await fetchAPI('/api/auth/me');
+        if (currentUser) {
+          setCurrentUserRole(currentUser.role);
+        }
+      } catch (err) {
+        console.error('Failed to load current user role:', err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   const loadDocuments = async (page: number, currentKeyword: string, currentStatus: string, currentCategoryId: string = categoryId) => {
   setLoading(true);
@@ -61,8 +87,9 @@ export default function DocumentManagement() {
       setCategories(res.categories);
       setHasLoadedCategories(true);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Failed to fetch documents', err);
+    setMessage({ text: err.message || 'Lỗi tải danh sách tài liệu', type: 'Danger' });
     setDocuments([]); // Làm sạch state nếu API lỗi để tránh crash bảng
   } finally {
     setLoading(false);
@@ -107,7 +134,7 @@ export default function DocumentManagement() {
     if (!selectedDocId || !takedownReason.trim()) return;
     
     try {
-      const result = await fetchAPI(`/api/admin/documents/${selectedDocId}/takedown`, {
+      const result = await fetchAPI(`/api/admin/documents/${selectedDocId}/hidden`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: takedownReason })
@@ -274,29 +301,41 @@ export default function DocumentManagement() {
                     </td>
                     <td>
                       <div className={styles.actionCell}>
-                        {doc.status === 'PENDING' && (
+                        <button 
+                          onClick={() => setViewingDoc(doc)} 
+                          className={`${styles.btnAction} ${styles.btnDetail}`} 
+                          title="Chi tiết"
+                        >
+                          <Eye size={16} /> Chi tiết
+                        </button>
+
+                        {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN' || currentUserRole === 'CONTENT_ADMIN') && (
                           <>
-                            <button onClick={() => handleApprove(doc.id)} className={`${styles.btnAction} ${styles.btnApprove}`} title="Duyệt">
-                              <Check size={16} /> Duyệt
-                            </button>
-                            <button onClick={() => openTakedownModal(doc.id)} className={`${styles.btnAction} ${styles.btnReject}`} title="Từ chối">
-                              <X size={16} /> Từ chối
-                            </button>
-                          </>
-                        )}
-                        {doc.status === 'APPROVED' && (
-                          <button onClick={() => openTakedownModal(doc.id)} className={`${styles.btnAction} ${styles.btnWarning}`} title="Gỡ tài liệu">
-                            <ShieldOff size={16} /> Gỡ
-                          </button>
-                        )}
-                        {(doc.status === 'REJECTED' || doc.status === 'TAKEDOWN') && (
-                          <>
-                            <button onClick={() => handleRestore(doc.id)} className={`${styles.btnAction} ${styles.btnRestore}`} title="Khôi phục">
-                              <RotateCcw size={16} /> Khôi phục
-                            </button>
-                            <button onClick={() => handleDelete(doc.id)} className={`${styles.btnAction} ${styles.btnReject}`} title="Xóa vĩnh viễn">
-                              <Trash2 size={16} /> Xóa
-                            </button>
+                            {doc.status === 'PENDING' && (
+                              <>
+                                <button onClick={() => handleApprove(doc.id)} className={`${styles.btnAction} ${styles.btnApprove}`} title="Duyệt">
+                                  <Check size={16} /> Duyệt
+                                </button>
+                                <button onClick={() => openTakedownModal(doc.id)} className={`${styles.btnAction} ${styles.btnReject}`} title="Từ chối">
+                                  <X size={16} /> Từ chối
+                                </button>
+                              </>
+                            )}
+                            {doc.status === 'APPROVED' && (
+                              <button onClick={() => openTakedownModal(doc.id)} className={`${styles.btnAction} ${styles.btnWarning}`} title="Gỡ tài liệu">
+                                <ShieldOff size={16} /> Gỡ
+                              </button>
+                            )}
+                            {(doc.status === 'REJECTED' || doc.status === 'TAKEDOWN') && (
+                              <>
+                                <button onClick={() => handleRestore(doc.id)} className={`${styles.btnAction} ${styles.btnRestore}`} title="Khôi phục">
+                                  <RotateCcw size={16} /> Khôi phục
+                                </button>
+                                <button onClick={() => handleDelete(doc.id)} className={`${styles.btnAction} ${styles.btnReject}`} title="Xóa vĩnh viễn">
+                                  <Trash2 size={16} /> Xóa
+                                </button>
+                              </>
+                            )}
                           </>
                         )}
                       </div>
@@ -373,6 +412,111 @@ export default function DocumentManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {viewingDoc && (
+        <div className={styles.modalOverlay} onClick={() => setViewingDoc(null)}>
+          <div className={`${styles.modalContent} ${styles.detailModalContent}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              Chi tiết tài liệu
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.detailGrid}>
+                <div className={styles.detailItemFull}>
+                  <label className={styles.detailLabel}>Tiêu đề</label>
+                  <div className={styles.detailValueTitle}>{viewingDoc.title}</div>
+                </div>
+
+                <div className={styles.detailItemFull}>
+                  <label className={styles.detailLabel}>Mô tả</label>
+                  <div className={styles.detailValueDescription}>
+                    {viewingDoc.description || <em style={{ color: '#9ca3af' }}>Không có mô tả</em>}
+                  </div>
+                </div>
+
+                <div className={styles.detailRow}>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Định dạng</label>
+                    <div className={styles.detailValue}>{viewingDoc.documentType}</div>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Dung lượng</label>
+                    <div className={styles.detailValue}>
+                      {formatFileSize(viewingDoc.fileSize)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.detailRow}>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Lượt tải xuống</label>
+                    <div className={styles.detailValue}>{viewingDoc.downloadCount}</div>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Chuyên ngành</label>
+                    <div className={styles.detailValue}>
+                      {viewingDoc.category?.name || <em style={{ color: '#9ca3af' }}>Chưa phân loại</em>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.detailRow}>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Người đăng</label>
+                    <div className={styles.detailValue}>
+                      {viewingDoc.uploader?.fullname || viewingDoc.uploader?.username || <em style={{ color: '#9ca3af' }}>Ẩn danh</em>}
+                    </div>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Ngày đăng</label>
+                    <div className={styles.detailValue}>
+                      {new Date(viewingDoc.createdAt).toLocaleString('vi-VN')}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.detailRow}>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Trạng thái</label>
+                    <div>{getStatusBadge(viewingDoc.status)}</div>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label className={styles.detailLabel}>Đường dẫn</label>
+                    <div>
+                      <a 
+                        href={viewingDoc.fileUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className={styles.detailLink}
+                      >
+                        Mở/Tải tài liệu
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {(viewingDoc.status === 'REJECTED' || viewingDoc.status === 'TAKEDOWN') && (
+                  <div className={styles.detailItemFull} style={{ marginTop: '12px' }}>
+                    <label className={`${styles.detailLabel} ${styles.labelDanger}`}>Lý do từ chối / gỡ bỏ</label>
+                    <div className={styles.detailValueReason}>
+                      {viewingDoc.rejectionReason || <em style={{ color: '#9ca3af' }}>Không có lý do chi tiết</em>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button 
+                type="button" 
+                className={styles.modalBtnCancel} 
+                onClick={() => setViewingDoc(null)}
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}

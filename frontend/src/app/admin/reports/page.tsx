@@ -14,6 +14,7 @@ function AdminReportsContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'danger' } | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -24,6 +25,20 @@ function AdminReportsContent() {
     setCurrentPage(page);
     loadReports(page);
   }, [pageParam]);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const currentUser = await fetchAPI('/api/auth/me');
+        if (currentUser) {
+          setCurrentUserRole(currentUser.role);
+        }
+      } catch (err) {
+        console.error('Failed to load current user role:', err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   const loadReports = async (page: number) => {
     setLoading(true);
@@ -36,8 +51,10 @@ function AdminReportsContent() {
         resolved: data.resolvedCount || 0,
         falseCount: data.falseCount || 0
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch reports', err);
+      setMessage({ text: err.message || 'Lỗi tải danh sách báo cáo vi phạm', type: 'danger' });
+      setReports([]);
     } finally {
       setLoading(false);
     }
@@ -164,20 +181,26 @@ function AdminReportsContent() {
                       {new Date(report.createdAt).toLocaleDateString('vi-VN')}
                     </td>
                     <td className="text-end pe-4">
-                      <button 
-                        onClick={() => handleApprove(report.id)} 
-                        className="btn btn-sm btn-outline-danger me-2" 
-                        title="Xóa bài viết (Đồng ý báo cáo)"
-                      >
-                        <i className="bi bi-trash"></i> Xóa bài
-                      </button>
-                      <button 
-                        onClick={() => handleReject(report.id)} 
-                        className="btn btn-sm btn-outline-secondary" 
-                        title="Từ chối (Báo cáo sai)"
-                      >
-                        <i className="bi bi-x-circle"></i> Từ chối
-                      </button>
+                      {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN' || currentUserRole === 'CONTENT_ADMIN') ? (
+                        <>
+                          <button 
+                            onClick={() => handleApprove(report.id)} 
+                            className="btn btn-sm btn-outline-danger me-2" 
+                            title="Xóa bài viết (Đồng ý báo cáo)"
+                          >
+                            <i className="bi bi-trash"></i> Xóa bài
+                          </button>
+                          <button 
+                            onClick={() => handleReject(report.id)} 
+                            className="btn btn-sm btn-outline-secondary" 
+                            title="Từ chối (Báo cáo sai)"
+                          >
+                            <i className="bi bi-x-circle"></i> Từ chối
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-muted fst-italic" style={{ fontSize: '12.5px' }}>Xem duy nhất</span>
+                      )}
                     </td>
                   </tr>
                 ))
