@@ -143,6 +143,10 @@ public class BookingApiController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Không thể đặt lịch hẹn cho những ngày trong quá khứ"));
             }
 
+            if (bookingDate.equals(LocalDate.now()) && startTime.isBefore(LocalTime.now())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Không thể đặt lịch hẹn cho khung giờ đã qua trong ngày"));
+            }
+
             List<Integer> validDurations = Arrays.asList(20, 30, 40, 50, 60);
             if (!validDurations.contains(duration)) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Thời lượng cuộc gọi không hợp lệ (chỉ chấp nhận 20, 30, 40, 50, 60 phút)"));

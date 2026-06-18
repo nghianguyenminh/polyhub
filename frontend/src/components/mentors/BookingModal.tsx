@@ -122,6 +122,11 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
   const getEarliestAvailableTime = (day: DayAvailability, dur: number): string | null => {
     if (!day || day.slots.length === 0) return null;
 
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    const isToday = day.date === todayStr;
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
     // Standard business hours: loop through slots
     for (const slot of day.slots) {
       const [slotSh, slotSm] = slot.startTime.split(':').map(Number);
@@ -129,8 +134,11 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       const slotStartMin = slotSh * 60 + slotSm;
       const slotEndMin = slotEh * 60 + slotEm;
 
+      // If today, only allow search from current local time + 5 minutes
+      const searchStartMin = isToday ? Math.max(slotStartMin, currentMinutes + 5) : slotStartMin;
+
       // Try times in 5-minute increments
-      for (let timeMin = slotStartMin; timeMin + dur <= slotEndMin; timeMin += 5) {
+      for (let timeMin = searchStartMin; timeMin + dur <= slotEndMin; timeMin += 5) {
         const testEndMin = timeMin + dur;
         let isOverlap = false;
 
@@ -166,7 +174,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
         setStartTime(suggested);
         setError('');
       } else {
-        setValidationMsg({ text: 'Ngày được chọn đã bận hoàn toàn, vui lòng chọn ngày khác.', isValid: false });
+        setValidationMsg({ text: 'Ngày được chọn đã bận hoàn toàn hoặc không còn giờ rảnh khả dụng trong hôm nay.', isValid: false });
       }
     }
   }, [selectedDay, duration]);
@@ -186,6 +194,20 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       const eh = Math.floor(endMinutes / 60);
       const em = endMinutes % 60;
       const endTimeStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+
+      // 0. Check if selected time is in the past for today
+      const todayStr = new Date().toLocaleDateString('en-CA');
+      if (selectedDay.date === todayStr) {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        if (startMinutes < currentMinutes) {
+          setValidationMsg({
+            text: `Giờ bắt đầu (${startTime}) đã trôi qua. Vui lòng chọn khung giờ trong tương lai.`,
+            isValid: false
+          });
+          return;
+        }
+      }
 
       // 1. Check if inside scheduled range
       let isWithinRange = false;
