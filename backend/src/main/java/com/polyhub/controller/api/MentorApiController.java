@@ -41,19 +41,25 @@ public class MentorApiController {
 
     @GetMapping
     public ResponseEntity<?> getMentors(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "newest") String sort,
-            @RequestParam(required = false) String keyword) {
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "newest") String sort,
+        @RequestParam(required = false) String keyword,
+        Principal principal) {
 
-        Sort.Direction direction = "oldest".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page - 1, 4, Sort.by(direction, "createdAt"));
+    Sort.Direction direction = "oldest".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
+    Pageable pageable = PageRequest.of(page - 1, 4, Sort.by(direction, "createdAt"));
 
-        Page<MentorRequest> mentorPage;
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            mentorPage = mentorRequestRepository.findByStatusAndKeyword(RequestStatus.APPROVED, keyword.trim(), pageable);
-        } else {
-            mentorPage = mentorRequestRepository.findByStatus(RequestStatus.APPROVED, pageable);
-        }
+    // Nếu người dùng đang đăng nhập, loại chính họ ra khỏi danh sách mentor hiển thị
+    String currentUsername = principal != null ? principal.getName() : null;
+
+    Page<MentorRequest> mentorPage;
+    if (keyword != null && !keyword.trim().isEmpty()) {
+        mentorPage = mentorRequestRepository.findByStatusAndKeywordExcludingUser(
+                RequestStatus.APPROVED, keyword.trim(), currentUsername, pageable);
+    } else {
+        mentorPage = mentorRequestRepository.findByStatusExcludingUser(
+                RequestStatus.APPROVED, currentUsername, pageable);
+    }
 
         List<Map<String, Object>> mentorsList = mentorPage.getContent().stream()
                 .map(m -> buildMentorMap(m))
@@ -176,13 +182,13 @@ public class MentorApiController {
                 Map<String, Object> degreeResult = fileStorageService.uploadFile(degreeFile);
                 request.setDegreeFile(degreeResult.get("url").toString());
             }
-
             mentorRequestRepository.save(request);
             return ResponseEntity.ok(Map.of("message", "Gửi yêu cầu thành công! Vui lòng chờ BQT phê duyệt."));
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Đã xảy ra lỗi: " + e.getMessage()));
         }
+
     }
 
     @GetMapping("/{id}")

@@ -502,26 +502,26 @@ export default function MentorManagement() {
                       </a>
                     </div>
                   )}
-                  {viewingMentor.cvUrl && (
+                  {viewingMentor.cvFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> CV</div>
-                      <a href={viewingMentor.cvUrl} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                      <a href={viewingMentor.cvFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
                         📄 Xem CV
                       </a>
                     </div>
                   )}
-                  {viewingMentor.certificateUrl && (
+                  {viewingMentor.certificateFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Chứng chỉ</div>
-                      <a href={viewingMentor.certificateUrl} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                      <a href={viewingMentor.certificateFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
                         📜 Xem Chứng chỉ
                       </a>
                     </div>
                   )}
-                  {viewingMentor.degreeUrl && (
+                  {viewingMentor.degreeFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Bằng cấp</div>
-                      <a href={viewingMentor.degreeUrl} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                      <a href={viewingMentor.degreeFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
                         🎓 Xem Bằng cấp
                       </a>
                     </div>

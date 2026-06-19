@@ -9,6 +9,7 @@ import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import '@/styles/mentors.css';
 import RightSidebar from '@/components/layout/RightSidebar';
+import BookingModal from '@/components/mentors/BookingModal';
 
 export default function MentorsPage() {
   const { user, loading } = useAuth();
@@ -18,6 +19,8 @@ export default function MentorsPage() {
   const [keyword, setKeyword] = useState('');
   const [sort, setSort] = useState('newest');
   const [isFetching, setIsFetching] = useState(true);
+  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const loadMentors = async (p = 1) => {
     setIsFetching(true);
@@ -58,44 +61,45 @@ export default function MentorsPage() {
           <LeftSidebar activeMenu="mentors" />
           
           <div className="poly-main-feed flex-grow-1 mx-4" style={{ maxWidth: '850px', minWidth: '0' }}>
-            <div className="poly-card p-3 mb-4" style={{ background: 'linear-gradient(to right, #ffffff, #fffaf5)' }}>
-              <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="mentor-hero-card poly-card p-4 mb-4" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #fffaf5 100%)' }}>
+              <div className="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
                 <div>
-                  <h5 className="fw-bold mb-1 text-dark">Kết nối Mentor</h5>
-                  <div className="text-muted" style={{ fontSize: '13px' }}>Tìm kiếm chuyên gia để định hướng và hỗ trợ dự án của bạn</div>
+                  <h5 className="mentor-hero-title fw-bold mb-1 text-dark" style={{ fontSize: '19px' }}>Kết nối Mentor</h5>
+                  <div className="mentor-hero-subtitle text-muted">Tìm kiếm chuyên gia để định hướng và hỗ trợ dự án của bạn</div>
                 </div>
-                <Link href="/mentors/register" className="btn btn-poly-gradient fw-bold rounded-pill px-3 py-2 shadow-sm d-flex align-items-center text-decoration-none text-white" style={{ fontSize: '13.5px' }}>
-                  Trở thành Mentor
+                <Link href="/mentors/register" className="mentor-cta-btn btn fw-bold rounded-pill px-4 py-2 d-flex align-items-center text-decoration-none text-white" style={{ fontSize: '13.5px' }}>
+                  <i className="bi bi-stars me-2"></i>Trở thành Mentor
                 </Link>
               </div>
               
-              <form onSubmit={handleSearch} className="input-group mt-3 shadow-sm" style={{ borderRadius: '50rem', border: '1px solid rgba(242, 113, 37, 0.2)', background: 'white' }}>
-                <span className="input-group-text bg-transparent border-0 text-poly ps-3 pe-2 py-2">
+              <form onSubmit={handleSearch} className="mentor-search-bar input-group mt-3">
+                <span className="input-group-text bg-transparent border-0 mentor-search-icon ps-4 pe-2 py-2">
                   <i className="bi bi-search"></i>
                 </span>
                 <input 
                   type="text" 
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  className="form-control bg-transparent border-0 py-2 shadow-none" 
-                  style={{ fontSize: '13.5px' }} 
+                  className="mentor-search-input form-control bg-transparent border-0 py-2 shadow-none" 
                   placeholder="Tìm kiếm theo tên, email, giới thiệu..."
                 />
-                <button type="submit" className="btn btn-poly-gradient px-4 fw-bold py-2" style={{ borderRadius: '0 50rem 50rem 0', fontSize: '13.5px' }}>Tìm kiếm</button>
+                <button type="submit" className="mentor-search-submit btn px-4 fw-bold py-2 text-white border-0">
+                  Tìm kiếm
+                </button>
               </form>
             </div>
 
-            <div className="d-flex align-items-center gap-2 mb-4 overflow-visible">
-              <button className="filter-coursera shadow-sm fw-bold text-dark border-0">
+            <div className="mentor-filter-row d-flex align-items-center gap-2 mb-4 overflow-visible">
+              <span className="mentor-filter-pill">
                 <i className="bi bi-sliders"></i> Sắp xếp
-              </button>
-              <div className="vr mx-1 opacity-25"></div> 
-              
+              </span>
+              <div className="mentor-filter-divider"></div>
+
               <select 
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
-                className="form-select form-select-sm shadow-sm cursor-pointer" 
-                style={{ borderRadius: '50rem', paddingLeft: '1rem', paddingRight: '2rem', fontSize: '13.5px', fontWeight: 500, width: 'auto' }}
+                className="mentor-sort-select"
+                style={{ width: 'auto' }}
               >
                 <option value="newest">Mới tham gia (Mới nhất)</option>
                 <option value="oldest">Gạo cội (Cũ nhất)</option>
@@ -104,12 +108,16 @@ export default function MentorsPage() {
 
             <div className="row row-cols-1 row-cols-md-2 g-3 mb-5">
               {isFetching ? (
-                <div className="col-12 text-center my-5">
-                  <div className="spinner-border text-primary" role="status"></div>
+                <div className="col-12 text-center my-5 py-4">
+                  <div className="spinner-border" role="status" style={{ color: '#F27125', width: '2.5rem', height: '2.5rem' }}></div>
                 </div>
               ) : mentors.length === 0 ? (
-                <div className="col-12 text-center my-5 text-muted">
-                  Không tìm thấy Mentor nào phù hợp.
+                <div className="col-12">
+                  <div className="mentor-empty-state text-center">
+                    <i className="bi bi-emoji-neutral mentor-empty-icon d-block"></i>
+                    <div className="fw-semibold text-dark mb-1" style={{ fontSize: '14.5px' }}>Không tìm thấy Mentor nào phù hợp</div>
+                    <div style={{ fontSize: '13px' }}>Thử đổi từ khóa tìm kiếm hoặc bộ lọc khác xem sao nhé.</div>
+                  </div>
                 </div>
               ) : (
                 mentors.map(req => (
@@ -119,19 +127,21 @@ export default function MentorsPage() {
                       
                       <div className="mentor-card-body">
                         <div className="d-flex justify-content-between align-items-start">
-                          <img 
-                            src={req.user?.avatar && req.user.avatar !== 'default.png' ? req.user.avatar : `https://ui-avatars.com/api/?name=${req.fullname}&background=random`} 
-                            className="mentor-card-avatar" 
-                            alt="avatar" 
-                          />
+                          <div className="mentor-card-avatar-wrap">
+                            <img 
+                              src={req.user?.avatar && req.user.avatar !== 'default.png' ? req.user.avatar : `https://ui-avatars.com/api/?name=${req.fullname}&background=random`} 
+                              className="mentor-card-avatar" 
+                              alt="avatar" 
+                            />
+                          </div>
                         </div>
                         
                         <div className="mt-2 mb-3">
-                          <h5 className="fw-bold text-dark mb-0 d-flex align-items-center">
+                          <h5 className="mentor-card-name fw-bold text-dark mb-0 d-flex align-items-center">
                             <span>{req.fullname}</span>
-                            <i className="bi bi-patch-check-fill text-primary ms-1 fs-6" title="Đã xác thực" style={{ background: '-webkit-linear-gradient(45deg, #f27121, #e94057)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}></i>
+                            <i className="bi bi-patch-check-fill mentor-verified-badge ms-1 fs-6" title="Đã xác thực"></i>
                           </h5>
-                          <div className="text-muted" style={{ fontSize: '13px', fontWeight: 500 }}>{req.introduction}</div>
+                          <div className="mentor-card-headline mt-1">{req.introduction}</div>
                         </div>
                         
                         <p className="mentor-bio">{req.motivation}</p>
@@ -141,13 +151,24 @@ export default function MentorsPage() {
                           <span className="mentor-tag">Polyhub</span>
                         </div>
                         
-                        <div className="d-flex gap-2 mt-auto">
-                          <Link href={`/profile/${req.user?.username}`} className="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action">
-                            Hồ sơ
-                          </Link>
-                          <Link href={`/chat?userId=${req.user?.username}`} className="btn btn-poly-gradient flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none">
-                            <i className="bi bi-chat-dots-fill me-1"></i> Nhắn tin
-                          </Link>
+                        <div className="d-flex flex-column gap-2 mt-auto w-100">
+                          <div className="d-flex gap-2">
+                            <Link href={`/profile/${req.user?.username}`} className="mentor-btn-profile btn flex-grow-1 rounded-pill fw-bold text-dark btn-action text-center text-decoration-none">
+                              Hồ sơ
+                            </Link>
+                            <Link href={`/chat?userId=${req.user?.username}`} className="mentor-btn-message btn flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none text-center border-0">
+                              <i className="bi bi-chat-dots-fill me-1"></i> Nhắn tin
+                            </Link>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              setSelectedMentor(req);
+                              setIsBookingOpen(true);
+                            }}
+                            className="mentor-btn-book btn w-100 rounded-pill fw-bold btn-action text-white border-0"
+                          >
+                            <i className="bi bi-calendar-check-fill me-1"></i> Đặt lịch hẹn
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -175,9 +196,20 @@ export default function MentorsPage() {
             )}
 
           </div>
-                <RightSidebar/>
+          <RightSidebar/>
         </main>
       </div>
+
+      {selectedMentor && (
+        <BookingModal 
+          isOpen={isBookingOpen}
+          onClose={() => {
+            setIsBookingOpen(false);
+            setSelectedMentor(null);
+          }}
+          mentor={selectedMentor}
+        />
+      )}
     </>
   );
 }
