@@ -419,7 +419,7 @@ export default function UserManagement() {
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      {user.username === 'superadmin' || user.role?.id === 'SUPER_ADMIN' ? (
+                      {user.username === 'admin' || user.username === 'superadmin' || user.role?.id === 'SUPER_ADMIN' ? (
                         <button 
                           className={styles.viewDetailsBtn} 
                           disabled

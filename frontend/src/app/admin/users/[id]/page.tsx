@@ -20,7 +20,7 @@ export default function AdminUserDetailPage() {
   }, [userId]);
 
   const loadUserDetail = async () => {
-    if (userId.toLowerCase() === 'superadmin') {
+    if (userId.toLowerCase() === 'admin' || userId.toLowerCase() === 'superadmin') {
       alert('Không thể xem chi tiết tài khoản Super Admin');
       router.push('/admin/users');
       return;
