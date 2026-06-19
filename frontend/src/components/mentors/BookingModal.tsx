@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { fetchAPI } from '@/lib/api';
 import { Mentor } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import ClockPicker from '../common/ClockPicker';
 import '@/styles/bookings.css';
 
 interface BookingModalProps {
@@ -529,16 +530,10 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                             <span className="bk-section-num">3</span>
                             Giờ bắt đầu
                           </div>
-                          <div className="bk-time-input-wrap">
-                            <i className="bi bi-clock-fill bk-time-icon" />
-                            <input
-                              type="time"
-                              value={startTime}
-                              onChange={(e) => setStartTime(e.target.value)}
-                              className={`bk-time-input ${startTime ? (validationMsg.isValid ? 'valid' : 'invalid') : ''}`}
-                              required
-                            />
-                          </div>
+                          <ClockPicker 
+                            value={startTime} 
+                            onChange={setStartTime} 
+                           />
                           <div className="bk-hint-text">
                             <i className="bi bi-info-circle" />
                             Đã gợi ý giờ trống sớm nhất

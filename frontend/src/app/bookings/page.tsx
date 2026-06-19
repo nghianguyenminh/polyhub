@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import dynamic from 'next/dynamic';
+import ClockPicker from '@/components/common/ClockPicker';
 import '@/styles/bookings.css';
 
 const VideoCallRoom = dynamic(() => import('@/components/chat/VideoCallRoom'), {
@@ -651,21 +652,17 @@ export default function BookingsPage() {
                       <div className="sch-time-row">
                         <div className="sch-time-field">
                           <label className="sch-time-label">Bắt đầu</label>
-                          <input
-                            type="time"
+                          <ClockPicker
                             value={newSlotStart}
-                            onChange={(e) => setNewSlotStart(e.target.value)}
-                            className="sch-time-input"
+                            onChange={setNewSlotStart}
                           />
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', color: '#9ca3af', fontWeight: 700, fontSize: 18, paddingBottom: 2 }}>–</div>
                         <div className="sch-time-field">
                           <label className="sch-time-label">Kết thúc</label>
-                          <input
-                            type="time"
+                          <ClockPicker
                             value={newSlotEnd}
-                            onChange={(e) => setNewSlotEnd(e.target.value)}
-                            className="sch-time-input"
+                            onChange={setNewSlotEnd}
                           />
                         </div>
                         <button

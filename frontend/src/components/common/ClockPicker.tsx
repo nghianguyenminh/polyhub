@@ -1,0 +1,238 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import styles from './ClockPicker.module.css';
+
+interface ClockPickerProps {
+  value: string; // "HH:MM"
+  onChange: (value: string) => void;
+  label?: string;
+  id?: string;
+}
+
+export default function ClockPicker({ value, onChange, label, id }: ClockPickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<'hours' | 'minutes'>('hours');
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+
+  // Parse initial value
+  const [hours, setHours] = useState(9);
+  const [minutes, setMinutes] = useState(0);
+  const [isPM, setIsPM] = useState(false);
+
+  useEffect(() => {
+    if (value) {
+      const [hStr, mStr] = value.split(':');
+      const h = parseInt(hStr, 10) || 0;
+      const m = parseInt(mStr, 10) || 0;
+      setHours(h === 0 ? 12 : h > 12 ? h - 12 : h);
+      setMinutes(m);
+      setIsPM(h >= 12);
+    }
+  }, [value]);
+
+  // Handle click outside to close
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const updateTime = (newHours: number, newMinutes: number, pm: boolean) => {
+    let rawHours = newHours;
+    if (newHours === 12) {
+      rawHours = pm ? 12 : 0;
+    } else {
+      rawHours = pm ? newHours + 12 : newHours;
+    }
+    const hStr = String(rawHours).padStart(2, '0');
+    const mStr = String(newMinutes).padStart(2, '0');
+    onChange(`${hStr}:${mStr}`);
+  };
+
+  const handleNumberClick = (num: number) => {
+    if (activeMode === 'hours') {
+      setHours(num);
+      updateTime(num, minutes, isPM);
+      // Auto switch to minutes mode
+      setTimeout(() => {
+        setActiveMode('minutes');
+      }, 300);
+    } else {
+      setMinutes(num);
+      updateTime(hours, num, isPM);
+    }
+  };
+
+  const adjustOneMinute = (amount: number) => {
+    let nextMin = minutes + amount;
+    if (nextMin >= 60) nextMin = 0;
+    if (nextMin < 0) nextMin = 59;
+    setMinutes(nextMin);
+    updateTime(hours, nextMin, isPM);
+  };
+
+  const toggleAMPM = (pm: boolean) => {
+    setIsPM(pm);
+    updateTime(hours, minutes, pm);
+  };
+
+  // Layout calculations for 12 positions around the clock circle
+  const getPosition = (index: number) => {
+    // 12 is at top (index 0), 1 is at 30 deg (index 1), etc.
+    const angle = (index * 30 * Math.PI) / 180;
+    const radius = 70; // px
+    const x = 90 + radius * Math.sin(angle); // 90px is center offset
+    const y = 90 - radius * Math.cos(angle);
+    return { left: `${x}px`, top: `${y}px` };
+  };
+
+  // Calculate hand rotation
+  const getHandRotation = () => {
+    if (activeMode === 'hours') {
+      return (hours % 12) * 30;
+    } else {
+      return minutes * 6; // 360 / 60 = 6 deg per minute
+    }
+  };
+
+  const hourNumbers = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  const minuteNumbers = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+  return (
+    <div className={styles.clockPickerContainer} ref={pickerRef}>
+      {label && <label className={styles.inputLabel}>{label}</label>}
+      <div 
+        className={styles.timeDisplayInput} 
+        onClick={() => setIsOpen(!isOpen)}
+        id={id}
+      >
+        <span className={styles.timeText}>{value || '00:00'}</span>
+        <i className="bi bi-clock-fill styles.clockIcon" style={{ color: '#f27125' }} />
+      </div>
+
+      {isOpen && (
+        <div className={styles.clockDropdown}>
+          {/* Digital Readout Header */}
+          <div className={styles.digitalHeader}>
+            <span 
+              className={`${styles.digitalNum} ${activeMode === 'hours' ? styles.activeText : ''}`}
+              onClick={() => setActiveMode('hours')}
+            >
+              {String(hours).padStart(2, '0')}
+            </span>
+            <span className={styles.digitalSeparator}>:</span>
+            <span 
+              className={`${styles.digitalNum} ${activeMode === 'minutes' ? styles.activeText : ''}`}
+              onClick={() => setActiveMode('minutes')}
+            >
+              {String(minutes).padStart(2, '0')}
+            </span>
+            <div className={styles.ampmToggleInHeader}>
+              <span 
+                className={`${styles.ampmHeaderBtn} ${!isPM ? styles.ampmHeaderBtnActive : ''}`}
+                onClick={() => toggleAMPM(false)}
+              >
+                AM
+              </span>
+              <span 
+                className={`${styles.ampmHeaderBtn} ${isPM ? styles.ampmHeaderBtnActive : ''}`}
+                onClick={() => toggleAMPM(true)}
+              >
+                PM
+              </span>
+            </div>
+          </div>
+
+          {/* Clock Dial */}
+          <div className={styles.clockDialWrapper}>
+            <div className={styles.clockDial}>
+              {/* Center Dot */}
+              <div className={styles.centerDot} />
+
+              {/* Hand */}
+              <div 
+                className={styles.clockHand}
+                style={{ transform: `rotate(${getHandRotation()}deg)` }}
+              >
+                <div className={styles.handLine} />
+                <div className={styles.handPointer} />
+              </div>
+
+              {/* Numbers */}
+              {activeMode === 'hours' ? (
+                hourNumbers.map((num, idx) => {
+                  const isActive = hours === num;
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      className={`${styles.dialNumber} ${isActive ? styles.activeNumber : ''}`}
+                      style={getPosition(idx)}
+                      onClick={() => handleNumberClick(num)}
+                    >
+                      {num}
+                    </button>
+                  );
+                })
+              ) : (
+                minuteNumbers.map((num, idx) => {
+                  const isActive = minutes === num;
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      className={`${styles.dialNumber} ${isActive ? styles.activeNumber : ''}`}
+                      style={getPosition(idx)}
+                      onClick={() => handleNumberClick(num)}
+                    >
+                      {String(num).padStart(2, '0')}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Precise Minute Adjustments */}
+          <div className={styles.adjustmentPanel}>
+            <button 
+              type="button" 
+              className={styles.adjustBtn} 
+              onClick={() => adjustOneMinute(-1)}
+              title="Giảm 1 phút"
+            >
+              <i className="bi bi-dash" />
+            </button>
+            <span className={styles.adjustmentLabel}>
+              {activeMode === 'hours' ? 'Chỉnh giờ' : 'Chỉnh phút'}
+            </span>
+            <button 
+              type="button" 
+              className={styles.adjustBtn} 
+              onClick={() => adjustOneMinute(1)}
+              title="Tăng 1 phút"
+            >
+              <i className="bi bi-plus" />
+            </button>
+          </div>
+
+          {/* Close/OK button */}
+          <div className={styles.footerPanel}>
+            <button 
+              type="button" 
+              className={styles.confirmBtn}
+              onClick={() => setIsOpen(false)}
+            >
+              Xác nhận
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
