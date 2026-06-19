@@ -60,6 +60,7 @@ export default function BookingsPage() {
   const [newSlotEnd, setNewSlotEnd] = useState('11:00');
   const [activeScheduleDay, setActiveScheduleDay] = useState<number>(2);
   const [savingSchedule, setSavingSchedule] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   // Rejection modal states
   const [rejectingBooking, setRejectingBooking] = useState<Booking | null>(null);
@@ -127,6 +128,7 @@ export default function BookingsPage() {
       const days = Array.from(new Set(slots.map(s => s.dayOfWeek)));
       setSelectedDays(days);
       setActiveScheduleDay(days.length > 0 ? days[0] : 2);
+      setIsDirty(false);
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi tải cấu hình lịch rảnh');
     } finally {
@@ -205,6 +207,7 @@ export default function BookingsPage() {
   };
 
   const handleToggleDay = (day: number) => {
+    setIsDirty(true);
     if (selectedDays.includes(day)) {
       setSelectedDays(selectedDays.filter(d => d !== day));
       setScheduleSlots(scheduleSlots.filter(s => s.dayOfWeek !== day));
@@ -237,10 +240,12 @@ export default function BookingsPage() {
     }
     const newSlot: ScheduleSlot = { dayOfWeek: activeScheduleDay, startTime: newSlotStart, endTime: newSlotEnd };
     setScheduleSlots([...scheduleSlots, newSlot].sort((a, b) => a.startTime.localeCompare(b.startTime)));
+    setIsDirty(true);
   };
 
   const handleRemoveSlot = (index: number) => {
     setScheduleSlots(scheduleSlots.filter((_, idx) => idx !== index));
+    setIsDirty(true);
   };
 
   const handleSaveSchedule = async () => {
@@ -254,6 +259,7 @@ export default function BookingsPage() {
         body: JSON.stringify(filteredSlots),
       });
       setSuccessMsg('Lưu cấu hình lịch rảnh thành công!');
+      setIsDirty(false);
       setTimeout(() => setSuccessMsg(''), 3000);
       loadMentorSchedule();
     } catch (err: any) {
@@ -685,6 +691,12 @@ export default function BookingsPage() {
 
                 {/* Save Button */}
                 <div className="sch-save-wrap">
+                  {isDirty && (
+                    <div className="sch-dirty-warning">
+                      <i className="bi bi-exclamation-triangle-fill" />
+                      Bạn có thay đổi chưa lưu. Hãy nhấn "Lưu cấu hình" để cập nhật vào hệ thống.
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={handleSaveSchedule}

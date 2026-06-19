@@ -1269,6 +1269,21 @@
 }
 .sch-save-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
+.sch-dirty-warning {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #b91c1c;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  margin-right: auto;
+  align-self: center;
+}
+
 /* Alert / No days selected */
 .sch-alert {
   padding: 14px 16px;
