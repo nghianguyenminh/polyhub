@@ -286,4 +286,61 @@ public class PostApiV2Controller {
 
         return map;
     }
+
+    /**
+     * DELETE /api/v2/posts/{postId}
+     * Xóa bài viết hiện tại.
+     */
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Map<String, Object>> deletePost(@PathVariable Long postId, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để xóa bài viết."));
+        }
+        try {
+            postService.deletePost(postId, principal.getName());
+            return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết thành công."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * PATCH /api/v2/posts/{postId}/privacy
+     * Đổi chế độ công khai / chỉ mình tôi.
+     */
+    @PatchMapping("/{postId}/privacy")
+    public ResponseEntity<?> togglePrivacy(@PathVariable Long postId, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để đổi quyền riêng tư."));
+        }
+        try {
+            com.polyhub.entity.Post updated = postService.togglePrivacy(postId, principal.getName());
+            boolean isPrivate = updated.getIsPrivate() != null ? updated.getIsPrivate() : false;
+            String status = isPrivate ? "riêng tư (Chỉ mình tôi)" : "công khai";
+            return ResponseEntity.ok(Map.of("message", "Đã đổi chế độ " + status, "isPrivate", isPrivate));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/v2/posts/{postId}/report
+     * Gửi báo cáo vi phạm bài viết tới admin.
+     */
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<?> reportPost(@PathVariable Long postId, @RequestBody Map<String, String> body, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để báo cáo bài viết."));
+        }
+        String reason = body.get("reason");
+        if (reason == null || reason.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lý do báo cáo không được để trống."));
+        }
+        try {
+            postService.reportPost(postId, reason, principal.getName());
+            return ResponseEntity.ok(Map.of("message", "Cảm ơn bạn đã báo cáo. Quản trị viên sẽ xem xét sớm."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
