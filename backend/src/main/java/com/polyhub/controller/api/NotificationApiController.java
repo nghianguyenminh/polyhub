@@ -54,4 +54,22 @@ public class NotificationApiController {
         notificationRepository.saveAll(unreadList);
         return ResponseEntity.ok(Map.of("message", "Đã đánh dấu đọc tất cả thông báo"));
     }
+
+    @PutMapping("/{id}/read")
+    @Transactional
+    public ResponseEntity<?> markSingleAsRead(@PathVariable("id") Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+        Notification n = notificationRepository.findById(id).orElse(null);
+        if (n == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Không tìm thấy thông báo"));
+        }
+        if (!n.getUser().getUsername().equalsIgnoreCase(principal.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Không có quyền"));
+        }
+        n.setIsRead(true);
+        notificationRepository.save(n);
+        return ResponseEntity.ok(Map.of("message", "Đã đánh dấu đọc thông báo"));
+    }
 }

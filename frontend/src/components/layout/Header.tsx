@@ -50,6 +50,19 @@ export default function Header() {
     }
   };
 
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      const noti = notifications.find(n => n.id === id);
+      if (noti && !noti.isRead) {
+        await fetchAPI(`/api/notifications/${id}/read`, { method: 'PUT' });
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      }
+    } catch (err) {
+      console.error('Failed to mark notification as read', err);
+    }
+  };
+
   const formatTime = (timeStr: string) => {
     try {
       const diff = Date.now() - new Date(timeStr).getTime();
@@ -117,6 +130,7 @@ export default function Header() {
                       <Link 
                         key={noti.id}
                         href={noti.link || '#'} 
+                        onClick={() => handleMarkAsRead(noti.id)}
                         className={`noti-item d-flex gap-2 text-decoration-none p-3 border-bottom transition-all ${!noti.isRead ? 'bg-light bg-opacity-75' : ''}`}
                         style={{ cursor: 'pointer' }}
                       >
@@ -147,7 +161,7 @@ export default function Header() {
                         </div>
                         {!noti.isRead && (
                           <div className="d-flex align-items-center justify-content-center ps-1">
-                            <div className="bg-primary rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#F27125' }}></div>
+                            <div className="bg-primary rounded-circle" style={{ width: '8px', height: '8px' }}></div>
                           </div>
                         )}
                       </Link>

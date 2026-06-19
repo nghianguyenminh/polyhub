@@ -64,7 +64,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Các endpoint auth công khai
-                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/verify-otp", "/api/auth/reset-password").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/verify-otp", "/api/auth/reset-password", "/error").permitAll()
                 // Cho phép kết nối WebSocket chat
                 .requestMatchers("/ws-chat/**").permitAll()
                 // API công khai: xem feed, xem bài viết, tài liệu, mentors, categories (không cần đăng nhập)

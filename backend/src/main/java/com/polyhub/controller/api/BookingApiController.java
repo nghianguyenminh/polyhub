@@ -202,6 +202,10 @@ public class BookingApiController {
             createSystemNotification(mentor, "Yêu cầu đặt lịch mới", 
                 student.getFullname() + " đã đặt lịch call video với bạn ngày " + bookingDate + " lúc " + startTime + ".");
 
+            // Gửi thông báo hệ thống cho Student
+            createSystemNotification(student, "Yêu cầu đặt lịch mới", 
+                "Bạn đã gửi yêu cầu đặt lịch call video với Mentor " + mentor.getFullname() + " ngày " + bookingDate + " lúc " + startTime + ".");
+
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 
         } catch (Exception e) {

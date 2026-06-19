@@ -34,6 +34,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [hasManuallySelectedTime, setHasManuallySelectedTime] = useState(false);
 
   // Zoom state (timeline)
   const [zoom, setZoom] = useState<number>(1);
@@ -92,6 +93,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       setSuccess(false);
       setSelectedDay(null);
       setZoom(1);
+      setHasManuallySelectedTime(false);
     }
   }, [isOpen, mentor]);
 
@@ -157,7 +159,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
   };
 
   useEffect(() => {
-    if (selectedDay) {
+    if (selectedDay && !hasManuallySelectedTime) {
       const suggested = getEarliestAvailableTime(selectedDay, duration);
       if (suggested) {
         setStartTime(suggested);
@@ -166,7 +168,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
         setValidationMsg({ text: 'Ngày được chọn đã bận hoàn toàn hoặc không còn giờ rảnh khả dụng trong hôm nay.', isValid: false });
       }
     }
-  }, [selectedDay, duration]);
+  }, [selectedDay, duration, hasManuallySelectedTime]);
 
   useEffect(() => {
     if (!selectedDay || !startTime) {
@@ -405,6 +407,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                           disabled={!day.isAvailable}
                           onClick={() => {
                             setSelectedDay(day);
+                            setHasManuallySelectedTime(false);
                             setError('');
                           }}
                           className={`bk-day-btn ${isSelected ? 'selected' : ''}`}
@@ -532,7 +535,10 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                           </div>
                           <ClockPicker 
                             value={startTime} 
-                            onChange={setStartTime} 
+                            onChange={(val) => {
+                              setStartTime(val);
+                              setHasManuallySelectedTime(true);
+                            }} 
                            />
                           <div className="bk-hint-text">
                             <i className="bi bi-info-circle" />
