@@ -23,9 +23,15 @@ export default function AdminUserDetailPage() {
     setLoading(true);
     try {
       const result = await fetchAPI(`/api/admin/users/${userId}`);
+      if (result.user?.role?.id === 'SUPER_ADMIN' || result.user?.role?.id === 'ADMIN') {
+        alert('Không thể xem chi tiết tài khoản Admin/Super Admin');
+        router.push('/admin/users');
+        return;
+      }
       setData(result);
     } catch (err) {
       console.error('Failed to fetch user detail', err);
+      alert('Không có quyền truy cập hoặc tài khoản không tồn tại.');
       router.push('/admin/users');
     } finally {
       setLoading(false);

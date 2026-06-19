@@ -419,12 +419,29 @@ export default function UserManagement() {
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <button 
-                        className={styles.viewDetailsBtn} 
-                        onClick={() => openDetailModal(user.username)}
-                      >
-                        <Eye size={14} /> Chi tiết
-                      </button>
+                      {user.role?.id === 'SUPER_ADMIN' || user.role?.id === 'ADMIN' ? (
+                        <button 
+                          className={styles.viewDetailsBtn} 
+                          disabled
+                          style={{ 
+                            opacity: 0.7, 
+                            cursor: 'not-allowed', 
+                            backgroundColor: '#f3f4f6', 
+                            borderColor: '#e5e7eb', 
+                            color: '#9ca3af' 
+                          }}
+                          title="Tài khoản này đang được bảo vệ"
+                        >
+                          <Shield size={14} /> Đang được bảo vệ
+                        </button>
+                      ) : (
+                        <button 
+                          className={styles.viewDetailsBtn} 
+                          onClick={() => openDetailModal(user.username)}
+                        >
+                          <Eye size={14} /> Chi tiết
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
