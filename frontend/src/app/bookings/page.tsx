@@ -95,30 +95,36 @@ export default function BookingsPage() {
   }, [activeTab, user]);
 
   const loadStudentBookings = async () => {
-    setLoadingBookings(true);
-    setErrorMsg('');
-    try {
-      const data = await fetchAPI('/api/bookings/student');
-      setBookings(data || []);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
-    } finally {
-      setLoadingBookings(false);
-    }
-  };
+  setLoadingBookings(true);
+  setErrorMsg('');
+  try {
+    const data = await fetchAPI('/api/bookings/student');
+    const sorted = (data || []).sort((a: Booking, b: Booking) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    setBookings(sorted);
+  } catch (err: any) {
+    setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
+  } finally {
+    setLoadingBookings(false);
+  }
+};
 
   const loadMentorBookings = async () => {
-    setLoadingBookings(true);
-    setErrorMsg('');
-    try {
-      const data = await fetchAPI('/api/bookings/mentor');
-      setBookings(data || []);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
-    } finally {
-      setLoadingBookings(false);
-    }
-  };
+  setLoadingBookings(true);
+  setErrorMsg('');
+  try {
+    const data = await fetchAPI('/api/bookings/mentor');
+    const sorted = (data || []).sort((a: Booking, b: Booking) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    setBookings(sorted);
+  } catch (err: any) {
+    setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
+  } finally {
+    setLoadingBookings(false);
+  }
+};
 
   const loadMentorSchedule = async () => {
     setLoadingBookings(true);

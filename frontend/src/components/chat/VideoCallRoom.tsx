@@ -24,6 +24,9 @@ export default function VideoCallRoom({
   const containerRef = useRef<HTMLDivElement>(null);
   const joinedRef = useRef(false);
   const zpRef = useRef<any>(null);
+  const autoClosedRef = useRef(false);
+
+
 
   const [timeLeft, setTimeLeft] = useState<number>(() => {
     if (!startedAt || !duration) return 0;
@@ -61,6 +64,10 @@ export default function VideoCallRoom({
   };
 
   const handleAutoClose = async () => {
+
+      if (autoClosedRef.current) return; // ← guard chống gọi 2 lần
+          autoClosedRef.current = true;
+
     try {
       if (zpRef.current) {
         zpRef.current.destroy();
@@ -160,6 +167,7 @@ export default function VideoCallRoom({
           turnOnCameraWhenJoining: false,
           showPreJoinView: true,
           onLeaveRoom: () => {
+            if (autoClosedRef.current) return; // Nếu đã tự động đóng, bỏ qua callback này
             joinedRef.current = false;
             setTimeout(() => {
               onLeaveRoom();

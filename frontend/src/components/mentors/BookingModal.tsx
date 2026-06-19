@@ -605,7 +605,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                           4. Chọn thời lượng cuộc gọi:
                         </label>
                         <div className="d-flex flex-wrap gap-2">
-                          {[20, 30, 40, 50, 60].map((mins) => {
+                          {[1, 20, 30, 40, 50, 60].map((mins) => {
                             const isDurSelected = duration === mins;
                             return (
                               <button

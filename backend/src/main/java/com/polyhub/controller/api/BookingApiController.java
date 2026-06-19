@@ -147,9 +147,9 @@ public class BookingApiController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Không thể đặt lịch hẹn cho khung giờ đã qua trong ngày"));
             }
 
-            List<Integer> validDurations = Arrays.asList(20, 30, 40, 50, 60);
+            List<Integer> validDurations = Arrays.asList(1, 20, 30, 40, 50, 60);
             if (!validDurations.contains(duration)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Thời lượng cuộc gọi không hợp lệ (chỉ chấp nhận 20, 30, 40, 50, 60 phút)"));
+                return ResponseEntity.badRequest().body(Map.of("error", "Thời lượng cuộc gọi không hợp lệ (chỉ chấp nhận 1, 20, 30, 40, 50, 60 phút)"));
             }
 
             LocalTime endTime = startTime.plusMinutes(duration);
