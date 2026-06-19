@@ -20,6 +20,20 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
   const [minutes, setMinutes] = useState(0);
   const [isPM, setIsPM] = useState(false);
 
+  // Refs for tracking latest state values in global handlers
+  const hoursRef = useRef(hours);
+  const minutesRef = useRef(minutes);
+  const isPMRef = useRef(isPM);
+  const activeModeRef = useRef(activeMode);
+
+  hoursRef.current = hours;
+  minutesRef.current = minutes;
+  isPMRef.current = isPM;
+  activeModeRef.current = activeMode;
+
+  const [isDragging, setIsDragging] = useState(false);
+  const dialRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (value) {
       const [hStr, mStr] = value.split(':');
@@ -52,6 +66,115 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
     const hStr = String(rawHours).padStart(2, '0');
     const mStr = String(newMinutes).padStart(2, '0');
     onChange(`${hStr}:${mStr}`);
+  };
+
+  // Drag and spin logic
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (clientX: number, clientY: number) => {
+      if (!dialRef.current) return;
+      const rect = dialRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const dx = clientX - centerX;
+      const dy = clientY - centerY;
+
+      let angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+      if (angle < 0) angle += 360;
+
+      const currentMode = activeModeRef.current;
+      const currentHours = hoursRef.current;
+      const currentMinutes = minutesRef.current;
+      const currentPM = isPMRef.current;
+
+      if (currentMode === 'hours') {
+        let hour = Math.round(angle / 30) % 12;
+        if (hour === 0) hour = 12;
+        if (hour !== currentHours) {
+          setHours(hour);
+          updateTime(hour, currentMinutes, currentPM);
+        }
+      } else {
+        const minute = Math.round(angle / 6) % 60;
+        if (minute !== currentMinutes) {
+          setMinutes(minute);
+          updateTime(currentHours, minute, currentPM);
+        }
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      if (activeModeRef.current === 'hours') {
+        setTimeout(() => {
+          setActiveMode('minutes');
+        }, 300);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  const handleInitialClickOrTouch = (clientX: number, clientY: number) => {
+    if (!dialRef.current) return;
+    const rect = dialRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+
+    let angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+    if (angle < 0) angle += 360;
+
+    const currentMode = activeModeRef.current;
+    const currentHours = hoursRef.current;
+    const currentMinutes = minutesRef.current;
+    const currentPM = isPMRef.current;
+
+    if (currentMode === 'hours') {
+      let hour = Math.round(angle / 30) % 12;
+      if (hour === 0) hour = 12;
+      setHours(hour);
+      updateTime(hour, currentMinutes, currentPM);
+    } else {
+      const minute = Math.round(angle / 6) % 60;
+      setMinutes(minute);
+      updateTime(currentHours, minute, currentPM);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return; // Only left click
+    setIsDragging(true);
+    handleInitialClickOrTouch(e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    if (e.touches.length > 0) {
+      handleInitialClickOrTouch(e.touches[0].clientX, e.touches[0].clientY);
+    }
   };
 
   const handleNumberClick = (num: number) => {
@@ -150,13 +273,18 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
 
           {/* Clock Dial */}
           <div className={styles.clockDialWrapper}>
-            <div className={styles.clockDial}>
+            <div 
+              className={styles.clockDial}
+              ref={dialRef}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
               {/* Center Dot */}
               <div className={styles.centerDot} />
 
               {/* Hand */}
               <div 
-                className={styles.clockHand}
+                className={`${styles.clockHand} ${isDragging ? styles.dragging : ''}`}
                 style={{ transform: `rotate(${getHandRotation()}deg)` }}
               >
                 <div className={styles.handLine} />
