@@ -63,6 +63,7 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
       await fetchAPI(`/api/v2/posts/${post.id}/report`, {
         method: 'POST',
         body: JSON.stringify({ reason }),
+        noRedirectOn401: true,
       });
       setShowReportModal(false);
       alert('Cảm ơn bạn đã báo cáo. Quản trị viên sẽ xem xét.');

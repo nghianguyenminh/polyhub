@@ -20,7 +20,7 @@ public class PostReport {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "post_id", nullable = true)
     private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,6 +29,10 @@ public class PostReport {
 
     @Column(nullable = false, length = 500)
     private String reason; // Lý do báo cáo
+
+    @Column(length = 50)
+    @Builder.Default
+    private String status = "PENDING"; // Trạng thái báo cáo (PENDING, WARNED, LOCK_REQUESTED)
 
     @CreationTimestamp
     @Column(updatable = false)

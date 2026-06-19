@@ -257,4 +257,71 @@ public class EmailService {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendPostWarningEmail(String toEmail, String fullname, String postContent, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - CẢNH BÁO: Bài viết của bạn bị báo cáo vi phạm");
+
+            String snippet = postContent.length() > 100 ? postContent.substring(0, 100) + "..." : postContent;
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #d97706; text-align: center;\">Cảnh Báo Nội Dung Vi Phạm</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Hệ thống PolyHUB nhận thấy bài viết của bạn có nội dung bị báo cáo vi phạm.</p>"
+                    + "<div style=\"background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0;\">"
+                    +   "<strong>Nội dung bài viết:</strong><p style=\"color: #4b5563; font-style: italic;\">\"" + snippet + "\"</p>"
+                    +   "<strong>Lý do báo cáo:</strong> <span style=\"color: #b45309;\">" + reason + "</span>"
+                    + "</div>"
+                    + "<p style=\"color: #dc2626; font-weight: bold;\">Yêu cầu quan trọng:</p>"
+                    + "<p>Vui lòng tự <strong>chỉnh sửa</strong> hoặc <strong>xóa</strong> bài viết này trong vòng <strong>2 ngày (48 giờ)</strong> kể từ khi nhận được email này.</p>"
+                    + "<p style=\"color: #dc2626; font-weight: bold;\">Nếu sau 2 ngày bạn không thực hiện chỉnh sửa hoặc xóa, tài khoản của bạn sẽ bị KHÓA tạm thời/vĩnh viễn theo điều khoản cộng đồng.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            System.err.println("Lỗi gửi Email cảnh báo: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendLockRequestEmail(String toEmail, String adminName, String reportedUserFullname, String reportedUsername, String postContent, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu khóa tài khoản người dùng vi phạm");
+
+            String snippet = postContent.length() > 100 ? postContent.substring(0, 100) + "..." : postContent;
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #dc2626; text-align: center;\">Yêu Cầu Khóa Tài Khoản</h2>"
+                    + "<p>Chào Admin quản lý người dùng <strong>" + adminName + "</strong>,</p>"
+                    + "<p>Ban quản lý nội dung vừa gửi một yêu cầu xem xét khóa tài khoản do vi phạm tiêu chuẩn cộng đồng mà không sửa chữa.</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 15px 0;\">"
+                    +   "<strong>Tài khoản bị yêu cầu khóa:</strong> " + reportedUserFullname + " (Username: <code>" + reportedUsername + "</code>)<br/>"
+                    +   "<strong>Lý do báo cáo bài viết:</strong> <span style=\"color: #b91c1c;\">" + reason + "</span><br/>"
+                    +   "<strong>Nội dung bài viết:</strong><p style=\"color: #4b5563; font-style: italic; margin-top: 5px;\">\"" + snippet + "\"</p>"
+                    + "</div>"
+                    + "<p>Vui lòng đăng nhập vào trang quản trị <strong>Quản lý Người Dùng</strong> để tiến hành xem xét khóa tài khoản này nếu cần thiết.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            System.err.println("Lỗi gửi Email yêu cầu khóa: " + e.getMessage());
+        }
+    }
 }

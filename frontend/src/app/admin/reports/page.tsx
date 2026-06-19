@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchAPI } from '@/lib/api';
-
 import { Suspense } from 'react';
 
 function AdminReportsContent() {
@@ -14,6 +13,10 @@ function AdminReportsContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'danger' } | null>(null);
+
+  // Modal states
+  const [selectedReport, setSelectedReport] = useState<any | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -52,6 +55,7 @@ function AdminReportsContent() {
     try {
       const result = await fetchAPI(`/api/admin/reports/${id}/approve`, { method: 'POST' });
       setMessage({ text: result.message, type: 'success' });
+      if (showDetailModal) setShowDetailModal(false);
       loadReports(currentPage);
     } catch (err: any) {
       setMessage({ text: err.message || 'Lỗi xử lý báo cáo', type: 'danger' });
@@ -63,9 +67,34 @@ function AdminReportsContent() {
     try {
       const result = await fetchAPI(`/api/admin/reports/${id}/reject`, { method: 'POST' });
       setMessage({ text: result.message, type: 'success' });
+      if (showDetailModal) setShowDetailModal(false);
       loadReports(currentPage);
     } catch (err: any) {
       setMessage({ text: err.message || 'Lỗi từ chối báo cáo', type: 'danger' });
+    }
+  };
+
+  const handleWarn = async (id: number) => {
+    if (!confirm('Gửi cảnh báo yêu cầu chỉnh sửa/xóa bài viết đến người dùng? Họ có 2 ngày để thực hiện.')) return;
+    try {
+      const result = await fetchAPI(`/api/admin/reports/${id}/warn`, { method: 'POST' });
+      setMessage({ text: result.message, type: 'success' });
+      if (showDetailModal) setShowDetailModal(false);
+      loadReports(currentPage);
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Lỗi gửi cảnh báo', type: 'danger' });
+    }
+  };
+
+  const handleRequestLock = async (id: number) => {
+    if (!confirm('Gửi yêu cầu khóa tài khoản người dùng vi phạm đến Ban quản lý Người dùng?')) return;
+    try {
+      const result = await fetchAPI(`/api/admin/reports/${id}/request-lock`, { method: 'POST' });
+      setMessage({ text: result.message, type: 'success' });
+      if (showDetailModal) setShowDetailModal(false);
+      loadReports(currentPage);
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Lỗi gửi yêu cầu khóa', type: 'danger' });
     }
   };
 
@@ -133,8 +162,17 @@ function AdminReportsContent() {
                 reports.map(report => (
                   <tr key={report.id}>
                     <td className="ps-4 py-3">
-                      <div className="fw-semibold text-danger mb-1">
+                      <div className="fw-semibold text-danger mb-1 d-flex align-items-center gap-2 flex-wrap">
                         <i className="bi bi-exclamation-triangle-fill me-1"></i> {report.reason}
+                        {report.status === 'WARNED' && (
+                          <span className="badge bg-warning text-dark" style={{ fontSize: '10px', fontWeight: 600 }}>Đã cảnh báo</span>
+                        )}
+                        {report.status === 'LOCK_REQUESTED' && (
+                          <span className="badge bg-danger text-white" style={{ fontSize: '10px', fontWeight: 600 }}>Y/C khóa acc</span>
+                        )}
+                        {(report.status === 'PENDING' || !report.status) && (
+                          <span className="badge bg-secondary text-white" style={{ fontSize: '10px', fontWeight: 600 }}>Chờ xử lý</span>
+                        )}
                       </div>
                       <div className="text-muted text-truncate" style={{ maxWidth: '300px', fontSize: '12px' }}>
                         Bài viết: {report.post?.content || 'Đã bị xóa'}
@@ -146,6 +184,7 @@ function AdminReportsContent() {
                           <img 
                             src={report.post.user.avatar && report.post.user.avatar !== 'default.png' ? report.post.user.avatar : `https://ui-avatars.com/api/?name=${report.post.user.fullname}`} 
                             className="rounded-circle" width="24" height="24" alt="avatar" 
+                            style={{ objectFit: 'cover' }}
                           />
                           <span className="fw-medium text-dark">{report.post.user.fullname}</span>
                         </div>
@@ -165,11 +204,11 @@ function AdminReportsContent() {
                     </td>
                     <td className="text-end pe-4">
                       <button 
-                        onClick={() => handleApprove(report.id)} 
-                        className="btn btn-sm btn-outline-danger me-2" 
-                        title="Xóa bài viết (Đồng ý báo cáo)"
+                        onClick={() => { setSelectedReport(report); setShowDetailModal(true); }} 
+                        className="btn btn-sm btn-outline-primary me-2" 
+                        title="Xem chi tiết báo cáo và bài viết"
                       >
-                        <i className="bi bi-trash"></i> Xóa bài
+                        <i className="bi bi-eye"></i> Chi tiết
                       </button>
                       <button 
                         onClick={() => handleReject(report.id)} 
@@ -215,6 +254,159 @@ function AdminReportsContent() {
           </div>
         )}
       </div>
+
+      {/* --- Detail Modal --- */}
+      {showDetailModal && selectedReport && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ zIndex: 1050, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowDetailModal(false); }}
+        >
+          <div
+            className="bg-white rounded-4 shadow-lg border-0"
+            style={{ width: '100%', maxWidth: '680px', margin: '0 16px', overflow: 'hidden', animation: 'polyFadeIn 0.2s ease-out' }}
+          >
+            {/* Modal Header */}
+            <div className="d-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-light">
+              <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '17px' }}>
+                Chi tiết báo cáo vi phạm #{selectedReport.id}
+              </h5>
+              <button
+                className="btn border-0 rounded-circle p-0 d-flex align-items-center justify-content-center bg-white shadow-sm"
+                style={{ width: '32px', height: '32px' }}
+                onClick={() => setShowDetailModal(false)}
+              >
+                <i className="bi bi-x fs-5"></i>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-auto" style={{ maxHeight: '65vh' }}>
+              
+              {/* Section 1: Report Reason */}
+              <div className="mb-4">
+                <h6 className="fw-bold text-uppercase text-muted mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Thông tin báo cáo</h6>
+                <div className="p-3 bg-light rounded-3 border-start border-4 border-danger">
+                  <div className="fw-bold text-danger mb-1">
+                    <i className="bi bi-exclamation-triangle-fill me-1"></i> Lý do: {selectedReport.reason}
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '13px' }}>
+                    Người báo cáo: <span className="fw-semibold text-dark">{selectedReport.reporter?.fullname || 'Ẩn danh'}</span> (@{selectedReport.reporter?.username || 'anonymous'})
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '13px' }}>
+                    Ngày gửi: {new Date(selectedReport.createdAt).toLocaleString('vi-VN')}
+                  </div>
+                  <div className="mt-2">
+                    Trạng thái: {' '}
+                    {selectedReport.status === 'WARNED' ? (
+                      <span className="badge bg-warning text-dark">Đã gửi email cảnh báo (Hạn 2 ngày)</span>
+                    ) : selectedReport.status === 'LOCK_REQUESTED' ? (
+                      <span className="badge bg-danger text-white">Đã gửi yêu cầu khóa tài khoản</span>
+                    ) : (
+                      <span className="badge bg-secondary text-white">Chờ xử lý</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Reported Post Content */}
+              <div className="mb-4">
+                <h6 className="fw-bold text-uppercase text-muted mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Nội dung bài viết bị báo cáo</h6>
+                <div className="p-3 border rounded-3 bg-white">
+                  {selectedReport.post ? (
+                    <>
+                      <div className="text-dark mb-3" style={{ fontSize: '14px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                        {selectedReport.post.content}
+                      </div>
+                      {selectedReport.post.imageUrl && (
+                        <div className="mb-3 rounded-2 overflow-hidden border text-center bg-light" style={{ maxHeight: '250px' }}>
+                          <img src={selectedReport.post.imageUrl} alt="post attachment" style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain' }} />
+                        </div>
+                      )}
+                      <div className="text-muted" style={{ fontSize: '11px' }}>
+                        Đăng lúc: {new Date(selectedReport.post.createdAt).toLocaleString('vi-VN')}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-muted fst-italic">Bài viết này đã bị xóa hoặc không tồn tại.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 3: Reported Person Info */}
+              <div className="mb-2">
+                <h6 className="fw-bold text-uppercase text-muted mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Thông tin người bị báo cáo (Tác giả)</h6>
+                {selectedReport.post?.user ? (
+                  <div className="p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+                    <img 
+                      src={selectedReport.post.user.avatar && selectedReport.post.user.avatar !== 'default.png' ? selectedReport.post.user.avatar : `https://ui-avatars.com/api/?name=${selectedReport.post.user.fullname}`} 
+                      className="rounded-circle border" width="48" height="48" alt="avatar" 
+                      style={{ objectFit: 'cover' }}
+                    />
+                    <div>
+                      <div className="fw-bold text-dark">{selectedReport.post.user.fullname}</div>
+                      <div className="text-muted" style={{ fontSize: '13px' }}>Username: @{selectedReport.post.user.username}</div>
+                      <div className="text-muted" style={{ fontSize: '13px' }}>Email: {selectedReport.post.user.email || 'Không có email'}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-muted fst-italic">Không rõ thông tin tác giả.</div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-4 py-3 border-top bg-light d-flex justify-content-between flex-wrap gap-2">
+              <div>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary btn-sm" 
+                  onClick={() => setShowDetailModal(false)}
+                >
+                  Đóng
+                </button>
+              </div>
+              <div className="d-flex gap-2">
+                {selectedReport.post && (
+                  <>
+                    <button 
+                      onClick={() => handleWarn(selectedReport.id)} 
+                      className="btn btn-sm btn-warning text-dark fw-semibold"
+                      title="Gửi email cảnh báo vi phạm yêu cầu chỉnh sửa/xóa bài trong 2 ngày"
+                    >
+                      <i className="bi bi-exclamation-octagon me-1"></i> Cảnh báo (2 ngày)
+                    </button>
+                    <button 
+                      onClick={() => handleRequestLock(selectedReport.id)} 
+                      className="btn btn-sm btn-danger fw-semibold"
+                      title="Gửi email yêu cầu User Admin thực hiện khóa tài khoản"
+                    >
+                      <i className="bi bi-shield-slash me-1"></i> Yêu cầu khóa
+                    </button>
+                  </>
+                )}
+                <button 
+                  onClick={() => handleReject(selectedReport.id)} 
+                  className="btn btn-sm btn-outline-secondary" 
+                  title="Từ chối báo cáo này (Báo cáo sai)"
+                >
+                  Từ chối
+                </button>
+                {selectedReport.post && (
+                  <button 
+                    onClick={() => handleApprove(selectedReport.id)} 
+                    className="btn btn-sm btn-danger" 
+                    title="Xóa bài viết vi phạm ngay lập tức"
+                  >
+                    Xóa bài
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
