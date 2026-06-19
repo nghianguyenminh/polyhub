@@ -86,8 +86,8 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
     // 12 is at top (index 0), 1 is at 30 deg (index 1), etc.
     const angle = (index * 30 * Math.PI) / 180;
     const radius = 70; // px
-    const x = 90 + radius * Math.sin(angle); // 90px is center offset
-    const y = 90 - radius * Math.cos(angle);
+    const x = 100 + radius * Math.sin(angle); // 100px is center offset (50% of 200px dial)
+    const y = 100 - radius * Math.cos(angle);
     return { left: `${x}px`, top: `${y}px` };
   };
 

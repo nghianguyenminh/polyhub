@@ -195,7 +195,7 @@
 .handPointer {
   position: absolute;
   left: -12px;
-  top: -76px; /* slightly past hand end */
+  top: -82px; /* centered at radius 70px (70px + 12px) */
   width: 24px;
   height: 24px;
   border-radius: 50%;
