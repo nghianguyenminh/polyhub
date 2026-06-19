@@ -53,9 +53,15 @@ public class AdminUserApiController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserDetail(@PathVariable("id") String username) {
+        if (username.equalsIgnoreCase("superadmin")) {
+            return ResponseEntity.status(403).body("Không thể xem chi tiết tài khoản Super Admin");
+        }
         User user = userRepository.findById(username).orElse(null);
         if (user == null) {
             return ResponseEntity.status(404).body("User not found");
+        }
+        if (user.getRole() != null && user.getRole().getId().equalsIgnoreCase("SUPER_ADMIN")) {
+            return ResponseEntity.status(403).body("Không thể xem chi tiết tài khoản Super Admin");
         }
         
         long userAdminCount = userRepository.countByRole_Id("USER_ADMIN");
@@ -75,8 +81,14 @@ public class AdminUserApiController {
     @PostMapping("/lock/{id}")
     public ResponseEntity<?> lockUser(@PathVariable("id") String username, 
                                       @RequestBody Map<String, String> body) {
+        if (username.equalsIgnoreCase("superadmin")) {
+            return ResponseEntity.status(403).body("Không thể khóa tài khoản Super Admin");
+        }
         String reason = body.get("reason");
         User user = userRepository.findById(username).orElse(null);
+        if (user != null && user.getRole() != null && user.getRole().getId().equalsIgnoreCase("SUPER_ADMIN")) {
+            return ResponseEntity.status(403).body("Không thể khóa tài khoản Super Admin");
+        }
         if (user != null && user.getActive()) {
             user.setActive(false);
             userRepository.save(user);
@@ -89,7 +101,13 @@ public class AdminUserApiController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'USER_ADMIN')")
     @PostMapping("/unlock/{id}")
     public ResponseEntity<?> unlockUser(@PathVariable("id") String username) {
+        if (username.equalsIgnoreCase("superadmin")) {
+            return ResponseEntity.status(403).body("Không thể mở khóa tài khoản Super Admin");
+        }
         User user = userRepository.findById(username).orElse(null);
+        if (user != null && user.getRole() != null && user.getRole().getId().equalsIgnoreCase("SUPER_ADMIN")) {
+            return ResponseEntity.status(403).body("Không thể mở khóa tài khoản Super Admin");
+        }
         if (user != null && !user.getActive()) {
             user.setActive(true);
             userRepository.save(user);
@@ -103,9 +121,15 @@ public class AdminUserApiController {
     @PostMapping("/roles/{id}")
     public ResponseEntity<?> changeRole(@PathVariable("id") String username,
                                         @RequestBody Map<String, String> body) {
+        if (username.equalsIgnoreCase("superadmin")) {
+            return ResponseEntity.status(403).body("Không thể thay đổi quyền của tài khoản Super Admin");
+        }
         String roleId = body.get("roleId");
         User user = userRepository.findById(username).orElse(null);
         Role role = roleRepository.findById(roleId).orElse(null);
+        if (user != null && user.getRole() != null && user.getRole().getId().equalsIgnoreCase("SUPER_ADMIN")) {
+            return ResponseEntity.status(403).body("Không thể thay đổi quyền của tài khoản Super Admin");
+        }
         
         if (user != null && role != null) {
             if (roleId.equals("USER_ADMIN") && (user.getRole() == null || !user.getRole().getId().equals("USER_ADMIN"))) {

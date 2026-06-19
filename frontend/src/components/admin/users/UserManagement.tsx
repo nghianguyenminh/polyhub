@@ -419,12 +419,23 @@ export default function UserManagement() {
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <button 
-                        className={styles.viewDetailsBtn} 
-                        onClick={() => openDetailModal(user.username)}
-                      >
-                        <Eye size={14} /> Chi tiết
-                      </button>
+                      {user.username === 'superadmin' || user.role?.id === 'SUPER_ADMIN' ? (
+                        <button 
+                          className={styles.viewDetailsBtn} 
+                          disabled
+                          style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                          title="Không thể xem chi tiết tài khoản Super Admin"
+                        >
+                          <Eye size={14} /> Chi tiết
+                        </button>
+                      ) : (
+                        <button 
+                          className={styles.viewDetailsBtn} 
+                          onClick={() => openDetailModal(user.username)}
+                        >
+                          <Eye size={14} /> Chi tiết
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

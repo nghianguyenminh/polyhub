@@ -20,9 +20,19 @@ export default function AdminUserDetailPage() {
   }, [userId]);
 
   const loadUserDetail = async () => {
+    if (userId.toLowerCase() === 'superadmin') {
+      alert('Không thể xem chi tiết tài khoản Super Admin');
+      router.push('/admin/users');
+      return;
+    }
     setLoading(true);
     try {
       const result = await fetchAPI(`/api/admin/users/${userId}`);
+      if (result.user?.role?.id === 'SUPER_ADMIN') {
+        alert('Không thể xem chi tiết tài khoản Super Admin');
+        router.push('/admin/users');
+        return;
+      }
       setData(result);
     } catch (err) {
       console.error('Failed to fetch user detail', err);
