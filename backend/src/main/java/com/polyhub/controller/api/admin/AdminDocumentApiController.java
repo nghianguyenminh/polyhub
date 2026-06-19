@@ -34,8 +34,9 @@ public class AdminDocumentApiController {
             @RequestParam(value = "include_stats", defaultValue = "false") boolean includeStats,
             @RequestParam(value = "include_categories", defaultValue = "false") boolean includeCategories) {
 
-        int size = 10; 
-        Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page, size);
+        int size = 10;
+        Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page,
+                size);
 
         Map<String, Object> response = new HashMap<>();
         response.put("documents", documentPage.getContent());
@@ -74,8 +75,8 @@ public class AdminDocumentApiController {
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/hidden")
-    public ResponseEntity<?> hideDocument(@PathVariable Long id, 
-                                               @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> hideDocument(@PathVariable Long id,
+            @RequestBody Map<String, String> body) {
         try {
             String reason = body.get("reason");
             documentAdminService.rejectOrTakedownDocument(id, reason);
