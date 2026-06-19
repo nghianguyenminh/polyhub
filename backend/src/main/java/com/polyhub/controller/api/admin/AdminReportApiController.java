@@ -34,8 +34,42 @@ public class AdminReportApiController {
         long resolvedCount = 0;
         long falseCount = 0;
 
+        // Build response manually to avoid lazy-loading serialization errors
+        java.util.List<Map<String, Object>> reportList = new java.util.ArrayList<>();
+        for (PostReport r : reportPage.getContent()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", r.getId());
+            item.put("reason", r.getReason());
+            item.put("createdAt", r.getCreatedAt());
+
+            // Post info
+            if (r.getPost() != null) {
+                Map<String, Object> postMap = new HashMap<>();
+                postMap.put("id", r.getPost().getId());
+                postMap.put("content", r.getPost().getContent());
+                if (r.getPost().getUser() != null) {
+                    Map<String, Object> postUser = new HashMap<>();
+                    postUser.put("username", r.getPost().getUser().getUsername());
+                    postUser.put("fullname", r.getPost().getUser().getFullname());
+                    postUser.put("avatar", r.getPost().getUser().getAvatar());
+                    postMap.put("user", postUser);
+                }
+                item.put("post", postMap);
+            }
+
+            // Reporter info
+            if (r.getReporter() != null) {
+                Map<String, Object> reporterMap = new HashMap<>();
+                reporterMap.put("username", r.getReporter().getUsername());
+                reporterMap.put("fullname", r.getReporter().getFullname());
+                item.put("reporter", reporterMap);
+            }
+
+            reportList.add(item);
+        }
+
         Map<String, Object> response = new HashMap<>();
-        response.put("reports", reportPage.getContent());
+        response.put("reports", reportList);
         response.put("currentPage", page);
         response.put("totalPages", reportPage.getTotalPages());
         response.put("pendingCount", pendingCount);
