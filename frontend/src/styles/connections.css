@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* --- THẺ MENTOR (MENTOR PROFILE CARD) --- */
+.mentor-profile-card {
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  /* Bo góc to hơn trang nhóm để tạo độ "sang" */
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mentor-profile-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  border-color: rgba(242, 113, 37, 0.2);
+  /* Sáng viền màu cam nhẹ khi hover */
+}
+
+/* Ảnh bìa */
+.mentor-card-cover {
+  height: 100px;
+  background-size: cover;
+  background-position: center;
+  background-color: #e9ecef;
+  position: relative;
+}
+
+/* Overlay làm mờ nhẹ ảnh bìa để đỡ gắt */
+.mentor-card-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.2));
+}
+
+/* Nội dung card */
+.mentor-card-body {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* Avatar to rõ ràng */
+.mentor-card-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 4px solid var(--bg-card);
+  margin-top: -36px;
+  background-color: white;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Đánh giá sao */
+.mentor-rating {
+  background: #ffffff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  position: relative;
+  z-index: 2;
+}
+
+/* Giới thiệu ngắn gọn */
+.mentor-bio {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  /* Giới hạn tối đa 3 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: italic;
+}
+
+/* Tags kỹ năng */
+.mentor-tag {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.mentor-profile-card:hover .mentor-tag {
+  background-color: var(--poly-primary-soft);
+  color: var(--poly-primary);
+}
+
+/* Nút Action */
+.btn-action {
+  padding: 8px 0;
+  font-size: 14px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.btn-action:active {
+  transform: scale(0.95);
+}
+
+/* Style cho thanh filter kế thừa từ groups.css nhưng khai báo lại để độc lập file */
+
+.filter-coursera:hover,
+.filter-coursera:focus {
+  background-color: #f8f9fa;
+  border-color: #d2d5d6;
+  color: #000;
+}
+
+.filter-coursera::after {
+  display: none;
+}
+
+
+
+/* ------------------ */

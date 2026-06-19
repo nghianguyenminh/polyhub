@@ -17,11 +17,11 @@ export default function LeftSidebar({ activeMenu = 'home' }: LeftSidebarProps) {
         <span className="nav-text">Trang chủ</span>
       </Link>
       
-      <Link href="/connections" className={`poly-nav-item ${activeMenu === 'connections' ? 'active' : ''}`}>
+      {/* <Link href="/connections" className={`poly-nav-item ${activeMenu === 'connections' ? 'active' : ''}`}>
         <div className="nav-icon-box"><i className="bi bi-people-fill icon-grad icon-grad-main"></i></div>
         <span className="nav-text">Góc Kết nối</span>
       </Link>
-      
+       */}
       <Link href="/mentors" className={`poly-nav-item ${activeMenu === 'mentors' ? 'active' : ''}`}>
         <div className="nav-icon-box"><i className="bi bi-award-fill icon-grad icon-grad-main"></i></div>
         <span className="nav-text">Poly Mentors</span>

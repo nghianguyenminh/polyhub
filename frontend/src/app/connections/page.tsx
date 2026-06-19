@@ -7,7 +7,7 @@ import { fetchAPI } from '@/lib/api';
 import { ConnectionUser, Mentor } from '@/lib/types';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import '@/styles/mentors.css'; // connections.css shares styles with mentors
+import '@/styles/connections.css'; // connections.css shares styles with mentors
 import RightSidebar from '@/components/layout/RightSidebar';
 
 export default function ConnectionsPage() {

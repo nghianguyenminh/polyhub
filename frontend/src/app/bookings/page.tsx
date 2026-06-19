@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import dynamic from 'next/dynamic';
+import '@/styles/bookings.css';
 
 const VideoCallRoom = dynamic(() => import('@/components/chat/VideoCallRoom'), {
   ssr: false,
@@ -52,11 +53,11 @@ export default function BookingsPage() {
   const [selectedBookingForCall, setSelectedBookingForCall] = useState<Booking | null>(null);
 
   // Mentor availability config states
-  const [selectedDays, setSelectedDays] = useState<number[]>([]); // 2 to 8
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [scheduleSlots, setScheduleSlots] = useState<ScheduleSlot[]>([]);
   const [newSlotStart, setNewSlotStart] = useState('09:00');
   const [newSlotEnd, setNewSlotEnd] = useState('11:00');
-  const [activeScheduleDay, setActiveScheduleDay] = useState<number>(2); // T2
+  const [activeScheduleDay, setActiveScheduleDay] = useState<number>(2);
   const [savingSchedule, setSavingSchedule] = useState(false);
 
   // Rejection modal states
@@ -65,66 +66,55 @@ export default function BookingsPage() {
   const [submittingRejection, setSubmittingRejection] = useState(false);
 
   useEffect(() => {
-    // Tick every second to update countdowns
-    const timer = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'MENTOR') {
-        setActiveTab('mentor-bookings');
-      } else {
-        setActiveTab('student');
-      }
+      setActiveTab(user.role === 'MENTOR' ? 'mentor-bookings' : 'student');
     }
   }, [user]);
 
   useEffect(() => {
     if (user) {
-      if (activeTab === 'student') {
-        loadStudentBookings();
-      } else if (activeTab === 'mentor-bookings') {
-        loadMentorBookings();
-      } else if (activeTab === 'mentor-schedule') {
-        loadMentorSchedule();
-      }
+      if (activeTab === 'student') loadStudentBookings();
+      else if (activeTab === 'mentor-bookings') loadMentorBookings();
+      else if (activeTab === 'mentor-schedule') loadMentorSchedule();
     }
   }, [activeTab, user]);
 
   const loadStudentBookings = async () => {
-  setLoadingBookings(true);
-  setErrorMsg('');
-  try {
-    const data = await fetchAPI('/api/bookings/student');
-    const sorted = (data || []).sort((a: Booking, b: Booking) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    setBookings(sorted);
-  } catch (err: any) {
-    setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
-  } finally {
-    setLoadingBookings(false);
-  }
-};
+    setLoadingBookings(true);
+    setErrorMsg('');
+    try {
+      const data = await fetchAPI('/api/bookings/student');
+      const sorted = (data || []).sort((a: Booking, b: Booking) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setBookings(sorted);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
 
   const loadMentorBookings = async () => {
-  setLoadingBookings(true);
-  setErrorMsg('');
-  try {
-    const data = await fetchAPI('/api/bookings/mentor');
-    const sorted = (data || []).sort((a: Booking, b: Booking) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    setBookings(sorted);
-  } catch (err: any) {
-    setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
-  } finally {
-    setLoadingBookings(false);
-  }
-};
+    setLoadingBookings(true);
+    setErrorMsg('');
+    try {
+      const data = await fetchAPI('/api/bookings/mentor');
+      const sorted = (data || []).sort((a: Booking, b: Booking) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setBookings(sorted);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Lỗi tải danh sách đặt lịch');
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
 
   const loadMentorSchedule = async () => {
     setLoadingBookings(true);
@@ -133,14 +123,9 @@ export default function BookingsPage() {
       const data = await fetchAPI('/api/mentor/schedule');
       const slots: ScheduleSlot[] = data || [];
       setScheduleSlots(slots);
-      
       const days = Array.from(new Set(slots.map(s => s.dayOfWeek)));
       setSelectedDays(days);
-      if (days.length > 0) {
-        setActiveScheduleDay(days[0]);
-      } else {
-        setActiveScheduleDay(2);
-      }
+      setActiveScheduleDay(days.length > 0 ? days[0] : 2);
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi tải cấu hình lịch rảnh');
     } finally {
@@ -158,12 +143,7 @@ export default function BookingsPage() {
       });
       setSuccessMsg('Đã hủy lịch hẹn thành công.');
       setTimeout(() => setSuccessMsg(''), 3000);
-      
-      if (activeTab === 'student') {
-        loadStudentBookings();
-      } else {
-        loadMentorBookings();
-      }
+      activeTab === 'student' ? loadStudentBookings() : loadMentorBookings();
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi hủy lịch hẹn');
     }
@@ -176,7 +156,7 @@ export default function BookingsPage() {
         method: 'PUT',
         body: JSON.stringify({ status: 'APPROVED' }),
       });
-      setSuccessMsg('Đã phê duyệt lịch hẹn thành công. Hệ thống đã gửi email và thông báo đến sinh viên.');
+      setSuccessMsg('Đã phê duyệt lịch hẹn. Hệ thống đã gửi email và thông báo đến sinh viên.');
       setTimeout(() => setSuccessMsg(''), 3000);
       loadMentorBookings();
     } catch (err: any) {
@@ -213,12 +193,9 @@ export default function BookingsPage() {
     }
   };
 
-  // Join Call Video API Handler
   const handleJoinCall = async (booking: Booking) => {
     try {
-      const updatedBooking = await fetchAPI(`/api/bookings/${booking.id}/join`, {
-        method: 'POST',
-      });
+      const updatedBooking = await fetchAPI(`/api/bookings/${booking.id}/join`, { method: 'POST' });
       setSelectedBookingForCall(updatedBooking);
       setActiveCallRoomId(updatedBooking.roomId || `booking_${updatedBooking.id}`);
     } catch (err: any) {
@@ -226,7 +203,6 @@ export default function BookingsPage() {
     }
   };
 
-  // Mentor schedule settings functions
   const handleToggleDay = (day: number) => {
     if (selectedDays.includes(day)) {
       setSelectedDays(selectedDays.filter(d => d !== day));
@@ -239,36 +215,26 @@ export default function BookingsPage() {
 
   const handleAddSlot = () => {
     if (!newSlotStart || !newSlotEnd) return;
-    
     const [sh, sm] = newSlotStart.split(':').map(Number);
     const [eh, em] = newSlotEnd.split(':').map(Number);
     if (sh * 60 + sm >= eh * 60 + em) {
       alert('Thời gian bắt đầu phải trước thời gian kết thúc.');
       return;
     }
-
     const daySlots = scheduleSlots.filter(s => s.dayOfWeek === activeScheduleDay);
     const newStartMin = sh * 60 + sm;
     const newEndMin = eh * 60 + em;
-
     for (const slot of daySlots) {
       const [slotSh, slotSm] = slot.startTime.split(':').map(Number);
       const [slotEh, slotEm] = slot.endTime.split(':').map(Number);
       const startMin = slotSh * 60 + slotSm;
       const endMin = slotEh * 60 + slotEm;
-
       if (newStartMin < endMin && newEndMin > startMin) {
         alert('Khung giờ rảnh bị đè lên khung giờ rảnh khác của ngày hôm nay.');
         return;
       }
     }
-
-    const newSlot: ScheduleSlot = {
-      dayOfWeek: activeScheduleDay,
-      startTime: newSlotStart,
-      endTime: newSlotEnd
-    };
-
+    const newSlot: ScheduleSlot = { dayOfWeek: activeScheduleDay, startTime: newSlotStart, endTime: newSlotEnd };
     setScheduleSlots([...scheduleSlots, newSlot].sort((a, b) => a.startTime.localeCompare(b.startTime)));
   };
 
@@ -296,77 +262,61 @@ export default function BookingsPage() {
     }
   };
 
-  const getDayLabel = (day: number) => {
-    if (day === 8) return 'Chủ Nhật';
-    return `Thứ ${day}`;
-  };
+  const getDayLabel = (day: number) => day === 8 ? 'Chủ Nhật' : `Thứ ${day}`;
 
-  const getStatusBadgeClass = (status: string) => {
+  const getStatusInfo = (status: string): { cls: string; text: string; icon: string } => {
     switch (status.toUpperCase()) {
-      case 'APPROVED': return 'bg-success bg-opacity-10 text-success border border-success border-opacity-20';
-      case 'PENDING': return 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20';
-      case 'REJECTED': return 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20';
-      case 'CLOSED': return 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20';
-      default: return 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20';
+      case 'APPROVED':  return { cls: 'approved',  text: 'Đã phê duyệt',    icon: 'bi-check-circle-fill' };
+      case 'PENDING':   return { cls: 'pending',   text: 'Chờ phê duyệt',   icon: 'bi-hourglass-split' };
+      case 'REJECTED':  return { cls: 'rejected',  text: 'Đã từ chối',      icon: 'bi-x-circle-fill' };
+      case 'CANCELLED': return { cls: 'cancelled', text: 'Đã hủy',          icon: 'bi-slash-circle' };
+      case 'CLOSED':    return { cls: 'closed',    text: 'Đã kết thúc',     icon: 'bi-flag-fill' };
+      default:          return { cls: 'cancelled', text: status,             icon: 'bi-circle' };
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'APPROVED': return 'Đã phê duyệt';
-      case 'PENDING': return 'Đang chờ duyệt';
-      case 'REJECTED': return 'Đã từ chối';
-      case 'CANCELLED': return 'Đã hủy';
-      case 'CLOSED': return 'Đã kết thúc';
-      default: return status;
-    }
-  };
-
-  // Helper to compute countdown text and joinable states
   const getCountdownStatus = (booking: Booking) => {
     if (booking.status !== 'APPROVED') return { text: '', isJoinable: false, isClosed: false };
 
     const startDateTime = new Date(`${booking.bookingDate}T${booking.startTime}`);
-    const limitDateTime = new Date(startDateTime.getTime() + 10 * 60 * 1000); // 10 mins point
+    const limitDateTime = new Date(startDateTime.getTime() + 10 * 60 * 1000);
     const diff = startDateTime.getTime() - now.getTime();
 
     if (diff > 0) {
-      // Show ticking countdown in HH:mm:ss if under 24 hours
       const totalSecs = Math.floor(diff / 1000);
       const hrs = Math.floor(totalSecs / 3600);
       const mins = Math.floor((totalSecs % 3600) / 60);
       const secs = totalSecs % 60;
-
       if (hrs >= 24) {
         const days = Math.floor(hrs / 24);
-        return { text: `Bắt đầu sau: ${days} ngày`, isJoinable: false, isClosed: false };
-      } else {
-        const hStr = String(hrs).padStart(2, '0');
-        const mStr = String(mins).padStart(2, '0');
-        const sStr = String(secs).padStart(2, '0');
-        return { text: `Bắt đầu sau: ${hStr}:${mStr}:${sStr}`, isJoinable: false, isClosed: false };
+        return { text: `Bắt đầu sau ${days} ngày`, isJoinable: false, isClosed: false };
       }
+      const hStr = String(hrs).padStart(2, '0');
+      const mStr = String(mins).padStart(2, '0');
+      const sStr = String(secs).padStart(2, '0');
+      return { text: `Bắt đầu sau ${hStr}:${mStr}:${sStr}`, isJoinable: false, isClosed: false };
     } else {
-      // Time has reached
       if (booking.startedAt != null) {
-        // Meeting already started
         const actualEnd = new Date(new Date(booking.startedAt).getTime() + booking.duration * 60 * 1000);
         if (now.getTime() > actualEnd.getTime()) {
           return { text: 'Cuộc gọi đã hết thời lượng', isJoinable: false, isClosed: true };
         }
         return { text: 'Cuộc gọi đang diễn ra', isJoinable: true, isClosed: false };
       } else {
-        // Meeting hasn't started yet. Check 10-minutes point
         if (now.getTime() > limitDateTime.getTime()) {
-          return { text: 'Đã đóng do quá hạn 10 phút không tham gia', isJoinable: false, isClosed: true };
+          return { text: 'Đã đóng do quá 10 phút không tham gia', isJoinable: false, isClosed: true };
         }
-        return { text: 'Bắt đầu ngay - Vào phòng call!', isJoinable: true, isClosed: false };
+        return { text: 'Bắt đầu ngay · Vào phòng call!', isJoinable: true, isClosed: false };
       }
     }
   };
 
   if (authLoading) {
-    return <div className="text-center mt-5"><div className="spinner-border text-primary" /></div>;
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div className="bk-spinner" />
+      </div>
+    );
   }
 
   return (
@@ -376,334 +326,385 @@ export default function BookingsPage() {
         <main className="w-100 d-flex justify-content-between">
           <LeftSidebar activeMenu="bookings" />
 
-          {/* Bookings Content */}
           <div className="poly-main-feed flex-grow-1 mx-4" style={{ maxWidth: '850px', minWidth: '0' }}>
-            <div className="poly-card p-3 mb-4 bg-white">
-              <h4 className="fw-bold text-dark mb-1">Quản lý Lịch hẹn Call Video</h4>
-              <p className="text-muted mb-0" style={{ fontSize: '13px' }}>
-                Đọc thông báo hệ thống, đếm ngược giây, và tham gia cuộc gọi video trực tuyến trực tiếp.
+
+            {/* Page Header */}
+            <div className="bkp-header">
+              <h4 className="bkp-header-title">
+                <span className="bkp-header-icon">
+                  <i className="bi bi-camera-video-fill" />
+                </span>
+                Quản lý Lịch hẹn Call Video
+              </h4>
+              <p className="bkp-header-sub">
+                Đọc thông báo hệ thống, theo dõi đếm ngược và tham gia cuộc gọi video trực tiếp.
               </p>
             </div>
 
             {/* Notifications */}
-            {successMsg && <div className="alert alert-success alert-dismissible fade show py-2 px-3 mb-3"><i className="bi bi-check-circle-fill me-2"></i>{successMsg}</div>}
-            {errorMsg && <div className="alert alert-danger alert-dismissible fade show py-2 px-3 mb-3"><i className="bi bi-exclamation-triangle-fill me-2"></i>{errorMsg}</div>}
+            {successMsg && (
+              <div className="bkp-alert success">
+                <i className="bi bi-check-circle-fill" /> {successMsg}
+              </div>
+            )}
+            {errorMsg && (
+              <div className="bkp-alert danger">
+                <i className="bi bi-exclamation-triangle-fill" /> {errorMsg}
+              </div>
+            )}
 
-            {/* Navigation Tabs */}
-            <div className="d-flex border-bottom mb-4 bg-white p-2 rounded-3 border">
+            {/* Tab Navigation */}
+            <div className="bkp-tabs">
               <button
-                className={`btn flex-grow-1 rounded-pill fw-bold py-2 ${activeTab === 'student' ? 'btn-poly-gradient text-white border-0' : 'btn-light text-dark'}`}
-                style={{
-                  background: activeTab === 'student' ? 'linear-gradient(135deg, #F27125, #FF9E67)' : undefined,
-                  fontSize: '14px'
-                }}
+                className={`bkp-tab ${activeTab === 'student' ? 'active' : ''}`}
                 onClick={() => setActiveTab('student')}
               >
-                <i className="bi bi-person me-1"></i> Lịch hẹn đã đặt (Vai trò Sinh viên)
+                <i className="bi bi-person" />
+                Lịch hẹn của tôi
               </button>
 
               {user?.role === 'MENTOR' && (
                 <>
                   <button
-                    className={`btn flex-grow-1 rounded-pill fw-bold py-2 ms-2 ${activeTab === 'mentor-bookings' ? 'btn-poly-gradient text-white border-0' : 'btn-light text-dark'}`}
-                    style={{
-                      background: activeTab === 'mentor-bookings' ? 'linear-gradient(135deg, #F27125, #FF9E67)' : undefined,
-                      fontSize: '14px'
-                    }}
+                    className={`bkp-tab ${activeTab === 'mentor-bookings' ? 'active' : ''}`}
                     onClick={() => setActiveTab('mentor-bookings')}
                   >
-                    <i className="bi bi-person-workspace me-1"></i> Yêu cầu đặt lịch (Vai trò Mentor)
+                    <i className="bi bi-person-workspace" />
+                    Yêu cầu đặt lịch
                   </button>
-
                   <button
-                    className={`btn flex-grow-1 rounded-pill fw-bold py-2 ms-2 ${activeTab === 'mentor-schedule' ? 'btn-poly-gradient text-white border-0' : 'btn-light text-dark'}`}
-                    style={{
-                      background: activeTab === 'mentor-schedule' ? 'linear-gradient(135deg, #F27125, #FF9E67)' : undefined,
-                      fontSize: '14px'
-                    }}
+                    className={`bkp-tab ${activeTab === 'mentor-schedule' ? 'active' : ''}`}
                     onClick={() => setActiveTab('mentor-schedule')}
                   >
-                    <i className="bi bi-gear me-1"></i> Cài đặt lịch rảnh
+                    <i className="bi bi-gear-fill" />
+                    Cài đặt lịch rảnh
                   </button>
                 </>
               )}
             </div>
 
-            {/* TAB CONTENT: BOOKINGS LIST */}
+            {/* ═══════════════════════════════════════
+                BOOKINGS LIST TAB
+            ═══════════════════════════════════════ */}
             {activeTab !== 'mentor-schedule' ? (
-              <div className="bookings-list d-flex flex-column gap-3 mb-5">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
                 {loadingBookings ? (
-                  <div className="text-center py-5">
-                    <div className="spinner-border text-primary" style={{ color: '#F27125' }} role="status"></div>
+                  <div className="bk-loading" style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(0,0,0,0.05)' }}>
+                    <div className="bk-spinner" />
+                    <span className="bk-loading-text">Đang tải...</span>
                   </div>
                 ) : bookings.length === 0 ? (
-                  <div className="poly-card p-5 text-center text-muted bg-white border">
-                    <i className="bi bi-calendar-x fs-1 d-block mb-2 text-secondary"></i>
-                    Không có lịch hẹn nào.
+                  <div className="bkp-empty">
+                    <i className="bi bi-calendar-x bkp-empty-icon" />
+                    <div className="bkp-empty-title">Chưa có lịch hẹn nào</div>
+                    <p className="bkp-empty-sub">
+                      {activeTab === 'student'
+                        ? 'Hãy tìm Mentor phù hợp và đặt lịch ngay!'
+                        : 'Sinh viên chưa gửi yêu cầu đặt lịch nào.'}
+                    </p>
                   </div>
                 ) : (
-                  bookings.map((booking) => {
+                  bookings.map((booking, index) => {
                     const isStudentView = activeTab === 'student';
                     const targetUser = isStudentView ? booking.mentor : booking.student;
                     const dateObj = new Date(booking.bookingDate);
-                    const formattedDate = dateObj.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    
+                    const formattedDate = dateObj.toLocaleDateString('vi-VN', {
+                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    });
                     const cdt = getCountdownStatus(booking);
+                    const statusInfo = getStatusInfo(booking.status);
 
                     return (
-                      <div key={booking.id} className="poly-card p-3 bg-white border shadow-sm transition-all" style={{ borderLeft: '5px solid #F27125 !important' }}>
-                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-                          
-                          {/* Left: User details */}
-                          <div className="d-flex align-items-center gap-3">
-                            <img 
-                              src={targetUser?.avatar && targetUser.avatar !== 'default.png' ? targetUser.avatar : `https://ui-avatars.com/api/?name=${targetUser?.fullname || 'User'}&background=random`} 
-                              className="rounded-circle border" 
-                              style={{ width: '48px', height: '48px', objectFit: 'cover' }}
-                              alt="avatar" 
-                            />
-                            <div>
-                              <div className="d-flex align-items-center gap-2">
-                                <h6 className="fw-bold mb-0 text-dark">{targetUser?.fullname}</h6>
-                                <span className={`badge px-2 py-1 fs-8 rounded-pill ${getStatusBadgeClass(booking.status)}`}>
-                                  {getStatusText(booking.status)}
-                                </span>
+                      <div
+                        key={booking.id}
+                        className={`bkp-card status-${booking.status.toLowerCase()}`}
+                        style={{ animationDelay: `${index * 0.06}s` }}
+                      >
+                        {/* Card Header */}
+                        <div className="bkp-card-header">
+                          <div className="bkp-card-left">
+                            <div className="bkp-avatar-wrap">
+                              <img
+                                src={targetUser?.avatar && targetUser.avatar !== 'default.png'
+                                  ? targetUser.avatar
+                                  : `https://ui-avatars.com/api/?name=${targetUser?.fullname || 'User'}&background=random`}
+                                className="bkp-avatar"
+                                alt="avatar"
+                              />
+                              <div className={`bkp-avatar-status ${
+                                booking.status === 'APPROVED' ? 'online'
+                                : booking.status === 'PENDING' ? 'pending'
+                                : 'offline'
+                              }`} />
+                            </div>
+                            <div className="bkp-card-info">
+                              <p className="bkp-card-name">{targetUser?.fullname}</p>
+                              <p className="bkp-card-role">
+                                <i className="bi bi-briefcase" />
+                                {isStudentView
+                                  ? `Mentor · ${targetUser?.major || 'Đang cập nhật'}`
+                                  : `Sinh viên · ${targetUser?.major || 'Đang cập nhật'}`}
+                              </p>
+                              <div className="bkp-card-time">
+                                <i className="bi bi-clock-fill" />
+                                {booking.startTime} – {booking.endTime}
+                                <span style={{ color: '#9ca3af', fontWeight: 400 }}>({booking.duration} phút)</span>
+                                <span style={{ color: '#9ca3af' }}>·</span>
+                                <span style={{ fontWeight: 500, color: '#6c757d' }}>{formattedDate}</span>
                               </div>
-                              <div className="text-muted fs-7 mt-1">
-                                {isStudentView ? `Mentor • Ngành ${targetUser?.major || 'Đang cập nhật'}` : `Sinh viên • Ngành ${targetUser?.major || 'Đang cập nhật'}`}
-                              </div>
-                              <div className="text-dark fw-medium fs-7 mt-1">
-                                <i className="bi bi-clock me-1 text-primary" style={{ color: '#F27125' }}></i>
-                                {booking.startTime} - {booking.endTime} ({booking.duration} phút) &bull; {formattedDate}
-                              </div>
-                              {/* Show ticking countdown warning */}
-                              {booking.status === 'APPROVED' && (
-                                <div className="mt-2 fs-8 fw-semibold">
-                                  {cdt.isClosed ? (
-                                    <span className="text-danger"><i className="bi bi-x-circle-fill me-1"></i>{cdt.text}</span>
-                                  ) : cdt.isJoinable ? (
-                                    <span className="text-success text-blink"><i className="bi bi-broadcast-pin me-1 text-blink"></i>{cdt.text}</span>
-                                  ) : (
-                                    <span className="text-muted"><i className="bi bi-hourglass-split me-1"></i>{cdt.text}</span>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           </div>
 
-                          {/* Right: Actions */}
-                          <div className="d-flex gap-2 w-100 w-md-auto justify-content-end align-self-stretch align-self-md-center">
-                            {booking.status === 'APPROVED' && (
-                              <button 
-                                onClick={() => handleJoinCall(booking)}
-                                disabled={!cdt.isJoinable || cdt.isClosed}
-                                className="btn rounded-pill fw-bold text-white px-3 d-flex align-items-center gap-1 shadow-sm transition-all"
-                                style={{ 
-                                  background: (cdt.isJoinable && !cdt.isClosed) 
-                                    ? 'linear-gradient(135deg, #F27125 0%, #FF9E67 100%)' 
-                                    : '#e4e6eb', 
-                                  color: (cdt.isJoinable && !cdt.isClosed) ? '#fff' : '#6c757d',
-                                  border: 'none', 
-                                  fontSize: '13.5px',
-                                  opacity: (cdt.isJoinable && !cdt.isClosed) ? 1 : 0.6,
-                                  cursor: (cdt.isJoinable && !cdt.isClosed) ? 'pointer' : 'not-allowed'
-                                }}
-                              >
-                                <i className="bi bi-camera-video-fill"></i> Tham gia Call Video
-                              </button>
-                            )}
-
-                            {isStudentView ? (
-                              (booking.status === 'PENDING' || booking.status === 'APPROVED') && !cdt.isClosed && (
-                                <button 
-                                  onClick={() => handleCancelBooking(booking.id)}
-                                  className="btn btn-outline-danger rounded-pill fw-bold px-3 fs-7"
-                                >
-                                  Hủy lịch hẹn
-                                </button>
-                              )
-                            ) : (
-                              booking.status === 'PENDING' && (
-                                <>
-                                  <button 
-                                    onClick={() => handleApproveBooking(booking.id)}
-                                    className="btn btn-success rounded-pill fw-bold px-3 fs-7 text-white"
-                                  >
-                                    Phê duyệt
-                                  </button>
-                                  <button 
-                                    onClick={() => handleOpenRejectModal(booking)}
-                                    className="btn btn-outline-danger rounded-pill fw-bold px-3 fs-7"
-                                  >
-                                    Từ chối
-                                  </button>
-                                </>
-                              )
-                            )}
+                          {/* Status Badge */}
+                          <div>
+                            <span className={`bkp-status ${statusInfo.cls}`}>
+                              <i className={`bi ${statusInfo.icon}`} />
+                              {statusInfo.text}
+                            </span>
                           </div>
                         </div>
 
+                        {/* Countdown Strip */}
+                        {booking.status === 'APPROVED' && (
+                          <div className={`bkp-countdown ${
+                            cdt.isClosed ? 'closed' : cdt.isJoinable ? 'joinable' : 'waiting'
+                          }`}>
+                            <i className={`bi ${
+                              cdt.isClosed ? 'bi-x-circle-fill' :
+                              cdt.isJoinable ? 'bi-broadcast-pin' :
+                              'bi-hourglass-split'
+                            }`} />
+                            {cdt.text}
+                          </div>
+                        )}
+
+                        {/* Notes & Reasons */}
                         {booking.note && (
-                          <div className="mt-3 p-3 bg-light rounded-3 text-dark fs-7" style={{ borderLeft: '3px solid #dee2e6' }}>
-                            <strong>Ghi chú câu hỏi:</strong> {booking.note}
+                          <div className="bkp-note">
+                            <strong>Ghi chú: </strong>{booking.note}
                           </div>
                         )}
-
                         {booking.status === 'REJECTED' && booking.rejectionReason && (
-                          <div className="mt-3 p-3 bg-danger bg-opacity-10 text-danger rounded-3 fs-7">
-                            <strong>Lý do từ chối:</strong> {booking.rejectionReason}
+                          <div className="bkp-rejection">
+                            <strong>Lý do từ chối: </strong>{booking.rejectionReason}
+                          </div>
+                        )}
+                        {booking.status === 'CLOSED' && booking.rejectionReason && (
+                          <div className="bkp-closed-reason">
+                            <strong>Chi tiết đóng lịch: </strong>{booking.rejectionReason}
                           </div>
                         )}
 
-                        {booking.status === 'CLOSED' && booking.rejectionReason && (
-                          <div className="mt-3 p-3 bg-secondary bg-opacity-10 text-secondary rounded-3 fs-7">
-                            <strong>Chi tiết đóng lịch:</strong> {booking.rejectionReason}
-                          </div>
-                        )}
+                        {/* Actions */}
+                        <div className="bkp-actions">
+                          {booking.status === 'APPROVED' && (
+                            <button
+                              onClick={() => handleJoinCall(booking)}
+                              disabled={!cdt.isJoinable || cdt.isClosed}
+                              className="bkp-btn-join"
+                            >
+                              <i className="bi bi-camera-video-fill" />
+                              Tham gia Call Video
+                            </button>
+                          )}
+
+                          {isStudentView ? (
+                            (booking.status === 'PENDING' || booking.status === 'APPROVED') && !cdt.isClosed && (
+                              <button
+                                onClick={() => handleCancelBooking(booking.id)}
+                                className="bkp-btn-cancel"
+                              >
+                                <i className="bi bi-x-circle me-1" />
+                                Hủy lịch
+                              </button>
+                            )
+                          ) : (
+                            booking.status === 'PENDING' && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveBooking(booking.id)}
+                                  className="bkp-btn-approve"
+                                >
+                                  <i className="bi bi-check-circle-fill" />
+                                  Phê duyệt
+                                </button>
+                                <button
+                                  onClick={() => handleOpenRejectModal(booking)}
+                                  className="bkp-btn-reject"
+                                >
+                                  <i className="bi bi-x-circle me-1" />
+                                  Từ chối
+                                </button>
+                              </>
+                            )
+                          )}
+                        </div>
                       </div>
                     );
                   })
                 )}
               </div>
             ) : (
-              /* TAB CONTENT: MENTOR SCHEDULE CONFIG */
-              <div className="poly-card p-4 bg-white border shadow-sm mb-5">
-                <h5 className="fw-bold mb-3 text-dark">Thiết lập Lịch rảnh hàng tuần</h5>
-                <p className="text-muted fs-7 mb-4">
-                  Chọn các ngày bạn rảnh trong tuần từ Thứ 2 đến Chủ Nhật. Với mỗi ngày được chọn, hãy cấu hình các khung giờ rảnh để sinh viên có thể chọn đặt lịch hẹn. Hệ thống hỗ trợ Mentor cài đặt nhiều khung giờ rảnh khác nhau trong cùng 1 ngày (ví dụ: sáng & chiều).
+              /* ═══════════════════════════════════════
+                 MENTOR SCHEDULE TAB
+              ═══════════════════════════════════════ */
+              <div className="sch-card" style={{ marginBottom: 40 }}>
+                <h5 className="sch-title">
+                  <span className="bkp-header-icon" style={{ width: 32, height: 32, fontSize: 14 }}>
+                    <i className="bi bi-calendar3" />
+                  </span>
+                  Thiết lập Lịch rảnh hàng tuần
+                </h5>
+                <p className="sch-sub">
+                  Chọn các ngày bạn rảnh trong tuần và cấu hình khung giờ rảnh để sinh viên có thể đặt lịch hẹn. Bạn có thể thiết lập nhiều khung giờ khác nhau trong cùng một ngày.
                 </p>
 
-                {/* 1. Chọn ngày rảnh trong tuần */}
-                <div className="mb-4">
-                  <label className="fw-bold text-secondary mb-2" style={{ fontSize: '13.5px' }}>
-                    Bước 1: Chọn ngày rảnh của bạn:
-                  </label>
-                  <div className="d-flex flex-wrap gap-2">
-                    {[2, 3, 4, 5, 6, 7, 8].map((day) => {
-                      const isActive = selectedDays.includes(day);
-                      return (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => handleToggleDay(day)}
-                          className="btn fw-bold px-3 py-2 rounded-3 transition-all"
-                          style={{
-                            fontSize: '13.5px',
-                            backgroundColor: isActive ? '#F27125' : 'rgba(242, 113, 37, 0.08)',
-                            color: isActive ? '#fff' : '#F27125',
-                            border: isActive ? '1px solid #F27125' : '1px solid rgba(242, 113, 37, 0.2)'
-                          }}
-                        >
-                          {day === 8 ? 'Chủ Nhật' : `Thứ ${day}`}
-                        </button>
-                      );
-                    })}
-                  </div>
+                {/* Step 1: Chọn ngày */}
+                <div className="sch-step-label">
+                  <span className="sch-step-badge">1</span>
+                  Chọn ngày bạn rảnh trong tuần
+                </div>
+                <div className="sch-day-grid">
+                  {[2, 3, 4, 5, 6, 7, 8].map((day) => {
+                    const isActive = selectedDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => handleToggleDay(day)}
+                        className={`sch-day-toggle ${isActive ? 'active' : ''}`}
+                      >
+                        {isActive
+                          ? <i className="bi bi-check-circle-fill" />
+                          : <i className="bi bi-circle" />
+                        }
+                        {day === 8 ? 'Chủ Nhật' : `Thứ ${day}`}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* 2. Cài đặt khung giờ cho từng ngày */}
-                {selectedDays.length > 0 ? (
-                  <div className="mb-4 bg-light p-3 rounded-3 border">
-                    <label className="fw-bold text-secondary mb-3" style={{ fontSize: '13.5px' }}>
-                      Bước 2: Cài đặt khoảng giờ rảnh cho từng ngày:
-                    </label>
+                {/* Step 2: Cài đặt khung giờ */}
+                <div className="sch-step-label">
+                  <span className="sch-step-badge">2</span>
+                  Cài đặt khung giờ rảnh cho từng ngày
+                </div>
 
-                    {/* Lọc ngày để hiển thị chi tiết cài đặt */}
-                    <div className="d-flex gap-2 border-bottom pb-2 mb-3 overflow-x-auto">
-                      {selectedDays.map((day) => (
+                {selectedDays.length > 0 ? (
+                  <div>
+                    {/* Day Tabs */}
+                    <div className="sch-day-tabs">
+                      {selectedDays.sort((a,b) => a - b).map((day) => (
                         <button
                           key={day}
                           type="button"
                           onClick={() => setActiveScheduleDay(day)}
-                          className={`btn btn-sm rounded-pill px-3 py-1 fw-bold border-0 ${activeScheduleDay === day ? 'bg-poly text-white' : 'bg-transparent text-muted'}`}
-                          style={{ backgroundColor: activeScheduleDay === day ? '#F27125' : undefined }}
+                          className={`sch-day-tab ${activeScheduleDay === day ? 'active' : ''}`}
                         >
                           {getDayLabel(day)}
                         </button>
                       ))}
                     </div>
 
-                    {/* Danh sách các slot đã thêm của activeScheduleDay */}
-                    <div className="slots-editor">
-                      <h6 className="fw-bold mb-2 text-dark fs-7">Danh sách khung giờ của {getDayLabel(activeScheduleDay)}:</h6>
-                      
-                      <div className="d-flex flex-column gap-2 mb-3">
-                        {scheduleSlots.filter(s => s.dayOfWeek === activeScheduleDay).length === 0 ? (
-                          <div className="text-muted fs-7 py-2"><i className="bi bi-info-circle me-1"></i>Chưa cấu hình khung giờ rảnh cho ngày này. Hãy thêm ở dưới.</div>
-                        ) : (
-                          scheduleSlots.map((slot, idx) => {
-                            if (slot.dayOfWeek !== activeScheduleDay) return null;
-                            return (
-                              <div key={idx} className="d-flex justify-content-between align-items-center bg-white p-2 rounded border">
-                                <span className="text-dark fw-medium fs-7">
-                                  <i className="bi bi-clock me-2 text-success"></i>
-                                  {slot.startTime} - {slot.endTime}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveSlot(scheduleSlots.indexOf(slot))}
-                                  className="btn btn-sm btn-link text-danger p-0"
-                                >
-                                  <i className="bi bi-trash-fill"></i>
-                                </button>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-
-                      {/* Công cụ thêm slot mới */}
-                      <div className="p-3 bg-white rounded border">
-                        <h6 className="fw-bold text-dark fs-7 mb-2">Thêm khoảng giờ rảnh mới:</h6>
-                        <div className="row g-2 align-items-end">
-                          <div className="col-5">
-                            <label className="text-muted fs-8 mb-1">Giờ bắt đầu</label>
-                            <input
-                              type="time"
-                              value={newSlotStart}
-                              onChange={(e) => setNewSlotStart(e.target.value)}
-                              className="form-control form-control-sm shadow-none"
-                            />
-                          </div>
-                          <div className="col-5">
-                            <label className="text-muted fs-8 mb-1">Giờ kết thúc</label>
-                            <input
-                              type="time"
-                              value={newSlotEnd}
-                              onChange={(e) => setNewSlotEnd(e.target.value)}
-                              className="form-control form-control-sm shadow-none"
-                            />
-                          </div>
-                          <div className="col-2 text-end">
-                            <button
-                              type="button"
-                              onClick={handleAddSlot}
-                              className="btn btn-sm btn-poly-gradient text-white w-100 fw-bold border-0"
-                              style={{ background: 'linear-gradient(135deg, #F27125, #FF9E67)', height: '31px' }}
-                            >
-                              Thêm
-                            </button>
-                          </div>
+                    {/* Slots for active day */}
+                    <div className="sch-slot-list">
+                      {scheduleSlots.filter(s => s.dayOfWeek === activeScheduleDay).length === 0 ? (
+                        <div className="sch-empty-slots">
+                          <i className="bi bi-clock" />
+                          Chưa có khung giờ. Hãy thêm ở bên dưới.
                         </div>
+                      ) : (
+                        scheduleSlots.map((slot, idx) => {
+                          if (slot.dayOfWeek !== activeScheduleDay) return null;
+                          return (
+                            <div key={idx} className="sch-slot-item">
+                              <div className="sch-slot-time">
+                                <i className="bi bi-clock-fill" />
+                                {slot.startTime} – {slot.endTime}
+                                <span style={{ fontSize: 12, color: '#6c757d', fontWeight: 400, marginLeft: 4 }}>
+                                  ({Math.round(
+                                    (parseInt(slot.endTime.split(':')[0]) * 60 + parseInt(slot.endTime.split(':')[1])) -
+                                    (parseInt(slot.startTime.split(':')[0]) * 60 + parseInt(slot.startTime.split(':')[1]))
+                                  )} phút)
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSlot(scheduleSlots.indexOf(slot))}
+                                className="sch-slot-del"
+                                title="Xóa khung giờ này"
+                              >
+                                <i className="bi bi-trash3-fill" />
+                              </button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Add slot form */}
+                    <div className="sch-add-form">
+                      <div className="sch-add-title">
+                        <i className="bi bi-plus-circle-fill" style={{ color: '#F27125' }} />
+                        Thêm khung giờ rảnh mới
+                      </div>
+                      <div className="sch-time-row">
+                        <div className="sch-time-field">
+                          <label className="sch-time-label">Bắt đầu</label>
+                          <input
+                            type="time"
+                            value={newSlotStart}
+                            onChange={(e) => setNewSlotStart(e.target.value)}
+                            className="sch-time-input"
+                          />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', color: '#9ca3af', fontWeight: 700, fontSize: 18, paddingBottom: 2 }}>–</div>
+                        <div className="sch-time-field">
+                          <label className="sch-time-label">Kết thúc</label>
+                          <input
+                            type="time"
+                            value={newSlotEnd}
+                            onChange={(e) => setNewSlotEnd(e.target.value)}
+                            className="sch-time-input"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddSlot}
+                          className="sch-add-btn"
+                        >
+                          <i className="bi bi-plus-lg" />
+                          Thêm
+                        </button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="alert alert-warning py-2 px-3 text-warning border-0" style={{ backgroundColor: '#fff3cd' }}>
-                    <i className="bi bi-exclamation-circle me-2"></i>Vui lòng chọn ít nhất 1 ngày rảnh ở Bước 1 để bắt đầu cấu hình khung giờ.
+                  <div className="sch-alert">
+                    <i className="bi bi-info-circle-fill" />
+                    Vui lòng chọn ít nhất 1 ngày rảnh ở Bước 1 để bắt đầu cấu hình khung giờ.
                   </div>
                 )}
 
-                {/* Nút lưu cấu hình */}
-                <div className="border-top pt-3 d-flex justify-content-end">
+                {/* Save Button */}
+                <div className="sch-save-wrap">
                   <button
                     type="button"
                     onClick={handleSaveSchedule}
                     disabled={savingSchedule}
-                    className="btn btn-poly-gradient px-4 py-2 rounded-pill fw-bold text-white border-0 shadow-sm"
-                    style={{ background: 'linear-gradient(135deg, #F27125 0%, #FFC371 100%)', opacity: savingSchedule ? 0.6 : 1 }}
+                    className="sch-save-btn"
                   >
-                    {savingSchedule ? 'Đang lưu...' : 'Lưu cấu hình'}
+                    {savingSchedule ? (
+                      <>
+                        <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'bk-spin 0.7s linear infinite' }} />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-floppy-fill" />
+                        Lưu cấu hình
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -713,45 +714,70 @@ export default function BookingsPage() {
         </main>
       </div>
 
-      {/* Modal từ chối yêu cầu đặt lịch */}
+      {/* ═══════════════════════════════════════
+          REJECT MODAL
+      ═══════════════════════════════════════ */}
       {rejectingBooking && (
-        <div className="modal show d-block animate-fade-in" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-              <div className="modal-header bg-danger text-white border-0 py-3">
-                <h5 className="modal-title fw-bold"><i className="bi bi-x-circle me-2"></i>Từ chối yêu cầu đặt lịch</h5>
-                <button type="button" className="btn-close btn-close-white shadow-none" onClick={() => setRejectingBooking(null)}></button>
+        <div
+          className="bkp-reject-modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setRejectingBooking(null); }}
+        >
+          <div className="bkp-reject-modal">
+            <div className="bkp-reject-header">
+              <div className="bkp-reject-title">
+                <i className="bi bi-x-circle-fill" />
+                Từ chối yêu cầu đặt lịch
               </div>
-              <div className="modal-body p-4 bg-light text-dark">
-                <p className="fs-7 text-secondary mb-3">
-                  Vui lòng cung cấp lý do từ chối yêu cầu đặt lịch của sinh viên <strong>{rejectingBooking.student.fullname}</strong>. Sinh viên sẽ nhận được email và thông báo hệ thống kèm lý do này.
-                </p>
-                <textarea
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  className="form-control bg-white shadow-none"
-                  rows={3}
-                  placeholder="Ví dụ: Tôi có lịch họp đột xuất, bạn có thể hẹn vào khung giờ khác được không..."
-                  required
-                />
-              </div>
-              <div className="modal-footer border-0 bg-light pt-0">
-                <button type="button" className="btn btn-light border rounded-pill px-4 fw-medium text-dark" onClick={() => setRejectingBooking(null)}>Hủy</button>
-                <button
-                  type="button"
-                  disabled={submittingRejection}
-                  onClick={handleConfirmReject}
-                  className="btn btn-danger rounded-pill px-4 fw-bold text-white"
-                >
-                  {submittingRejection ? 'Đang xử lý...' : 'Xác nhận từ chối'}
-                </button>
-              </div>
+              <button
+                className="bkp-reject-close"
+                onClick={() => setRejectingBooking(null)}
+              >
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
+            <div className="bkp-reject-body">
+              <p className="bkp-reject-desc">
+                Vui lòng cung cấp lý do từ chối yêu cầu của sinh viên{' '}
+                <strong>{rejectingBooking.student.fullname}</strong>. Sinh viên sẽ nhận được email và thông báo hệ thống kèm lý do này.
+              </p>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="bkp-reject-textarea"
+                rows={4}
+                placeholder="Ví dụ: Tôi có lịch họp đột xuất, bạn có thể hẹn vào khung giờ khác được không..."
+              />
+            </div>
+            <div className="bkp-reject-footer">
+              <button
+                className="bkp-reject-cancel"
+                onClick={() => setRejectingBooking(null)}
+              >
+                Hủy
+              </button>
+              <button
+                disabled={submittingRejection}
+                onClick={handleConfirmReject}
+                className="bkp-reject-confirm"
+              >
+                {submittingRejection ? (
+                  <>
+                    <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'bk-spin 0.7s linear infinite' }} />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-x-circle-fill" />
+                    Xác nhận từ chối
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Phòng họp Video call overlay */}
+      {/* Video Call Room */}
       {activeCallRoomId && user && selectedBookingForCall && (
         <VideoCallRoom
           roomId={activeCallRoomId}
@@ -759,11 +785,7 @@ export default function BookingsPage() {
           onLeaveRoom={() => {
             setActiveCallRoomId(null);
             setSelectedBookingForCall(null);
-            if (activeTab === 'student') {
-              loadStudentBookings();
-            } else {
-              loadMentorBookings();
-            }
+            activeTab === 'student' ? loadStudentBookings() : loadMentorBookings();
           }}
           bookingId={selectedBookingForCall.id}
           duration={selectedBookingForCall.duration}
