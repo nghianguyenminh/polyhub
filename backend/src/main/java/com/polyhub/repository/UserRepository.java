@@ -45,4 +45,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :start AND u.createdAt < :end")
     long countByCreatedAtBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+
+    @Query("SELECT u FROM User u WHERE u.role.id IN ('SUPER_ADMIN', 'ADMIN', 'USER_ADMIN')")
+    List<User> findUserManagers();
 }
