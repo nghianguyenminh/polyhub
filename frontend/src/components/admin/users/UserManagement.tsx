@@ -423,10 +423,16 @@ export default function UserManagement() {
                         <button 
                           className={styles.viewDetailsBtn} 
                           disabled
-                          style={{ opacity: 0.5, cursor: 'not-allowed' }}
-                          title="Không thể xem chi tiết tài khoản Admin/Super Admin"
+                          style={{ 
+                            opacity: 0.7, 
+                            cursor: 'not-allowed', 
+                            backgroundColor: '#f3f4f6', 
+                            borderColor: '#e5e7eb', 
+                            color: '#9ca3af' 
+                          }}
+                          title="Tài khoản này đang được bảo vệ"
                         >
-                          <Eye size={14} /> Chi tiết
+                          <Shield size={14} /> Đang được bảo vệ
                         </button>
                       ) : (
                         <button 
