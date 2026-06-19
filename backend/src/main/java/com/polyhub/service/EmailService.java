@@ -257,4 +257,41 @@ public class EmailService {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendWarningEmail(String toEmail, String fullname, String postContent, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Cảnh báo: Bài viết của bạn bị báo cáo vi phạm");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #ff9800;\">"
+                    + "<h2 style=\"color: #ff9800; text-align: center;\">Cảnh Báo Vi Phạm Nội Dung</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Chúng tôi nhận được báo cáo vi phạm liên quan đến bài viết của bạn trên hệ thống PolyHUB.</p>"
+                    + "<p><strong>Nội dung bài viết:</strong></p>"
+                    + "<div style=\"background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 10px 0; color: #374151;\">"
+                    +   "<em>\"" + (postContent != null ? postContent : "[Không có nội dung chữ]") + "\"</em>"
+                    + "</div>"
+                    + "<p><strong>Lý do bị báo cáo:</strong> <span style=\"color: #dc2626; font-weight: bold;\">" + reason + "</span></p>"
+                    + "<div style=\"background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; color: #856404;\">"
+                    +   "<strong>Yêu cầu:</strong> Vui lòng chỉnh sửa hoặc xóa bài viết này trong vòng <strong>2 ngày</strong>. "
+                    +   "Nếu sau 2 ngày bài viết vẫn chưa được chỉnh sửa hoặc xóa, tài khoản của bạn sẽ bị <strong>khóa tạm thời hoặc vĩnh viễn</strong>."
+                    + "</div>"
+                    + "<p>Cảm ơn sự hợp tác của bạn để xây dựng cộng đồng PolyHUB lành mạnh.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email cảnh báo: " + e.getMessage());
+        }
+    }
 }

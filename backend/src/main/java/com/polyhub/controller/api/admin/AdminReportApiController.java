@@ -2,8 +2,10 @@ package com.polyhub.controller.api.admin;
 
 import com.polyhub.entity.Post;
 import com.polyhub.entity.PostReport;
+import com.polyhub.entity.User;
 import com.polyhub.repository.PostReportRepository;
 import com.polyhub.repository.PostRepository;
+import com.polyhub.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +26,7 @@ public class AdminReportApiController {
 
     private final PostReportRepository postReportRepository;
     private final PostRepository postRepository;
+    private final EmailService emailService;
 
     @GetMapping
     public ResponseEntity<?> getReports(@RequestParam(defaultValue = "1") int page) {
@@ -63,5 +66,21 @@ public class AdminReportApiController {
             return ResponseEntity.ok(Map.of("message", "Đã từ chối báo cáo."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Lỗi từ chối báo cáo."));
+    }
+
+    @PostMapping("/{id}/warn")
+    public ResponseEntity<?> warnUser(@PathVariable Long id) {
+        PostReport report = postReportRepository.findById(id).orElse(null);
+        if (report != null && report.getPost() != null && report.getPost().getUser() != null) {
+            User reportedUser = report.getPost().getUser();
+            String reason = report.getReason();
+            String postContent = report.getPost().getContent();
+            
+            // Gửi email cảnh báo
+            emailService.sendWarningEmail(reportedUser.getEmail(), reportedUser.getFullname(), postContent, reason);
+            
+            return ResponseEntity.ok(Map.of("message", "Đã gửi email cảnh báo yêu cầu chỉnh sửa/xóa bài viết trong 2 ngày tới người dùng " + reportedUser.getUsername() + " thành công."));
+        }
+        return ResponseEntity.status(400).body(Map.of("message", "Lỗi gửi email cảnh báo."));
     }
 }

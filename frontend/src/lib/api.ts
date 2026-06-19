@@ -21,7 +21,6 @@ export async function fetchLocal(path: string, options: RequestInit = {}) {
   return response.json().catch(() => ({}));
 }
 
-
 export function getAuthToken(): string | null {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('token');
@@ -47,7 +46,6 @@ interface FetchOptions extends RequestInit {
 
 export async function fetchAPI(path: string, options: FetchOptions = {}) {
   const token = options.token !== undefined ? options.token : getAuthToken();
-
   const headers = new Headers(options.headers || {});
 
   if (token) {
@@ -58,27 +56,35 @@ export async function fetchAPI(path: string, options: FetchOptions = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
 
-  if (response.status === 401) {
-    if (!options.noRedirectOn401) {
-      setAuthToken(null);
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (response.status === 401) {
+        if (!options.noRedirectOn401) {
+          setAuthToken(null);
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+        }
+        throw new Error(errorData.error || errorData.message || 'Vui lòng đăng nhập để thực hiện chức năng này.');
       }
+
+      if (response.status === 403) {
+        throw new Error(errorData.error || errorData.message || 'Bạn không có quyền thực hiện chức năng này.');
+      }
+
+      throw new Error(errorData.error || errorData.message || `API error: ${response.status}`);
     }
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || errorData.message || 'Vui lòng đăng nhập để thực hiện chức năng này.');
-  }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || errorData.message || `API error: ${response.status}`);
+    return await response.json().catch(() => ({}));
+  } catch (error: any) {
+    console.error(`[API Error tại ${path}]:`, error);
+    throw new Error(error.message || 'Không thể kết nối đến máy chủ Backend.');
   }
-
-  return response.json().catch(() => ({}));
 }
-

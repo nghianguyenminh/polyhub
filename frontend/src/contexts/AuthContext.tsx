@@ -29,10 +29,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await fetchAPI('/api/auth/me');
       setUser(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch current user:', err);
-      setAuthToken(null);
-      setUser(null);
+      
+      const errMsg = err.message || '';
+      // SỬA LỖI: Check điều kiện thông báo lỗi linh hoạt cả tiếng Anh lẫn tiếng Việt để xóa Token hết hạn
+      if (
+        errMsg.includes('đăng nhập') || 
+        errMsg.includes('Unauthorized') || 
+        errMsg.includes('401') || 
+        errMsg.includes('403')
+      ) {
+        setAuthToken(null);
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -52,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthToken(data.token);
       setUser(data.user);
     } catch (err) {
-      setLoading(false);
+      setUser(null);
       throw err;
     } finally {
       setLoading(false);

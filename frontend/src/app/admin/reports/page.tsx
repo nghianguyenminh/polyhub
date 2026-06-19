@@ -14,6 +14,7 @@ function AdminReportsContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'danger' } | null>(null);
+  const [selectedReport, setSelectedReport] = useState<any | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -52,6 +53,7 @@ function AdminReportsContent() {
     try {
       const result = await fetchAPI(`/api/admin/reports/${id}/approve`, { method: 'POST' });
       setMessage({ text: result.message, type: 'success' });
+      setSelectedReport(null);
       loadReports(currentPage);
     } catch (err: any) {
       setMessage({ text: err.message || 'Lỗi xử lý báo cáo', type: 'danger' });
@@ -63,9 +65,44 @@ function AdminReportsContent() {
     try {
       const result = await fetchAPI(`/api/admin/reports/${id}/reject`, { method: 'POST' });
       setMessage({ text: result.message, type: 'success' });
+      setSelectedReport(null);
       loadReports(currentPage);
     } catch (err: any) {
       setMessage({ text: err.message || 'Lỗi từ chối báo cáo', type: 'danger' });
+    }
+  };
+
+  const handleWarn = async (id: number) => {
+    if (!confirm('Gửi email cảnh báo yêu cầu chỉnh sửa/xóa bài viết trong 2 ngày tới người dùng?')) return;
+    try {
+      const result = await fetchAPI(`/api/admin/reports/${id}/warn`, { method: 'POST' });
+      setMessage({ text: result.message, type: 'success' });
+      setSelectedReport(null);
+      loadReports(currentPage);
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Lỗi gửi cảnh báo', type: 'danger' });
+    }
+  };
+
+  const handleLockUser = async (username: string) => {
+    if (!username) return;
+    const reason = prompt('Nhập lý do khóa tài khoản người dùng @' + username + ':');
+    if (reason === null) return; // Hủy
+    if (reason.trim() === '') {
+      alert('Vui lòng nhập lý do khóa tài khoản!');
+      return;
+    }
+
+    try {
+      const result = await fetchAPI(`/api/admin/users/lock/${username}`, {
+        method: 'POST',
+        body: JSON.stringify({ reason: reason.trim() })
+      });
+      setMessage({ text: result.message, type: 'success' });
+      setSelectedReport(null);
+      loadReports(currentPage);
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Lỗi khóa tài khoản', type: 'danger' });
     }
   };
 
@@ -165,6 +202,13 @@ function AdminReportsContent() {
                     </td>
                     <td className="text-end pe-4">
                       <button 
+                        onClick={() => setSelectedReport(report)} 
+                        className="btn btn-sm btn-outline-primary me-2" 
+                        title="Xem chi tiết báo cáo"
+                      >
+                        <i className="bi bi-eye"></i> Chi tiết
+                      </button>
+                      <button 
                         onClick={() => handleApprove(report.id)} 
                         className="btn btn-sm btn-outline-danger me-2" 
                         title="Xóa bài viết (Đồng ý báo cáo)"
@@ -215,6 +259,161 @@ function AdminReportsContent() {
           </div>
         )}
       </div>
+
+      {/* Modal chi tiết báo cáo */}
+      {selectedReport && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 1050,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '20px'
+        }}>
+          <div className="bg-white rounded-3 shadow-lg" style={{
+            maxWidth: '650px',
+            width: '100%',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}>
+            {/* Modal Header */}
+            <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+              <h5 className="mb-0 fw-bold text-dark">
+                <i className="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                Chi tiết Báo cáo Vi phạm
+              </h5>
+              <button className="btn-close" onClick={() => setSelectedReport(null)}></button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-auto" style={{ flex: 1 }}>
+              {/* Report Reason */}
+              <div className="mb-4">
+                <h6 className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Lý do báo cáo</h6>
+                <div className="p-3 bg-danger bg-opacity-10 border-start border-4 border-danger rounded-3 text-danger fw-semibold">
+                  {selectedReport.reason}
+                </div>
+              </div>
+
+              {/* Reported Post Content */}
+              <div className="mb-4">
+                <h6 className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Nội dung bài viết bị báo cáo</h6>
+                <div className="p-3 bg-light rounded-3 border">
+                  <p className="mb-0 text-dark" style={{ whiteSpace: 'pre-wrap' }}>
+                    {selectedReport.post?.content || <span className="text-muted fst-italic">[Bài viết không có văn bản]</span>}
+                  </p>
+                  {selectedReport.post?.imageUrl && (
+                    <div className="mt-3 text-center">
+                      <img 
+                        src={selectedReport.post.imageUrl} 
+                        alt="Hình ảnh bài viết" 
+                        className="img-fluid rounded-2 shadow-sm" 
+                        style={{ maxHeight: '200px', objectFit: 'contain' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="row g-3">
+                {/* Reported User */}
+                <div className="col-12 col-md-6">
+                  <div className="p-3 border rounded-3 bg-light bg-opacity-50 h-100">
+                    <h6 className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Người bị báo cáo</h6>
+                    {selectedReport.post?.user ? (
+                      <div>
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                          <img 
+                            src={selectedReport.post.user.avatar && selectedReport.post.user.avatar !== 'default.png' ? selectedReport.post.user.avatar : `https://ui-avatars.com/api/?name=${selectedReport.post.user.fullname}`} 
+                            className="rounded-circle" width="30" height="30" alt="avatar" 
+                          />
+                          <div>
+                            <div className="fw-bold text-dark">{selectedReport.post.user.fullname}</div>
+                            <div className="text-muted" style={{ fontSize: '11px' }}>@{selectedReport.post.user.username}</div>
+                          </div>
+                        </div>
+                        <div className="text-muted" style={{ fontSize: '12px' }}>
+                          <i className="bi bi-envelope me-1"></i> {selectedReport.post.user.email}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-muted fst-italic">Không rõ người dùng</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Reporter */}
+                <div className="col-12 col-md-6">
+                  <div className="p-3 border rounded-3 bg-light bg-opacity-50 h-100">
+                    <h6 className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Người báo cáo</h6>
+                    {selectedReport.reporter ? (
+                      <div>
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                          <img 
+                            src={selectedReport.reporter.avatar && selectedReport.reporter.avatar !== 'default.png' ? selectedReport.reporter.avatar : `https://ui-avatars.com/api/?name=${selectedReport.reporter.fullname}`} 
+                            className="rounded-circle" width="30" height="30" alt="avatar" 
+                          />
+                          <div>
+                            <div className="fw-bold text-dark">{selectedReport.reporter.fullname}</div>
+                            <div className="text-muted" style={{ fontSize: '11px' }}>@{selectedReport.reporter.username}</div>
+                          </div>
+                        </div>
+                        <div className="text-muted" style={{ fontSize: '12px' }}>
+                          <i className="bi bi-envelope me-1"></i> {selectedReport.reporter.email}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-muted fst-italic">Ẩn danh</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 border-top bg-light d-flex justify-content-between flex-wrap gap-2">
+              <div className="d-flex gap-2">
+                {/* Warning button */}
+                <button 
+                  onClick={() => handleWarn(selectedReport.id)} 
+                  className="btn btn-warning text-white fw-semibold d-flex align-items-center gap-1"
+                >
+                  <i className="bi bi-exclamation-octagon-fill"></i> Cảnh báo (2 ngày)
+                </button>
+                {/* Lock account button */}
+                {selectedReport.post?.user && (
+                  <button 
+                    onClick={() => handleLockUser(selectedReport.post.user.username)} 
+                    className="btn btn-danger fw-semibold d-flex align-items-center gap-1"
+                  >
+                    <i className="bi bi-lock-fill"></i> Khóa tài khoản
+                  </button>
+                )}
+              </div>
+              <div className="d-flex gap-2">
+                {/* Reject report button */}
+                <button 
+                  onClick={() => handleReject(selectedReport.id)} 
+                  className="btn btn-outline-secondary fw-semibold"
+                >
+                  Từ chối
+                </button>
+                {/* Approve report (Delete post) button */}
+                <button 
+                  onClick={() => handleApprove(selectedReport.id)} 
+                  className="btn btn-outline-danger fw-semibold"
+                >
+                  Xóa bài viết
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
