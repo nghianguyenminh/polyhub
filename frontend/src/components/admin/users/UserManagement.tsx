@@ -419,12 +419,12 @@ export default function UserManagement() {
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      {user.username === 'admin' || user.username === 'superadmin' || user.role?.id === 'SUPER_ADMIN' ? (
+                      {user.role?.id === 'SUPER_ADMIN' || user.role?.id === 'ADMIN' ? (
                         <button 
                           className={styles.viewDetailsBtn} 
                           disabled
                           style={{ opacity: 0.5, cursor: 'not-allowed' }}
-                          title="Không thể xem chi tiết tài khoản Super Admin"
+                          title="Không thể xem chi tiết tài khoản Admin/Super Admin"
                         >
                           <Eye size={14} /> Chi tiết
                         </button>
