@@ -1,16 +1,16 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import { View, StyleSheet } from 'react-native';
-import Feather from '@expo/vector-icons/Feather';
 import { theme } from '../constants/theme';
-const Icon = Feather as any;
+import Feather from '@expo/vector-icons/Feather';
 
+// Real Screens
 import { HomeScreen } from '../screens/home/HomeScreen';
+import { MentorListScreen } from '../screens/mentors/MentorListScreen';
+import { BookingListScreen } from '../screens/bookings/BookingListScreen';
+import { DocumentListScreen } from '../screens/documents/DocumentListScreen';
+import { SavedListScreen } from '../screens/saved/SavedListScreen';
 
-// Create empty dummy screens for other tabs
-const DummyScreen = () => <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
-
+const Icon = Feather as any;
 const Tab = createBottomTabNavigator();
 
 export const MainTabNavigator = () => {
@@ -40,13 +40,15 @@ export const MainTabNavigator = () => {
         })}
       >
         <Tab.Screen name="Trang chủ" component={HomeScreen} />
-        <Tab.Screen name="Mentors" component={DummyScreen} />
-        <Tab.Screen name="Lịch hẹn" component={DummyScreen} />
-        <Tab.Screen name="Tài liệu" component={DummyScreen} />
-        <Tab.Screen name="Đã lưu" component={DummyScreen} />
+        <Tab.Screen name="Mentors" component={MentorListScreen} />
+        <Tab.Screen name="Lịch hẹn" component={BookingListScreen} />
+        <Tab.Screen name="Tài liệu" component={DocumentListScreen} />
+        <Tab.Screen name="Đã lưu" component={SavedListScreen} />
       </Tab.Navigator>
   );
 };
+
+import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   tabBar: {
@@ -63,3 +65,4 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
 });
+

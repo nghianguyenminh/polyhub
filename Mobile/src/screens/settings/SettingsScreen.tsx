@@ -5,6 +5,7 @@ import { PolyHeader } from '../../components/PolyHeader';
 import { PolyText } from '../../components/PolyText';
 import { theme } from '../../constants/theme';
 import Feather from '@expo/vector-icons/Feather';
+import { useAuthStore } from '../../store/authStore';
 
 const Icon = Feather as any;
 
@@ -12,6 +13,16 @@ export const SettingsScreen = () => {
   const navigation = useNavigation<any>();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { logout: storeLogout, setTransitioning } = useAuthStore();
+
+  const handleLogout = async () => {
+    setTransitioning(true);
+    await new Promise(r => setTimeout(r, 1200)); // wait for logo merge
+    await storeLogout();
+    setTimeout(() => {
+      setTransitioning(false);
+    }, 800);
+  };
 
   const renderSectionHeader = (title: string) => (
     <View style={styles.sectionHeader}>
@@ -100,8 +111,9 @@ export const SettingsScreen = () => {
 
         {/* Logout */}
         <View style={[styles.sectionBlock, { marginTop: theme.spacing.lg }]}>
-          {renderSettingItem('log-out', 'Đăng xuất', 'Đăng xuất khỏi thiết bị này', () => { }, undefined, true)}
+          {renderSettingItem('log-out', 'Đăng xuất', 'Đăng xuất khỏi thiết bị này', handleLogout, undefined, true)}
         </View>
+
 
         <PolyText align="center" variant="caption" color={theme.colors.textLight} style={styles.versionText}>
           PolyHUB phiên bản 1.0.0

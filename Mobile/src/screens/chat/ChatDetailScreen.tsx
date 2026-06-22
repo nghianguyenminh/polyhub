@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -7,67 +7,203 @@ import {
   TouchableOpacity, 
   KeyboardAvoidingView, 
   Platform,
-  Image
+  Image,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PolyHeader } from '../../components/PolyHeader';
 import { PolyText } from '../../components/PolyText';
 import { theme } from '../../constants/theme';
+import { useAuthStore } from '../../store/authStore';
+import api, { getApiBaseUrl } from '../../services/api';
 import Feather from '@expo/vector-icons/Feather';
+import { Client } from '@stomp/stompjs';
+
+// Polyfill for TextEncoder/TextDecoder required by StompJS in React Native
+if (typeof TextEncoder === 'undefined') {
+  class TextEncoderPolyfill {
+    encode(str: string) {
+      const arr = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++) {
+        arr[i] = str.charCodeAt(i) & 0xff;
+      }
+      return arr;
+    }
+  }
+  globalThis.TextEncoder = TextEncoderPolyfill as any;
+}
 
 const Icon = Feather as any;
 
-const MOCK_MESSAGES = [
-  { id: '1', text: 'Chào bạn, cho mình hỏi về khóa học React Native với.', sender: 'other', time: '10:20' },
-  { id: '2', text: 'Chào bạn, bạn cần hỗ trợ phần nào nhỉ?', sender: 'me', time: '10:22' },
-  { id: '3', text: 'Mình đang thắc mắc cách cấu hình Redux Toolkit.', sender: 'other', time: '10:25' },
-  { id: '4', text: 'À phần đó bạn xem bài 4 trong giáo trình nhé, có hướng dẫn chi tiết luôn.', sender: 'me', time: '10:28' },
-  { id: '5', text: 'Bạn làm xong bài React Native chưa?', sender: 'other', time: '10:30' },
-];
-
 export const ChatDetailScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
-  const [message, setMessage] = useState('');
+  const { user } = useAuthStore();
   
-  const { userName, avatar, online } = route.params || {
-    userName: 'Nguyễn Văn A',
-    avatar: 'https://i.pravatar.cc/150?img=11',
-    online: true,
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+
+  const stompClientRef = useRef<Client | null>(null);
+  const flatListRef = useRef<FlatList | null>(null);
+
+  const { roomId: initialRoomId, targetUser } = route.params || {};
+  const [roomId, setRoomId] = useState<string | null>(initialRoomId || null);
+
+  const targetUsername = targetUser?.username;
+  const targetFullname = targetUser?.fullname || 'Bạn bè';
+  const targetAvatar = targetUser?.avatar || 'https://i.pravatar.cc/150?img=12';
+
+  // 1. Resolve room ID and load chat history
+  const initChat = async () => {
+    setIsLoading(true);
+    try {
+      let activeRoomId = roomId;
+
+      // If we don't have a roomId, resolve/create one using backend api
+      if (!activeRoomId && targetUsername) {
+        const response = await api.get(`/api/chat-data`, {
+          params: { userId: targetUsername }
+        });
+        activeRoomId = response.data.roomId;
+        setRoomId(activeRoomId);
+      }
+
+      if (activeRoomId) {
+        // Load history
+        const historyResponse = await api.get(`/api/chat/history`, {
+          params: { roomId: activeRoomId }
+        });
+        setMessages(historyResponse.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to initialize chat detail:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    initChat();
+  }, [initialRoomId, targetUsername]);
+
+  // 2. Connect to WebSocket once roomId is resolved
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Convert HTTP API URL to WebSocket protocol (ws/wss)
+    const baseApi = getApiBaseUrl();
+    const wsUrl = baseApi.replace(/^http/, 'ws') + '/ws-chat/websocket';
+
+    console.log('Connecting to WebSocket:', wsUrl);
+
+    const client = new Client({
+      brokerURL: wsUrl,
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+      onConnect: (frame) => {
+        console.log('STOMP connected successfully');
+        setIsConnected(true);
+
+        // Subscribe to current room
+        client.subscribe(`/topic/chat/${roomId}`, (message) => {
+          const newMsg = JSON.parse(message.body);
+          
+          // Only add text message or call actions
+          setMessages((prev) => {
+            // Check if message is already added (e.g. sent by me and optimistically added)
+            if (prev.some((m) => m.id === newMsg.id)) {
+              return prev;
+            }
+            return [...prev, newMsg];
+          });
+        });
+      },
+      onDisconnect: () => {
+        console.log('STOMP disconnected');
+        setIsConnected(false);
+      },
+      onStompError: (frame) => {
+        console.error('STOMP error:', frame);
+      }
+    });
+
+    client.activate();
+    stompClientRef.current = client;
+
+    return () => {
+      client.deactivate();
+    };
+  }, [roomId]);
+
+  const handleSendMessage = () => {
+    if (!inputText.trim() || !roomId || !isConnected || !stompClientRef.current) return;
+
+    const msgObj = {
+      roomId: roomId,
+      senderId: user?.username,
+      content: inputText.trim(),
+      type: 'TEXT',
+    };
+
+    // Publish to backend STOMP endpoint
+    stompClientRef.current.publish({
+      destination: '/app/chat.sendMessage',
+      body: JSON.stringify(msgObj),
+    });
+
+    setInputText('');
+  };
+
+  const handleVideoCall = () => {
+    if (!roomId) {
+      Alert.alert('Chờ kết nối', 'Đang thiết lập phòng hội thoại, vui lòng thử lại sau.');
+      return;
+    }
+    // Navigate to ZegoCloud VideoCall
+    navigation.navigate('VideoCall', {
+      bookingId: roomId,
+      userName: user?.fullname || 'User',
+    });
   };
 
   const renderMessage = ({ item }: { item: any }) => {
-    const isMe = item.sender === 'me';
+    const isMe = item.senderId === user?.username;
+    const timeStr = item.timestamp
+      ? new Date(item.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+      : '';
+
     return (
       <View style={[styles.messageWrapper, isMe ? styles.messageWrapperMe : styles.messageWrapperOther]}>
-        {!isMe && <Image source={{ uri: avatar }} style={styles.messageAvatar} />}
+        {!isMe && <Image source={{ uri: targetAvatar }} style={styles.messageAvatar} />}
         <View style={[styles.messageBubble, isMe ? styles.messageBubbleMe : styles.messageBubbleOther]}>
-          <PolyText color={isMe ? '#FFFFFF' : theme.colors.textMain}>{item.text}</PolyText>
-          <PolyText 
-            variant="small" 
-            color={isMe ? 'rgba(255,255,255,0.7)' : theme.colors.textLight} 
-            style={styles.messageTime}
-          >
-            {item.time}
-          </PolyText>
+          <PolyText color={isMe ? '#FFFFFF' : theme.colors.textMain}>{item.content}</PolyText>
+          {timeStr ? (
+            <PolyText 
+              variant="small" 
+              color={isMe ? 'rgba(255,255,255,0.7)' : theme.colors.textLight} 
+              style={styles.messageTime}
+            >
+              {timeStr}
+            </PolyText>
+          ) : null}
         </View>
       </View>
     );
   };
 
-  // Custom Header component for Chat to show Avatar & Status
   const renderHeaderRight = () => (
     <View style={styles.headerRight}>
-      <TouchableOpacity style={styles.iconButton}>
+      <TouchableOpacity style={styles.iconButton} onPress={() => Alert.alert('Gọi thoại', 'Tính năng gọi thoại đang được nâng cấp.')}>
         <Icon name="phone" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconButton}>
+      <TouchableOpacity style={styles.iconButton} onPress={handleVideoCall}>
         <Icon name="video" size={20} color={theme.colors.primary} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.iconButton}>
-        <Icon name="info" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
     </View>
   );
@@ -76,66 +212,61 @@ export const ChatDetailScreen = () => {
     <KeyboardAvoidingView 
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <PolyHeader 
         showBack 
         onBackPress={() => navigation.goBack()}
         rightComponent={renderHeaderRight()}
-        title="" // We will use absolute center to override title rendering
+        title="" // We will use custom center header
       />
       
       {/* Overlay custom title block for header */}
       <View style={[styles.headerCenter, { top: insets.top }]}>
         <View style={styles.headerUserInfo}>
-          <View style={styles.avatarContainer}>
-             <Image source={{ uri: avatar }} style={styles.headerAvatar} />
-             {online && <View style={styles.onlineDot} />}
-          </View>
+          <Image source={{ uri: targetAvatar }} style={styles.headerAvatar} />
           <View>
-            <PolyText weight="bold" style={styles.headerName}>{userName}</PolyText>
+            <PolyText weight="bold" style={styles.headerName}>{targetFullname}</PolyText>
             <PolyText variant="small" color={theme.colors.textMuted}>
-              {online ? 'Đang hoạt động' : 'Hoạt động 2 giờ trước'}
+              {isConnected ? 'Đang trực tuyến' : 'Đang kết nối...'}
             </PolyText>
           </View>
         </View>
       </View>
 
-      <FlatList
-        data={MOCK_MESSAGES}
-        keyExtractor={item => item.id}
-        renderItem={renderMessage}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <ActivityIndicator size="large" color={theme.colors.primary} style={{ flex: 1 }} />
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={item => item.id?.toString() || Math.random().toString()}
+          renderItem={renderMessage}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        />
+      )}
 
       <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
-        <TouchableOpacity style={styles.attachBtn}>
-          <Icon name="plus-circle" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-        
         <View style={styles.textInputWrapper}>
           <TextInput
             style={styles.input}
-            placeholder="Nhắn tin..."
+            placeholder="Nhập tin nhắn..."
             placeholderTextColor={theme.colors.textLight}
-            value={message}
-            onChangeText={setMessage}
+            value={inputText}
+            onChangeText={setInputText}
             multiline
           />
-          <TouchableOpacity style={styles.smileyBtn}>
-             <Icon name="smile" size={20} color={theme.colors.textMuted} />
-          </TouchableOpacity>
         </View>
 
-        {message.trim().length > 0 ? (
-          <TouchableOpacity style={styles.sendBtn}>
-            <Icon name="send" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.attachBtn}>
-            <Icon name="thumbs-up" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity 
+          style={[styles.sendBtn, !inputText.trim() && { backgroundColor: theme.colors.background }]} 
+          onPress={handleSendMessage}
+          disabled={!inputText.trim()}
+        >
+          <Icon name="send" size={18} color={inputText.trim() ? "#FFFFFF" : theme.colors.textLight} />
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -158,25 +289,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: theme.spacing.sm,
-  },
   headerAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-  },
-  onlineDot: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.success,
-    borderWidth: 1.5,
-    borderColor: '#FFF',
+    marginRight: theme.spacing.sm,
   },
   headerName: {
     fontSize: 15,
@@ -239,16 +356,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
-  attachBtn: {
-    padding: theme.spacing.sm,
-  },
   textInputWrapper: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.background,
     borderRadius: 20,
-    marginHorizontal: theme.spacing.sm,
+    marginRight: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     minHeight: 40,
     maxHeight: 100,
@@ -261,9 +375,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10,
   },
-  smileyBtn: {
-    padding: 4,
-  },
   sendBtn: {
     width: 36,
     height: 36,
@@ -271,6 +382,5 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: theme.spacing.sm,
   },
 });

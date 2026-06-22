@@ -1,6 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import { useAuthStore } from '../store/authStore';
+import { SplashScreen } from '../components/SplashScreen';
+
+// Navigation Stack Components
 import { MainTabNavigator } from './MainTabNavigator';
 import { CreatePostScreen } from '../screens/post/CreatePostScreen';
 import { NotificationScreen } from '../screens/notification/NotificationScreen';
@@ -9,47 +14,112 @@ import { ChatDetailScreen } from '../screens/chat/ChatDetailScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { SettingsScreen } from '../screens/settings/SettingsScreen';
 import { EditProfileScreen } from '../screens/settings/EditProfileScreen';
+import { MentorDetailScreen } from '../screens/mentors/MentorDetailScreen';
+import { BookingScreen } from '../screens/mentors/BookingScreen';
+import { VideoCallScreen } from '../screens/chat/VideoCallScreen';
+
+// Auth Screen Components
+import { LoginScreen } from '../screens/auth/LoginScreen';
+import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
+import { OTPScreen } from '../screens/auth/OTPScreen';
 
 const Stack = createNativeStackNavigator();
 
 export const RootNavigator = () => {
+  const { isAuthenticated, loading, isTransitioning, checkAuth } = useAuthStore();
+  const [showStartupSplash, setShowStartupSplash] = useState(true);
+
+  useEffect(() => {
+    // Check credentials on startup
+    checkAuth().then(() => {
+      // Small buffer to allow startup screen smooth entry before potential transition
+    });
+  }, []);
+
+  const handleStartupSplashEnd = () => {
+    setShowStartupSplash(false);
+  };
+
+  // If checkAuth is still loading and startup splash is active, show the splash screen
+  if (showStartupSplash) {
+    return <SplashScreen onAnimationEnd={handleStartupSplashEnd} />;
+  }
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Main Tabs */}
-        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-        
-        {/* Modals & Full Screens */}
-        <Stack.Screen 
-          name="CreatePost" 
-          component={CreatePostScreen} 
-          options={{ presentation: 'fullScreenModal' }}
-        />
-        <Stack.Screen 
-          name="Notifications" 
-          component={NotificationScreen} 
-        />
-        <Stack.Screen 
-          name="ChatList" 
-          component={ChatListScreen} 
-        />
-        <Stack.Screen 
-          name="ChatDetail" 
-          component={ChatDetailScreen} 
-        />
-        <Stack.Screen 
-          name="Profile" 
-          component={ProfileScreen} 
-        />
-        <Stack.Screen 
-          name="Settings" 
-          component={SettingsScreen} 
-        />
-        <Stack.Screen 
-          name="EditProfile" 
-          component={EditProfileScreen} 
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.container}>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {isAuthenticated ? (
+            // App Stack (Authenticated)
+            <>
+              <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+              
+              {/* Modals & Full Screens */}
+              <Stack.Screen 
+                name="CreatePost" 
+                component={CreatePostScreen} 
+                options={{ presentation: 'fullScreenModal' }}
+              />
+              <Stack.Screen 
+                name="Notifications" 
+                component={NotificationScreen} 
+              />
+              <Stack.Screen 
+                name="ChatList" 
+                component={ChatListScreen} 
+              />
+              <Stack.Screen 
+                name="ChatDetail" 
+                component={ChatDetailScreen} 
+              />
+              <Stack.Screen 
+                name="Profile" 
+                component={ProfileScreen} 
+              />
+              <Stack.Screen 
+                name="Settings" 
+                component={SettingsScreen} 
+              />
+              <Stack.Screen 
+                name="EditProfile" 
+                component={EditProfileScreen} 
+              />
+              <Stack.Screen 
+                name="MentorDetail" 
+                component={MentorDetailScreen} 
+              />
+              <Stack.Screen 
+                name="Booking" 
+                component={BookingScreen} 
+              />
+              <Stack.Screen 
+                name="VideoCall" 
+                component={VideoCallScreen} 
+              />
+            </>
+          ) : (
+            // Auth Stack (Unauthenticated)
+            <>
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+              <Stack.Screen name="OTP" component={OTPScreen} />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+      
+      {/* Centralized transition overlay (for Login/Logout actions) */}
+      {isTransitioning && <SplashScreen />}
+    </View>
   );
 };
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+});
