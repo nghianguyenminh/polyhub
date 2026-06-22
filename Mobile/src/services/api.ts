@@ -11,8 +11,9 @@ export const setCustomApiBase = (url: string) => {
 export const getApiBaseUrl = () => {
   if (customBaseUrl) return customBaseUrl;
   
-  // Set default API base directly to the computer's current Wi-Fi IP address
-  const apiBase = 'http://172.16.36.24:8080';
+  // ⚠️ Cập nhật IP này thành IP máy tính trên cùng mạng WiFi với điện thoại.
+  // IP hiện tại lấy từ Metro server: exp://10.151.125.216:8081
+  const apiBase = 'http://10.151.125.216:8080';
   
   console.log('Using API Base URL:', apiBase);
   return apiBase;

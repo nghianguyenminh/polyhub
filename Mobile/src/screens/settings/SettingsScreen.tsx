@@ -74,7 +74,7 @@ export const SettingsScreen = () => {
         {/* Account Section */}
         {renderSectionHeader('Tài khoản')}
         <View style={styles.sectionBlock}>
-          {renderSettingItem('user', 'Thông tin cá nhân', 'Chỉnh sửa tên, số điện thoại, email', () => navigation.navigate('EditProfile'))}
+          {renderSettingItem('user', 'Thông tin cá nhân', 'Chỉnh sửa tên, số điện thoại', () => navigation.navigate('EditProfile'))}
           {renderSettingItem('lock', 'Mật khẩu và bảo mật', 'Đổi mật khẩu, xác thực 2 yếu tố', () => { })}
           {renderSettingItem('shield', 'Quyền riêng tư', 'Kiểm soát ai có thể thấy bài đăng của bạn', () => { })}
         </View>
