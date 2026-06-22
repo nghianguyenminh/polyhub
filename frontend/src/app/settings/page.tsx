@@ -282,7 +282,7 @@ export default function SettingsPage() {
           <LeftSidebar activeMenu="profile" />
           
           <div className="settings-container w-100 mx-auto" style={{ maxWidth: '950px', padding: '20px 0' }}>
-            <h2 className="fw-bold mb-4 px-2 px-md-0"><i className="bi bi-gear-fill me-2 text-poly"></i>Cài đặt & Quyền riêng tư</h2>
+            <h2 className="fw-bold mb-4 px-2 px-md-0"><i className="bi bi-gear-fill me-2 text-poly"></i>Cài đặt</h2>
 
             {successMsg && (
               <div className="alert alert-success alert-dismissible fade show rounded-3 border-0 shadow-sm py-3 mb-4 mx-2 mx-md-0" role="alert">
