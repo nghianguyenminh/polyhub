@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   View,
 } from 'react-native';
-import { theme } from '../constants/theme';
+import { useAppTheme } from '../store/themeStore';
 import { PolyText } from './PolyText';
 
 // Optional: if expo-linear-gradient is installed later, we can replace this with a real gradient
@@ -28,6 +28,7 @@ export const PolyButton: React.FC<PolyButtonProps> = ({
   disabled,
   ...props
 }) => {
+  const { theme, styles } = useAppTheme(createStyles);
   const isPrimary = variant === 'primary';
   const isOutline = variant === 'outline';
   const isGhost = variant === 'ghost';
@@ -75,7 +76,7 @@ export const PolyButton: React.FC<PolyButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   button: {
     height: 48,
     borderRadius: theme.borderRadius.pill,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ViewProps, StyleSheet } from 'react-native';
-import { theme } from '../constants/theme';
+import { useAppTheme } from '../store/themeStore';
 
 interface PolyCardProps extends ViewProps {
   noPadding?: boolean;
@@ -12,6 +12,7 @@ export const PolyCard: React.FC<PolyCardProps> = ({
   noPadding = false,
   ...props
 }) => {
+  const { theme, styles } = useAppTheme(createStyles);
   return (
     <View
       style={[
@@ -26,7 +27,7 @@ export const PolyCard: React.FC<PolyCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   card: {
     backgroundColor: theme.colors.card,
     borderRadius: theme.borderRadius.xl,

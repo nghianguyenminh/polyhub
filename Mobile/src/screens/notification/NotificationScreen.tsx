@@ -1,67 +1,86 @@
-import React from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { PolyHeader } from '../../components/PolyHeader';
 import { PolyText } from '../../components/PolyText';
 import { theme } from '../../constants/theme';
 import { useNavigation } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
+import api from '../../services/api';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/vi';
+
+dayjs.extend(relativeTime);
+dayjs.locale('vi');
 
 const Icon = Feather as any;
 
-// Mock data for notifications
-const NOTIFICATIONS = [
-  {
-    id: '1',
-    user: 'Trần Bình',
-    avatar: 'https://i.pravatar.cc/150?img=12',
-    action: 'đã bình luận về bài viết của bạn',
-    time: '2 phút trước',
-    unread: true,
-  },
-  {
-    id: '2',
-    user: 'Poly Mentor',
-    avatar: 'https://i.pravatar.cc/150?img=32',
-    action: 'Lịch hẹn Call video của bạn sắp bắt đầu trong 15 phút.',
-    time: '1 giờ trước',
-    unread: true,
-  },
-  {
-    id: '3',
-    user: 'Nguyễn Văn A',
-    avatar: 'https://i.pravatar.cc/150?img=11',
-    action: 'đã thích bài viết của bạn',
-    time: '3 giờ trước',
-    unread: false,
-  },
-  {
-    id: '4',
-    user: 'FPT Polytechnic',
-    avatar: 'https://i.pravatar.cc/150?img=3',
-    action: 'đã đăng một tài liệu mới trong Góc Tài liệu.',
-    time: '1 ngày trước',
-    unread: false,
-  },
-];
-
 export const NotificationScreen = () => {
   const navigation = useNavigation();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get('/api/notifications');
+      setNotifications(response.data);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchNotifications();
+  };
+
+  const handleMarkAsRead = async (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    try {
+      await api.put(`/api/notifications/${id}/read`);
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+      fetchNotifications();
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    try {
+      await api.put('/api/notifications/read');
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+      fetchNotifications();
+    }
+  };
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
-      style={[styles.notiItem, item.unread && styles.unreadItem]}
+      style={[styles.notiItem, !item.isRead && styles.unreadItem]}
       activeOpacity={0.7}
+      onPress={() => {
+        if (!item.isRead) handleMarkAsRead(item.id);
+      }}
     >
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
+      <View style={[styles.avatar, styles.iconAvatar]}>
+        <Icon name="bell" size={24} color={theme.colors.primary} />
+      </View>
       <View style={styles.content}>
         <PolyText>
-          <PolyText weight="bold">{item.user}</PolyText> {item.action}
+          <PolyText weight="bold">{item.title}</PolyText>
+          {'\n'}{item.content}
         </PolyText>
-        <PolyText variant="caption" color={item.unread ? '#0866FF' : theme.colors.textMuted} style={styles.time}>
-          {item.time}
+        <PolyText variant="caption" color={!item.isRead ? '#0866FF' : theme.colors.textMuted} style={styles.time}>
+          {dayjs(item.createdAt).fromNow()}
         </PolyText>
       </View>
-      {item.unread && <View style={styles.unreadDot} />}
+      {!item.isRead && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 
@@ -72,17 +91,28 @@ export const NotificationScreen = () => {
         showBack 
         onBackPress={() => navigation.goBack()}
         rightComponent={
-          <TouchableOpacity style={styles.iconButtonCircle}>
+          <TouchableOpacity style={styles.iconButtonCircle} onPress={handleMarkAllAsRead}>
             <Icon name="check-circle" size={20} color={theme.colors.textMain} />
           </TouchableOpacity>
         }
       />
       <FlatList
-        data={NOTIFICATIONS}
-        keyExtractor={item => item.id}
+        data={notifications}
+        keyExtractor={item => item.id.toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Icon name="bell-off" size={48} color={theme.colors.textMuted} />
+            <PolyText color={theme.colors.textMuted} style={{ marginTop: 16 }}>
+              Bạn chưa có thông báo nào
+            </PolyText>
+          </View>
+        }
       />
     </View>
   );
@@ -111,6 +141,17 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     marginRight: theme.spacing.md,
+  },
+  iconAvatar: {
+    backgroundColor: theme.colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
   },
   content: {
     flex: 1,

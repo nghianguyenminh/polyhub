@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import api, { getApiBaseUrl } from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
 import { PolyHeader } from '../../components/PolyHeader';
 import { PolyText } from '../../components/PolyText';
 import { PolyButton } from '../../components/PolyButton';
@@ -11,12 +14,69 @@ const Icon = Feather as any;
 
 export const EditProfileScreen = () => {
   const navigation = useNavigation<any>();
+  const { user, updateUser } = useAuthStore();
+  const [isUploading, setIsUploading] = useState(false);
 
   // Form State
-  const [name, setName] = useState('Nguyễn Văn A');
-  const [email, setEmail] = useState('nguyenvana@gmail.com');
-  const [phone, setPhone] = useState('0987654321');
-  const [bio, setBio] = useState('Student at FPT Polytechnic 🎓 | React Native Developer 💻');
+  const [name, setName] = useState(user?.fullname || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [bio, setBio] = useState(user?.bio || '');
+
+  const getAvatarUri = (avatarName: string | undefined) => {
+    if (!avatarName || avatarName === 'default.png') {
+      return 'https://i.pravatar.cc/150?img=12'; // Fallback
+    }
+    if (avatarName.startsWith('http')) return avatarName;
+    return `${getApiBaseUrl()}${avatarName}`;
+  };
+
+  const handleSelectAvatar = async () => {
+    if (!user) return;
+    
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+      
+      if (result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        
+        setIsUploading(true);
+        const formData = new FormData();
+        
+        const uriParts = asset.uri.split('/');
+        const fileName = asset.fileName || uriParts[uriParts.length - 1] || 'avatar.jpg';
+
+        formData.append('avatar', {
+          uri: asset.uri,
+          name: fileName,
+          type: asset.mimeType || 'image/jpeg',
+        } as any);
+
+        const response = await api.put(`/api/users/${user.username}/avatar`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (response.data && response.data.avatar) {
+          await updateUser({ avatar: response.data.avatar });
+          Alert.alert('Thành công', 'Cập nhật ảnh đại diện thành công!');
+        }
+      }
+    } catch (error: any) {
+      console.error('Lỗi cập nhật avatar:', error);
+      Alert.alert('Lỗi', error.message || 'Không thể cập nhật ảnh đại diện');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSave = () => {
     // Logic lưu thông tin
@@ -39,15 +99,22 @@ export const EditProfileScreen = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.avatarSection}>
-          <View style={styles.avatarWrapper}>
+          <TouchableOpacity style={styles.avatarWrapper} onPress={handleSelectAvatar} disabled={isUploading}>
             <Image 
-              source={{ uri: 'https://i.pravatar.cc/150?img=11' }} 
+              source={{ uri: getAvatarUri(user?.avatar) }} 
               style={styles.avatar} 
             />
-            <TouchableOpacity style={styles.editAvatarBtn}>
-              <Icon name="camera" size={16} color="#FFF" />
-            </TouchableOpacity>
-          </View>
+            {isUploading && (
+              <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]}>
+                <ActivityIndicator color="#FFF" size="large" />
+              </View>
+            )}
+            {!isUploading && (
+              <View style={styles.editAvatarBtn}>
+                <Icon name="camera" size={16} color="#FFF" />
+              </View>
+            )}
+          </TouchableOpacity>
           <PolyText color={theme.colors.textMuted} style={styles.avatarHint}>
             Chạm để thay đổi ảnh đại diện
           </PolyText>
@@ -151,6 +218,12 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
+  },
+  loadingOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   editAvatarBtn: {
     position: 'absolute',

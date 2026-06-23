@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { PolyHeader } from '../../components/PolyHeader';
 import { PolyText } from '../../components/PolyText';
-import { theme } from '../../constants/theme';
+import { useAppTheme, useThemeStore, ThemeMode } from '../../store/themeStore';
 import Feather from '@expo/vector-icons/Feather';
 import { useAuthStore } from '../../store/authStore';
 
@@ -11,7 +11,11 @@ const Icon = Feather as any;
 
 export const SettingsScreen = () => {
   const navigation = useNavigation<any>();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, styles } = useAppTheme(createStyles);
+  const themeMode = useThemeStore(state => state.themeMode);
+  const setThemeMode = useThemeStore(state => state.setThemeMode);
+  
+  const [showThemeModal, setShowThemeModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const { logout: storeLogout, setTransitioning } = useAuthStore();
 
@@ -82,13 +86,9 @@ export const SettingsScreen = () => {
         {/* Display Section */}
         {renderSectionHeader('Hiển thị & Tuỳ chỉnh')}
         <View style={styles.sectionBlock}>
-          {renderSettingItem('moon', 'Chế độ tối (Dark Mode)', 'Thay đổi giao diện sang màu tối', undefined,
-            <Switch
-              value={isDarkMode}
-              onValueChange={setIsDarkMode}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-              thumbColor="#FFF"
-            />
+          {renderSettingItem('moon', 'Giao diện (Theme)', 
+            themeMode === 'system' ? 'Theo hệ thống' : themeMode === 'dark' ? 'Giao diện Tối' : 'Giao diện Sáng', 
+            () => setShowThemeModal(true)
           )}
           {renderSettingItem('globe', 'Ngôn ngữ', 'Tiếng Việt', () => { })}
           {renderSettingItem('bell', 'Thông báo đẩy', 'Quản lý thông báo ứng dụng', undefined,
@@ -119,11 +119,41 @@ export const SettingsScreen = () => {
           PolyHUB phiên bản 1.0.0
         </PolyText>
       </ScrollView>
+
+      {/* Theme Selection Modal */}
+      <Modal
+        visible={showThemeModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowThemeModal(false)}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowThemeModal(false)}>
+          <View style={styles.modalContent}>
+            <PolyText variant="h3" weight="bold" style={styles.modalTitle}>Chọn giao diện</PolyText>
+            
+            {(['light', 'dark', 'system'] as ThemeMode[]).map((mode) => (
+              <TouchableOpacity 
+                key={mode} 
+                style={styles.modalOption}
+                onPress={() => {
+                  setThemeMode(mode);
+                  setShowThemeModal(false);
+                }}
+              >
+                <PolyText weight={themeMode === mode ? 'bold' : 'regular'} color={themeMode === mode ? theme.colors.primary : theme.colors.textMain}>
+                  {mode === 'light' ? 'Giao diện Sáng' : mode === 'dark' ? 'Giao diện Tối' : 'Theo hệ thống'}
+                </PolyText>
+                {themeMode === mode && <Icon name="check" size={20} color={theme.colors.primary} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -166,4 +196,28 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.md,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.card,
+    borderTopLeftRadius: theme.borderRadius.xl,
+    borderTopRightRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    marginBottom: theme.spacing.lg,
+    color: theme.colors.textMain,
+    textAlign: 'center',
+  },
+  modalOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  }
 });

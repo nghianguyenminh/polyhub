@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { SplashScreen } from '../components/SplashScreen';
+import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '../store/themeStore';
 
 // Navigation Stack Components
 import { MainTabNavigator } from './MainTabNavigator';
@@ -29,6 +31,7 @@ const Stack = createNativeStackNavigator();
 export const RootNavigator = () => {
   const { isAuthenticated, loading, isTransitioning, checkAuth } = useAuthStore();
   const [showStartupSplash, setShowStartupSplash] = useState(true);
+  const { theme, styles } = useAppTheme(createStyles);
 
   useEffect(() => {
     // Check credentials on startup
@@ -48,7 +51,18 @@ export const RootNavigator = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationContainer>
+      <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+      <NavigationContainer theme={{
+        dark: theme.isDark,
+        colors: {
+          primary: theme.colors.primary,
+          background: theme.colors.background,
+          card: theme.colors.card,
+          text: theme.colors.textMain,
+          border: theme.colors.border,
+          notification: theme.colors.primary,
+        }
+      }}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {isAuthenticated ? (
             // App Stack (Authenticated)
@@ -80,6 +94,7 @@ export const RootNavigator = () => {
               <Stack.Screen 
                 name="Settings" 
                 component={SettingsScreen} 
+                options={{ animation: 'slide_from_left' }}
               />
               <Stack.Screen 
                 name="EditProfile" 
@@ -117,9 +132,9 @@ export const RootNavigator = () => {
 };
 
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background,
   },
 });

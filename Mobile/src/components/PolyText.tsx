@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TextProps, StyleSheet } from 'react-native';
-import { theme } from '../constants/theme';
+import { useAppTheme } from '../store/themeStore';
 
 interface PolyTextProps extends TextProps {
   variant?: 'h1' | 'h2' | 'h3' | 'body' | 'caption' | 'small';
@@ -12,12 +12,15 @@ interface PolyTextProps extends TextProps {
 export const PolyText: React.FC<PolyTextProps> = ({
   variant = 'body',
   weight = 'regular',
-  color = theme.colors.textMain,
+  color,
   align = 'left',
   style,
   children,
   ...props
 }) => {
+  const { theme } = useAppTheme();
+  const finalColor = color || theme.colors.textMain;
+
   return (
     <Text
       style={[
@@ -25,7 +28,7 @@ export const PolyText: React.FC<PolyTextProps> = ({
         {
           fontSize: theme.typography.sizes[variant],
           fontFamily: theme.typography.fontFamily[weight],
-          color: color,
+          color: finalColor,
           textAlign: align,
         },
         style,

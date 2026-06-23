@@ -283,6 +283,14 @@ export const HomeScreen = () => {
     <View style={styles.container}>
       <PolyHeader
         title="PolyHUB"
+        leftComponent={
+          <TouchableOpacity
+            style={styles.menuIconButton}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Icon name="menu" size={24} color={theme.colors.textMain} />
+          </TouchableOpacity>
+        }
         rightComponent={
           <View style={styles.headerRight}>
             <TouchableOpacity
@@ -296,6 +304,15 @@ export const HomeScreen = () => {
               onPress={() => navigation.navigate('ChatList')}
             >
               <Icon name="message-circle" size={20} color={theme.colors.textMain} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ marginLeft: 8 }}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <Image
+                source={{ uri: getAvatarUri(user?.avatar) }}
+                style={styles.headerAvatar}
+              />
             </TouchableOpacity>
           </View>
         }
@@ -479,6 +496,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  menuIconButton: {
+    padding: theme.spacing.sm,
+    marginLeft: -theme.spacing.sm,
+  },
   iconButtonCircle: {
     width: 38,
     height: 38,
@@ -486,6 +507,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.iconBackground,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primarySoft,
   },
   listContent: {
     padding: theme.spacing.lg,

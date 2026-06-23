@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { theme } from '../constants/theme';
+import { useAppTheme } from '../store/themeStore';
 import { PolyText } from './PolyText';
 import Feather from '@expo/vector-icons/Feather';
 const Icon = Feather as any;
@@ -12,6 +12,7 @@ interface PolyHeaderProps {
   showBack?: boolean;
   onBackPress?: () => void;
   rightComponent?: React.ReactNode;
+  leftComponent?: React.ReactNode;
 }
 
 export const PolyHeader: React.FC<PolyHeaderProps> = ({
@@ -19,9 +20,11 @@ export const PolyHeader: React.FC<PolyHeaderProps> = ({
   showBack = false,
   onBackPress,
   rightComponent,
+  leftComponent,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
+  const { theme, styles } = useAppTheme(createStyles);
 
   return (
     <View
@@ -34,11 +37,11 @@ export const PolyHeader: React.FC<PolyHeaderProps> = ({
       ]}
     >
       <View style={styles.left}>
-        {showBack && (
+        {showBack ? (
           <TouchableOpacity onPress={onBackPress} style={styles.iconButton}>
             <Icon name="arrow-left" size={24} color={theme.colors.textMain} />
           </TouchableOpacity>
-        )}
+        ) : leftComponent}
       </View>
 
       <View style={styles.center}>
@@ -46,40 +49,20 @@ export const PolyHeader: React.FC<PolyHeaderProps> = ({
           variant="h3"
           weight="bold"
           color={title === 'PolyHUB' ? theme.colors.primary : theme.colors.textMain}
+          numberOfLines={1}
         >
           {title}
         </PolyText>
       </View>
 
       <View style={styles.right}>
-        {rightComponent || (
-          <View style={styles.rightIconsContainer}>
-            <TouchableOpacity 
-              style={[styles.iconButtonCircle, { marginRight: 8 }]}
-              onPress={() => navigation.navigate('ChatList')}
-            >
-              <Icon name="message-circle" size={20} color={theme.colors.textMain} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.iconButtonCircle, { marginRight: 8 }]}
-              onPress={() => navigation.navigate('Notifications')}
-            >
-              <Icon name="bell" size={20} color={theme.colors.textMain} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-              <Image 
-                source={{ uri: 'https://i.pravatar.cc/150?img=11' }} 
-                style={styles.headerAvatar}
-              />
-            </TouchableOpacity>
-          </View>
-        )}
+        {rightComponent}
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     backgroundColor: theme.colors.card,
     flexDirection: 'row',
