@@ -64,13 +64,13 @@ export const DocumentListScreen = () => {
       });
       const data = response.data;
       
-      const list = data.content || []; // Spring Boot Page object usually has 'content'
+      const list = data.documents || data.content || [];
       if (pageNumber === 1) {
         setDocuments(list);
       } else {
         setDocuments((prev) => [...prev, ...list]);
       }
-      setPage((data.number ?? 0) + 1);
+      setPage(data.currentPage || (data.number != null ? data.number + 1 : 1));
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Failed to load documents:', error);
