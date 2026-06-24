@@ -114,9 +114,36 @@ function AdminReportsContent() {
       </div>
 
       {message && (
-        <div className={`alert alert-${message.type} alert-dismissible fade show rounded-3 border-0 shadow-sm`} role="alert">
-          {message.text}
-          <button type="button" className="btn-close" onClick={() => setMessage(null)}></button>
+        <div
+          className="d-flex align-items-center justify-content-between p-3 mb-4 rounded-3 border-start border-4 shadow-sm"
+          style={{
+            backgroundColor: message.type === 'success' ? '#F0FDF4' : '#FEF2F2',
+            borderColor: message.type === 'success' ? '#22C55E' : '#EF4444',
+            color: message.type === 'success' ? '#166534' : '#991B1B',
+            animation: 'polyFadeIn 0.3s ease-out'
+          }}
+          role="alert"
+        >
+          <div className="d-flex align-items-center gap-2">
+            <i
+              className={`bi ${message.type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-circle-fill text-danger'} fs-5`}
+            ></i>
+            <span className="fw-semibold" style={{ fontSize: '14px' }}>{message.text}</span>
+          </div>
+          <button
+            type="button"
+            className="btn border-0 p-1 d-flex align-items-center justify-content-center rounded-circle"
+            style={{
+              width: '24px',
+              height: '24px',
+              color: message.type === 'success' ? '#166534' : '#991B1B',
+              opacity: 0.7,
+              cursor: 'pointer'
+            }}
+            onClick={() => setMessage(null)}
+          >
+            <i className="bi bi-x-lg" style={{ fontSize: '12px' }}></i>
+          </button>
         </div>
       )}
 
@@ -135,7 +162,7 @@ function AdminReportsContent() {
         </div>
         <div className="col-12 col-md-4">
           <div className="poly-card p-3 bg-white rounded-3 shadow-sm border-0 border-start border-4 border-danger h-100">
-            <div className="text-muted fw-medium" style={{ fontSize: '13px' }}>Báo cáo sai</div>
+            <div className="text-muted fw-medium" style={{ fontSize: '13px' }}>Từ Chối Xóa Bài </div>
             <h3 className="fw-bold text-dark mt-1 mb-0">{stats.falseCount}</h3>
           </div>
         </div>
@@ -181,9 +208,9 @@ function AdminReportsContent() {
                     <td>
                       {report.post?.user ? (
                         <div className="d-flex align-items-center gap-2">
-                          <img 
-                            src={report.post.user.avatar && report.post.user.avatar !== 'default.png' ? report.post.user.avatar : `https://ui-avatars.com/api/?name=${report.post.user.fullname}`} 
-                            className="rounded-circle" width="24" height="24" alt="avatar" 
+                          <img
+                            src={report.post.user.avatar && report.post.user.avatar !== 'default.png' ? report.post.user.avatar : `https://ui-avatars.com/api/?name=${report.post.user.fullname}`}
+                            className="rounded-circle" width="24" height="24" alt="avatar"
                             style={{ objectFit: 'cover' }}
                           />
                           <span className="fw-medium text-dark">{report.post.user.fullname}</span>
@@ -203,16 +230,16 @@ function AdminReportsContent() {
                       {new Date(report.createdAt).toLocaleDateString('vi-VN')}
                     </td>
                     <td className="text-end pe-4">
-                      <button 
-                        onClick={() => { setSelectedReport(report); setShowDetailModal(true); }} 
-                        className="btn btn-sm btn-outline-primary me-2" 
+                      <button
+                        onClick={() => { setSelectedReport(report); setShowDetailModal(true); }}
+                        className="btn btn-sm btn-outline-primary me-2"
                         title="Xem chi tiết báo cáo và bài viết"
                       >
                         <i className="bi bi-eye"></i> Chi tiết
                       </button>
-                      <button 
-                        onClick={() => handleReject(report.id)} 
-                        className="btn btn-sm btn-outline-secondary" 
+                      <button
+                        onClick={() => handleReject(report.id)}
+                        className="btn btn-sm btn-outline-secondary"
                         title="Từ chối (Báo cáo sai)"
                       >
                         <i className="bi bi-x-circle"></i> Từ chối
@@ -224,7 +251,7 @@ function AdminReportsContent() {
             </tbody>
           </table>
         </div>
-        
+
         {totalPages > 1 && (
           <div className="d-flex justify-content-between align-items-center p-3 border-top bg-light bg-opacity-50">
             <div className="text-muted" style={{ fontSize: '13px' }}>
@@ -237,8 +264,8 @@ function AdminReportsContent() {
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
-                    <button 
-                      className="page-link shadow-none" 
+                    <button
+                      className="page-link shadow-none"
                       style={currentPage === page ? { backgroundColor: '#4F46E5', borderColor: '#4F46E5' } : {}}
                       onClick={() => handlePageChange(page)}
                     >
@@ -282,7 +309,7 @@ function AdminReportsContent() {
 
             {/* Modal Body */}
             <div className="p-4 overflow-auto" style={{ maxHeight: '65vh' }}>
-              
+
               {/* Section 1: Report Reason */}
               <div className="mb-4">
                 <h6 className="fw-bold text-uppercase text-muted mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Thông tin báo cáo</h6>
@@ -338,9 +365,9 @@ function AdminReportsContent() {
                 <h6 className="fw-bold text-uppercase text-muted mb-2" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Thông tin người bị báo cáo (Tác giả)</h6>
                 {selectedReport.post?.user ? (
                   <div className="p-3 bg-light rounded-3 d-flex align-items-center gap-3">
-                    <img 
-                      src={selectedReport.post.user.avatar && selectedReport.post.user.avatar !== 'default.png' ? selectedReport.post.user.avatar : `https://ui-avatars.com/api/?name=${selectedReport.post.user.fullname}`} 
-                      className="rounded-circle border" width="48" height="48" alt="avatar" 
+                    <img
+                      src={selectedReport.post.user.avatar && selectedReport.post.user.avatar !== 'default.png' ? selectedReport.post.user.avatar : `https://ui-avatars.com/api/?name=${selectedReport.post.user.fullname}`}
+                      className="rounded-circle border" width="48" height="48" alt="avatar"
                       style={{ objectFit: 'cover' }}
                     />
                     <div>
@@ -359,44 +386,26 @@ function AdminReportsContent() {
             {/* Modal Footer */}
             <div className="px-4 py-3 border-top bg-light d-flex justify-content-between flex-wrap gap-2">
               <div>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary btn-sm" 
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
                   onClick={() => setShowDetailModal(false)}
                 >
                   Đóng
                 </button>
               </div>
               <div className="d-flex gap-2">
-                {selectedReport.post && (
-                  <>
-                    <button 
-                      onClick={() => handleWarn(selectedReport.id)} 
-                      className="btn btn-sm btn-warning text-dark fw-semibold"
-                      title="Gửi email cảnh báo vi phạm yêu cầu chỉnh sửa/xóa bài trong 2 ngày"
-                    >
-                      <i className="bi bi-exclamation-octagon me-1"></i> Cảnh báo (2 ngày)
-                    </button>
-                    <button 
-                      onClick={() => handleRequestLock(selectedReport.id)} 
-                      className="btn btn-sm btn-danger fw-semibold"
-                      title="Gửi email yêu cầu User Admin thực hiện khóa tài khoản"
-                    >
-                      <i className="bi bi-shield-slash me-1"></i> Yêu cầu khóa
-                    </button>
-                  </>
-                )}
-                <button 
-                  onClick={() => handleReject(selectedReport.id)} 
-                  className="btn btn-sm btn-outline-secondary" 
+                <button
+                  onClick={() => handleReject(selectedReport.id)}
+                  className="btn btn-sm btn-outline-secondary"
                   title="Từ chối báo cáo này (Báo cáo sai)"
                 >
                   Từ chối
                 </button>
                 {selectedReport.post && (
-                  <button 
-                    onClick={() => handleApprove(selectedReport.id)} 
-                    className="btn btn-sm btn-danger" 
+                  <button
+                    onClick={() => handleApprove(selectedReport.id)}
+                    className="btn btn-sm btn-danger"
                     title="Xóa bài viết vi phạm ngay lập tức"
                   >
                     Xóa bài

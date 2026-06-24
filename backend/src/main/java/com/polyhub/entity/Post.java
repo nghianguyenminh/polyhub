@@ -56,6 +56,11 @@ public class Post {
     @JsonIgnore // CHẶN VÒNG LẶP: Không cần thiết trả về danh sách report trong API bài viết thông thường
     private List<PostReport> reports = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonIgnore
+    private List<SavedPost> savedPosts = new ArrayList<>();
+
     @Column(name = "is_private")
     @Builder.Default
     private Boolean isPrivate = false;
