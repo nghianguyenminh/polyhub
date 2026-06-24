@@ -29,6 +29,16 @@ public class AdminReportApiController {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @jakarta.annotation.PostConstruct
+    public void initDatabaseSchema() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE post_reports MODIFY post_id BIGINT NULL");
+        } catch (Exception e) {
+            System.err.println("Database migration note: " + e.getMessage());
+        }
+    }
 
     @GetMapping
     public ResponseEntity<?> getReports(@RequestParam(defaultValue = "1") int page) {
@@ -96,20 +106,25 @@ public class AdminReportApiController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
     @PostMapping("/{id}/approve")
     public ResponseEntity<?> approveReport(@PathVariable Long id) {
-        PostReport report = postReportRepository.findById(id).orElse(null);
-        if (report != null && report.getPost() != null) {
-            Post post = report.getPost();
-            // Disassociate all reports related to this post before deleting the post
-            java.util.List<PostReport> relatedReports = postReportRepository.findByPostId(post.getId());
-            for (PostReport r : relatedReports) {
-                r.setPost(null);
-                r.setStatus("RESOLVED");
-                postReportRepository.save(r);
+        try {
+            PostReport report = postReportRepository.findById(id).orElse(null);
+            if (report != null && report.getPost() != null) {
+                Post post = report.getPost();
+                // Disassociate all reports related to this post before deleting the post
+                java.util.List<PostReport> relatedReports = postReportRepository.findByPostId(post.getId());
+                for (PostReport r : relatedReports) {
+                    r.setPost(null);
+                    r.setStatus("RESOLVED");
+                    postReportRepository.save(r);
+                }
+                postRepository.delete(post); 
+                return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết vi phạm thành công."));
             }
-            postRepository.delete(post); 
-            return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết vi phạm thành công."));
+            return ResponseEntity.status(400).body(Map.of("message", "Lỗi xử lý báo cáo."));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("message", "Lỗi hệ thống: " + e.getMessage()));
         }
-        return ResponseEntity.status(400).body(Map.of("message", "Lỗi xử lý báo cáo."));
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
