@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchAPI } from '@/lib/api';
+import '@/styles/auth.css';
 
 export default function VerifyOtpPage() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,13 @@ export default function VerifyOtpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    document.body.classList.add('auth-body');
+    return () => {
+      document.body.classList.remove('auth-body');
+    };
+  }, []);
 
   useEffect(() => {
     // Lấy email đã lưu từ session storage sau khi quên mật khẩu thành công

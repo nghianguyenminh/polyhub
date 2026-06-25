@@ -11,6 +11,11 @@
 .bg-poly-soft { background-color: var(--poly-primary-soft) !important; }
 
 /* --- TỔNG THỂ LAYOUT --- */
+body.auth-body {
+    padding-top: 0 !important;
+    overflow-x: hidden;
+}
+
 .auth-wrapper {
     min-height: 100vh;
     display: flex;
