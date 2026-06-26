@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 let customBaseUrl: string | null = null;
 
@@ -11,9 +12,18 @@ export const setCustomApiBase = (url: string) => {
 export const getApiBaseUrl = () => {
   if (customBaseUrl) return customBaseUrl;
   
-  // ⚠️ Cập nhật IP này thành IP máy tính trên cùng mạng WiFi với điện thoại.
-  // IP hiện tại: 172.16.40.148
-  const apiBase = 'http://172.16.40.148:8080';
+  // Tự động phát hiện IP máy tính (host) đang chạy Metro Bundler để kết nối backend
+  const hostUri = Constants.expoConfig?.hostUri;
+  let host = 'localhost';
+  
+  if (hostUri) {
+    host = hostUri.split(':')[0];
+  } else {
+    // Dự phòng khi chạy độc lập
+    host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+  }
+  
+  const apiBase = `http://${host}:8080`;
   
   console.log('Using API Base URL:', apiBase);
   return apiBase;
