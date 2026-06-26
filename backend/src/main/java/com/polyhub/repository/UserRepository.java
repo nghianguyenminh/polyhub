@@ -45,4 +45,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :start AND u.createdAt < :end")
     long countByCreatedAtBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query("UPDATE User u SET u.IsTwoFactorEnabled = :status WHERE u.username = :username")
+    void forceUpdate2FA(@org.springframework.data.repository.query.Param("status") Boolean status, @org.springframework.data.repository.query.Param("username") String username);
 }

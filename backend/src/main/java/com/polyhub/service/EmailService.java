@@ -257,4 +257,31 @@ public class EmailService {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
+    public void send2FAEmail(String toEmail, String fullname, String otp) {
+    try {
+        jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+        org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+        
+        helper.setTo(toEmail);
+        helper.setSubject("Mã xác minh bảo mật 2 bước - Polyhub");
+        
+        String htmlMsg = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 30px; border-radius: 8px;'>"
+                + "<div style='text-align: center; margin-bottom: 20px;'>"
+                + "<h2 style='color: #f27125; margin: 0;'>Xác Minh Đăng Nhập</h2>"
+                + "</div>"
+                + "<p style='font-size: 16px; color: #333;'>Xin chào <strong>" + fullname + "</strong>,</p>"
+                + "<p style='font-size: 15px; color: #555; line-height: 1.5;'>Bạn đang cố gắng đăng nhập vào hệ thống Polyhub. Vui lòng sử dụng mã xác minh gồm 6 chữ số dưới đây để hoàn tất quá trình đăng nhập:</p>"
+                + "<div style='text-align: center; margin: 30px 0;'>"
+                + "<span style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111; background-color: #f4f4f4; padding: 15px 30px; border-radius: 6px; border: 1px dashed #ccc; display: inline-block;'>" + otp + "</span>"
+                + "</div>"
+                + "<p style='font-size: 14px; color: #777; line-height: 1.5;'>Tuyệt đối không chia sẻ mã này cho bất kỳ ai. Nếu bạn không thực hiện yêu cầu này, vui lòng đổi mật khẩu ngay lập tức.</p>"
+                + "<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;' />"
+                + "</div>";
+        
+        helper.setText(htmlMsg, true);
+        mailSender.send(message);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
 }

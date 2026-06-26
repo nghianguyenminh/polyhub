@@ -165,6 +165,32 @@ public class UserApiController {
         return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu thành công"));
     }
 
+@PutMapping("/{username}/toggle-2fa")
+@org.springframework.transaction.annotation.Transactional
+public ResponseEntity<?> toggle2FA(@PathVariable("username") String username, @RequestBody Map<String, Boolean> request) {
+    // 1. Tìm user mới nhất từ DB
+    User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Boolean enable = request.get("enable");
+    
+    // 2. Set giá trị trực tiếp
+    user.setIsTwoFactorEnabled(enable);
+    
+    if (!enable) {
+        user.setTwoFactorCode(null);
+        user.setTwoFactorCodeExpireTime(null);
+    }
+
+    // 3. Save và Flush để ép đẩy xuống DB ngay lập tức
+    userRepository.saveAndFlush(user); 
+
+    return ResponseEntity.ok(Map.of(
+            "message", "Cập nhật thành công",
+            "IsTwoFactorEnabled", enable
+    ));
+}
+
     /**
      * GET /api/users/{username}/followers — Danh sách followers.
      */
@@ -214,6 +240,7 @@ public class UserApiController {
         map.put("role", user.getRole() != null ? user.getRole().getId() : null);
         map.put("followersCount", user.getFollowers() != null ? user.getFollowers().size() : 0);
         map.put("followingCount", user.getFollowing() != null ? user.getFollowing().size() : 0);
+        map.put("IsTwoFactorEnabled", user.getIsTwoFactorEnabled() != null ? user.getIsTwoFactorEnabled() : false);
 
         // Kiểm tra xem user hiện tại có đang follow user này không
         if (principal != null) {
