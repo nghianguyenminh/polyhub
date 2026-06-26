@@ -33,6 +33,13 @@ export default function RegisterPage() {
     }
   }, [user, router]);
 
+  useEffect(() => {
+    document.body.classList.add('auth-body');
+    return () => {
+      document.body.classList.remove('auth-body');
+    };
+  }, []);
+
   // Particle background effect
   useEffect(() => {
     const canvas = canvasRef.current;

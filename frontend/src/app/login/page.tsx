@@ -44,6 +44,13 @@ function LoginContent() {
       sessionStorage.setItem('hasSeenSplash', 'true');
     }
   }, []);
+
+  useEffect(() => {
+    document.body.classList.add('auth-body');
+    return () => {
+      document.body.classList.remove('auth-body');
+    };
+  }, []);
   // Particle background effect
   useEffect(() => {
     const canvas = canvasRef.current;
