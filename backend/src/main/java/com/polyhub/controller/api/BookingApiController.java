@@ -446,4 +446,171 @@ public class BookingApiController {
 
         return ResponseEntity.ok(availability);
     }
+
+    // ======================================================
+    // TÍNH NĂNG GIA HẠN THỜI GIAN (SESSION EXTENSION)
+    // ======================================================
+
+    /**
+     * GET /api/bookings/{id}/remaining-time
+     * Trả về thông tin thời gian còn lại của cuộc gọi đang diễn ra.
+     * Mobile sẽ poll endpoint này mỗi 30 giây để sync trạng thái.
+     */
+    @GetMapping("/{id}/remaining-time")
+    public ResponseEntity<?> getRemainingTime(@PathVariable("id") Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+
+        Booking booking = bookingRepository.findById(id).orElse(null);
+        if (booking == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Không tìm thấy lịch hẹn"));
+        }
+
+        String username = principal.getName();
+        boolean isStudent = booking.getStudent().getUsername().equalsIgnoreCase(username);
+        boolean isMentor = booking.getMentor().getUsername().equalsIgnoreCase(username);
+
+        if (!isStudent && !isMentor) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền truy cập cuộc gọi này"));
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", booking.getStatus().toString());
+        result.put("duration", booking.getDuration());
+        result.put("extensionCount", booking.getExtensionCount() != null ? booking.getExtensionCount() : 0);
+        result.put("maxExtensions", booking.getMaxExtensions() != null ? booking.getMaxExtensions() : 3);
+        result.put("extendedMinutes", booking.getExtendedMinutes() != null ? booking.getExtendedMinutes() : 0);
+
+        int extensionCount = booking.getExtensionCount() != null ? booking.getExtensionCount() : 0;
+        int maxExtensions = booking.getMaxExtensions() != null ? booking.getMaxExtensions() : 3;
+        boolean canExtend = extensionCount < maxExtensions;
+        result.put("canExtend", canExtend);
+
+        if (booking.getStartedAt() != null && booking.getStatus() == BookingStatus.APPROVED) {
+            LocalDateTime endTime = booking.getStartedAt().plusMinutes(booking.getDuration());
+            long remainingSeconds = java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
+            result.put("remainingSeconds", Math.max(0, remainingSeconds));
+            result.put("startedAt", booking.getStartedAt().toString());
+            result.put("calculatedEndAt", endTime.toString());
+        } else {
+            result.put("remainingSeconds", 0);
+            result.put("startedAt", null);
+            result.put("calculatedEndAt", null);
+        }
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * POST /api/bookings/{id}/extend
+     * Gia hạn thời gian cuộc gọi thêm X phút.
+     * Body: { "additionalMinutes": 10 | 20 | 30 }
+     * Chỉ mentor hoặc student của booking mới được gọi.
+     * Tối đa 3 lần gia hạn mỗi session.
+     */
+    @PostMapping("/{id}/extend")
+    @Transactional
+    public ResponseEntity<?> extendBooking(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Object> payload,
+            Principal principal) {
+
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+
+        Booking booking = bookingRepository.findById(id).orElse(null);
+        if (booking == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Không tìm thấy lịch hẹn"));
+        }
+
+        // Chỉ cho phép gia hạn khi booking đang ở trạng thái APPROVED và đã bắt đầu
+        if (booking.getStatus() != BookingStatus.APPROVED) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Cuộc gọi không đang diễn ra hoặc đã kết thúc"));
+        }
+
+        if (booking.getStartedAt() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Cuộc gọi chưa được bắt đầu"));
+        }
+
+        // Kiểm tra quyền
+        String username = principal.getName();
+        boolean isStudent = booking.getStudent().getUsername().equalsIgnoreCase(username);
+        boolean isMentor = booking.getMentor().getUsername().equalsIgnoreCase(username);
+
+        if (!isStudent && !isMentor) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền gia hạn cuộc gọi này"));
+        }
+
+        // Kiểm tra giới hạn gia hạn
+        int currentExtCount = booking.getExtensionCount() != null ? booking.getExtensionCount() : 0;
+        int maxExtensions = booking.getMaxExtensions() != null ? booking.getMaxExtensions() : 3;
+
+        if (currentExtCount >= maxExtensions) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Đã đạt giới hạn gia hạn (" + maxExtensions + " lần). Không thể gia hạn thêm.",
+                "extensionCount", currentExtCount,
+                "maxExtensions", maxExtensions
+            ));
+        }
+
+        // Validate số phút gia hạn
+        Object additionalMinutesObj = payload.get("additionalMinutes");
+        if (additionalMinutesObj == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng chỉ định số phút muốn gia hạn"));
+        }
+
+        int additionalMinutes;
+        try {
+            additionalMinutes = Integer.parseInt(additionalMinutesObj.toString());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Số phút gia hạn không hợp lệ"));
+        }
+
+        List<Integer> validExtensions = Arrays.asList(10, 20, 30);
+        if (!validExtensions.contains(additionalMinutes)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Thời gian gia hạn chỉ được là 10, 20 hoặc 30 phút"));
+        }
+
+        // Cập nhật booking
+        int newDuration = booking.getDuration() + additionalMinutes;
+        int newExtendedMinutes = (booking.getExtendedMinutes() != null ? booking.getExtendedMinutes() : 0) + additionalMinutes;
+
+        booking.setDuration(newDuration);
+        booking.setExtensionCount(currentExtCount + 1);
+        booking.setExtendedMinutes(newExtendedMinutes);
+
+        // Cập nhật endTime (theo startTime gốc của booking, không phải startedAt)
+        LocalTime newEndTime = booking.getStartTime().plusMinutes(newDuration);
+        booking.setEndTime(newEndTime);
+
+        Booking saved = bookingRepository.save(booking);
+
+        // Tính thời gian còn lại sau gia hạn
+        LocalDateTime newEndAt = booking.getStartedAt().plusMinutes(newDuration);
+        long remainingSeconds = java.time.Duration.between(LocalDateTime.now(), newEndAt).getSeconds();
+
+        // Gửi thông báo cho bên đối phương
+        String extenderName = isStudent ? booking.getStudent().getFullname() : booking.getMentor().getFullname();
+        User notifyTarget = isStudent ? booking.getMentor() : booking.getStudent();
+
+        createSystemNotification(notifyTarget, "Cuộc gọi được gia hạn",
+            extenderName + " đã gia hạn cuộc gọi thêm " + additionalMinutes + " phút. Thời gian mới: " + newDuration + " phút.");
+
+        // Trả về thông tin đầy đủ sau gia hạn
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Gia hạn cuộc gọi thành công! Thêm " + additionalMinutes + " phút.");
+        response.put("additionalMinutes", additionalMinutes);
+        response.put("newDuration", newDuration);
+        response.put("extensionCount", saved.getExtensionCount());
+        response.put("maxExtensions", saved.getMaxExtensions());
+        response.put("extendedMinutes", saved.getExtendedMinutes());
+        response.put("canExtend", saved.getExtensionCount() < saved.getMaxExtensions());
+        response.put("remainingSeconds", Math.max(0, remainingSeconds));
+        response.put("calculatedEndAt", newEndAt.toString());
+
+        return ResponseEntity.ok(response);
+    }
 }
+
