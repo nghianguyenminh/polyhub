@@ -3,13 +3,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/lib/types';
 import { fetchAPI, setAuthToken, getAuthToken } from '@/lib/api';
+import SplashScreen from '@/components/layout/SplashScreen';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  isTransitioning: boolean;
+  triggerTransition: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const refreshUser = async () => {
     const token = getAuthToken();
@@ -42,6 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, []);
 
+  const triggerTransition = async () => {
+    setIsTransitioning(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsTransitioning(false);
+  };
+
   const login = async (username: string, password: string) => {
     setLoading(true);
     try {
@@ -49,8 +59,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         body: JSON.stringify({ username, password }),
       });
+      
+      // Kích hoạt hiệu ứng chuyển cảnh
+      setIsTransitioning(true);
+      await new Promise(r => setTimeout(r, 1200)); // Đợi hiệu ứng logo hội tụ
+      
       setAuthToken(data.token);
       setUser(data.user);
+      
+      setTimeout(() => setIsTransitioning(false), 300);
     } catch (err) {
       setLoading(false);
       throw err;
@@ -59,7 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    setIsTransitioning(true);
+    await new Promise(r => setTimeout(r, 1200)); // Đợi hiệu ứng logo hội tụ
     setAuthToken(null);
     setUser(null);
     if (typeof window !== 'undefined') {
@@ -68,8 +87,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, isTransitioning, triggerTransition }}>
       {children}
+      {isTransitioning && <SplashScreen />}
     </AuthContext.Provider>
   );
 }
@@ -81,3 +101,4 @@ export function useAuth() {
   }
   return context;
 }
+
