@@ -30,7 +30,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
            // Trọng số 0: Các bài viết public của người lạ
            "    ELSE 0 " +
            "  END DESC, " +
-           // Tiêu chí sắp xếp thứ 2: Thời gian đăng bài
+           // Tiêu chí sắp xếp thứ 2: Điểm Hot Score giảm dần
+           "  p.hotScore DESC, " +
+           // Tiêu chí sắp xếp thứ 3: Thời gian đăng bài
            "  p.createdAt DESC")
     Page<Post> findVisiblePostsForFeed(@Param("viewerUsername") String viewerUsername, Pageable pageable);
 

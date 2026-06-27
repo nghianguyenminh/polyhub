@@ -37,6 +37,7 @@ public class PostService {
         Post post = new Post();
         post.setContent(content);
         post.setUser(user);
+        post.setHotScore(1.7677); // Khởi tạo điểm Recency Boost cho bài đăng mới
 
         // Nêú có ảnh đính kèm thì upload lên Cloudinary
         if (image != null && !image.isEmpty()) {
@@ -64,6 +65,7 @@ public class PostService {
         sharedPost.setContent(content); // Lời tựa người dùng thêm vào
         sharedPost.setUser(user);
         sharedPost.setSharedPost(rootPost);
+        sharedPost.setHotScore(1.7677); // Khởi tạo điểm Recency Boost cho bài đăng mới
 
         return postRepository.save(sharedPost);
     }
