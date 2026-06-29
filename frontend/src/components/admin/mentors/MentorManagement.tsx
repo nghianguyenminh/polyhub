@@ -146,7 +146,14 @@ export default function MentorManagement() {
     if (!url) return;
 
     // Chuẩn hoá sang HTTPS để trình duyệt không chặn "insecure download"
-    const secureUrl = url.replace('http://', 'https://');
+    let secureUrl = url.replace('http://', 'https://');
+
+    // Hỗ trợ các tệp cũ tải lên dạng raw không có đuôi mở rộng
+    const isRaw = secureUrl.includes('/raw/upload/');
+    const hasExtension = secureUrl.match(/\.[a-zA-Z0-9]+$/) !== null;
+    if (isRaw && !hasExtension) {
+      secureUrl = `${secureUrl}/cv.pdf`;
+    }
 
     const lowerUrl = secureUrl.toLowerCase();
     const isPdf = lowerUrl.endsWith('.pdf') || lowerUrl.includes('/pdf');
@@ -528,37 +535,73 @@ export default function MentorManagement() {
                   {viewingMentor.cvFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> CV</div>
-                      <a
-                        href="#"
-                        onClick={(e) => handleViewDocument(e, viewingMentor.cvFile)}
-                        className={styles.detailFileChip}
-                      >
-                        📄 Xem CV
-                      </a>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.cvFile)}
+                          className={styles.detailFileChip}
+                        >
+                          📄 Xem CV
+                        </a>
+                        <a
+                          href={viewingMentor.cvFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
                     </div>
                   )}
                   {viewingMentor.certificateFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Chứng chỉ</div>
-                      <a
-                        href="#"
-                        onClick={(e) => handleViewDocument(e, viewingMentor.certificateFile)}
-                        className={styles.detailFileChip}
-                      >
-                        📜 Xem Chứng chỉ
-                      </a>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.certificateFile)}
+                          className={styles.detailFileChip}
+                        >
+                          📜 Xem Chứng chỉ
+                        </a>
+                        <a
+                          href={viewingMentor.certificateFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
                     </div>
                   )}
                   {viewingMentor.degreeFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Bằng cấp</div>
-                      <a
-                        href="#"
-                        onClick={(e) => handleViewDocument(e, viewingMentor.degreeFile)}
-                        className={styles.detailFileChip}
-                      >
-                        🎓 Xem Bằng cấp
-                      </a>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.degreeFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🎓 Xem Bằng cấp
+                        </a>
+                        <a
+                          href={viewingMentor.degreeFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
                     </div>
                   )}
                   {!viewingMentor.portfolioLink && !viewingMentor.cvUrl && !viewingMentor.certificateUrl && !viewingMentor.degreeUrl && (
