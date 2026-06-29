@@ -205,3 +205,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         padding: 32px 24px;
     }
 }
+
+/* --- VALIDATION ERRORS --- */
+.auth-field-error {
+    color: #DC2626;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+    font-weight: 500;
+}
+.error-field {
+    border-color: #DC2626 !important;
+}
+.error-field:focus {
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}

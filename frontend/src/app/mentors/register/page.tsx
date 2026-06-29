@@ -87,6 +87,8 @@ export default function MentorRegisterPage() {
         errs.fullname = 'Vui lòng nhập họ tên đầy đủ';
       } else if (fullname.trim().length < 2) {
         errs.fullname = 'Họ tên phải có ít nhất 2 ký tự';
+      } else if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠưăâêôơ\s]+$/.test(fullname.trim())) {
+        errs.fullname = 'Họ tên không chứa số hoặc ký tự đặc biệt';
       }
 
       // 2. Validate CCCD/CMND (Chính xác 9 hoặc 12 chữ số)

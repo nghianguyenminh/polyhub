@@ -24,6 +24,7 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loadingState, setLoadingState] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -203,25 +204,93 @@ export default function RegisterPage() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+    
+    const errs: Record<string, string> = {};
 
-    if (password !== confirmPassword) {
-      setErrorMsg('Mật khẩu xác nhận không trùng khớp!');
+    // 1. Validate fullname
+    const cleanFullname = fullname.trim();
+    if (!cleanFullname) {
+      errs.fullname = 'Vui lòng nhập họ và tên';
+    } else if (cleanFullname.length < 2) {
+      errs.fullname = 'Họ tên phải có ít nhất 2 ký tự';
+    } else if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠưăâêôơ\s]+$/.test(cleanFullname)) {
+      errs.fullname = 'Họ tên không chứa số hoặc ký tự đặc biệt';
+    }
+
+    // 2. Validate username (Mã sinh viên FPT: VD PS12345, PC12345)
+    const cleanUsername = username.trim().toUpperCase();
+    if (!cleanUsername) {
+      errs.username = 'Vui lòng nhập mã sinh viên';
+    } else if (!/^[A-Z]{2}\d{5}$/.test(cleanUsername)) {
+      errs.username = 'Mã sinh viên không hợp lệ (VD: PS12345, PC12345)';
+    }
+
+    // 3. Validate email (Chấp nhận fpt.edu.vn và fe.edu.vn)
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      errs.email = 'Vui lòng nhập email';
+    } else if (!/^[a-zA-Z0-9._%+-]+@(fpt\.edu\.vn|fe\.edu\.vn)$/i.test(cleanEmail)) {
+      errs.email = 'Vui lòng sử dụng email FPT Polytechnic (@fpt.edu.vn hoặc @fe.edu.vn)';
+    }
+
+    // 4. Validate phone
+    const cleanPhone = phone.trim();
+    if (cleanPhone) {
+      if (!/^(0[3|5|7|8|9])+([0-9]{8})$/.test(cleanPhone)) {
+        errs.phone = 'Số điện thoại không hợp lệ (Bắt đầu bằng 03,05,07,08,09)';
+      }
+    }
+
+    // 5. Validate birthday
+    if (birthday) {
+      const birthDate = new Date(birthday);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 15) {
+        errs.birthday = 'Bạn phải từ 15 tuổi trở lên';
+      } else if (age > 80) {
+        errs.birthday = 'Năm sinh không hợp lệ';
+      }
+    }
+
+    // 6. Validate password
+    if (!password) {
+      errs.password = 'Vui lòng nhập mật khẩu';
+    } else if (password.length < 6) {
+      errs.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+
+    // 7. Validate confirmPassword
+    if (!confirmPassword) {
+      errs.confirmPassword = 'Vui lòng xác nhận mật khẩu';
+    } else if (password !== confirmPassword) {
+      errs.confirmPassword = 'Mật khẩu xác nhận không khớp!';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setErrorMsg('Vui lòng kiểm tra lại thông tin nhập liệu.');
       return;
     }
 
+    setFieldErrors({});
     setLoadingState(true);
 
     try {
       await fetchAPI('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({
-          fullname,
-          username,
-          email,
+          fullname: cleanFullname,
+          username: cleanUsername,
+          email: cleanEmail,
           password,
           confirmPassword,
-          phone,
-          birthday,
+          phone: cleanPhone || null,
+          birthday: birthday || null,
         }),
       });
       setSuccessMsg('Đăng ký thành công! Đang chuyển hướng...');
@@ -269,15 +338,16 @@ export default function RegisterPage() {
                   <i className="bi bi-person-badge input-icon"></i>
                   <input 
                     type="text" 
-                    className="form-control-custom" 
+                    className={`form-control-custom ${fieldErrors.fullname ? 'error-field' : ''}`} 
                     id="fullname" 
                     value={fullname}
-                    onChange={(e) => setFullname(e.target.value)}
+                    onChange={(e) => { setFullname(e.target.value); setFieldErrors(p => ({...p, fullname: ''})); }}
                     placeholder="Nhập họ và tên" 
                     required 
                     autoFocus
                   />
                 </div>
+                {fieldErrors.fullname && <span className="auth-field-error">⚠ {fieldErrors.fullname}</span>}
               </div>
               <div className="col-md-6 form-group">
                 <label className="form-label" htmlFor="username">Mã sinh viên</label>
@@ -285,14 +355,15 @@ export default function RegisterPage() {
                   <i className="bi bi-card-text input-icon"></i>
                   <input 
                     type="text" 
-                    className="form-control-custom" 
+                    className={`form-control-custom ${fieldErrors.username ? 'error-field' : ''}`} 
                     id="username" 
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => { setUsername(e.target.value); setFieldErrors(p => ({...p, username: ''})); }}
                     placeholder="VD: PS12345" 
                     required 
                   />
                 </div>
+                {fieldErrors.username && <span className="auth-field-error">⚠ {fieldErrors.username}</span>}
               </div>
             </div>
 
@@ -303,14 +374,15 @@ export default function RegisterPage() {
                   <i className="bi bi-envelope input-icon"></i>
                   <input 
                     type="email" 
-                    className="form-control-custom" 
+                    className={`form-control-custom ${fieldErrors.email ? 'error-field' : ''}`} 
                     id="email" 
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setFieldErrors(p => ({...p, email: ''})); }}
                     placeholder="VD: email@fpt.edu.vn" 
                     required 
                   />
                 </div>
+                {fieldErrors.email && <span className="auth-field-error">⚠ {fieldErrors.email}</span>}
               </div>
             </div>
 
@@ -321,13 +393,14 @@ export default function RegisterPage() {
                   <i className="bi bi-telephone input-icon"></i>
                   <input 
                     type="tel" 
-                    className="form-control-custom" 
+                    className={`form-control-custom ${fieldErrors.phone ? 'error-field' : ''}`} 
                     id="phone" 
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => { setPhone(e.target.value); setFieldErrors(p => ({...p, phone: ''})); }}
                     placeholder="VD: 0912345678" 
                   />
                 </div>
+                {fieldErrors.phone && <span className="auth-field-error">⚠ {fieldErrors.phone}</span>}
               </div>
               <div className="col-md-6 form-group">
                 <label className="form-label" htmlFor="birthday">Ngày sinh</label>
@@ -335,12 +408,13 @@ export default function RegisterPage() {
                   <i className="bi bi-calendar-event input-icon"></i>
                   <input 
                     type="date" 
-                    className={`form-control-custom ${!birthday ? 'input-placeholder-color' : ''}`} 
+                    className={`form-control-custom ${!birthday ? 'input-placeholder-color' : ''} ${fieldErrors.birthday ? 'error-field' : ''}`} 
                     id="birthday" 
                     value={birthday}
-                    onChange={(e) => setBirthday(e.target.value)}
+                    onChange={(e) => { setBirthday(e.target.value); setFieldErrors(p => ({...p, birthday: ''})); }}
                   />
                 </div>
+                {fieldErrors.birthday && <span className="auth-field-error">⚠ {fieldErrors.birthday}</span>}
               </div>
             </div>
 
@@ -351,10 +425,10 @@ export default function RegisterPage() {
                   <i className="bi bi-lock input-icon"></i>
                   <input 
                     type={showPassword ? 'text' : 'password'} 
-                    className="form-control-custom pe-5" 
+                    className={`form-control-custom pe-5 ${fieldErrors.password ? 'error-field' : ''}`} 
                     id="password" 
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setFieldErrors(p => ({...p, password: ''})); }}
                     placeholder="••••••••" 
                     required 
                   />
@@ -366,6 +440,7 @@ export default function RegisterPage() {
                     <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
                   </button>
                 </div>
+                {fieldErrors.password && <span className="auth-field-error">⚠ {fieldErrors.password}</span>}
               </div>
               <div className="col-md-6 form-group">
                 <label className="form-label" htmlFor="confirmPassword">Xác nhận mật khẩu</label>
@@ -373,10 +448,10 @@ export default function RegisterPage() {
                   <i className="bi bi-shield-lock input-icon"></i>
                   <input 
                     type={showConfirmPassword ? 'text' : 'password'} 
-                    className="form-control-custom pe-5" 
+                    className={`form-control-custom pe-5 ${fieldErrors.confirmPassword ? 'error-field' : ''}`} 
                     id="confirmPassword" 
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => { setConfirmPassword(e.target.value); setFieldErrors(p => ({...p, confirmPassword: ''})); }}
                     placeholder="••••••••" 
                     required 
                   />
@@ -388,6 +463,7 @@ export default function RegisterPage() {
                     <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
                   </button>
                 </div>
+                {fieldErrors.confirmPassword && <span className="auth-field-error">⚠ {fieldErrors.confirmPassword}</span>}
               </div>
             </div>
 
