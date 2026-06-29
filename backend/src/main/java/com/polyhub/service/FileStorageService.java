@@ -55,20 +55,61 @@ public class FileStorageService {
      * @return Map chứa các thuộc tính do Cloudinary trả về (url, public_id, format, bytes,...)
      * @throws IOException Bắt lỗi nếu file bị hỏng hoặc lỗi mạng
      */
+    /**
+     * TẢI LÊN TÀI LIỆU (PDF, DOCX, v.v.)
+     * Xác định loại file dựa vào đuôi mở rộng để thiết lập "resource_type" phù hợp:
+     * - PDF/Hình ảnh: dùng "image" để trình duyệt có thể mở xem trực tiếp và hiển thị preview trên Cloudinary.
+     * - Các định dạng khác (WORD, EXCEL, ZIP, RAR,...): dùng "raw" và đính kèm đuôi mở rộng vào public_id
+     *   để file được lưu trữ và tải về đúng định dạng gốc.
+     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        String baseName = "document";
 
-        // Dùng "raw" thay vì "auto" để Cloudinary luôn lưu đúng loại tài liệu,
-        // tránh bị nhận diện nhầm thành "image" và bị trình duyệt tải về.
+        if (originalFilename != null && originalFilename.contains(".")) {
+            int dotIndex = originalFilename.lastIndexOf(".");
+            baseName = originalFilename.substring(0, dotIndex);
+            extension = originalFilename.substring(dotIndex + 1).toLowerCase();
+        }
+
+        // Loại bỏ ký tự đặc biệt của baseName
+        baseName = baseName.replaceAll("[^a-zA-Z0-9_-]", "_");
+        if (baseName.isEmpty()) {
+            baseName = "doc";
+        }
+
+        // Tạo tên định danh duy nhất (unique public id)
+        String uniqueName = baseName + "_" + System.currentTimeMillis();
+
+        String resourceType;
+        String publicId;
+
+        // Phân loại tài liệu
+        if ("pdf".equals(extension) || isImageExtension(extension)) {
+            resourceType = "image";
+            publicId = uniqueName; // PDF và Image không đưa đuôi file vào public_id trên Cloudinary
+        } else {
+            resourceType = "raw";
+            publicId = uniqueName + (extension.isEmpty() ? "" : "." + extension); // raw MUST có đuôi file
+        }
+
         Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
                 "folder", "polyhub_documents",
-                "resource_type", "raw"
+                "resource_type", resourceType,
+                "public_id", publicId
         );
 
-        // Chuyển file thành biến byte và upload lên Cloudinary
+        // Upload lên Cloudinary
         Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(file.getBytes(), options);
 
         return uploadResult;
+    }
+
+    private boolean isImageExtension(String ext) {
+        if (ext == null) return false;
+        return java.util.List.of("png", "jpg", "jpeg", "gif", "webp", "bmp", "svg").contains(ext.toLowerCase());
     }
 
     /**
@@ -93,19 +134,20 @@ public class FileStorageService {
      */
     @SuppressWarnings("unchecked")
     public void deleteFile(String publicId) throws IOException {
-        // Khai báo tùy chọn xóa: invalidate = true để cưỡng chế xóa sạch bộ nhớ đệm (cache) trên máy chủ
-        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
-            "invalidate", true,
-            "resource_type", "raw" // Các file thư mục, zip, word,... thường được Cloud phân loại là "raw"
-        );
+        Map<String, Object> options = new java.util.HashMap<>();
+        options.put("invalidate", true);
         
-        try {
-            // Thử xóa đối tượng với tư cách là file "raw" (Tài liệu thông thường)
-            cloudinary.uploader().destroy(publicId, options);
-        } catch (Exception e) {
-            // Nếu Cloudinary báo lỗi (Do nhận diện file này là hình ảnh - image), 
-            // thì fallback lại xóa theo dạng image mặc định
-            cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("invalidate", true));
+        // Xác định resource_type dựa vào đuôi file trong publicId
+        String resourceType = "image";
+        if (publicId != null && publicId.contains(".")) {
+            String ext = publicId.substring(publicId.lastIndexOf(".") + 1).toLowerCase();
+            // Nếu đuôi file thuộc nhóm raw (docx, xlsx, zip, rar, etc.)
+            if (!java.util.List.of("png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "pdf").contains(ext)) {
+                resourceType = "raw";
+            }
         }
+        options.put("resource_type", resourceType);
+        
+        cloudinary.uploader().destroy(publicId, options);
     }
 }
