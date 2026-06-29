@@ -516,3 +516,10 @@
   text-decoration: underline;
   color: #3730a3;
 }
+
+.pageEllipsis {
+  padding: 6px 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  user-select: none;
+}

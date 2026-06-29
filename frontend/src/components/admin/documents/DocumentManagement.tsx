@@ -91,7 +91,8 @@ export default function DocumentManagement() {
   ) => {
     setLoading(true);
     try {
-      let url = `/api/admin/documents?page=${page}&size=5`;
+      const pageSize = 5;
+      let url = `/api/admin/documents?page=${page}&size=${pageSize}`;
 
       if (currentKeyword)
         url += `&keyword=${encodeURIComponent(currentKeyword)}`;
@@ -501,43 +502,42 @@ export default function DocumentManagement() {
             </tbody>
           </table>
         </div>
-
-        {/* Custom Pagination */}
-        {totalPages > 1 && (
-          <div className={styles.pagination}>
-            <div className={styles.pageInfo}>
-              Trang <strong>{currentPage}</strong> / {totalPages}
-            </div>
-            <div className={styles.pageControls}>
-              <button
-                className={styles.pageBtn}
-                disabled={currentPage === 1}
-                onClick={() => handlePageChange(currentPage - 1)}
-              >
-                Trước
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    className={`${styles.pageBtn} ${currentPage === page ? styles.pageBtnActive : ""}`}
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </button>
-                ),
-              )}
-              <button
-                className={styles.pageBtn}
-                disabled={currentPage === totalPages}
-                onClick={() => handlePageChange(currentPage + 1)}
-              >
-                Tiếp
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+        {/* Custom Pagination */}
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <div className={styles.pageInfo}>
+            Trang <strong>{currentPage}</strong> / {totalPages}
+          </div>
+          <div className={styles.pageControls}>
+            <button
+              className={styles.pageBtn}
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              Trước
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  className={`${styles.pageBtn} ${currentPage === page ? styles.pageBtnActive : ""}`}
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </button>
+              ),
+            )}
+            <button
+              className={styles.pageBtn}
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              Tiếp
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Custom Take down Modal (replaces Bootstrap Modal) */}
       {isModalOpen && (
