@@ -141,6 +141,29 @@ export default function MentorManagement() {
     }
   };
 
+  const handleViewDocument = (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    if (!url) return;
+
+    // Chuẩn hoá sang HTTPS để trình duyệt không chặn "insecure download"
+    const secureUrl = url.replace('http://', 'https://');
+
+    const lowerUrl = secureUrl.toLowerCase();
+    const isPdf = lowerUrl.endsWith('.pdf') || lowerUrl.includes('/pdf');
+    const isDocx = lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc');
+
+    if (isPdf || isDocx) {
+      // Dùng Google Docs Viewer để hiển thị PDF/DOCX trực tiếp trong trình duyệt,
+      // tránh trường hợp trình duyệt tải file về thay vì xem.
+      // Điều này hoạt động cho cả URL dạng /raw/upload/ lẫn /image/upload/.
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(secureUrl)}&embedded=true`;
+      window.open(viewerUrl, '_blank');
+    } else {
+      // Các file khác (ảnh, zip,...) mở trực tiếp
+      window.open(secureUrl, '_blank');
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -505,7 +528,11 @@ export default function MentorManagement() {
                   {viewingMentor.cvFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> CV</div>
-                      <a href={viewingMentor.cvFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                      <a
+                        href="#"
+                        onClick={(e) => handleViewDocument(e, viewingMentor.cvFile)}
+                        className={styles.detailFileChip}
+                      >
                         📄 Xem CV
                       </a>
                     </div>
@@ -513,7 +540,11 @@ export default function MentorManagement() {
                   {viewingMentor.certificateFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Chứng chỉ</div>
-                      <a href={viewingMentor.certificateFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                      <a
+                        href="#"
+                        onClick={(e) => handleViewDocument(e, viewingMentor.certificateFile)}
+                        className={styles.detailFileChip}
+                      >
                         📜 Xem Chứng chỉ
                       </a>
                     </div>
@@ -521,7 +552,11 @@ export default function MentorManagement() {
                   {viewingMentor.degreeFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Bằng cấp</div>
-                      <a href={viewingMentor.degreeFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
+                      <a
+                        href="#"
+                        onClick={(e) => handleViewDocument(e, viewingMentor.degreeFile)}
+                        className={styles.detailFileChip}
+                      >
                         🎓 Xem Bằng cấp
                       </a>
                     </div>

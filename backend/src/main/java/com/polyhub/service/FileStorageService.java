@@ -42,23 +42,30 @@ public class FileStorageService {
     }
 
     /**
-     * TẢI LÊN TÀI LIỆU
-     * Hàm này nhận file từ Frontend, đẩy lên Cloudinary và trả về thông tin chi tiết.
-     * 
+     * TẢI LÊN TÀI LIỆU (PDF, DOCX, v.v.)
+     * Hàm này nhận file từ Frontend, đẩy lên Cloudinary dưới dạng "raw" để đảm bảo
+     * file được lưu đúng loại, trình duyệt có thể xem trực tiếp thay vì tải về.
+     *
+     * LÝ DO DÙNG "raw" THAY VÌ "auto":
+     * - "auto" có thể nhầm PDF/DOCX thành "image", khiến Cloudinary trả về
+     *   Content-Disposition: attachment → trình duyệt tải file thay vì hiển thị.
+     * - "raw" đảm bảo file luôn được lưu đúng loại tài liệu.
+     *
      * @param file File cần upload (PDF, DOCX, ZIP, RAR,...)
      * @return Map chứa các thuộc tính do Cloudinary trả về (url, public_id, format, bytes,...)
      * @throws IOException Bắt lỗi nếu file bị hỏng hoặc lỗi mạng
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
-        
-        // Cấu hình các tham số khi đẩy file lên cloud
+
+        // Dùng "raw" thay vì "auto" để Cloudinary luôn lưu đúng loại tài liệu,
+        // tránh bị nhận diện nhầm thành "image" và bị trình duyệt tải về.
         Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
-                "folder", "polyhub_documents", // Tự động tạo thư mục trên Cloudinary để lưu file gọn gàng
-                "resource_type", "auto"        // Tự động nhận diện loại file (image cho ảnh, raw cho zip/pdf/docx...)
+                "folder", "polyhub_documents",
+                "resource_type", "raw"
         );
 
-        // Chuyển file thành biến byte và upload thẳng lên Cloudinary
+        // Chuyển file thành biến byte và upload lên Cloudinary
         Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(file.getBytes(), options);
 
         return uploadResult;

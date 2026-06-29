@@ -99,7 +99,7 @@ public class UserApiController {
             User user = userRepository.findById(username).orElse(null);
             if (user == null) return ResponseEntity.notFound().build();
 
-            Map<String, Object> uploadResult = fileStorageService.uploadFile(file);
+            Map<String, Object> uploadResult = fileStorageService.uploadImage(file, "polyhub_avatars");
             user.setAvatar((String) uploadResult.get("url"));
             userRepository.save(user);
 
@@ -126,7 +126,7 @@ public class UserApiController {
             User user = userRepository.findById(username).orElse(null);
             if (user == null) return ResponseEntity.notFound().build();
 
-            Map<String, Object> uploadResult = fileStorageService.uploadFile(file);
+            Map<String, Object> uploadResult = fileStorageService.uploadImage(file, "polyhub_covers");
             user.setCoverImage((String) uploadResult.get("url"));
             userRepository.save(user);
 

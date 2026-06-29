@@ -23,6 +23,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Tài liệu của bạn KHÔNG ĐƯỢC PHÊ DUYỆT");
@@ -46,7 +47,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
             // Vì chạy nền Async, ko ném exception chết App, chỉ log lỗi ở Console
         }
@@ -57,6 +58,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Yêu cầu đăng ký Mentor bị từ chối");
@@ -79,7 +81,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
@@ -89,6 +91,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Chúc mừng! Bạn đã trở thành Mentor");
@@ -107,7 +110,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
@@ -117,6 +120,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Quyền Mentor của bạn đã bị thu hồi");
@@ -139,7 +143,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
@@ -149,6 +153,7 @@ public class EmailService {
         try {
             jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
             org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Yêu cầu Cấp lại Mật khẩu");
             String htmlContent = "<div style=\"font-family: Inter, Arial, sans-serif; padding: 20px; background-color: #f3f4f6;\">"
@@ -167,14 +172,16 @@ public class EmailService {
                     + "</div></div>";
             helper.setText(htmlContent, true);
             mailSender.send(message);
-        } catch (jakarta.mail.MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi OTP Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     public void sendAccountLockEmail(String toEmail, String fullname, String reason) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã bị khóa");
@@ -197,8 +204,9 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -207,6 +215,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã được mở khóa");
@@ -225,8 +234,9 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     @Async
@@ -234,6 +244,7 @@ public class EmailService {
         try {
             jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
             org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Cập nhật quyền hạn tài khoản");
@@ -253,8 +264,9 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (jakarta.mail.MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -263,6 +275,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             String statusText = "APPROVED".equalsIgnoreCase(status) ? "ĐÃ ĐƯỢC PHÊ DUYỆT" : "BỊ TỪ CHỐI";
@@ -294,8 +307,9 @@ public class EmailService {
             helper.setText(htmlContent, true);
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email thông báo lịch hẹn: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -304,6 +318,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - CẢNH BÁO: Bài viết của bạn bị báo cáo vi phạm");
@@ -328,8 +343,9 @@ public class EmailService {
 
             helper.setText(htmlContent, true);
             mailSender.send(message);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email cảnh báo: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -338,6 +354,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Yêu cầu khóa tài khoản người dùng vi phạm");
@@ -361,8 +378,9 @@ public class EmailService {
 
             helper.setText(htmlContent, true);
             mailSender.send(message);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email yêu cầu khóa: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

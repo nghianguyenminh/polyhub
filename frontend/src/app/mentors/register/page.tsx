@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchAPI } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import '@/styles/mentors.css';
 import '@/styles/mentorRegister.css';
@@ -27,6 +28,7 @@ const STEPS = [
 
 
 export default function MentorRegisterPage() {
+  const { user } = useAuth();
   const [loading, setLoading]       = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError]           = useState('');
@@ -50,6 +52,18 @@ export default function MentorRegisterPage() {
   const [degreeFile, setDegreeFile]         = useState<File | null>(null);
 
   useEffect(() => { checkStatus(); }, []);
+
+  useEffect(() => {
+    if (user) {
+      setFullname(prev => prev || user.fullname || '');
+      setEmail(prev => prev || user.email || '');
+      setPhone(prev => prev || user.phone || '');
+      if (user.birthday) {
+        const birthdayStr = user.birthday;
+        setBirthday(prev => prev || birthdayStr.split('T')[0]);
+      }
+    }
+  }, [user]);
 
   const checkStatus = async () => {
     try {
@@ -410,6 +424,7 @@ export default function MentorRegisterPage() {
                       placeholder="example@gmail.com"
                       value={email}
                       onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({...p, email: ''})); }}
+                      disabled
                     />
                     {fieldErrors.email && <div className="mr-field-error">⚠ {fieldErrors.email}</div>}
                   </div>
