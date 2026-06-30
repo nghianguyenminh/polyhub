@@ -27,6 +27,59 @@ const MONTHS = [
   'Tháng 11',
   'Tháng 12',
 ];
+interface CustomSelectProps {
+  value: number;
+  options: { value: number; label: string | number }[];
+  onChange: (val: number) => void;
+  width?: string;
+  maxHeight?: string;
+}
+
+function CustomSelect({ value, options, onChange, width = '100px', maxHeight = '200px' }: CustomSelectProps) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((o) => o.value === value);
+
+  return (
+    <div className={styles.customSelectWrapper} ref={dropdownRef} style={{ width }}>
+      <div className={styles.customSelectValue} onClick={() => setOpen(!open)}>
+        <span>{selectedOption ? selectedOption.label : value}</span>
+        <span className={styles.customSelectArrow} style={{ transform: open ? 'rotate(180deg)' : 'none', display: 'inline-block' }}>
+          ▼
+        </span>
+      </div>
+      {open && (
+        <div className={styles.customSelectOptions} style={{ maxHeight }}>
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              className={`${styles.customSelectOption} ${
+                opt.value === value ? styles.customSelectOptionSelected : ''
+              }`}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CustomDatePicker({
   value,
@@ -238,30 +291,20 @@ export default function CustomDatePicker({
             </button>
             <div className={styles.selectGroup}>
               {/* Month Dropdown */}
-              <select
-                className={styles.monthSelect}
+              <CustomSelect
                 value={currentMonth}
-                onChange={(e) => setCurrentMonth(parseInt(e.target.value, 10))}
-              >
-                {MONTHS.map((m, idx) => (
-                  <option key={idx} value={idx}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+                options={MONTHS.map((m, idx) => ({ value: idx, label: m }))}
+                onChange={(val) => setCurrentMonth(val)}
+                width="110px"
+              />
 
               {/* Year Dropdown */}
-              <select
-                className={styles.yearSelect}
+              <CustomSelect
                 value={currentYear}
-                onChange={(e) => setCurrentYear(parseInt(e.target.value, 10))}
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+                options={years.map((y) => ({ value: y, label: y }))}
+                onChange={(val) => setCurrentYear(val)}
+                width="95px"
+              />
             </div>
             <button type="button" className={styles.navButton} onClick={handleNextMonth}>
               ❯
