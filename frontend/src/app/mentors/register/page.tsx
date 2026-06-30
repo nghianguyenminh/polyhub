@@ -92,10 +92,25 @@ export default function MentorRegisterPage() {
       }
 
       // 2. Validate CCCD/CMND (Chính xác 9 hoặc 12 chữ số)
-      if (!cccdNumber.trim()) {
+      const cleanCCCD = cccdNumber.replace(/\s/g, '');
+      if (!cleanCCCD) {
         errs.cccdNumber = 'Vui lòng nhập số CCCD/CMND';
-      } else if (!/^(\d{9}|\d{12})$/.test(cccdNumber.replace(/\s/g, ''))) {
-        errs.cccdNumber = 'CCCD/CMND không hợp lệ (phải là 9 hoặc 12 chữ số)';
+      } else if (!/^\d+$/.test(cleanCCCD)) {
+        errs.cccdNumber = 'CCCD/CMND chỉ được chứa các chữ số';
+      } else if (cleanCCCD.length !== 9 && cleanCCCD.length !== 12) {
+        errs.cccdNumber = 'Số CCCD phải có 12 chữ số (hoặc CMND 9 chữ số)';
+      } else if (cleanCCCD.length === 12) {
+        const provinceCode = parseInt(cleanCCCD.slice(0, 3), 10);
+        if (provinceCode < 1 || provinceCode > 96) {
+          errs.cccdNumber = 'Mã tỉnh/thành phố trên CCCD (3 số đầu) không hợp lệ';
+        }
+        if (birthday) {
+          const birthYearSuffix = new Date(birthday).getFullYear().toString().slice(-2);
+          const cccdYearSuffix = cleanCCCD.slice(4, 6);
+          if (cccdYearSuffix !== birthYearSuffix) {
+            errs.cccdNumber = 'Năm sinh trên CCCD (số thứ 5 & 6) không khớp với ngày sinh';
+          }
+        }
       }
 
       // 3. Validate Email (Chuẩn RFC 5322)
