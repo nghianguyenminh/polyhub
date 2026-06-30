@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI } from '@/lib/api';
+import CustomDatePicker from '@/components/common/CustomDatePicker';
 import '@/styles/auth.css';
 
 export default function RegisterPage() {
@@ -404,17 +405,14 @@ export default function RegisterPage() {
               </div>
               <div className="col-md-6 form-group">
                 <label className="form-label" htmlFor="birthday">Ngày sinh</label>
-                <div className="input-wrapper">
-                  <i className="bi bi-calendar-event input-icon"></i>
-                  <input 
-                    type="date" 
-                    className={`form-control-custom ${!birthday ? 'input-placeholder-color' : ''} ${fieldErrors.birthday ? 'error-field' : ''}`} 
-                    id="birthday" 
-                    value={birthday}
-                    onChange={(e) => { setBirthday(e.target.value); setFieldErrors(p => ({...p, birthday: ''})); }}
-                  />
-                </div>
-                {fieldErrors.birthday && <span className="auth-field-error">⚠ {fieldErrors.birthday}</span>}
+                <CustomDatePicker
+                  id="birthday"
+                  value={birthday}
+                  onChange={(val) => { setBirthday(val); setFieldErrors(p => ({...p, birthday: ''})); }}
+                  error={!!fieldErrors.birthday}
+                  placeholder="Chọn ngày sinh"
+                />
+                {fieldErrors.birthday && <span className="auth-field-error" style={{ marginTop: '6px' }}>⚠ {fieldErrors.birthday}</span>}
               </div>
             </div>
 

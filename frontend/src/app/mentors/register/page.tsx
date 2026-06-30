@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { fetchAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
+import CustomDatePicker from '@/components/common/CustomDatePicker';
 import '@/styles/mentors.css';
 import '@/styles/mentorRegister.css';
 
@@ -460,11 +461,12 @@ export default function MentorRegisterPage() {
 
                 <div className="mr-field" style={{ maxWidth: 280 }}>
                   <label className="mr-label">Ngày sinh <span>*</span></label>
-                  <input
-                    type="date"
-                    className={`mr-input ${fieldErrors.birthday ? 'error-field' : ''}`}
+                  <CustomDatePicker
+                    id="birthday"
                     value={birthday}
-                    onChange={e => { setBirthday(e.target.value); setFieldErrors(p => ({...p, birthday: ''})); }}
+                    onChange={val => { setBirthday(val); setFieldErrors(p => ({...p, birthday: ''})); }}
+                    error={!!fieldErrors.birthday}
+                    placeholder="Chọn ngày sinh"
                   />
                   {fieldErrors.birthday && <div className="mr-field-error">⚠ {fieldErrors.birthday}</div>}
                 </div>
