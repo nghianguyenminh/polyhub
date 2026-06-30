@@ -15,10 +15,9 @@
 /* --- TOAST ITEM --- */
 .toast-item-custom {
     pointer-events: auto;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
+    background: #ffffff !important;
     border-radius: 12px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.06);
     padding: 16px;
     display: flex;
     align-items: center;
@@ -101,7 +100,7 @@
 .toast-message-custom {
     font-size: 14px;
     font-weight: 500;
-    color: #1F2937;
+    color: #1F2937 !important;
     line-height: 1.5;
     margin: 0;
 }
