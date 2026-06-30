@@ -38,6 +38,13 @@ public class MentorRequest implements Serializable {
     @Column(name = "cccd_number", length = 20, nullable = false)
     private String cccdNumber;
 
+    @Column(name = "cccd_front_file")
+    private String cccdFrontFile;
+
+    @Column(name = "cccd_back_file")
+    private String cccdBackFile;
+
+
     @Column(columnDefinition = "nvarchar(1500)", nullable = false)
     private String introduction;
 

@@ -8,6 +8,7 @@ import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.FileStorageService;
+import com.polyhub.service.FptAiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,9 @@ public class MentorApiController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private FptAiService fptAiService;
 
     @GetMapping
     public ResponseEntity<?> getMentors(
@@ -120,7 +124,8 @@ public class MentorApiController {
     @PostMapping("/register")
     public ResponseEntity<?> registerMentor(
             @RequestParam("fullname") String fullname,
-            @RequestParam("cccdNumber") String cccdNumber,
+            @RequestParam("cccdFrontFile") MultipartFile cccdFrontFile,
+            @RequestParam("cccdBackFile") MultipartFile cccdBackFile,
             @RequestParam("email") String email,
             @RequestParam("phone") String phone,
             @RequestParam("birthday") String birthdayStr,
@@ -151,10 +156,13 @@ public class MentorApiController {
         }
 
         try {
+            // Xác thực CCCD qua FPT.AI
+            String extractedCccdNumber = fptAiService.extractCccdNumber(cccdFrontFile);
+
             LocalDate birthday = LocalDate.parse(birthdayStr);
             request.setUser(currentUser);
             request.setFullname(fullname);
-            request.setCccdNumber(cccdNumber);
+            request.setCccdNumber(extractedCccdNumber);
             request.setEmail(email);
             request.setPhone(phone);
             request.setBirthday(birthday);
@@ -162,6 +170,16 @@ public class MentorApiController {
             request.setMotivation(motivation);
             request.setStatus(RequestStatus.PENDING);
             request.setRejectionReason(null);
+
+            // Upload CCCD images
+            if (cccdFrontFile != null && !cccdFrontFile.isEmpty()) {
+                Map<String, Object> frontResult = fileStorageService.uploadFile(cccdFrontFile);
+                request.setCccdFrontFile(frontResult.get("url").toString());
+            }
+            if (cccdBackFile != null && !cccdBackFile.isEmpty()) {
+                Map<String, Object> backResult = fileStorageService.uploadFile(cccdBackFile);
+                request.setCccdBackFile(backResult.get("url").toString());
+            }
 
             // Upload CV (Required)
             if (cvFile != null && !cvFile.isEmpty()) {
