@@ -105,11 +105,50 @@ export default function MentorRegisterPage() {
         if (provinceCode < 1 || provinceCode > 96) {
           errs.cccdNumber = 'Mã tỉnh/thành phố trên CCCD (3 số đầu) không hợp lệ';
         }
+        
         if (birthday) {
-          const birthYearSuffix = new Date(birthday).getFullYear().toString().slice(-2);
+          const birthYear = new Date(birthday).getFullYear();
+          const birthYearSuffix = birthYear.toString().slice(-2);
           const cccdYearSuffix = cleanCCCD.slice(4, 6);
           if (cccdYearSuffix !== birthYearSuffix) {
             errs.cccdNumber = 'Năm sinh trên CCCD (số thứ 5 & 6) không khớp với ngày sinh';
+          } else {
+            // Kiểm tra chữ số thứ 4: Mã thế kỷ và giới tính
+            const genderDigit = parseInt(cleanCCCD.charAt(3), 10);
+            let expectedDigitNam: number | null = null;
+            let expectedDigitNu: number | null = null;
+
+            if (birthYear >= 1900 && birthYear <= 1999) {
+              expectedDigitNam = 0;
+              expectedDigitNu = 1;
+            } else if (birthYear >= 2000 && birthYear <= 2099) {
+              expectedDigitNam = 2;
+              expectedDigitNu = 3;
+            } else if (birthYear >= 2100 && birthYear <= 2199) {
+              expectedDigitNam = 4;
+              expectedDigitNu = 5;
+            } else if (birthYear >= 2200 && birthYear <= 2299) {
+              expectedDigitNam = 6;
+              expectedDigitNu = 7;
+            } else if (birthYear >= 1800 && birthYear <= 1899) {
+              expectedDigitNam = 8;
+              expectedDigitNu = 9;
+            }
+
+            if (expectedDigitNam !== null && expectedDigitNu !== null) {
+              if (user && user.gender !== undefined) {
+                const expectedDigit = user.gender ? expectedDigitNam : expectedDigitNu;
+                if (genderDigit !== expectedDigit) {
+                  const genderText = user.gender ? 'Nam' : 'Nữ';
+                  const centuryText = birthYear >= 2000 ? 'thế kỷ 21' : 'thế kỷ 20';
+                  errs.cccdNumber = `Ký tự thứ 4 phải là ${expectedDigit} (dành cho giới tính ${genderText} sinh vào ${centuryText})`;
+                }
+              } else {
+                if (genderDigit !== expectedDigitNam && genderDigit !== expectedDigitNu) {
+                  errs.cccdNumber = `Ký tự thứ 4 không khớp với mã thế kỷ sinh ${birthYear}`;
+                }
+              }
+            }
           }
         }
       }
