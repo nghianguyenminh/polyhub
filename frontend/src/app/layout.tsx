@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 import "./globals.css";
 import "../styles/style.css";
 import "../styles/sidebar.css";
@@ -36,7 +37,9 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </AuthProvider>
         <Script 
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 

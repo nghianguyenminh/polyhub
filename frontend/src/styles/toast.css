@@ -1,0 +1,128 @@
+/* --- TOAST NOTIFICATION CONTAINER --- */
+.toast-container-custom {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+    max-width: 380px;
+    width: calc(100vw - 48px);
+}
+
+/* --- TOAST ITEM --- */
+.toast-item-custom {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 4px solid #111827;
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.toast-item-custom.exit {
+    animation: toastSlideOut 0.25s ease forwards;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) translateY(0);
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* --- TYPES --- */
+.toast-item-custom.success {
+    border-left-color: #22C55E;
+}
+.toast-item-custom.error {
+    border-left-color: #EF4444;
+}
+.toast-item-custom.warning {
+    border-left-color: #EAB308;
+}
+.toast-item-custom.info {
+    border-left-color: #3B82F6;
+}
+
+/* --- ICONS --- */
+.toast-icon-custom {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.success .toast-icon-custom {
+    color: #22C55E;
+}
+.error .toast-icon-custom {
+    color: #EF4444;
+}
+.warning .toast-icon-custom {
+    color: #EAB308;
+}
+.info .toast-icon-custom {
+    color: #3B82F6;
+}
+
+/* --- CONTENT --- */
+.toast-content-custom {
+    flex-grow: 1;
+    font-family: 'Inter', sans-serif;
+}
+
+.toast-message-custom {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1F2937;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* --- CLOSE BUTTON --- */
+.toast-close-custom {
+    background: none;
+    border: none;
+    outline: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.toast-close-custom:hover {
+    background-color: #F3F4F6;
+    color: #4B5563;
+}

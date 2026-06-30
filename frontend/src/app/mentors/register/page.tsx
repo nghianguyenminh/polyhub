@@ -7,6 +7,7 @@ import { fetchAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import CustomDatePicker from '@/components/common/CustomDatePicker';
+import { useToast } from '@/contexts/ToastContext';
 import '@/styles/mentors.css';
 import '@/styles/mentorRegister.css';
 
@@ -30,6 +31,7 @@ const STEPS = [
 
 export default function MentorRegisterPage() {
   const { user } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [loading, setLoading]       = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError]           = useState('');
@@ -281,9 +283,10 @@ export default function MentorRegisterPage() {
       });
 
       setUserStatus({ hasRequest: true, requestStatus: 'PENDING' });
-      alert('Gửi hồ sơ thành công! Vui lòng chờ BQT xét duyệt.');
+      showSuccess('Gửi hồ sơ thành công! Vui lòng chờ BQT xét duyệt.');
       router.push('/mentors');
     } catch (err: any) {
+      showError(err.message || 'Lỗi khi gửi hồ sơ');
       setError(err.message || 'Lỗi khi gửi hồ sơ');
     } finally {
       setLoading(false);
