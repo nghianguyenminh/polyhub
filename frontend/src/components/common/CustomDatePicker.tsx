@@ -10,6 +10,7 @@ interface CustomDatePickerProps {
   placeholder?: string;
   id?: string;
   error?: boolean;
+  placement?: 'top' | 'bottom' | 'auto';
 }
 
 const MONTHS = [
@@ -33,14 +34,34 @@ export default function CustomDatePicker({
   placeholder = 'dd/mm/yyyy',
   id,
   error = false,
+  placement = 'auto',
 }: CustomDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPlacement, setDropdownPlacement] = useState<'top' | 'bottom'>('bottom');
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   // Calendar navigation state
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+  // Smart placement detection
+  useEffect(() => {
+    if (isOpen && wrapperRef.current) {
+      if (placement === 'auto') {
+        const rect = wrapperRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        if (spaceBelow < 340 && spaceAbove > 340) {
+          setDropdownPlacement('top');
+        } else {
+          setDropdownPlacement('bottom');
+        }
+      } else {
+        setDropdownPlacement(placement);
+      }
+    }
+  }, [isOpen, placement]);
 
   // Set initial view state based on value
   useEffect(() => {
@@ -209,7 +230,7 @@ export default function CustomDatePicker({
 
       {/* Calendar Dropdown */}
       {isOpen && (
-        <div className={styles.dropdownContainer}>
+        <div className={`${styles.dropdownContainer} ${dropdownPlacement === 'top' ? styles.placementTop : ''}`}>
           {/* Header Controls */}
           <div className={styles.header}>
             <button type="button" className={styles.navButton} onClick={handlePrevMonth}>
