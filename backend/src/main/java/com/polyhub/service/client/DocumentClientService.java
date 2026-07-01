@@ -3,8 +3,12 @@ package com.polyhub.service.client;
 import com.polyhub.entity.Category;
 import com.polyhub.entity.User;
 import com.polyhub.entity.Document;
+import com.polyhub.entity.DocumentReport;
+import com.polyhub.entity.ReportReason;
+import com.polyhub.entity.ReportStatus;
 import com.polyhub.repository.CategoryRepository;
 import com.polyhub.repository.DocumentRepository;
+import com.polyhub.repository.DocumentReportRepository;
 import com.polyhub.service.FileStorageService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +28,7 @@ public class DocumentClientService {
     private final CategoryRepository categoryRepository;
     private final FileStorageService fileStorageService;
     private final com.polyhub.repository.SavedDocumentRepository savedDocumentRepository;
+    private final DocumentReportRepository documentReportRepository;
 
     private java.util.Map<String, Long> cachedTypeCounts = null;
     private long lastTypeCountsTime = 0;
@@ -163,6 +168,31 @@ public class DocumentClientService {
             }
             outputStream.flush();
         }
+    }
+
+    /**
+     * Người dùng báo cáo 1 tài liệu vi phạm.
+     * Mỗi user chỉ được báo cáo 1 lần cho cùng 1 tài liệu (chặn ở DB bằng unique
+     * constraint).
+     */
+    @Transactional
+    public DocumentReport reportDocument(Long documentId, User reporter, ReportReason reason, String detail) {
+        if (documentReportRepository.existsByDocument_IdAndReporter_Username(documentId, reporter.getUsername())) {
+            throw new IllegalStateException("Bạn đã báo cáo tài liệu này rồi, vui lòng chờ admin xử lý.");
+        }
+
+        Document doc = documentRepository.findById(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài liệu này."));
+
+        DocumentReport report = DocumentReport.builder()
+                .document(doc)
+                .reporter(reporter)
+                .reason(reason)
+                .detail(detail)
+                .status(ReportStatus.PENDING)
+                .build();
+
+        return documentReportRepository.save(report);
     }
 
     private String getFileExtension(String filename) {
