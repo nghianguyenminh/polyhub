@@ -127,7 +127,7 @@ public class MentorApiController {
             @RequestParam("cccdFrontFile") MultipartFile cccdFrontFile,
             @RequestParam("cccdBackFile") MultipartFile cccdBackFile,
             @RequestParam("email") String email,
-            @RequestParam("phone") String phone,
+            @RequestParam(value = "phone", required = false) String phone,
             @RequestParam("birthday") String birthdayStr,
             @RequestParam("introduction") String introduction,
             @RequestParam("motivation") String motivation,

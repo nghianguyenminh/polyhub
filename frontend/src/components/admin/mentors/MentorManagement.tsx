@@ -266,7 +266,7 @@ export default function MentorManagement() {
                 <th>Ứng viên</th>
                 <th>Kinh nghiệm</th>
                 <th>Link tham khảo</th>
-                <th>Ngày đăng ký</th>
+                <th>Ngày đăng ký làm Mentor</th>
                 <th>Trạng thái</th>
                 <th style={{ textAlign: 'right' }}>Hành động</th>
               </tr>
@@ -468,8 +468,8 @@ export default function MentorManagement() {
                     <div className={styles.detailFieldValue}>{viewingMentor.cccdNumber || '—'}</div>
                   </div>
                   <div className={styles.detailField}>
-                    <div className={styles.detailFieldLabel}><Phone size={13} /> Số điện thoại</div>
-                    <div className={styles.detailFieldValue}>{viewingMentor.phone || '—'}</div>
+                    <div className={styles.detailFieldLabel}><Mail size={13} /> Email</div>
+                    <div className={styles.detailFieldValue}>{viewingMentor.email || '—'}</div>
                   </div>
                   <div className={styles.detailField}>
                     <div className={styles.detailFieldLabel}><Calendar size={13} /> Ngày sinh</div>
@@ -530,6 +530,54 @@ export default function MentorManagement() {
                       >
                         {viewingMentor.portfolioLink}
                       </a>
+                    </div>
+                  )}
+                  {viewingMentor.cccdFrontFile && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Mặt trước CCCD</div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.cccdFrontFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🖼️ Xem Ảnh
+                        </a>
+                        <a
+                          href={viewingMentor.cccdFrontFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {viewingMentor.cccdBackFile && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Mặt sau CCCD</div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.cccdBackFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🖼️ Xem Ảnh
+                        </a>
+                        <a
+                          href={viewingMentor.cccdBackFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
                     </div>
                   )}
                   {viewingMentor.cvFile && (

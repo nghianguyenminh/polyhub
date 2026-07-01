@@ -1,10 +1,12 @@
 package com.polyhub.controller.api.admin;
 
 import com.polyhub.entity.MentorRequest;
+import com.polyhub.entity.Notification;
 import com.polyhub.entity.RequestStatus;
 import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
 import com.polyhub.repository.MentorRequestRepository;
+import com.polyhub.repository.NotificationRepository;
 import com.polyhub.repository.RoleRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.EmailService;
@@ -29,6 +31,7 @@ public class AdminMentorApiController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmailService emailService;
+    private final NotificationRepository notificationRepository;
 
     @GetMapping
     public ResponseEntity<?> getMentorRequests(
@@ -104,6 +107,17 @@ public class AdminMentorApiController {
             }
 
             emailService.sendMentorApprovalEmail(request.getEmail(), request.getFullname());
+
+            // Gửi thông báo in-app
+            if (user != null) {
+                Notification notif = new Notification();
+                notif.setUser(user);
+                notif.setTitle("Phê duyệt hồ sơ Mentor");
+                notif.setContent("Chúc mừng! Yêu cầu trở thành Mentor của bạn đã được ban quản trị phê duyệt.");
+                notif.setLink("/mentors");
+                notificationRepository.save(notif);
+            }
+
             return ResponseEntity.ok(Map.of("message", "Đã phê duyệt yêu cầu trở thành Mentor."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Không thể phê duyệt yêu cầu này."));
@@ -120,6 +134,18 @@ public class AdminMentorApiController {
             mentorRequestRepository.save(request);
 
             emailService.sendMentorRejectionEmail(request.getEmail(), request.getFullname(), reason);
+
+            // Gửi thông báo in-app
+            User user = request.getUser();
+            if (user != null) {
+                Notification notif = new Notification();
+                notif.setUser(user);
+                notif.setTitle("Từ chối hồ sơ Mentor");
+                notif.setContent("Rất tiếc, yêu cầu Mentor của bạn đã bị từ chối với lý do: " + reason);
+                notif.setLink("/mentors/register");
+                notificationRepository.save(notif);
+            }
+
             return ResponseEntity.ok(Map.of("message", "Đã từ chối yêu cầu trở thành Mentor."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Không thể từ chối yêu cầu này."));
@@ -145,6 +171,17 @@ public class AdminMentorApiController {
             }
 
             emailService.sendMentorRevokeEmail(request.getEmail(), request.getFullname(), reason);
+
+            // Gửi thông báo in-app
+            if (user != null) {
+                Notification notif = new Notification();
+                notif.setUser(user);
+                notif.setTitle("Tước quyền Mentor");
+                notif.setContent("Tài khoản của bạn đã bị tước quyền Mentor và chuyển về vai trò Học viên với lý do: " + reason);
+                notif.setLink("/");
+                notificationRepository.save(notif);
+            }
+
             return ResponseEntity.ok(Map.of("message", "Đã tước quyền Mentor và đưa tài khoản về vai trò Sinh viên."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Không thể tước quyền yêu cầu này."));

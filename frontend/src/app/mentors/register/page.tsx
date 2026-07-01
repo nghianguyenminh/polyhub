@@ -19,11 +19,10 @@ interface StepProps {
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Cá nhân',    icon: '👤', title: 'Thông tin cá nhân' },
-  { id: 2, label: 'Xác thực',   icon: '🪪', title: 'Xác thực định danh' },
-  { id: 3, label: 'Kinh nghiệm', icon: '💼', title: 'Kinh nghiệm & Động lực' },
-  { id: 4, label: 'Hồ sơ',      icon: '📎', title: 'Hồ sơ đính kèm' },
-  { id: 5, label: 'Xác nhận',   icon: '✅', title: 'Xác nhận & Gửi' },
+  { id: 1, label: 'Xác thực',   icon: '🪪', title: 'Xác thực định danh' },
+  { id: 2, label: 'Kinh nghiệm', icon: '💼', title: 'Kinh nghiệm & Động lực' },
+  { id: 3, label: 'Hồ sơ',      icon: '📎', title: 'Hồ sơ đính kèm' },
+  { id: 4, label: 'Xác nhận',   icon: '✅', title: 'Xác nhận & Gửi' },
 ];
 
 
@@ -56,6 +55,15 @@ export default function MentorRegisterPage() {
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [degreeFile, setDegreeFile]         = useState<File | null>(null);
 
+  // States cho FPT AI ID Recognition
+  const [isVerifyingFront, setIsVerifyingFront] = useState(false);
+  const [frontIdData, setFrontIdData] = useState<any>(null);
+  const [frontIdError, setFrontIdError] = useState('');
+
+  const [isVerifyingBack, setIsVerifyingBack] = useState(false);
+  const [backIdData, setBackIdData] = useState<any>(null);
+  const [backIdError, setBackIdError] = useState('');
+
   useEffect(() => { checkStatus(); }, []);
 
   useEffect(() => {
@@ -82,54 +90,85 @@ export default function MentorRegisterPage() {
     }
   };
 
+  const handleFrontFileChange = async (f: File | null) => {
+    setCccdFrontFile(f);
+    setFieldErrors(p => ({...p, cccdFrontFile: ''}));
+    setFrontIdData(null);
+    setFrontIdError('');
+
+    if (f) {
+      setIsVerifyingFront(true);
+      try {
+        const formData = new FormData();
+        formData.append('image', f);
+        const res = await fetch('https://api.fpt.ai/vision/idr/vnm', {
+          method: 'POST',
+          headers: {
+            'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.errorCode === 0 && data.data && data.data.length > 0) {
+          const info = data.data[0];
+          if (info.type && info.type.includes('back')) {
+            setFrontIdError('Đây có vẻ là mặt sau. Vui lòng tải lên mặt trước CCCD.');
+          } else {
+            setFrontIdData(info);
+          }
+        } else {
+          setFrontIdError(data.errorMessage || 'Không thể nhận diện CCCD.');
+        }
+      } catch (err) {
+        setFrontIdError('Lỗi kết nối đến máy chủ xác thực.');
+      } finally {
+        setIsVerifyingFront(false);
+      }
+    }
+  };
+
+  const handleBackFileChange = async (f: File | null) => {
+    setCccdBackFile(f);
+    setFieldErrors(p => ({...p, cccdBackFile: ''}));
+    setBackIdData(null);
+    setBackIdError('');
+
+    if (f) {
+      setIsVerifyingBack(true);
+      try {
+        const formData = new FormData();
+        formData.append('image', f);
+        const res = await fetch('https://api.fpt.ai/vision/idr/vnm', {
+          method: 'POST',
+          headers: {
+            'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.errorCode === 0 && data.data && data.data.length > 0) {
+          const info = data.data[0];
+          if (info.type && (info.type.includes('front') || info.id)) {
+            setBackIdError('Đây có vẻ là mặt trước. Vui lòng tải lên mặt sau CCCD.');
+          } else {
+            setBackIdData(info);
+          }
+        } else {
+          setBackIdError(data.errorMessage || 'Không thể nhận diện CCCD.');
+        }
+      } catch (err) {
+        setBackIdError('Lỗi kết nối đến máy chủ xác thực.');
+      } finally {
+        setIsVerifyingBack(false);
+      }
+    }
+  };
+
   // ── Validation ──────────────────────────────────────────────────────────────
   const validateStep = (step: number): boolean => {
     const errs: Record<string, string> = {};
 
     if (step === 1) {
-      // 1. Validate Họ và Tên (Không chứa số và ký tự đặc biệt, tối thiểu 2 ký tự)
-      if (!fullname.trim()) {
-        errs.fullname = 'Vui lòng nhập họ tên đầy đủ';
-      } else if (fullname.trim().length < 2) {
-        errs.fullname = 'Họ tên phải có ít nhất 2 ký tự';
-      } else if (!/^[\p{L}\s]+$/u.test(fullname.trim())) {
-        errs.fullname = 'Họ tên không chứa số hoặc ký tự đặc biệt';
-      }
-
-      // 2. Validate Email (Chuẩn RFC 5322)
-      if (!email.trim()) {
-        errs.email = 'Vui lòng nhập email';
-      } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-        errs.email = 'Định dạng email không hợp lệ (VD: ten@domain.com)';
-      }
-
-      // 4. Validate Số điện thoại (Chuẩn Việt Nam: 10 số, bắt đầu bằng 03,05,07,08,09)
-      if (!phone.trim()) {
-        errs.phone = 'Vui lòng nhập số điện thoại';
-      } else if (!/^(0[3|5|7|8|9])+([0-9]{8})$/.test(phone.replace(/\s/g, ''))) {
-        errs.phone = 'Số điện thoại không hợp lệ';
-      }
-
-      // 5. Validate Ngày sinh (Phải đủ 18 tuổi)
-      if (!birthday) {
-        errs.birthday = 'Vui lòng chọn ngày sinh';
-      } else {
-        const birthDate = new Date(birthday);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
-        }
-        if (age < 18) {
-          errs.birthday = 'Bạn phải đủ 18 tuổi để trở thành Mentor';
-        } else if (age > 100) {
-          errs.birthday = 'Năm sinh không hợp lệ';
-        }
-      }
-    }
-
-    if (step === 2) {
       const MAX_IMG_SIZE = 5 * 1024 * 1024; // 5MB
       const ALLOWED_IMAGES = ['image/jpeg', 'image/png'];
 
@@ -139,6 +178,12 @@ export default function MentorRegisterPage() {
         errs.cccdFrontFile = 'Dung lượng ảnh vượt quá 5MB';
       } else if (!ALLOWED_IMAGES.includes(cccdFrontFile.type)) {
         errs.cccdFrontFile = 'Chỉ chấp nhận file ảnh JPG, PNG';
+      } else if (isVerifyingFront) {
+        errs.cccdFrontFile = 'Đang xác thực ảnh mặt trước, vui lòng chờ...';
+      } else if (frontIdError) {
+        errs.cccdFrontFile = frontIdError;
+      } else if (!frontIdData) {
+        errs.cccdFrontFile = 'Chưa xác thực được mặt trước CCCD';
       }
 
       if (!cccdBackFile) {
@@ -147,10 +192,16 @@ export default function MentorRegisterPage() {
         errs.cccdBackFile = 'Dung lượng ảnh vượt quá 5MB';
       } else if (!ALLOWED_IMAGES.includes(cccdBackFile.type)) {
         errs.cccdBackFile = 'Chỉ chấp nhận file ảnh JPG, PNG';
+      } else if (isVerifyingBack) {
+        errs.cccdBackFile = 'Đang xác thực ảnh mặt sau, vui lòng chờ...';
+      } else if (backIdError) {
+        errs.cccdBackFile = backIdError;
+      } else if (!backIdData) {
+        errs.cccdBackFile = 'Chưa xác thực được mặt sau CCCD';
       }
     }
 
-    if (step === 3) {
+    if (step === 2) {
       // 6. Validate Textarea (Kiểm soát số lượng ký tự tối thiểu để đảm bảo chất lượng nội dung)
       if (!introduction.trim()) {
         errs.introduction = 'Vui lòng điền phần giới thiệu bản thân';
@@ -165,7 +216,7 @@ export default function MentorRegisterPage() {
       }
     }
 
-    if (step === 4) {
+    if (step === 3) {
       // 7. Validate File (Bắt lỗi cả dung lượng và định dạng mở rộng)
       const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
       const MAX_OTHER_SIZE = 5 * 1024 * 1024; // 5MB
@@ -223,16 +274,46 @@ export default function MentorRegisterPage() {
   // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!agreed) { setError('Vui lòng đồng ý với điều khoản trước khi gửi.'); return; }
+    
+    const errs: Record<string, string> = {};
+    if (!email.trim()) {
+      errs.email = 'Vui lòng nhập email';
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+      errs.email = 'Định dạng email không hợp lệ (VD: ten@domain.com)';
+    }
+
+    if (!phone.trim()) {
+      // no-op, removed phone validation
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setError('Vui lòng kiểm tra lại thông tin liên hệ');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
+    let finalFullname = fullname;
+    let finalBirthday = birthday;
+    if (frontIdData) {
+      finalFullname = frontIdData.name || finalFullname;
+      if (frontIdData.dob) {
+        const parts = frontIdData.dob.split('/');
+        if (parts.length === 3) {
+           finalBirthday = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+    }
+
     const formData = new FormData();
-    formData.append('fullname', fullname);
+    formData.append('fullname', finalFullname);
     formData.append('cccdFrontFile', cccdFrontFile!);
     formData.append('cccdBackFile', cccdBackFile!);
     formData.append('email', email);
     formData.append('phone', phone);
-    formData.append('birthday', birthday);
+    formData.append('birthday', finalBirthday);
     formData.append('introduction', introduction);
     formData.append('motivation', motivation);
     formData.append('cvFile', cvFile!);
@@ -278,7 +359,7 @@ export default function MentorRegisterPage() {
           />
           {file ? (
             isImage ? (
-              <div style={{ width: '100%', height: '140px', position: 'relative', borderRadius: '6px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: '140px', position: 'relative', borderRadius: '6px', overflow: 'hidden', pointerEvents: 'none' }}>
                 <img 
                   src={URL.createObjectURL(file)} 
                   alt="preview" 
@@ -424,71 +505,8 @@ export default function MentorRegisterPage() {
           {/* Main Card */}
           <div className="mr-card">
 
-            {/* ── STEP 1: Personal info ── */}
+            {/* ── STEP 1: Verification ── */}
             {currentStep === 1 && (
-              <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
-                <div className="mr-step-header">
-                  <div className="mr-step-icon">👤</div>
-                  <div>
-                    <div className="mr-step-title">Thông tin cá nhân</div>
-                    <div className="mr-step-subtitle">Cung cấp thông tin định danh cơ bản của bạn</div>
-                  </div>
-                </div>
-
-                <div className="mr-row">
-                  <div className="mr-field">
-                    <label className="mr-label">Họ và tên đầy đủ <span>*</span></label>
-                    <input
-                      className={`mr-input ${fieldErrors.fullname ? 'error-field' : ''}`}
-                      placeholder="Nguyễn Văn A"
-                      value={fullname}
-                      onChange={e => { setFullname(e.target.value); setFieldErrors(p => ({...p, fullname: ''})); }}
-                    />
-                    {fieldErrors.fullname && <div className="mr-field-error">⚠ {fieldErrors.fullname}</div>}
-                  </div>
-                  <div className="mr-field">
-                    <label className="mr-label">Ngày sinh <span>*</span></label>
-                    <CustomDatePicker
-                      id="birthday"
-                      value={birthday}
-                      onChange={val => { setBirthday(val); setFieldErrors(p => ({...p, birthday: ''})); }}
-                      error={!!fieldErrors.birthday}
-                      placeholder="Chọn ngày sinh"
-                    />
-                    {fieldErrors.birthday && <div className="mr-field-error">⚠ {fieldErrors.birthday}</div>}
-                  </div>
-                </div>
-
-                <div className="mr-row">
-                  <div className="mr-field">
-                    <label className="mr-label">Email liên hệ <span>*</span></label>
-                    <input
-                      type="email"
-                      className={`mr-input ${fieldErrors.email ? 'error-field' : ''}`}
-                      placeholder="example@gmail.com"
-                      value={email}
-                      onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({...p, email: ''})); }}
-                      disabled
-                    />
-                    {fieldErrors.email && <div className="mr-field-error">⚠ {fieldErrors.email}</div>}
-                  </div>
-                  <div className="mr-field">
-                    <label className="mr-label">Số điện thoại <span>*</span></label>
-                    <input
-                      type="tel"
-                      className={`mr-input ${fieldErrors.phone ? 'error-field' : ''}`}
-                      placeholder="0901 234 567"
-                      value={phone}
-                      onChange={e => { setPhone(e.target.value); setFieldErrors(p => ({...p, phone: ''})); }}
-                    />
-                    {fieldErrors.phone && <div className="mr-field-error">⚠ {fieldErrors.phone}</div>}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 2: Verification ── */}
-            {currentStep === 2 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
                 <div className="mr-step-header">
                   <div className="mr-step-icon">🪪</div>
@@ -499,26 +517,53 @@ export default function MentorRegisterPage() {
                 </div>
 
                 <div className="mr-row">
-                  <FileZone
-                    id="cccdFrontFile" label="Mặt trước CCCD/CMND" required
-                    hint="JPG, PNG — Tối đa 5MB"
-                    accept=".jpg,.jpeg,.png"
-                    file={cccdFrontFile}
-                    onChange={f => { setCccdFrontFile(f); setFieldErrors(p => ({...p, cccdFrontFile: ''})); }}
-                  />
-                  <FileZone
-                    id="cccdBackFile" label="Mặt sau CCCD/CMND" required
-                    hint="JPG, PNG — Tối đa 5MB"
-                    accept=".jpg,.jpeg,.png"
-                    file={cccdBackFile}
-                    onChange={f => { setCccdBackFile(f); setFieldErrors(p => ({...p, cccdBackFile: ''})); }}
-                  />
+                  <div style={{ flex: 1 }}>
+                    <FileZone
+                      id="cccdFrontFile" label="Mặt trước CCCD/CMND" required
+                      hint="JPG, PNG — Tối đa 5MB"
+                      accept=".jpg,.jpeg,.png"
+                      file={cccdFrontFile}
+                      onChange={handleFrontFileChange}
+                    />
+                    {isVerifyingFront && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang xác thực thông tin...</div>}
+                    {frontIdError && <div style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>❌ {frontIdError}</div>}
+                    {frontIdData && (
+                      <div style={{ fontSize: 13, color: '#34d399', marginTop: 8, padding: '8px 12px', background: 'rgba(52, 211, 153, 0.1)', borderRadius: 6, border: '1px solid rgba(52, 211, 153, 0.2)' }}>
+                        <div style={{ marginBottom: 4 }}>✅ <strong>Nhận diện hợp lệ</strong></div>
+                        <div style={{ opacity: 0.9 }}>Số CCCD: <strong>{frontIdData.id}</strong></div>
+                        <div style={{ opacity: 0.9 }}>Họ tên: <strong>{frontIdData.name}</strong></div>
+                        <div style={{ opacity: 0.9 }}>Ngày sinh: {frontIdData.dob}</div>
+                        <div style={{ opacity: 0.9 }}>Giới tính: {frontIdData.sex}</div>
+                        <div style={{ opacity: 0.9 }}>Quốc tịch: {frontIdData.nationality}</div>
+                        <div style={{ opacity: 0.9, marginTop: 4 }}>🏠 Quê quán: {frontIdData.home}</div>
+                        <div style={{ opacity: 0.9, marginTop: 4 }}>📍 Thường trú: {frontIdData.address}</div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <FileZone
+                      id="cccdBackFile" label="Mặt sau CCCD/CMND" required
+                      hint="JPG, PNG — Tối đa 5MB"
+                      accept=".jpg,.jpeg,.png"
+                      file={cccdBackFile}
+                      onChange={handleBackFileChange}
+                    />
+                    {isVerifyingBack && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang xác thực thông tin...</div>}
+                    {backIdError && <div style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>❌ {backIdError}</div>}
+                    {backIdData && (
+                      <div style={{ fontSize: 13, color: '#34d399', marginTop: 8, padding: '8px 12px', background: 'rgba(52, 211, 153, 0.1)', borderRadius: 6, border: '1px solid rgba(52, 211, 153, 0.2)' }}>
+                        <div style={{ marginBottom: 4 }}>✅ <strong>Nhận diện hợp lệ</strong></div>
+                        <div style={{ opacity: 0.9 }}>Ngày cấp: {backIdData.issue_date}</div>
+                        {backIdData.issue_loc && <div style={{ opacity: 0.9, marginTop: 4 }}>🏢 Nơi cấp: {backIdData.issue_loc}</div>}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 3: Experience ── */}
-            {currentStep === 3 && (
+            {/* ── STEP 2: Experience ── */}
+            {currentStep === 2 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
                 <div className="mr-step-header">
                   <div className="mr-step-icon">💼</div>
@@ -555,8 +600,8 @@ export default function MentorRegisterPage() {
               </div>
             )}
 
-            {/* ── STEP 4: Documents ── */}
-            {currentStep === 4 && (
+            {/* ── STEP 3: Documents ── */}
+            {currentStep === 3 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
                 <div className="mr-step-header">
                   <div className="mr-step-icon">📎</div>
@@ -600,8 +645,8 @@ export default function MentorRegisterPage() {
               </div>
             )}
 
-            {/* ── STEP 5: Review & Submit ── */}
-            {currentStep === 5 && (
+            {/* ── STEP 4: Review & Submit ── */}
+            {currentStep === 4 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
                 <div className="mr-step-header">
                   <div className="mr-step-icon">✅</div>
@@ -611,20 +656,22 @@ export default function MentorRegisterPage() {
                   </div>
                 </div>
 
-                {/* Personal review */}
+                {/* Personal & Contact info from CCCD */}
                 <div className="mr-review-card">
-                  <div className="mr-review-header">👤 Thông tin cá nhân</div>
-                  {[
-                    ['Họ tên', fullname],
-                    ['Email', email],
-                    ['Điện thoại', phone],
-                    ['Ngày sinh', birthday],
-                  ].map(([k, v]) => (
-                    <div className="mr-review-row" key={k}>
-                      <span className="mr-review-key">{k}</span>
-                      <span className="mr-review-val">{v || '—'}</span>
-                    </div>
-                  ))}
+                  <div className="mr-review-header">👤 Thông tin cá nhân & Liên hệ</div>
+                  <div className="mr-review-row">
+                    <span className="mr-review-key">Họ tên</span>
+                    <span className="mr-review-val" style={{ fontWeight: 600 }}>{frontIdData?.name || fullname || '—'}</span>
+                  </div>
+                  <div className="mr-review-row">
+                    <span className="mr-review-key">Ngày sinh</span>
+                    <span className="mr-review-val">{frontIdData?.dob || birthday || '—'}</span>
+                  </div>
+                  
+                  <div className="mr-review-row">
+                    <span className="mr-review-key">Email liên hệ</span>
+                    <span className="mr-review-val">{email || '—'}</span>
+                  </div>
                 </div>
 
                 {/* Experience review */}
@@ -642,18 +689,37 @@ export default function MentorRegisterPage() {
 
                 {/* Documents review */}
                 <div className="mr-review-card">
-                  <div className="mr-review-header">📎 Hồ sơ đính kèm</div>
+                  <div className="mr-review-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>📎 Hồ sơ đính kèm</span>
+                  </div>
                   {[
-                    ['Mặt trước CCCD', cccdFrontFile?.name],
-                    ['Mặt sau CCCD', cccdBackFile?.name],
-                    ['CV', cvFile?.name],
-                    ['Chứng chỉ', certificateFile?.name],
-                    ['Bằng cấp', degreeFile?.name],
-                  ].map(([k, v]) => (
-                    <div className="mr-review-row" key={k}>
+                    ['Mặt trước CCCD', cccdFrontFile, 1],
+                    ['Mặt sau CCCD', cccdBackFile, 1],
+                    ['CV', cvFile, 3],
+                    ['Chứng chỉ', certificateFile, 3],
+                    ['Bằng cấp', degreeFile, 3],
+                  ].map(([k, f, stepIndex]) => (
+                    <div className="mr-review-row" key={k as string}>
                       <span className="mr-review-key">{k}</span>
-                      <span className="mr-review-val" style={{ color: v ? '#6ee7b7' : 'rgba(255,255,255,0.25)' }}>
-                        {v ? `📄 ${v}` : 'Không có'}
+                      <span className="mr-review-val" style={{ color: f ? '#6ee7b7' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {f ? (
+                          <>
+                            <a 
+                              href={URL.createObjectURL(f as File)} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              style={{ color: '#6ee7b7', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+                            >
+                              📄 {(f as File).name}
+                            </a>
+                            <button 
+                              onClick={() => { setDirection('backward'); setCurrentStep(stepIndex as number); }}
+                              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 4, padding: '2px 6px', fontSize: 11, color: '#fff', cursor: 'pointer' }}
+                            >
+                              Sửa
+                            </button>
+                          </>
+                        ) : 'Không có'}
                       </span>
                     </div>
                   ))}

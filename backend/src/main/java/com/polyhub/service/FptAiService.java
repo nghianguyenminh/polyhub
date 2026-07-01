@@ -30,7 +30,7 @@ public class FptAiService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        headers.set("api_key", apiKey);
+        headers.set("api-key", apiKey);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         // Wrap MultipartFile into a ByteArrayResource to correctly send via RestTemplate
