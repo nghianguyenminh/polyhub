@@ -9,6 +9,7 @@ import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import PostCard from '@/components/post/PostCard';
+import PostSkeleton from '@/components/post/PostSkeleton';
 import '@/styles/profile.css';
 
 export default function UserProfilePage() {
@@ -20,6 +21,7 @@ export default function UserProfilePage() {
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
   // Status states
   const [isFollowing, setIsFollowing] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -36,8 +38,10 @@ export default function UserProfilePage() {
       setIsOwner(data.isOwner || false);
 
       // Profile loaded successfully
+      setProfileLoading(false);
 
       // 2. Fetch user's posts
+      setPostsLoading(true);
       const postsData = await fetchAPI(`/api/v2/posts/user/${username}?page=0&size=15`);
       setPosts(postsData.posts || []);
     } catch (err: any) {
@@ -45,6 +49,7 @@ export default function UserProfilePage() {
       setErrorMsg(err.message || 'Lỗi tải trang cá nhân');
     } finally {
       setProfileLoading(false);
+      setPostsLoading(false);
     }
   };
 
@@ -154,7 +159,7 @@ export default function UserProfilePage() {
 
           {/* Profile Content */}
           <div className="profile-container w-100 mx-auto" style={{ maxWidth: '900px' }}>
-            
+
             {/* Alerts */}
             {successMsg && <div className="alert alert-success alert-dismissible fade show">{successMsg}</div>}
             {errorMsg && <div className="alert alert-danger alert-dismissible fade show">{errorMsg}</div>}
@@ -163,13 +168,13 @@ export default function UserProfilePage() {
             <div className="poly-card profile-header-card mb-3 overflow-hidden bg-white">
               {/* Cover Image */}
               <div className="profile-cover position-relative">
-                <img 
-                  src={profileUser.coverImage || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809'} 
-                  alt="Cover" 
-                  className="w-100 object-fit-cover" 
+                <img
+                  src={profileUser.coverImage || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809'}
+                  alt="Cover"
+                  className="w-100 object-fit-cover"
                   style={{ height: '250px' }}
                 />
-                
+
                 {isOwner && (
                   <div className="position-absolute bottom-0 end-0 m-3">
                     <label className="btn btn-light shadow-sm btn-edit-cover rounded-pill fw-medium px-3 py-1 mb-0 cursor-pointer text-dark">
@@ -183,14 +188,14 @@ export default function UserProfilePage() {
               {/* Profile Info details */}
               <div className="profile-info px-4 pb-4 position-relative">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-end text-center text-md-start">
-                  
+
                   <div className="avatar-wrapper position-relative z-2" style={{ marginTop: '-65px', marginBottom: '10px' }}>
-                    <img 
-                      src={profileUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'} 
-                      alt="Avatar" 
-                      className="profile-avatar border border-4 border-white rounded-circle shadow-sm" 
-                      width="130" 
-                      height="130" 
+                    <img
+                      src={profileUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                      alt="Avatar"
+                      className="profile-avatar border border-4 border-white rounded-circle shadow-sm"
+                      width="130"
+                      height="130"
                       style={{ objectFit: 'cover', background: '#fff' }}
                     />
                     {isOwner && (
@@ -210,21 +215,21 @@ export default function UserProfilePage() {
                         <i className="bi bi-check-circle-fill text-primary ms-1" style={{ fontSize: '20px' }} title="Tài khoản xác thực"></i>
                       </span>
                       {profileUser.role === 'MENTOR' && (
-                        <span className="badge d-flex align-items-center gap-1 px-2 py-1 fw-bold shadow-sm" 
-                              style={{ 
-                                background: 'linear-gradient(135deg, #F27125, #FF9E67)', 
-                                color: '#fff', 
-                                fontSize: '12px',
-                                borderRadius: '20px',
-                                letterSpacing: '0.5px',
-                                transform: 'translateY(-2px)'
-                              }}>
+                        <span className="badge d-flex align-items-center gap-1 px-2 py-1 fw-bold shadow-sm"
+                          style={{
+                            background: 'linear-gradient(135deg, #F27125, #FF9E67)',
+                            color: '#fff',
+                            fontSize: '12px',
+                            borderRadius: '20px',
+                            letterSpacing: '0.5px',
+                            transform: 'translateY(-2px)'
+                          }}>
                           <i className="bi bi-star-fill text-warning" style={{ fontSize: '11px', textShadow: '0 0 2px rgba(255,255,255,0.5)' }}></i> MENTOR
                         </span>
                       )}
                     </h2>
                     <p className="text-muted mb-1 fw-medium" style={{ fontSize: '15px' }}>
-                      @{profileUser.username} 
+                      @{profileUser.username}
                       {profileUser.major && ` • SV Ngành ${profileUser.major}`}
                     </p>
                     <p className="text-muted mb-0" style={{ fontSize: '14px' }}>
@@ -235,16 +240,16 @@ export default function UserProfilePage() {
                   <div className="d-flex gap-2 justify-content-center w-100 w-md-auto mb-2 mb-md-0">
                     {isOwner ? (
                       <>
-                        <button className="btn btn-primary rounded-pill px-4 fw-medium shadow-sm bg-poly border-0"><i className="bi bi-plus-lg me-1"></i> Thêm vào tin</button>
-                        <button 
-                          className="btn btn-secondary bg-light border-0 rounded-pill px-4 fw-medium text-dark shadow-sm"
+                        {/* <button className="btn btn-primary rounded-pill px-4 fw-medium shadow-sm bg-poly border-0"><i className="bi bi-plus-lg me-1"></i> Thêm vào tin</button> */}
+                        <button
+                          className="btn btn-primary border-0 rounded-pill px-4 fw-medium shadow-sm bg-poly"
                           onClick={() => router.push('/settings')}
                         >
                           <i className="bi bi-pencil me-1"></i> Chỉnh sửa
                         </button>
                       </>
                     ) : (
-                      <button 
+                      <button
                         className={`btn ${isFollowing ? 'btn-secondary bg-light text-dark border' : 'btn-primary bg-poly'} rounded-pill px-4 fw-medium shadow-sm border-0`}
                         onClick={handleFollowToggle}
                       >
@@ -277,7 +282,7 @@ export default function UserProfilePage() {
                 <div className="poly-card p-3 mb-3 bg-white">
                   <h5 className="fw-bold mb-3 fs-6 text-dark">Giới thiệu</h5>
                   <div className="d-flex align-items-center mb-2 text-muted" style={{ fontSize: '14.5px' }}>
-                    <i className="bi bi-mortarboard-fill fs-5 me-2 text-center" style={{ width: '20px' }}></i> 
+                    <i className="bi bi-mortarboard-fill fs-5 me-2 text-center" style={{ width: '20px' }}></i>
                     <span>{profileUser.major ? `Sinh viên ngành ${profileUser.major}` : 'Sinh viên tại FPT Polytechnic'}</span>
                   </div>
                   <div className="d-flex align-items-center mb-2 text-muted" style={{ fontSize: '14.5px' }}>
@@ -296,7 +301,12 @@ export default function UserProfilePage() {
 
               {/* Right Column: User Posts */}
               <div className="col-lg-8 col-12">
-                {posts.length === 0 ? (
+                {postsLoading ? (
+                  <div className="d-flex flex-column gap-3">
+                    <PostSkeleton />
+                    <PostSkeleton />
+                  </div>
+                ) : posts.length === 0 ? (
                   <div className="poly-card p-5 text-center text-muted bg-white">
                     <i className="bi bi-journal-x fs-1 d-block mb-2"></i>
                     Chưa có bài viết nào được đăng bởi người dùng này.

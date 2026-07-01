@@ -9,20 +9,31 @@ import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import PostCard from '@/components/post/PostCard';
+import PostSkeleton from '@/components/post/PostSkeleton';
 import '@/styles/home.css';
 import SplashScreen from '@/components/layout/SplashScreen';
 
+
+// Global cache for feed posts to prevent reload delay on navigation
+let globalFeedCache: {
+  posts: Post[];
+  feedPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  lastFetch: number;
+} | null = null;
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
 export default function HomePage() {
   
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [feedPage, setFeedPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [hasNext, setHasNext] = useState(false);
-  const [feedLoading, setFeedLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>(globalFeedCache ? globalFeedCache.posts : []);
+  const [feedPage, setFeedPage] = useState(globalFeedCache ? globalFeedCache.feedPage : 0);
+  const [totalPages, setTotalPages] = useState(globalFeedCache ? globalFeedCache.totalPages : 0);
+  const [hasNext, setHasNext] = useState(globalFeedCache ? globalFeedCache.hasNext : false);
+  const [feedLoading, setFeedLoading] = useState(globalFeedCache ? false : true);
 
   // Infinite scroll sentinel
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -41,17 +52,36 @@ export default function HomePage() {
     }
   }, [user, loading, router]);
 
-  const loadFeed = useCallback(async (page = 0) => {
+  const loadFeed = useCallback(async (page = 0, force = false) => {
+    // If loading first page and we have fresh cache, do not load
+    if (page === 0 && !force && globalFeedCache && (Date.now() - globalFeedCache.lastFetch < CACHE_TTL)) {
+      return;
+    }
+
     if (loadingRef.current) return;
     loadingRef.current = true;
-    setFeedLoading(true);
+    if (page === 0 && (!globalFeedCache || globalFeedCache.posts.length === 0)) {
+      setFeedLoading(true);
+    }
+
     try {
       const data = await fetchAPI(`/api/v2/posts/feed?page=${page}&size=10`);
-      if (page === 0) {
-        setPosts(data.posts || []);
-      } else {
-        setPosts((prev) => [...prev, ...(data.posts || [])]);
-      }
+      
+      setPosts((prev) => {
+        const newPosts = page === 0 ? (data.posts || []) : [...prev, ...(data.posts || [])];
+        
+        // Update global cache
+        globalFeedCache = {
+          posts: newPosts,
+          feedPage: data.currentPage || 0,
+          totalPages: data.totalPages || 0,
+          hasNext: !!data.hasNext,
+          lastFetch: Date.now()
+        };
+        
+        return newPosts;
+      });
+      
       setFeedPage(data.currentPage || 0);
       setTotalPages(data.totalPages || 0);
       setHasNext(!!data.hasNext);
@@ -174,8 +204,8 @@ export default function HomePage() {
       const closeBtn = document.getElementById('closeCreatePostModal');
       if (closeBtn) closeBtn.click();
 
-      // Refresh feed
-      loadFeed(0);
+      // Refresh feed (force bypass cache)
+      loadFeed(0, true);
     } catch (err) {
       console.error('Failed to create post', err);
     } finally {
@@ -241,8 +271,10 @@ export default function HomePage() {
 
             {/* Posts Feed list */}
             {feedLoading && posts.length === 0 ? (
-              <div className="d-flex justify-content-center p-5">
-                <div className="spinner-border text-primary" role="status"></div>
+              <div className="d-flex flex-column mt-3">
+                <PostSkeleton />
+                <PostSkeleton />
+                <PostSkeleton />
               </div>
             ) : posts.length === 0 ? (
               <div className="poly-card p-5 text-center text-muted bg-white">
@@ -252,7 +284,7 @@ export default function HomePage() {
             ) : (
               <div>
                 {posts.map((post) => (
-                  <PostCard key={post.id} post={post} onPostUpdated={() => loadFeed(0)} />
+                  <PostCard key={post.id} post={post} onPostUpdated={() => loadFeed(0, true)} />
                 ))}
 
                 {/* Infinite scroll sentinel */}

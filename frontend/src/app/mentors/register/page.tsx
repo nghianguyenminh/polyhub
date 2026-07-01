@@ -19,11 +19,11 @@ interface StepProps {
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'CCCD',       icon: '🪪', title: 'Xác thực định danh' },
-  { id: 2, label: 'Khuôn mặt',  icon: '🧑', title: 'Xác thực khuôn mặt' },
+  { id: 1, label: 'CCCD', icon: '🪪', title: 'Xác thực định danh' },
+  { id: 2, label: 'Khuôn mặt', icon: '🧑', title: 'Xác thực khuôn mặt' },
   { id: 3, label: 'Kinh nghiệm', icon: '💼', title: 'Kinh nghiệm & Động lực' },
-  { id: 4, label: 'Hồ sơ',      icon: '📎', title: 'Hồ sơ đính kèm' },
-  { id: 5, label: 'Xác nhận',   icon: '✅', title: 'Xác nhận & Gửi' },
+  { id: 4, label: 'Hồ sơ', icon: '📎', title: 'Hồ sơ đính kèm' },
+  { id: 5, label: 'Xác nhận', icon: '✅', title: 'Xác nhận & Gửi' },
 ];
 
 
@@ -33,28 +33,28 @@ const STEPS = [
 export default function MentorRegisterPage() {
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
-  const [loading, setLoading]       = useState(false);
+  const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
-  const [error, setError]           = useState('');
+  const [error, setError] = useState('');
   const [userStatus, setUserStatus] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [direction, setDirection]   = useState<'forward' | 'backward'>('forward');
-  const [agreed, setAgreed]         = useState(false);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const [agreed, setAgreed] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
   // Form states
-  const [fullname, setFullname]             = useState('');
-  const [cccdFrontFile, setCccdFrontFile]   = useState<File | null>(null);
-  const [cccdBackFile, setCccdBackFile]     = useState<File | null>(null);
-  const [email, setEmail]                   = useState('');
-  const [phone, setPhone]                   = useState('');
-  const [birthday, setBirthday]             = useState('');
-  const [introduction, setIntroduction]     = useState('');
-  const [motivation, setMotivation]         = useState('');
-  const [cvFile, setCvFile]                 = useState<File | null>(null);
+  const [fullname, setFullname] = useState('');
+  const [cccdFrontFile, setCccdFrontFile] = useState<File | null>(null);
+  const [cccdBackFile, setCccdBackFile] = useState<File | null>(null);
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [introduction, setIntroduction] = useState('');
+  const [motivation, setMotivation] = useState('');
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const [degreeFile, setDegreeFile]         = useState<File | null>(null);
+  const [degreeFile, setDegreeFile] = useState<File | null>(null);
 
   // States cho FPT AI ID Recognition
   const [isVerifyingFront, setIsVerifyingFront] = useState(false);
@@ -99,7 +99,7 @@ export default function MentorRegisterPage() {
 
   const handleFrontFileChange = async (f: File | null) => {
     setCccdFrontFile(f);
-    setFieldErrors(p => ({...p, cccdFrontFile: ''}));
+    setFieldErrors(p => ({ ...p, cccdFrontFile: '' }));
     setFrontIdData(null);
     setFrontIdError('');
 
@@ -136,7 +136,7 @@ export default function MentorRegisterPage() {
 
   const handleBackFileChange = async (f: File | null) => {
     setCccdBackFile(f);
-    setFieldErrors(p => ({...p, cccdBackFile: ''}));
+    setFieldErrors(p => ({ ...p, cccdBackFile: '' }));
     setBackIdData(null);
     setBackIdError('');
 
@@ -173,7 +173,7 @@ export default function MentorRegisterPage() {
 
   const handleFaceFileChange = async (f: File | null) => {
     setFaceFile(f);
-    setFieldErrors(p => ({...p, faceFile: ''}));
+    setFieldErrors(p => ({ ...p, faceFile: '' }));
     setFaceMatchData(null);
     setFaceMatchError('');
 
@@ -336,7 +336,7 @@ export default function MentorRegisterPage() {
   // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!agreed) { setError('Vui lòng đồng ý với điều khoản trước khi gửi.'); return; }
-    
+
     const errs: Record<string, string> = {};
     if (!email.trim()) {
       errs.email = 'Vui lòng nhập email';
@@ -364,7 +364,7 @@ export default function MentorRegisterPage() {
       if (frontIdData.dob) {
         const parts = frontIdData.dob.split('/');
         if (parts.length === 3) {
-           finalBirthday = `${parts[2]}-${parts[1]}-${parts[0]}`;
+          finalBirthday = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
       }
     }
@@ -381,7 +381,7 @@ export default function MentorRegisterPage() {
     formData.append('motivation', motivation);
     formData.append('cvFile', cvFile!);
     if (certificateFile) formData.append('certificateFile', certificateFile);
-    if (degreeFile)      formData.append('degreeFile', degreeFile);
+    if (degreeFile) formData.append('degreeFile', degreeFile);
 
     try {
       await fetchAPI('/api/mentors/register', {
@@ -411,7 +411,7 @@ export default function MentorRegisterPage() {
     accept: string; id: string;
   }) => {
     const isImage = file?.type.startsWith('image/');
-    
+
     return (
       <div className="mr-field">
         <label className="mr-label">{label}{required && <span>*</span>}</label>
@@ -423,10 +423,10 @@ export default function MentorRegisterPage() {
           {file ? (
             isImage ? (
               <div style={{ width: '100%', height: '140px', position: 'relative', borderRadius: '6px', overflow: 'hidden', pointerEvents: 'none' }}>
-                <img 
-                  src={URL.createObjectURL(file)} 
-                  alt="preview" 
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'rgba(255,255,255,0.05)' }} 
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt="preview"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'rgba(255,255,255,0.05)' }}
                 />
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', padding: '6px', fontSize: '12px', textAlign: 'center', color: '#fff', fontWeight: 500 }}>
                   Nhấn để tải ảnh khác lên
@@ -457,7 +457,7 @@ export default function MentorRegisterPage() {
   if (pageLoading) {
     return (
       <>
-       
+
         <Header />
         <div className="mr-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
@@ -473,7 +473,7 @@ export default function MentorRegisterPage() {
   if (userStatus?.hasRequest && (userStatus.requestStatus === 'PENDING' || userStatus.requestStatus === 'APPROVED')) {
     return (
       <>
-        
+
         <Header />
         <div className="mr-root">
           <div className="mr-particle mr-particle-1" />
@@ -500,7 +500,7 @@ export default function MentorRegisterPage() {
 
   return (
     <>
-     
+
       <Header />
       <div className="mr-root">
         <div className="mr-particle mr-particle-1" />
@@ -688,7 +688,7 @@ export default function MentorRegisterPage() {
                     className={`mr-input mr-textarea ${fieldErrors.introduction ? 'error-field' : ''}`}
                     placeholder="Ví dụ: Tôi đã có 3 năm kinh nghiệm lập trình Java, từng tham gia dự án thương mại điện tử cho công ty ABC..."
                     value={introduction}
-                    onChange={e => { setIntroduction(e.target.value); setFieldErrors(p => ({...p, introduction: ''})); }}
+                    onChange={e => { setIntroduction(e.target.value); setFieldErrors(p => ({ ...p, introduction: '' })); }}
                     rows={5}
                   />
                   <div className="mr-hint">Mô tả ngắn về chuyên môn, dự án đã làm hoặc thành tích nổi bật.</div>
@@ -701,7 +701,7 @@ export default function MentorRegisterPage() {
                     className={`mr-input mr-textarea ${fieldErrors.motivation ? 'error-field' : ''}`}
                     placeholder="Vì sao bạn muốn tham gia chia sẻ kiến thức cùng cộng đồng PolyHUB?"
                     value={motivation}
-                    onChange={e => { setMotivation(e.target.value); setFieldErrors(p => ({...p, motivation: ''})); }}
+                    onChange={e => { setMotivation(e.target.value); setFieldErrors(p => ({ ...p, motivation: '' })); }}
                     rows={4}
                   />
                   {fieldErrors.motivation && <div className="mr-field-error">⚠ {fieldErrors.motivation}</div>}
@@ -725,7 +725,7 @@ export default function MentorRegisterPage() {
                   hint="PDF, DOC, DOCX — Tối đa 10MB"
                   accept=".pdf,.doc,.docx"
                   file={cvFile}
-                  onChange={f => { setCvFile(f); setFieldErrors(p => ({...p, cvFile: ''})); }}
+                  onChange={f => { setCvFile(f); setFieldErrors(p => ({ ...p, cvFile: '' })); }}
                 />
 
                 <div className="mr-row">
@@ -776,7 +776,7 @@ export default function MentorRegisterPage() {
                     <span className="mr-review-key">Ngày sinh</span>
                     <span className="mr-review-val">{frontIdData?.dob || birthday || '—'}</span>
                   </div>
-                  
+
                   <div className="mr-review-row">
                     <span className="mr-review-key">Email liên hệ</span>
                     <span className="mr-review-val">{email || '—'}</span>
@@ -802,28 +802,28 @@ export default function MentorRegisterPage() {
                     <span>📎 Hồ sơ đính kèm</span>
                   </div>
                   {[
-                    ['Mặt trước CCCD', cccdFrontFile, 1],
-                    ['Mặt sau CCCD', cccdBackFile, 1],
-                    ['Ảnh chân dung', faceFile, 2],
-                    ['CV', cvFile, 4],
-                    ['Chứng chỉ', certificateFile, 4],
-                    ['Bằng cấp', degreeFile, 4],
-                  ].map(([k, f, stepIndex]) => (
-                    <div className="mr-review-row" key={k as string}>
-                      <span className="mr-review-key">{k}</span>
-                      <span className="mr-review-val" style={{ color: f ? '#6ee7b7' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {f ? (
+                    { label: 'Mặt trước CCCD', file: cccdFrontFile, step: 1 },
+                    { label: 'Mặt sau CCCD', file: cccdBackFile, step: 1 },
+                    { label: 'Ảnh chân dung', file: faceFile, step: 2 },
+                    { label: 'CV', file: cvFile, step: 4 },
+                    { label: 'Chứng chỉ', file: certificateFile, step: 4 },
+                    { label: 'Bằng cấp', file: degreeFile, step: 4 },
+                  ].map(({ label, file, step }) => (
+                    <div className="mr-review-row" key={label}>
+                      <span className="mr-review-key">{label}</span>
+                      <span className="mr-review-val" style={{ color: file ? '#6ee7b7' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {file ? (
                           <>
-                            <a 
-                              href={URL.createObjectURL(f as File)} 
-                              target="_blank" 
+                            <a
+                              href={URL.createObjectURL(file as File)}
+                              target="_blank"
                               rel="noreferrer"
                               style={{ color: '#6ee7b7', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
                             >
-                              📄 {(f as File).name}
+                              📄 {(file as File).name}
                             </a>
-                            <button 
-                              onClick={() => { setDirection('backward'); setCurrentStep(stepIndex as number); }}
+                            <button
+                              onClick={() => { setDirection('backward'); setCurrentStep(step); }}
                               style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 4, padding: '2px 6px', fontSize: 11, color: '#fff', cursor: 'pointer' }}
                             >
                               Sửa
