@@ -19,6 +19,10 @@ export interface SimpleUser {
   fullname: string;
   avatar?: string;
   major?: string;
+  role?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface Post {
