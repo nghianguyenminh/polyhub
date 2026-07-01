@@ -134,6 +134,7 @@ public class MentorApiController {
             @RequestParam("cvFile") MultipartFile cvFile,
             @RequestParam(value = "certificateFile", required = false) MultipartFile certificateFile,
             @RequestParam(value = "degreeFile", required = false) MultipartFile degreeFile,
+            @RequestParam("faceFile") MultipartFile faceFile,
             Principal principal) {
 
         if (principal == null) {
@@ -179,6 +180,10 @@ public class MentorApiController {
             if (cccdBackFile != null && !cccdBackFile.isEmpty()) {
                 Map<String, Object> backResult = fileStorageService.uploadFile(cccdBackFile);
                 request.setCccdBackFile(backResult.get("url").toString());
+            }
+            if (faceFile != null && !faceFile.isEmpty()) {
+                Map<String, Object> faceResult = fileStorageService.uploadFile(faceFile);
+                request.setFaceFile(faceResult.get("url").toString());
             }
 
             // Upload CV (Required)
@@ -231,6 +236,7 @@ public class MentorApiController {
         map.put("cvFile", m.getCvFile());
         map.put("certificateFile", m.getCertificateFile());
         map.put("degreeFile", m.getDegreeFile());
+        map.put("faceFile", m.getFaceFile());
         map.put("createdAt", m.getCreatedAt());
         if (m.getUser() != null) {
             map.put("user", Map.of(

@@ -204,9 +204,24 @@ export default function UserProfilePage() {
                   </div>
 
                   <div className="flex-grow-1 ms-md-4 mb-3 mb-md-0 w-100">
-                    <h2 className="mb-1 fw-bold text-dark d-flex justify-content-center justify-content-md-start align-items-center gap-2">
-                      {profileUser.fullname} 
-                      <i className="bi bi-check-circle-fill text-primary" style={{ fontSize: '18px' }}></i>
+                    <h2 className="mb-1 fw-bold text-dark d-flex justify-content-center justify-content-md-start align-items-center flex-wrap gap-2">
+                      <span className="d-flex align-items-center gap-1">
+                        {profileUser.fullname}
+                        <i className="bi bi-check-circle-fill text-primary ms-1" style={{ fontSize: '20px' }} title="Tài khoản xác thực"></i>
+                      </span>
+                      {profileUser.role === 'MENTOR' && (
+                        <span className="badge d-flex align-items-center gap-1 px-2 py-1 fw-bold shadow-sm" 
+                              style={{ 
+                                background: 'linear-gradient(135deg, #F27125, #FF9E67)', 
+                                color: '#fff', 
+                                fontSize: '12px',
+                                borderRadius: '20px',
+                                letterSpacing: '0.5px',
+                                transform: 'translateY(-2px)'
+                              }}>
+                          <i className="bi bi-star-fill text-warning" style={{ fontSize: '11px', textShadow: '0 0 2px rgba(255,255,255,0.5)' }}></i> MENTOR
+                        </span>
+                      )}
                     </h2>
                     <p className="text-muted mb-1 fw-medium" style={{ fontSize: '15px' }}>
                       @{profileUser.username} 

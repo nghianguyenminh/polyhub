@@ -44,6 +44,8 @@ public class MentorRequest implements Serializable {
     @Column(name = "cccd_back_file")
     private String cccdBackFile;
 
+    @Column(name = "face_file")
+    private String faceFile;
 
     @Column(columnDefinition = "nvarchar(1500)", nullable = false)
     private String introduction;

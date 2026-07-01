@@ -19,10 +19,11 @@ interface StepProps {
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Xác thực',   icon: '🪪', title: 'Xác thực định danh' },
-  { id: 2, label: 'Kinh nghiệm', icon: '💼', title: 'Kinh nghiệm & Động lực' },
-  { id: 3, label: 'Hồ sơ',      icon: '📎', title: 'Hồ sơ đính kèm' },
-  { id: 4, label: 'Xác nhận',   icon: '✅', title: 'Xác nhận & Gửi' },
+  { id: 1, label: 'CCCD',       icon: '🪪', title: 'Xác thực định danh' },
+  { id: 2, label: 'Khuôn mặt',  icon: '🧑', title: 'Xác thực khuôn mặt' },
+  { id: 3, label: 'Kinh nghiệm', icon: '💼', title: 'Kinh nghiệm & Động lực' },
+  { id: 4, label: 'Hồ sơ',      icon: '📎', title: 'Hồ sơ đính kèm' },
+  { id: 5, label: 'Xác nhận',   icon: '✅', title: 'Xác nhận & Gửi' },
 ];
 
 
@@ -63,6 +64,12 @@ export default function MentorRegisterPage() {
   const [isVerifyingBack, setIsVerifyingBack] = useState(false);
   const [backIdData, setBackIdData] = useState<any>(null);
   const [backIdError, setBackIdError] = useState('');
+
+  // States cho FPT AI Face Match
+  const [faceFile, setFaceFile] = useState<File | null>(null);
+  const [isVerifyingFaceMatch, setIsVerifyingFaceMatch] = useState(false);
+  const [faceMatchData, setFaceMatchData] = useState<any>(null);
+  const [faceMatchError, setFaceMatchError] = useState('');
 
   useEffect(() => { checkStatus(); }, []);
 
@@ -164,6 +171,49 @@ export default function MentorRegisterPage() {
     }
   };
 
+  const handleFaceFileChange = async (f: File | null) => {
+    setFaceFile(f);
+    setFieldErrors(p => ({...p, faceFile: ''}));
+    setFaceMatchData(null);
+    setFaceMatchError('');
+
+    if (f) {
+      if (!cccdFrontFile) {
+        setFaceMatchError('Vui lòng hoàn thành bước tải lên mặt trước CCCD trước.');
+        return;
+      }
+
+      setIsVerifyingFaceMatch(true);
+      try {
+        const formData = new FormData();
+        formData.append('file[]', cccdFrontFile);
+        formData.append('file[]', f);
+
+        const res = await fetch('https://api.fpt.ai/dmp/checkface/v1', {
+          method: 'POST',
+          headers: {
+            'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.code === '200' && data.data) {
+          if (data.data.isMatch) {
+            setFaceMatchData(data.data);
+          } else {
+            setFaceMatchError(`Khuôn mặt không khớp (Độ tương đồng: ${data.data.similarity}%). Vui lòng thử lại.`);
+          }
+        } else {
+          setFaceMatchError(data.message || 'Lỗi xác thực khuôn mặt.');
+        }
+      } catch (err) {
+        setFaceMatchError('Lỗi kết nối đến máy chủ xác thực.');
+      } finally {
+        setIsVerifyingFaceMatch(false);
+      }
+    }
+  };
+
   // ── Validation ──────────────────────────────────────────────────────────────
   const validateStep = (step: number): boolean => {
     const errs: Record<string, string> = {};
@@ -202,6 +252,18 @@ export default function MentorRegisterPage() {
     }
 
     if (step === 2) {
+      if (!faceFile) {
+        errs.faceFile = 'Vui lòng tải lên ảnh chụp khuôn mặt của bạn';
+      } else if (isVerifyingFaceMatch) {
+        errs.faceFile = 'Đang xác thực khuôn mặt, vui lòng chờ...';
+      } else if (faceMatchError) {
+        errs.faceFile = faceMatchError;
+      } else if (!faceMatchData) {
+        errs.faceFile = 'Chưa xác thực khuôn mặt thành công';
+      }
+    }
+
+    if (step === 3) {
       // 6. Validate Textarea (Kiểm soát số lượng ký tự tối thiểu để đảm bảo chất lượng nội dung)
       if (!introduction.trim()) {
         errs.introduction = 'Vui lòng điền phần giới thiệu bản thân';
@@ -216,7 +278,7 @@ export default function MentorRegisterPage() {
       }
     }
 
-    if (step === 3) {
+    if (step === 4) {
       // 7. Validate File (Bắt lỗi cả dung lượng và định dạng mở rộng)
       const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
       const MAX_OTHER_SIZE = 5 * 1024 * 1024; // 5MB
@@ -311,6 +373,7 @@ export default function MentorRegisterPage() {
     formData.append('fullname', finalFullname);
     formData.append('cccdFrontFile', cccdFrontFile!);
     formData.append('cccdBackFile', cccdBackFile!);
+    formData.append('faceFile', faceFile!);
     formData.append('email', email);
     formData.append('phone', phone);
     formData.append('birthday', finalBirthday);
@@ -562,8 +625,54 @@ export default function MentorRegisterPage() {
               </div>
             )}
 
-            {/* ── STEP 2: Experience ── */}
+            {/* ── STEP 2: Face Match ── */}
             {currentStep === 2 && (
+              <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
+                <div className="mr-step-header">
+                  <div className="mr-step-icon">🧑</div>
+                  <div>
+                    <div className="mr-step-title">Xác thực khuôn mặt</div>
+                    <div className="mr-step-subtitle">Tải lên ảnh chụp chân dung rõ nét để đối chiếu với CCCD</div>
+                  </div>
+                </div>
+
+                <div className="mr-row">
+                  <div style={{ flex: 1 }}>
+                    <FileZone
+                      id="faceFile" label="Ảnh chụp khuôn mặt" required
+                      hint="JPG, PNG — Tối đa 5MB"
+                      accept=".jpg,.jpeg,.png"
+                      file={faceFile}
+                      onChange={handleFaceFileChange}
+                    />
+                    {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt...</div>}
+                    {faceMatchError && <div style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>❌ {faceMatchError}</div>}
+                    {faceMatchData && (
+                      <div style={{ fontSize: 13, color: '#34d399', marginTop: 8, padding: '8px 12px', background: 'rgba(52, 211, 153, 0.1)', borderRadius: 6, border: '1px solid rgba(52, 211, 153, 0.2)' }}>
+                        <div style={{ marginBottom: 4 }}>✅ <strong>Khuôn mặt khớp với CCCD</strong></div>
+                        <div style={{ opacity: 0.9 }}>Độ tương đồng: <strong>{faceMatchData.similarity}%</strong></div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
+                    <div className="mr-alert mr-alert-info">
+                      <span className="mr-alert-icon">💡</span>
+                      <div className="mr-alert-body">
+                        <strong>Mẹo chụp ảnh:</strong>
+                        <ul style={{ margin: 0, paddingLeft: 20, marginTop: 4 }}>
+                          <li>Chụp rõ nét, không bị lóa sáng hoặc quá tối</li>
+                          <li>Không đeo kính râm hoặc khẩu trang</li>
+                          <li>Nhìn thẳng vào khung hình</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 3: Experience ── */}
+            {currentStep === 3 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
                 <div className="mr-step-header">
                   <div className="mr-step-icon">💼</div>
@@ -600,8 +709,8 @@ export default function MentorRegisterPage() {
               </div>
             )}
 
-            {/* ── STEP 3: Documents ── */}
-            {currentStep === 3 && (
+            {/* ── STEP 4: Documents ── */}
+            {currentStep === 4 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
                 <div className="mr-step-header">
                   <div className="mr-step-icon">📎</div>
@@ -645,8 +754,8 @@ export default function MentorRegisterPage() {
               </div>
             )}
 
-            {/* ── STEP 4: Review & Submit ── */}
-            {currentStep === 4 && (
+            {/* ── STEP 5: Review & Submit ── */}
+            {currentStep === 5 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
                 <div className="mr-step-header">
                   <div className="mr-step-icon">✅</div>
@@ -695,9 +804,10 @@ export default function MentorRegisterPage() {
                   {[
                     ['Mặt trước CCCD', cccdFrontFile, 1],
                     ['Mặt sau CCCD', cccdBackFile, 1],
-                    ['CV', cvFile, 3],
-                    ['Chứng chỉ', certificateFile, 3],
-                    ['Bằng cấp', degreeFile, 3],
+                    ['Ảnh chân dung', faceFile, 2],
+                    ['CV', cvFile, 4],
+                    ['Chứng chỉ', certificateFile, 4],
+                    ['Bằng cấp', degreeFile, 4],
                   ].map(([k, f, stepIndex]) => (
                     <div className="mr-review-row" key={k as string}>
                       <span className="mr-review-key">{k}</span>

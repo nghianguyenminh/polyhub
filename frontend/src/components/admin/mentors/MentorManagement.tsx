@@ -580,6 +580,30 @@ export default function MentorManagement() {
                       </div>
                     </div>
                   )}
+                  {viewingMentor.faceFile && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Ảnh chân dung</div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.faceFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🖼️ Xem Ảnh
+                        </a>
+                        <a
+                          href={viewingMentor.faceFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
+                    </div>
+                  )}
                   {viewingMentor.cvFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> CV</div>
@@ -652,7 +676,7 @@ export default function MentorManagement() {
                       </div>
                     </div>
                   )}
-                  {!viewingMentor.portfolioLink && !viewingMentor.cvUrl && !viewingMentor.certificateUrl && !viewingMentor.degreeUrl && (
+                  {!viewingMentor.portfolioLink && !viewingMentor.cvFile && !viewingMentor.certificateFile && !viewingMentor.degreeFile && !viewingMentor.faceFile && (
                     <div style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.875rem', padding: '8px 0' }}>
                       Không có tài liệu đính kèm.
                     </div>
