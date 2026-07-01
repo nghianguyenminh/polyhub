@@ -281,7 +281,7 @@ export default function MentorRegisterPage() {
         body: formData
       });
       const data = await res.json();
-      if (data.code === '200' && data.data) {
+      if (String(data.code) === '200' && data.data) {
         const liveness = data.data.liveness;
         const faceMatch = data.data.face_match || data.data.faceMatch;
 
