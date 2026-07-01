@@ -7,7 +7,8 @@ import { fetchAPI } from '@/lib/api';
 import { ConnectionUser, Mentor } from '@/lib/types';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import '@/styles/connections.css'; // connections.css shares styles with mentors
+import '@/styles/mentors.css'; // shared card styles (mentor-profile-card, avatar, etc.)
+import '@/styles/connections.css'; // connections-specific overrides
 import RightSidebar from '@/components/layout/RightSidebar';
 
 export default function ConnectionsPage() {
@@ -118,11 +119,13 @@ export default function ConnectionsPage() {
                       
                       <div className="mentor-card-body">
                         <div className="d-flex justify-content-between align-items-start">
-                          <img 
-                            src={u.avatar && u.avatar !== 'default.png' ? u.avatar : `https://ui-avatars.com/api/?name=${u.fullname}&background=random&rounded=true&size=128`} 
-                            className="mentor-card-avatar" 
-                            alt="avatar" 
-                          />
+                          <div className="mentor-card-avatar-wrap">
+                            <img 
+                              src={u.avatar && u.avatar !== 'default.png' ? u.avatar : `https://ui-avatars.com/api/?name=${u.fullname}&background=random&rounded=true&size=128`} 
+                              className="mentor-card-avatar" 
+                              alt="avatar" 
+                            />
+                          </div>
                           {!u.isSelf && (
                             <button 
                               className={`btn btn-sm rounded-pill fw-bold ${u.isFollowing ? 'btn-primary' : 'btn-outline-primary'}`} 

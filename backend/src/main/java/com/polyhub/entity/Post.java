@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Tránh lỗi Lazy Loading khi chuyển sang JSON
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" }) // Tránh lỗi Lazy Loading khi chuyển sang JSON
 public class Post {
 
     @Id
@@ -41,7 +41,7 @@ public class Post {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shared_post_id")
     private Post sharedPost;
-    
+
     @OneToMany(mappedBy = "sharedPost", cascade = CascadeType.ALL)
     @Builder.Default
     @JsonIgnore // CHẶN VÒNG LẶP: Không trả về danh sách các bài đã share khi xem một bài viết
@@ -53,7 +53,8 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    @JsonIgnore // CHẶN VÒNG LẶP: Không cần thiết trả về danh sách report trong API bài viết thông thường
+    @JsonIgnore // CHẶN VÒNG LẶP: Không cần thiết trả về danh sách report trong API bài viết
+                // thông thường
     private List<PostReport> reports = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -64,6 +65,10 @@ public class Post {
     @Column(name = "is_private")
     @Builder.Default
     private Boolean isPrivate = false;
+
+    @Column(name = "hot_score", nullable = false, columnDefinition = "double default 0.0")
+    @Builder.Default
+    private Double hotScore = 0.0;
 
     @CreationTimestamp
     @Column(updatable = false)
