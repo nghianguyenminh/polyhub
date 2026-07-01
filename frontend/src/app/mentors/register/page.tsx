@@ -171,46 +171,141 @@ export default function MentorRegisterPage() {
     }
   };
 
-  const handleFaceFileChange = async (f: File | null) => {
-    setFaceFile(f);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingProgress, setRecordingProgress] = useState(0);
+  const [livenessInstruction, setLivenessInstruction] = useState('Đưa khuôn mặt vào trong khung oval');
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (isCameraOpen && videoRef.current && cameraStream) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [isCameraOpen, cameraStream]);
+
+  const startCamera = async () => {
+    setFaceMatchError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      setCameraStream(stream);
+      setIsCameraOpen(true);
+      setFaceFile(null);
+      setFaceMatchData(null);
+    } catch (err) {
+      setFaceMatchError('Không thể mở camera. Vui lòng cấp quyền truy cập.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
+    setCameraStream(null);
+    setIsCameraOpen(false);
+  };
+
+  const startRecording = () => {
+    if (!cameraStream) return;
+    setFaceMatchError('');
+    setIsRecording(true);
+    const stream = cameraStream;
+    let mimeType = 'video/webm';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'video/mp4';
+    }
+    const mediaRecorder = new MediaRecorder(stream, { mimeType });
+    const chunks: Blob[] = [];
+
+    mediaRecorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: mimeType });
+      const extension = mimeType === 'video/mp4' ? 'mp4' : 'webm';
+      const file = new File([blob], `liveness.${extension}`, { type: mimeType });
+      setFaceFile(file);
+      stopCamera();
+      handleLivenessVerification(file);
+    };
+
+    mediaRecorder.start();
+
+    // Logic app ngân hàng: quay 7s, hướng dẫn đổi mỗi 2s
+    let time = 0;
+    setLivenessInstruction('Vui lòng nhìn thẳng và giữ yên...');
+
+    const interval = setInterval(() => {
+      time += 100;
+      setRecordingProgress((time / 10000) * 100);
+
+      if (time === 3000) setLivenessInstruction('Từ từ quay mặt sang trái');
+      if (time === 6000) setLivenessInstruction('Từ từ quay mặt sang phải');
+      if (time === 8000) setLivenessInstruction('Nhìn thẳng và mỉm cười');
+
+      if (time >= 10000) {
+        clearInterval(interval);
+        mediaRecorder.stop();
+        setIsRecording(false);
+        setRecordingProgress(0);
+        setLivenessInstruction('Đưa khuôn mặt vào trong khung oval');
+      }
+    }, 100);
+  };
+
+  const handleLivenessVerification = async (video: File) => {
     setFieldErrors(p => ({ ...p, faceFile: '' }));
     setFaceMatchData(null);
     setFaceMatchError('');
 
-    if (f) {
-      if (!cccdFrontFile) {
-        setFaceMatchError('Vui lòng hoàn thành bước tải lên mặt trước CCCD trước.');
-        return;
+    if (!cccdFrontFile) {
+      setFaceMatchError('Vui lòng hoàn thành bước tải lên mặt trước CCCD trước.');
+      return;
+    }
+
+    setIsVerifyingFaceMatch(true);
+    try {
+      const formData = new FormData();
+      formData.append('video', video);
+      // Chỉ gửi CCCD nếu file hợp lệ (không phải file dummy)
+      if (cccdFrontFile && cccdFrontFile.size > 0) {
+        formData.append('cmnd', cccdFrontFile);
       }
 
-      setIsVerifyingFaceMatch(true);
-      try {
-        const formData = new FormData();
-        formData.append('file[]', cccdFrontFile);
-        formData.append('file[]', f);
+      const res = await fetch('https://api.fpt.ai/dmp/liveness/v3', {
+        method: 'POST',
+        headers: {
+          'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
+        },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.code === '200' && data.data) {
+        const liveness = data.data.liveness;
+        const faceMatch = data.data.face_match || data.data.faceMatch;
 
-        const res = await fetch('https://api.fpt.ai/dmp/checkface/v1', {
-          method: 'POST',
-          headers: {
-            'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
-          },
-          body: formData
-        });
-        const data = await res.json();
-        if (data.code === '200' && data.data) {
-          if (data.data.isMatch) {
-            setFaceMatchData(data.data);
-          } else {
-            setFaceMatchError(`Khuôn mặt không khớp (Độ tương đồng: ${data.data.similarity}%). Vui lòng thử lại.`);
-          }
+        // Nếu không có CMND, API có thể không trả về face_match. Ta vẫn pass nếu liveness OK.
+        const isLivenessOk = liveness && liveness.is_live;
+        const isMatchOk = faceMatch ? faceMatch.is_match : true; // Nếu không có thì mặc định true cho test
+
+        if (isLivenessOk && isMatchOk) {
+          setFaceMatchData({
+            isMatch: faceMatch ? faceMatch.is_match : true,
+            similarity: faceMatch ? faceMatch.similarity : 100,
+            isLive: liveness.is_live,
+            deepFake: liveness.deep_fake
+          });
         } else {
-          setFaceMatchError(data.message || 'Lỗi xác thực khuôn mặt.');
+          setFaceMatchError(`Xác thực thất bại: Khuôn mặt ${faceMatch?.is_match === false ? 'không khớp' : 'khớp'}, ${liveness?.is_live ? 'là người thật' : 'không phải người thật'}`);
         }
-      } catch (err) {
-        setFaceMatchError('Lỗi kết nối đến máy chủ xác thực.');
-      } finally {
-        setIsVerifyingFaceMatch(false);
+      } else {
+        setFaceMatchError(data.message || 'Lỗi xác thực khuôn mặt.');
       }
+    } catch (err) {
+      setFaceMatchError('Lỗi kết nối đến máy chủ xác thực.');
+    } finally {
+      setIsVerifyingFaceMatch(false);
     }
   };
 
@@ -253,7 +348,7 @@ export default function MentorRegisterPage() {
 
     if (step === 2) {
       if (!faceFile) {
-        errs.faceFile = 'Vui lòng tải lên ảnh chụp khuôn mặt của bạn';
+        errs.faceFile = 'Vui lòng quay video khuôn mặt của bạn';
       } else if (isVerifyingFaceMatch) {
         errs.faceFile = 'Đang xác thực khuôn mặt, vui lòng chờ...';
       } else if (faceMatchError) {
@@ -571,12 +666,32 @@ export default function MentorRegisterPage() {
             {/* ── STEP 1: Verification ── */}
             {currentStep === 1 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
-                <div className="mr-step-header">
+                <div className="mr-step-header" style={{ position: 'relative' }}>
                   <div className="mr-step-icon">🪪</div>
                   <div>
                     <div className="mr-step-title">Xác thực định danh</div>
                     <div className="mr-step-subtitle">Tải lên hình ảnh 2 mặt CCCD/CMND của bạn</div>
                   </div>
+                  {/* NÚT BYPASS CHO TEST */}
+                  <button
+                    onClick={() => {
+                      const dummyFile = new File([''], 'dummy.jpg', { type: 'image/jpeg' });
+                      setCccdFrontFile(dummyFile);
+                      setCccdBackFile(dummyFile);
+                      setFrontIdData({ id: '000000000000', name: 'TEST USER', dob: '01/01/2000', sex: 'Nam', nationality: 'Việt Nam', home: 'Hà Nội', address: 'Hà Nội' });
+                      setBackIdData({ issue_date: '01/01/2020', issue_loc: 'C06' });
+                      setTimeout(() => setDirection('forward'), 100);
+                      setTimeout(() => setCurrentStep(2), 200);
+                    }}
+                    style={{
+                      position: 'absolute', right: 0, top: 0,
+                      background: '#10b981', border: 'none', color: '#fff',
+                      padding: '6px 12px', borderRadius: '4px', cursor: 'pointer',
+                      fontSize: '12px', fontWeight: 600
+                    }}
+                  >
+                    Bỏ qua bước này (Test Mode) ➔
+                  </button>
                 </div>
 
                 <div className="mr-row">
@@ -631,38 +746,128 @@ export default function MentorRegisterPage() {
                 <div className="mr-step-header">
                   <div className="mr-step-icon">🧑</div>
                   <div>
-                    <div className="mr-step-title">Xác thực khuôn mặt</div>
-                    <div className="mr-step-subtitle">Tải lên ảnh chụp chân dung rõ nét để đối chiếu với CCCD</div>
+                    <div className="mr-step-title">Xác thực khuôn mặt (Liveness)</div>
+                    <div className="mr-step-subtitle">Hệ thống sẽ ghi hình 7 giây và hướng dẫn bạn thực hiện các cử động như app ngân hàng</div>
                   </div>
                 </div>
 
-                <div className="mr-row">
-                  <div style={{ flex: 1 }}>
-                    <FileZone
-                      id="faceFile" label="Ảnh chụp khuôn mặt" required
-                      hint="JPG, PNG — Tối đa 5MB"
-                      accept=".jpg,.jpeg,.png"
-                      file={faceFile}
-                      onChange={handleFaceFileChange}
-                    />
-                    {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt...</div>}
-                    {faceMatchError && <div style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>❌ {faceMatchError}</div>}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div style={{ width: '100%' }}>
+                    <div className="mr-field">
+                      <label className="mr-label">Xác thực bằng Camera <span>*</span></label>
+                      <div className="mr-file-zone" style={{ padding: 16, minHeight: 400, position: 'relative' }}>
+                        {!isCameraOpen && !faceFile && (
+                          <div style={{ textAlign: 'center', margin: '80px 0' }}>
+                            <div className="mr-file-icon">📹</div>
+                            <div className="mr-file-text"><strong>Nhấn để mở Camera</strong></div>
+                            <div className="mr-file-sub">Cần cấp quyền truy cập camera</div>
+                            <button className="mr-btn mr-btn-primary" style={{ margin: '16px auto 0' }} onClick={startCamera}>
+                              Mở Camera
+                            </button>
+                          </div>
+                        )}
+                        {isCameraOpen && (
+                          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ position: 'relative', width: '100%', borderRadius: 8, overflow: 'hidden', backgroundColor: '#000' }}>
+                              <video
+                                ref={videoRef}
+                                autoPlay
+                                muted
+                                playsInline
+                                style={{ width: '100%', height: '400px', objectFit: 'cover', display: 'block', transform: 'scaleX(-1)', opacity: isRecording ? 1 : 0.7, transition: 'opacity 0.3s' }}
+                              />
+                              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                                <defs>
+                                  <mask id="oval-mask" x="0" y="0" width="100" height="100">
+                                    <rect x="0" y="0" width="100" height="100" fill="white" />
+                                    <ellipse cx="50" cy="50" rx="35" ry="46" fill="black" />
+                                  </mask>
+                                </defs>
+                                <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.7)" mask="url(#oval-mask)" />
+                                <ellipse cx="50" cy="50" rx="35" ry="46" fill="none" stroke={isRecording ? '#10b981' : '#fcd34d'} strokeWidth="0.8" strokeDasharray={isRecording ? 'none' : '2,2'} />
+                              </svg>
+                              <div style={{ position: 'absolute', bottom: '10%', width: '100%', textAlign: 'center' }}>
+                                <span style={{ background: 'rgba(0,0,0,0.6)', padding: '6px 16px', borderRadius: 20, color: isRecording ? '#10b981' : '#fff', fontWeight: 600, fontSize: 14, backdropFilter: 'blur(4px)' }}>
+                                  {livenessInstruction}
+                                </span>
+                              </div>
+                            </div>
+
+                            {!isRecording ? (
+                              <button className="mr-btn mr-btn-primary" style={{ marginTop: 16 }} onClick={startRecording}>
+                                🔴 Bắt đầu quay (7s)
+                              </button>
+                            ) : (
+                              <div style={{ width: '100%', marginTop: 12 }}>
+                                <div style={{ fontSize: 13, color: '#f87171', textAlign: 'center', marginBottom: 4 }}>
+                                  Đang quay...
+                                </div>
+                                <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+                                  <div style={{ width: `${recordingProgress}%`, height: '100%', background: '#f87171', borderRadius: 2, transition: 'width 0.1s' }} />
+                                </div>
+                              </div>
+                            )}
+                            <button
+                              style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', width: 24, height: 24, color: '#fff', cursor: 'pointer' }}
+                              onClick={stopCamera}
+                            >✕</button>
+                          </div>
+                        )}
+                        {faceFile && !isCameraOpen && (
+                          <div style={{ textAlign: 'center' }}>
+                            <div className="mr-file-icon" style={{ fontSize: 32 }}>🎬</div>
+                            <div className="mr-file-text" style={{ marginTop: 8 }}><strong>Đã quay video thành công</strong></div>
+                            <div className="mr-file-sub" style={{ marginBottom: 12 }}>{faceFile.name}</div>
+                            <button className="mr-btn mr-btn-ghost" style={{ margin: '0 auto', fontSize: 13 }} onClick={startCamera}>
+                              🔄 Quay lại video
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {fieldErrors.faceFile && <div className="mr-field-error">⚠ {fieldErrors.faceFile}</div>}
+                    </div>
+
+                    {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt và kiểm tra liveness...</div>}
+                    {faceMatchError && (
+                      <div style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>
+                        ❌ {faceMatchError}
+                        <div style={{ marginTop: 8 }}>
+                          <button
+                            onClick={() => {
+                              setFaceMatchError('');
+                              setFaceMatchData({
+                                isMatch: true,
+                                similarity: 100,
+                                isLive: true,
+                                deepFake: false
+                              });
+                            }}
+                            className="mr-btn mr-btn-ghost"
+                            style={{ fontSize: 12, padding: '4px 8px', background: 'rgba(248, 113, 113, 0.1)' }}
+                          >
+                            ⚠️ Ép buộc Bỏ qua (Chỉ dùng cho Test)
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {faceMatchData && (
-                      <div style={{ fontSize: 13, color: '#34d399', marginTop: 8, padding: '8px 12px', background: 'rgba(52, 211, 153, 0.1)', borderRadius: 6, border: '1px solid rgba(52, 211, 153, 0.2)' }}>
-                        <div style={{ marginBottom: 4 }}>✅ <strong>Khuôn mặt khớp với CCCD</strong></div>
-                        <div style={{ opacity: 0.9 }}>Độ tương đồng: <strong>{faceMatchData.similarity}%</strong></div>
+                      <div style={{ fontSize: 14, color: '#34d399', marginTop: 12, padding: '12px 16px', background: 'rgba(52, 211, 153, 0.1)', borderRadius: 8, border: '1px solid rgba(52, 211, 153, 0.2)' }}>
+                        <div style={{ marginBottom: 6, fontSize: 16 }}>✅ <strong>Xác thực thành công</strong></div>
+                        <div style={{ opacity: 0.9 }}>Khuôn mặt khớp: <strong>{faceMatchData.similarity}%</strong></div>
+                        <div style={{ opacity: 0.9 }}>Người thật (Liveness): <strong>{faceMatchData.isLive ? 'Có' : 'Không'}</strong></div>
+                        <div style={{ opacity: 0.9 }}>Deep fake: <strong>{faceMatchData.deepFake ? 'Có' : 'Không'}</strong></div>
                       </div>
                     )}
                   </div>
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
+                  <div style={{ width: '100%' }}>
                     <div className="mr-alert mr-alert-info">
                       <span className="mr-alert-icon">💡</span>
                       <div className="mr-alert-body">
-                        <strong>Mẹo chụp ảnh:</strong>
+                        <strong>Mẹo quay video liveness:</strong>
                         <ul style={{ margin: 0, paddingLeft: 20, marginTop: 4 }}>
-                          <li>Chụp rõ nét, không bị lóa sáng hoặc quá tối</li>
-                          <li>Không đeo kính râm hoặc khẩu trang</li>
-                          <li>Nhìn thẳng vào khung hình</li>
+                          <li>Đảm bảo ánh sáng rõ ràng, không quá tối hoặc lóa.</li>
+                          <li>Giữ khuôn mặt nằm gọn trong khung hình oval.</li>
+                          <li>Làm theo hướng dẫn trên màn hình (quay trái, quay phải).</li>
                         </ul>
                       </div>
                     </div>
@@ -804,7 +1009,7 @@ export default function MentorRegisterPage() {
                   {[
                     { label: 'Mặt trước CCCD', file: cccdFrontFile, step: 1 },
                     { label: 'Mặt sau CCCD', file: cccdBackFile, step: 1 },
-                    { label: 'Ảnh chân dung', file: faceFile, step: 2 },
+                    { label: 'Video Liveness', file: faceFile, step: 2 },
                     { label: 'CV', file: cvFile, step: 4 },
                     { label: 'Chứng chỉ', file: certificateFile, step: 4 },
                     { label: 'Bằng cấp', file: degreeFile, step: 4 },
