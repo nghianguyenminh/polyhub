@@ -10,6 +10,7 @@ import com.polyhub.service.CategoryService;
 import com.polyhub.service.FileStorageService;
 import com.polyhub.service.FptAiService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,12 @@ public class MentorApiController {
 
     @Autowired
     private FptAiService fptAiService;
+
+    // Chỉ bật bằng application-dev.properties (app.mentor-test-bypass.enabled=true)
+    // Mặc định là false để đảm bảo production luôn xác thực CCCD thật, không ai
+    // có thể bypass chỉ bằng cách đặt tên file là "dummy.jpg".
+    @Value("${app.mentor-test-bypass.enabled:false}")
+    private boolean testBypassEnabled;
 
     @GetMapping
     public ResponseEntity<?> getMentors(
@@ -158,10 +165,40 @@ public class MentorApiController {
         }
 
         try {
-            // Xác thực CCCD qua FPT.AI
-            // 1. Trích xuất thông tin chi tiết qua FPT.AI OCR
-            com.fasterxml.jackson.databind.JsonNode ocrResult = fptAiService.extractCccdDetails(cccdFrontFile);
-            
+            // Xác thực CCCD qua FPT.AI.
+            // Nhánh bypass (dummy.jpg) CHỈ hoạt động khi testBypassEnabled = true
+            // (bật qua app.mentor-test-bypass.enabled trong application-dev.properties).
+            // Ở production, biến này mặc định false => luôn gọi FPT.AI thật,
+            // không ai có thể qua mặt xác thực chỉ bằng cách đặt tên file "dummy.jpg".
+            com.fasterxml.jackson.databind.JsonNode ocrResult;
+            boolean isDummyUpload = cccdFrontFile != null && "dummy.jpg".equals(cccdFrontFile.getOriginalFilename());
+
+            if (testBypassEnabled && isDummyUpload) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.node.ObjectNode mockResult = mapper.createObjectNode();
+                mockResult.put("errorCode", 0);
+                mockResult.put("errorMessage", "success");
+
+                com.fasterxml.jackson.databind.node.ObjectNode mockData = mapper.createObjectNode();
+                mockData.put("id", cccdNumber);
+                mockData.put("name", fullname);
+                try {
+                    LocalDate inputBirthdayForMock = LocalDate.parse(birthdayStr);
+                    java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    mockData.put("dob", inputBirthdayForMock.format(dtf));
+                } catch (Exception e) {
+                    mockData.put("dob", "15/08/1999");
+                }
+                mockData.put("copy_check", "real");
+                mockData.put("fake_check", "real");
+                mockData.put("recaptured_check", "real");
+
+                mockResult.putArray("data").add(mockData);
+                ocrResult = mockResult;
+            } else {
+                ocrResult = fptAiService.extractCccdDetails(cccdFrontFile);
+            }
+
             int errorCode = ocrResult.path("errorCode").asInt(-1);
             if (errorCode != 0) {
                 String errorMsg = ocrResult.path("errorMessage").asText("Lỗi không xác định");
@@ -198,7 +235,7 @@ public class MentorApiController {
             if (!extractedCccd.trim().equalsIgnoreCase(cccdNumber.replace(" ", ""))) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Số CCCD nhập vào không khớp với thông tin trên ảnh thẻ."));
             }
-            
+
             // Đối chiếu Họ tên
             String normInputName = fullname.trim().replaceAll("\\s+", " ").toUpperCase();
             String normExtractedName = extractedName.trim().replaceAll("\\s+", " ").toUpperCase();

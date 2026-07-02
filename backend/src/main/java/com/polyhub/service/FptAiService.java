@@ -29,11 +29,10 @@ public class FptAiService {
 
         if ("mock".equalsIgnoreCase(apiKey) || apiKey.trim().isEmpty()) {
             System.out.println("Using MOCK FPT.AI OCR verification. Skipping actual API call.");
-            // Giả lập kết quả OCR thành công cho mục đích thử nghiệm
             ObjectNode mockResult = mapper.createObjectNode();
             mockResult.put("errorCode", 0);
             mockResult.put("errorMessage", "success");
-            
+
             ObjectNode mockData = mapper.createObjectNode();
             mockData.put("id", "079099012345");
             mockData.put("name", "PHAN TRAN TIEN");
@@ -42,7 +41,7 @@ public class FptAiService {
             mockData.put("copy_check", "real");
             mockData.put("fake_check", "real");
             mockData.put("recaptured_check", "real");
-            
+
             mockResult.putArray("data").add(mockData);
             return mockResult;
         }
@@ -53,6 +52,7 @@ public class FptAiService {
         headers.set("api-key", apiKey);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
         HttpHeaders imageHeaders = new HttpHeaders();
         String filename = imageFile.getOriginalFilename();
         if (filename != null && filename.toLowerCase().endsWith(".png")) {
@@ -60,7 +60,7 @@ public class FptAiService {
         } else {
             imageHeaders.setContentType(MediaType.IMAGE_JPEG);
         }
-        
+
         final String finalFilename = (filename != null && !filename.isEmpty()) ? filename : "image.jpg";
         ByteArrayResource fileResource = new ByteArrayResource(imageFile.getBytes()) {
             @Override
@@ -93,23 +93,22 @@ public class FptAiService {
 
         if ("mock".equalsIgnoreCase(apiKey) || apiKey.trim().isEmpty()) {
             System.out.println("Using MOCK FPT.AI Liveness verification. Skipping actual API call.");
-            // Giả lập kết quả Liveness thành công cho mục đích thử nghiệm
             ObjectNode mockResult = mapper.createObjectNode();
             mockResult.put("code", "200");
             mockResult.put("message", "Success");
-            
+
             ObjectNode mockData = mapper.createObjectNode();
-            
+
             ObjectNode mockLiveness = mapper.createObjectNode();
             mockLiveness.put("is_live", true);
             mockLiveness.put("deep_fake", false);
             mockData.set("liveness", mockLiveness);
-            
+
             ObjectNode mockFaceMatch = mapper.createObjectNode();
             mockFaceMatch.put("is_match", true);
             mockFaceMatch.put("similarity", 98.5);
             mockData.set("face_match", mockFaceMatch);
-            
+
             mockResult.set("data", mockData);
             return mockResult;
         }
@@ -120,11 +119,12 @@ public class FptAiService {
         headers.set("api-key", apiKey);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        
+
         // Thêm file video ghi hình gương mặt
         HttpHeaders videoHeaders = new HttpHeaders();
         videoHeaders.setContentType(MediaType.valueOf("video/mp4"));
-        final String videoFilename = (videoFile.getOriginalFilename() != null && !videoFile.getOriginalFilename().isEmpty()) ? videoFile.getOriginalFilename() : "video.mp4";
+        final String videoFilename = (videoFile.getOriginalFilename() != null && !videoFile.getOriginalFilename().isEmpty())
+                ? videoFile.getOriginalFilename() : "video.mp4";
         ByteArrayResource videoResource = new ByteArrayResource(videoFile.getBytes()) {
             @Override
             public String getFilename() {
@@ -132,7 +132,7 @@ public class FptAiService {
             }
         };
         body.add("video", new HttpEntity<>(videoResource, videoHeaders));
-        
+
         // Thêm file ảnh mặt trước CCCD
         HttpHeaders cccdHeaders = new HttpHeaders();
         String cccdOriginalName = cccdFile.getOriginalFilename();
