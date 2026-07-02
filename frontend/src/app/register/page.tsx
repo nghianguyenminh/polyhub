@@ -226,12 +226,12 @@ export default function RegisterPage() {
       errs.username = 'Mã sinh viên không hợp lệ (VD: PS12345, PC12345)';
     }
 
-    // 3. Validate email (Chấp nhận fpt.edu.vn và fe.edu.vn)
+    // 3. Validate email (Chấp nhận tất cả định dạng email hợp lệ)
     const cleanEmail = email.trim();
     if (!cleanEmail) {
       errs.email = 'Vui lòng nhập email';
-    } else if (!/^[a-zA-Z0-9._%+-]+@(fpt\.edu\.vn|fe\.edu\.vn)$/i.test(cleanEmail)) {
-      errs.email = 'Vui lòng sử dụng email FPT Polytechnic (@fpt.edu.vn hoặc @fe.edu.vn)';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(cleanEmail)) {
+      errs.email = 'Email không hợp lệ (Ví dụ: user@example.com)';
     }
 
     // 4. Validate phone
