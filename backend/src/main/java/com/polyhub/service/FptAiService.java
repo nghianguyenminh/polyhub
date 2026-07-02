@@ -59,7 +59,10 @@ public class FptAiService {
                 return imageFile.getOriginalFilename() != null ? imageFile.getOriginalFilename() : "image.jpg";
             }
         };
-        body.add("image", fileResource);
+        HttpHeaders imageHeaders = new HttpHeaders();
+        imageHeaders.setContentType(MediaType.parseMediaType(imageFile.getContentType() != null ? imageFile.getContentType() : "image/jpeg"));
+        HttpEntity<ByteArrayResource> imageEntity = new HttpEntity<>(fileResource, imageHeaders);
+        body.add("image", imageEntity);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
@@ -113,20 +116,28 @@ public class FptAiService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         
         // Thêm file video ghi hình gương mặt
-        body.add("video", new ByteArrayResource(videoFile.getBytes()) {
+        ByteArrayResource videoResource = new ByteArrayResource(videoFile.getBytes()) {
             @Override
             public String getFilename() {
                 return videoFile.getOriginalFilename() != null ? videoFile.getOriginalFilename() : "video.mp4";
             }
-        });
+        };
+        HttpHeaders videoHeaders = new HttpHeaders();
+        videoHeaders.setContentType(MediaType.parseMediaType(videoFile.getContentType() != null ? videoFile.getContentType() : "video/webm"));
+        HttpEntity<ByteArrayResource> videoEntity = new HttpEntity<>(videoResource, videoHeaders);
+        body.add("video", videoEntity);
         
         // Thêm file ảnh mặt trước CCCD
-        body.add("cmnd", new ByteArrayResource(cccdFile.getBytes()) {
+        ByteArrayResource cccdResource = new ByteArrayResource(cccdFile.getBytes()) {
             @Override
             public String getFilename() {
                 return cccdFile.getOriginalFilename() != null ? cccdFile.getOriginalFilename() : "cccd.jpg";
             }
-        });
+        };
+        HttpHeaders cccdHeaders = new HttpHeaders();
+        cccdHeaders.setContentType(MediaType.parseMediaType(cccdFile.getContentType() != null ? cccdFile.getContentType() : "image/jpeg"));
+        HttpEntity<ByteArrayResource> cccdEntity = new HttpEntity<>(cccdResource, cccdHeaders);
+        body.add("cmnd", cccdEntity);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
