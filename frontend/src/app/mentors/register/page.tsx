@@ -230,27 +230,43 @@ export default function MentorRegisterPage() {
 
     mediaRecorder.start();
 
-    // Logic app ngân hàng: quay 7s, hướng dẫn đổi mỗi 2s
+    // Logic eKYC tự động: quét 8.5s, cập nhật chỉ dẫn liên tục
     let time = 0;
     setLivenessInstruction('Vui lòng nhìn thẳng và giữ yên...');
 
     const interval = setInterval(() => {
       time += 100;
-      setRecordingProgress((time / 10000) * 100);
+      setRecordingProgress((time / 8500) * 100);
 
-      if (time === 3000) setLivenessInstruction('Từ từ quay mặt sang trái');
-      if (time === 6000) setLivenessInstruction('Từ từ quay mặt sang phải');
-      if (time === 8000) setLivenessInstruction('Nhìn thẳng và mỉm cười');
+      if (time === 2000) setLivenessInstruction('Từ từ quay mặt sang trái');
+      if (time === 4500) setLivenessInstruction('Từ từ quay mặt sang phải');
+      if (time === 7000) setLivenessInstruction('Nhìn thẳng và mỉm cười');
 
-      if (time >= 10000) {
+      if (time >= 8500) {
         clearInterval(interval);
-        mediaRecorder.stop();
+        if (mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
         setIsRecording(false);
         setRecordingProgress(0);
         setLivenessInstruction('Đưa khuôn mặt vào trong khung oval');
       }
     }, 100);
   };
+
+  // Tự động kích hoạt ghi hình khi camera mở sẵn sàng
+  useEffect(() => {
+    if (!cameraStream || !isCameraOpen) return;
+
+    setLivenessInstruction('Chuẩn bị... Vui lòng đưa khuôn mặt vào trong khung oval');
+    setRecordingProgress(0);
+
+    const timer = setTimeout(() => {
+      startRecording();
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [cameraStream, isCameraOpen]);
 
   const handleLivenessVerification = async (video: File) => {
     setFieldErrors(p => ({ ...p, faceFile: '' }));
@@ -929,13 +945,14 @@ export default function MentorRegisterPage() {
                             </div>
 
                             {!isRecording ? (
-                              <button className="mr-btn mr-btn-primary" style={{ marginTop: 16 }} onClick={startRecording}>
-                                🔴 Bắt đầu quay (7s)
-                              </button>
+                              <div style={{ marginTop: 16, fontSize: 14, color: '#fcd34d', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ display: 'inline-block', width: 8, height: 8, background: '#fcd34d', borderRadius: '50%', animation: 'ping 1s infinite' }} />
+                                Đang chuẩn bị quét tự động... Vui lòng nhìn thẳng
+                              </div>
                             ) : (
                               <div style={{ width: '100%', marginTop: 12 }}>
                                 <div style={{ fontSize: 13, color: '#f87171', textAlign: 'center', marginBottom: 4 }}>
-                                  Đang quay...
+                                  Đang quét...
                                 </div>
                                 <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
                                   <div style={{ width: `${recordingProgress}%`, height: '100%', background: '#f87171', borderRadius: 2, transition: 'width 0.1s' }} />
@@ -951,10 +968,10 @@ export default function MentorRegisterPage() {
                         {faceFile && !isCameraOpen && (
                           <div style={{ textAlign: 'center' }}>
                             <div className="mr-file-icon" style={{ fontSize: 32 }}>🎬</div>
-                            <div className="mr-file-text" style={{ marginTop: 8 }}><strong>Đã quay video thành công</strong></div>
+                            <div className="mr-file-text" style={{ marginTop: 8 }}><strong>Đã quét khuôn mặt thành công</strong></div>
                             <div className="mr-file-sub" style={{ marginBottom: 12 }}>{faceFile.name}</div>
                             <button className="mr-btn mr-btn-ghost" style={{ margin: '0 auto', fontSize: 13 }} onClick={startCamera}>
-                              🔄 Quay lại video
+                              🔄 Thực hiện quét lại
                             </button>
                           </div>
                         )}
@@ -964,9 +981,32 @@ export default function MentorRegisterPage() {
 
                     {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt và kiểm tra liveness...</div>}
                     {faceMatchError && (
-                      <div style={{ fontSize: 13, color: '#f87171', marginTop: 8 }}>
-                        ❌ {faceMatchError}
-                        <div style={{ marginTop: 8 }}>
+                      <div style={{ 
+                        background: 'rgba(239, 68, 68, 0.1)', 
+                        border: '1px solid rgba(239, 68, 68, 0.2)', 
+                        borderRadius: '8px', 
+                        padding: '16px', 
+                        marginTop: '16px', 
+                        textAlign: 'center' 
+                      }}>
+                        <div style={{ fontSize: 14, color: '#f87171', fontWeight: 600, marginBottom: 8 }}>
+                          ❌ Xác thực thất bại
+                        </div>
+                        <div style={{ fontSize: 13, color: '#fca5a5', marginBottom: 16 }}>
+                          Chi tiết: {faceMatchError}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => {
+                              setFaceMatchError('');
+                              startCamera();
+                            }}
+                            className="mr-btn mr-btn-primary"
+                            style={{ fontSize: 13, padding: '8px 16px', minWidth: '180px' }}
+                          >
+                            🔄 Thực hiện quét lại khuôn mặt
+                          </button>
+                          
                           <button
                             onClick={() => {
                               if (!faceFile) {
@@ -983,7 +1023,7 @@ export default function MentorRegisterPage() {
                               setFieldErrors(p => ({ ...p, faceFile: '' }));
                             }}
                             className="mr-btn mr-btn-ghost"
-                            style={{ fontSize: 12, padding: '4px 8px', background: 'rgba(248, 113, 113, 0.1)' }}
+                            style={{ fontSize: 12, padding: '8px 12px', color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)' }}
                           >
                             ⚠️ Ép buộc Bỏ qua (Chỉ dùng cho Test)
                           </button>
