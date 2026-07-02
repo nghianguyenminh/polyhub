@@ -2,6 +2,7 @@ package com.polyhub.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
@@ -17,23 +18,41 @@ public class FptAiService {
     @Value("${fpt.ai.api-key:mock}")
     private String apiKey;
 
-    private static final String FPT_AI_URL = "https://api.fpt.ai/vision/idr/vnm";
+    private static final String FPT_AI_OCR_URL = "https://api.fpt.ai/vision/idr/vnm";
+    private static final String FPT_AI_LIVENESS_URL = "https://api.fpt.ai/dmp/liveness/v3";
 
-    public String extractCccdNumber(MultipartFile imageFile) throws Exception {
+    /**
+     * Trích xuất thông tin chi tiết CCCD/CMND bằng API FPT.AI
+     */
+    public JsonNode extractCccdDetails(MultipartFile imageFile) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+
         if ("mock".equalsIgnoreCase(apiKey) || apiKey.trim().isEmpty()) {
-            System.out.println("Using MOCK FPT.AI verification. Skipping actual API call.");
-            // Giả lập thành công và trả về số CCCD fake
-            return "012345678901";
+            System.out.println("Using MOCK FPT.AI OCR verification. Skipping actual API call.");
+            // Giả lập kết quả OCR thành công cho mục đích thử nghiệm
+            ObjectNode mockResult = mapper.createObjectNode();
+            mockResult.put("errorCode", 0);
+            mockResult.put("errorMessage", "success");
+            
+            ObjectNode mockData = mapper.createObjectNode();
+            mockData.put("id", "079099012345");
+            mockData.put("name", "PHAN TRAN TIEN");
+            mockData.put("dob", "15/08/1999");
+            mockData.put("sex", "NAM");
+            mockData.put("copy_check", "real");
+            mockData.put("fake_check", "real");
+            mockData.put("recaptured_check", "real");
+            
+            mockResult.putArray("data").add(mockData);
+            return mockResult;
         }
 
         RestTemplate restTemplate = new RestTemplate();
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.set("api-key", apiKey);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        // Wrap MultipartFile into a ByteArrayResource to correctly send via RestTemplate
         ByteArrayResource fileResource = new ByteArrayResource(imageFile.getBytes()) {
             @Override
             public String getFilename() {
@@ -45,32 +64,82 @@ public class FptAiService {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(FPT_AI_URL, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(FPT_AI_OCR_URL, requestEntity, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode root = mapper.readTree(response.getBody());
-
-                int errorCode = root.path("errorCode").asInt(-1);
-                if (errorCode == 0) {
-                    JsonNode dataArray = root.path("data");
-                    if (dataArray.isArray() && dataArray.size() > 0) {
-                        JsonNode data = dataArray.get(0);
-                        String id = data.path("id").asText();
-                        if (id != null && !id.isEmpty()) {
-                            return id;
-                        }
-                    }
-                    throw new Exception("Không tìm thấy thông tin số CCCD/CMND trên ảnh");
-                } else {
-                    String errorMsg = root.path("errorMessage").asText("Lỗi không xác định");
-                    throw new Exception("FPT.AI Error: " + errorMsg);
-                }
+                return mapper.readTree(response.getBody());
             } else {
                 throw new Exception("Lỗi kết nối FPT.AI API: " + response.getStatusCode());
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new Exception("Quá trình xác thực CCCD thất bại: " + e.getMessage());
+            throw new Exception("Quá trình trích xuất thông tin CCCD thất bại: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Xác thực Liveness gương mặt và so khớp ảnh CCCD bằng API FPT.AI Liveness V3
+     */
+    public JsonNode verifyLivenessAndFaceMatch(MultipartFile videoFile, MultipartFile cccdFile) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+
+        if ("mock".equalsIgnoreCase(apiKey) || apiKey.trim().isEmpty()) {
+            System.out.println("Using MOCK FPT.AI Liveness verification. Skipping actual API call.");
+            // Giả lập kết quả Liveness thành công cho mục đích thử nghiệm
+            ObjectNode mockResult = mapper.createObjectNode();
+            mockResult.put("code", "200");
+            mockResult.put("message", "Success");
+            
+            ObjectNode mockData = mapper.createObjectNode();
+            
+            ObjectNode mockLiveness = mapper.createObjectNode();
+            mockLiveness.put("is_live", true);
+            mockLiveness.put("deep_fake", false);
+            mockData.set("liveness", mockLiveness);
+            
+            ObjectNode mockFaceMatch = mapper.createObjectNode();
+            mockFaceMatch.put("is_match", true);
+            mockFaceMatch.put("similarity", 98.5);
+            mockData.set("face_match", mockFaceMatch);
+            
+            mockResult.set("data", mockData);
+            return mockResult;
+        }
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.set("api-key", apiKey);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        
+        // Thêm file video ghi hình gương mặt
+        body.add("video", new ByteArrayResource(videoFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return videoFile.getOriginalFilename() != null ? videoFile.getOriginalFilename() : "video.mp4";
+            }
+        });
+        
+        // Thêm file ảnh mặt trước CCCD
+        body.add("cmnd", new ByteArrayResource(cccdFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return cccdFile.getOriginalFilename() != null ? cccdFile.getOriginalFilename() : "cccd.jpg";
+            }
+        });
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(FPT_AI_LIVENESS_URL, requestEntity, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return mapper.readTree(response.getBody());
+            } else {
+                throw new Exception("Lỗi kết nối FPT.AI Liveness API: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Quá trình xác thực gương mặt eKYC thất bại: " + e.getMessage());
         }
     }
 }

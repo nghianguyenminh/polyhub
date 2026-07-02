@@ -109,14 +109,11 @@ export default function MentorRegisterPage() {
       try {
         const formData = new FormData();
         formData.append('image', f);
-        const res = await fetch('https://api.fpt.ai/vision/idr/vnm', {
+        const data = await fetchAPI('/api/ai/ocr-cccd', {
           method: 'POST',
-          headers: {
-            'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
-          },
-          body: formData
+          body: formData,
+          noRedirectOn401: true
         });
-        const data = await res.json();
         if (data.errorCode === 0 && data.data && data.data.length > 0) {
           const info = data.data[0];
           if (info.type && info.type.includes('back')) {
@@ -269,19 +266,16 @@ export default function MentorRegisterPage() {
     try {
       const formData = new FormData();
       formData.append('video', video);
-      // Chỉ gửi CCCD nếu file hợp lệ (không phải file dummy)
       if (cccdFrontFile && cccdFrontFile.size > 0) {
-        formData.append('cmnd', cccdFrontFile);
+        formData.append('cccd', cccdFrontFile);
       }
 
-      const res = await fetch('https://api.fpt.ai/dmp/liveness/v3', {
+      // Gọi qua API proxy của backend Spring Boot để bảo mật API Key
+      const data = await fetchAPI('/api/ai/verify-face', {
         method: 'POST',
-        headers: {
-          'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
-        },
-        body: formData
+        body: formData,
+        noRedirectOn401: true
       });
-      const data = await res.json();
 
       const isSuccessCode = String(data.code) === '200' || String(data.code) === '0' || String(data.errorCode) === '0';
       const isSuccessMessage = data.message && (data.message.toLowerCase().includes('success') || data.message.toLowerCase() === 'ok');
@@ -317,8 +311,8 @@ export default function MentorRegisterPage() {
       } else {
         setFaceMatchError(data.message || 'Lỗi xác thực khuôn mặt.');
       }
-    } catch (err) {
-      setFaceMatchError('Lỗi kết nối đến máy chủ xác thực.');
+    } catch (err: any) {
+      setFaceMatchError(err.message || 'Lỗi kết nối đến máy chủ xác thực.');
     } finally {
       setIsVerifyingFaceMatch(false);
     }
@@ -469,8 +463,10 @@ export default function MentorRegisterPage() {
 
     let finalFullname = fullname;
     let finalBirthday = birthday;
+    let finalCccdNumber = '';
     if (frontIdData) {
       finalFullname = frontIdData.name || finalFullname;
+      finalCccdNumber = frontIdData.id || '';
       if (frontIdData.dob) {
         const parts = frontIdData.dob.split('/');
         if (parts.length === 3) {
@@ -481,6 +477,7 @@ export default function MentorRegisterPage() {
 
     const formData = new FormData();
     formData.append('fullname', finalFullname);
+    formData.append('cccdNumber', finalCccdNumber);
     formData.append('cccdFrontFile', cccdFrontFile!);
     formData.append('cccdBackFile', cccdBackFile!);
     formData.append('faceFile', faceFile!);
