@@ -587,12 +587,12 @@ export default function MentorRegisterPage() {
           <div className="mr-wrapper" style={{ maxWidth: 560, textAlign: 'center' }}>
             <div className="mr-card" style={{ animationDelay: '0.1s' }}>
               <div className="mr-pending-icon">⏳</div>
-              <h2 style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+              <h2 style={{ color: '#111827', fontWeight: 800, marginBottom: 12 }}>
                 Hồ sơ đang được xét duyệt
               </h2>
-              <p style={{ color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 24 }}>
+              <p style={{ color: '#4B5563', lineHeight: 1.7, marginBottom: 24 }}>
                 Cảm ơn bạn đã đăng ký! Ban Quản Trị đang xem xét hồ sơ của bạn.<br />
-                Quá trình này thường mất từ <strong style={{ color: '#c4b5fd' }}>1–3 ngày làm việc</strong>.
+                Quá trình này thường mất từ <strong style={{ color: '#F27125' }}>1–3 ngày làm việc</strong>.
               </p>
               <Link href="/mentors" className="mr-btn mr-btn-primary" style={{ justifyContent: 'center' }}>
                 ← Quay lại trang Mentor
