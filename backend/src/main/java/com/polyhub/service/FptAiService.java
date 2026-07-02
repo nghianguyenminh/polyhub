@@ -53,13 +53,22 @@ public class FptAiService {
         headers.set("api-key", apiKey);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        HttpHeaders imageHeaders = new HttpHeaders();
+        String filename = imageFile.getOriginalFilename();
+        if (filename != null && filename.toLowerCase().endsWith(".png")) {
+            imageHeaders.setContentType(MediaType.IMAGE_PNG);
+        } else {
+            imageHeaders.setContentType(MediaType.IMAGE_JPEG);
+        }
+        
+        final String finalFilename = (filename != null && !filename.isEmpty()) ? filename : "image.jpg";
         ByteArrayResource fileResource = new ByteArrayResource(imageFile.getBytes()) {
             @Override
             public String getFilename() {
-                return imageFile.getOriginalFilename() != null ? imageFile.getOriginalFilename() : "image.jpg";
+                return finalFilename;
             }
         };
-        body.add("image", fileResource);
+        body.add("image", new HttpEntity<>(fileResource, imageHeaders));
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
@@ -113,20 +122,33 @@ public class FptAiService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         
         // Thêm file video ghi hình gương mặt
-        body.add("video", new ByteArrayResource(videoFile.getBytes()) {
+        HttpHeaders videoHeaders = new HttpHeaders();
+        videoHeaders.setContentType(MediaType.valueOf("video/mp4"));
+        final String videoFilename = (videoFile.getOriginalFilename() != null && !videoFile.getOriginalFilename().isEmpty()) ? videoFile.getOriginalFilename() : "video.mp4";
+        ByteArrayResource videoResource = new ByteArrayResource(videoFile.getBytes()) {
             @Override
             public String getFilename() {
-                return videoFile.getOriginalFilename() != null ? videoFile.getOriginalFilename() : "video.mp4";
+                return videoFilename;
             }
-        });
+        };
+        body.add("video", new HttpEntity<>(videoResource, videoHeaders));
         
         // Thêm file ảnh mặt trước CCCD
-        body.add("cmnd", new ByteArrayResource(cccdFile.getBytes()) {
+        HttpHeaders cccdHeaders = new HttpHeaders();
+        String cccdOriginalName = cccdFile.getOriginalFilename();
+        if (cccdOriginalName != null && cccdOriginalName.toLowerCase().endsWith(".png")) {
+            cccdHeaders.setContentType(MediaType.IMAGE_PNG);
+        } else {
+            cccdHeaders.setContentType(MediaType.IMAGE_JPEG);
+        }
+        final String cccdFilename = (cccdOriginalName != null && !cccdOriginalName.isEmpty()) ? cccdOriginalName : "cccd.jpg";
+        ByteArrayResource cccdResource = new ByteArrayResource(cccdFile.getBytes()) {
             @Override
             public String getFilename() {
-                return cccdFile.getOriginalFilename() != null ? cccdFile.getOriginalFilename() : "cccd.jpg";
+                return cccdFilename;
             }
-        });
+        };
+        body.add("cmnd", new HttpEntity<>(cccdResource, cccdHeaders));
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 

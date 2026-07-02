@@ -158,12 +158,7 @@ public class MentorApiController {
         }
 
         try {
-            // Xác thực CCCD qua FPT.AI (Bypass nếu là file test)
-            String extractedCccdNumber;
-            if (cccdFrontFile != null && "dummy.jpg".equals(cccdFrontFile.getOriginalFilename())) {
-                extractedCccdNumber = "000000000000";
-            } else {
-                extractedCccdNumber = fptAiService.extractCccdNumber(cccdFrontFile);
+            // Xác thực CCCD qua FPT.AI
             // 1. Trích xuất thông tin chi tiết qua FPT.AI OCR
             com.fasterxml.jackson.databind.JsonNode ocrResult = fptAiService.extractCccdDetails(cccdFrontFile);
             
