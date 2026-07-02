@@ -63,11 +63,14 @@ public class MentorRequest implements Serializable {
     private String degreeFile;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(50)")
     private RequestStatus status = RequestStatus.PENDING;
 
     @Column(name = "rejection_reason", columnDefinition = "nvarchar(1000)")
     private String rejectionReason;
+
+    @Column(name = "admin_notes", columnDefinition = "nvarchar(1000)")
+    private String adminNotes;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
