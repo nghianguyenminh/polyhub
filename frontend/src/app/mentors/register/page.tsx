@@ -98,6 +98,30 @@ export default function MentorRegisterPage() {
     }
   };
 
+  const getFriendlyOcrErrorMessage = (errorCode: any, errorMessage: string) => {
+    const code = Number(errorCode);
+    switch (code) {
+      case 1:
+        return 'Ảnh không hợp lệ hoặc không đúng định dạng.';
+      case 2:
+        return 'Kích thước ảnh quá nhỏ hoặc không đạt chuẩn.';
+      case 3:
+        return 'Lỗi kết nối hệ thống nhận diện.';
+      case 5:
+        return 'Không tìm thấy thẻ CCCD hoặc khuôn mặt trong ảnh.';
+      case 6:
+        return 'Ảnh quá mờ, lóa sáng hoặc chất lượng quá thấp.';
+      case 7:
+        return 'Phát hiện ảnh thẻ photocopy hoặc không phải ảnh gốc.';
+      case 9:
+        return 'Phát hiện nhiều hơn một thẻ CCCD trong ảnh.';
+      case 10:
+        return 'Mặt thẻ không khớp (vui lòng kiểm tra lại mặt trước/mặt sau).';
+      default:
+        return errorMessage || 'Không thể nhận diện CCCD. Vui lòng chụp rõ nét và thử lại.';
+    }
+  };
+
   const handleFrontFileChange = async (f: File | null) => {
     setCccdFrontFile(f);
     setFieldErrors(p => ({ ...p, cccdFrontFile: '' }));
@@ -122,10 +146,10 @@ export default function MentorRegisterPage() {
             setFrontIdData(info);
           }
         } else {
-          setFrontIdError(data.errorMessage || 'Không thể nhận diện CCCD.');
+          setFrontIdError(getFriendlyOcrErrorMessage(data.errorCode, data.errorMessage));
         }
-      } catch (err) {
-        setFrontIdError('Lỗi kết nối đến máy chủ xác thực.');
+      } catch (err: any) {
+        setFrontIdError(err.message || 'Lỗi kết nối đến máy chủ xác thực.');
       } finally {
         setIsVerifyingFront(false);
       }
@@ -143,14 +167,11 @@ export default function MentorRegisterPage() {
       try {
         const formData = new FormData();
         formData.append('image', f);
-        const res = await fetch('https://api.fpt.ai/vision/idr/vnm', {
+        const data = await fetchAPI('/api/ai/ocr-cccd', {
           method: 'POST',
-          headers: {
-            'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
-          },
-          body: formData
+          body: formData,
+          noRedirectOn401: true
         });
-        const data = await res.json();
         if (data.errorCode === 0 && data.data && data.data.length > 0) {
           const info = data.data[0];
           if (info.type && (info.type.includes('front') || info.id)) {
@@ -159,10 +180,10 @@ export default function MentorRegisterPage() {
             setBackIdData(info);
           }
         } else {
-          setBackIdError(data.errorMessage || 'Không thể nhận diện CCCD.');
+          setBackIdError(getFriendlyOcrErrorMessage(data.errorCode, data.errorMessage));
         }
-      } catch (err) {
-        setBackIdError('Lỗi kết nối đến máy chủ xác thực.');
+      } catch (err: any) {
+        setBackIdError(err.message || 'Lỗi kết nối đến máy chủ xác thực.');
       } finally {
         setIsVerifyingBack(false);
       }
