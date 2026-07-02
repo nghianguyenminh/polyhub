@@ -5,6 +5,7 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import "./globals.css";
 import "../styles/style.css";
 import "../styles/sidebar.css";
+import GlobalBookingCall from "@/components/common/GlobalBookingCall";
 
 export const metadata: Metadata = {
   title: "PolyHUB - FPT Polytechnic",
@@ -39,6 +40,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             {children}
+            <GlobalBookingCall />
           </ToastProvider>
         </AuthProvider>
         <Script 

@@ -142,6 +142,17 @@ export default function MentorsPage() {
                             <i className="bi bi-patch-check-fill mentor-verified-badge ms-1 fs-6" title="Đã xác thực"></i>
                           </h5>
                           <div className="mentor-card-headline mt-1">{req.introduction}</div>
+                          {req.reviewCount !== undefined && req.reviewCount > 0 && (
+                            <div className="d-flex align-items-center mt-1" style={{ fontSize: '13px' }}>
+                              <span style={{ color: '#F5C518', fontWeight: 'bold', marginRight: '4px' }}>
+                                <i className="bi bi-star-fill me-1"></i>
+                                {req.averageRating?.toFixed(1)}
+                              </span>
+                              <span style={{ color: '#65676B' }}>
+                                ({req.reviewCount} đánh giá)
+                              </span>
+                            </div>
+                          )}
                         </div>
                         
                         <p className="mentor-bio">{req.motivation}</p>

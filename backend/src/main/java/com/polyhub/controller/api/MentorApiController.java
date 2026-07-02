@@ -9,6 +9,7 @@ import com.polyhub.repository.UserRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.FileStorageService;
 import com.polyhub.service.FptAiService;
+import com.polyhub.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -43,6 +44,9 @@ public class MentorApiController {
 
     @Autowired
     private FptAiService fptAiService;
+    
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     // Chỉ bật bằng application-dev.properties (app.mentor-test-bypass.enabled=true)
     // Mặc định là false để đảm bảo production luôn xác thực CCCD thật, không ai
@@ -341,13 +345,24 @@ public class MentorApiController {
         map.put("degreeFile", m.getDegreeFile());
         map.put("faceFile", m.getFaceFile());
         map.put("createdAt", m.getCreatedAt());
+        
+        Double avgRating = 0.0;
+        Long revCount = 0L;
+
         if (m.getUser() != null) {
+            avgRating = reviewRepository.getAverageRatingForMentor(m.getUser());
+            revCount = reviewRepository.countReviewsForMentor(m.getUser());
+
             map.put("user", Map.of(
                     "username", m.getUser().getUsername(),
                     "avatar", m.getUser().getAvatar() != null ? m.getUser().getAvatar() : "",
                     "major", m.getUser().getMajor() != null ? m.getUser().getMajor() : ""
             ));
         }
+        
+        map.put("averageRating", avgRating != null ? Math.round(avgRating * 10.0) / 10.0 : 0.0);
+        map.put("reviewCount", revCount != null ? revCount : 0);
+        
         return map;
     }
 
