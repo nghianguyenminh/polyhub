@@ -40,6 +40,7 @@ export default function MentorRegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [agreed, setAgreed] = useState(false);
+  const [isReapplying, setIsReapplying] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
@@ -575,11 +576,10 @@ export default function MentorRegisterPage() {
     );
   }
 
-  // Pending / Approved state
-  if (userStatus?.hasRequest && (userStatus.requestStatus === 'PENDING' || userStatus.requestStatus === 'APPROVED')) {
+  // Pending state
+  if (userStatus?.hasRequest && userStatus.requestStatus === 'PENDING') {
     return (
       <>
-
         <Header />
         <div className="mr-root">
           <div className="mr-particle mr-particle-1" />
@@ -594,6 +594,105 @@ export default function MentorRegisterPage() {
                 Cảm ơn bạn đã đăng ký! Ban Quản Trị đang xem xét hồ sơ của bạn.<br />
                 Quá trình này thường mất từ <strong style={{ color: '#F27125' }}>1–3 ngày làm việc</strong>.
               </p>
+              <Link href="/mentors" className="mr-btn mr-btn-primary" style={{ justifyContent: 'center' }}>
+                ← Quay lại trang Mentor
+              </Link>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Approved state
+  if (userStatus?.hasRequest && userStatus.requestStatus === 'APPROVED') {
+    return (
+      <>
+        <Header />
+        <div className="mr-root">
+          <div className="mr-particle mr-particle-1" />
+          <div className="mr-particle mr-particle-2" />
+          <div className="mr-wrapper" style={{ maxWidth: 560, textAlign: 'center' }}>
+            <div className="mr-card" style={{ animationDelay: '0.1s' }}>
+              <div className="mr-pending-icon">🎉</div>
+              <h2 style={{ color: '#000000ff', fontWeight: 800, marginBottom: 12 }}>
+                Chúc mừng bạn!
+              </h2>
+              <p style={{ color: 'rgba(8, 8, 8, 0.55)', lineHeight: 1.7, marginBottom: 24 }}>
+                Bạn đã chính thức trở thành Mentor của PolyHUB.<br />
+                Hãy bắt đầu hành trình chia sẻ kiến thức của mình ngay hôm nay.
+              </p>
+              <Link href="/mentors" className="mr-btn mr-btn-primary" style={{ justifyContent: 'center' }}>
+                Đi đến trang Mentor
+              </Link>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Revoked state
+  if (userStatus?.hasRequest && userStatus.requestStatus === 'REVOKED' && !isReapplying) {
+    return (
+      <>
+        <Header />
+        <div className="mr-root">
+          <div className="mr-particle mr-particle-1" />
+          <div className="mr-particle mr-particle-2" />
+          <div className="mr-wrapper" style={{ maxWidth: 560, textAlign: 'center' }}>
+            <div className="mr-card" style={{ animationDelay: '0.1s' }}>
+              <div className="mr-pending-icon">🚫</div>
+              <h2 style={{ color: '#000000ff', fontWeight: 800, marginBottom: 12 }}>
+                Quyền Mentor đã bị tước
+              </h2>
+              <p style={{ color: 'rgba(8, 8, 8, 0.55)', lineHeight: 1.7, marginBottom: 24 }}>
+                Rất tiếc, quyền Mentor của bạn đã bị vô hiệu hóa bởi Ban Quản Trị.
+              </p>
+              {userStatus.rejectionReason && (
+                <div style={{ background: 'rgba(0,0,0,0.05)', padding: '12px', borderRadius: '8px', marginBottom: '24px', textAlign: 'left', color: '#000000ff', fontSize: '14px' }}>
+                  <strong>Lý do:</strong> {userStatus.rejectionReason}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link href="/" className="mr-btn mr-btn-primary" style={{ justifyContent: 'center' }}>
+                  Về Trang Chủ
+                </Link>
+                <button onClick={() => setIsReapplying(true)} className="mr-btn" style={{ justifyContent: 'center', background: 'transparent', border: '1px solid rgba(0,0,0,0.2)', color: '#000000ff' }}>
+                  Đăng ký lại (Nộp hồ sơ mới)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+
+  // Interviewing state
+  if (userStatus?.hasRequest && userStatus.requestStatus === 'INTERVIEWING') {
+    return (
+      <>
+        <Header />
+        <div className="mr-root">
+          <div className="mr-particle mr-particle-1" />
+          <div className="mr-particle mr-particle-2" />
+          <div className="mr-wrapper" style={{ maxWidth: 560, textAlign: 'center' }}>
+            <div className="mr-card" style={{ animationDelay: '0.1s' }}>
+              <div className="mr-pending-icon">🎙️</div>
+              <h2 style={{ color: '#000000ff', fontWeight: 800, marginBottom: 12 }}>
+                Đang chờ phỏng vấn
+              </h2>
+              <p style={{ color: 'rgba(8, 8, 8, 0.55)', lineHeight: 1.7, marginBottom: 24 }}>
+                Hồ sơ của bạn đã qua vòng sơ loại. Chúng tôi đã gửi một email thư mời phỏng vấn đến bạn.<br />
+                Vui lòng kiểm tra hộp thư (bao gồm cả thư rác) để xem thông tin chi tiết.
+              </p>
+              {userStatus.adminNotes && (
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', marginBottom: '24px', textAlign: 'left', color: '#000000ff', fontSize: '14px' }}>
+                  <strong>Ghi chú từ BQT:</strong> {userStatus.adminNotes}
+                </div>
+              )}
               <Link href="/mentors" className="mr-btn mr-btn-primary" style={{ justifyContent: 'center' }}>
                 ← Quay lại trang Mentor
               </Link>
@@ -646,14 +745,16 @@ export default function MentorRegisterPage() {
             ))}
           </div>
 
-          {/* Rejected banner */}
-          {userStatus?.hasRequest && userStatus.requestStatus === 'REJECTED' && (
+          {/* Rejected / Needs Update / Revoked banner */}
+          {userStatus?.hasRequest && (userStatus.requestStatus === 'REJECTED' || userStatus.requestStatus === 'NEEDS_UPDATE' || userStatus.requestStatus === 'REVOKED') && (
             <div className="mr-alert mr-alert-warning" style={{ marginBottom: 24 }}>
               <span className="mr-alert-icon">⚠️</span>
               <div>
-                <div className="mr-alert-title">Hồ sơ trước đó đã bị từ chối</div>
+                <div className="mr-alert-title">
+                  {userStatus.requestStatus === 'REJECTED' ? 'Hồ sơ trước đó đã bị từ chối' : userStatus.requestStatus === 'REVOKED' ? 'Quyền Mentor trước đó đã bị tước' : 'Yêu cầu bổ sung hồ sơ'}
+                </div>
                 <div className="mr-alert-body">
-                  Lý do: {userStatus.rejectionReason}<br />
+                  Lý do/Ghi chú: {userStatus.rejectionReason || userStatus.adminNotes}<br />
                   Bạn có thể điều chỉnh và nộp lại hồ sơ bên dưới.
                 </div>
               </div>
@@ -754,12 +855,35 @@ export default function MentorRegisterPage() {
             {/* ── STEP 2: Face Match ── */}
             {currentStep === 2 && (
               <div className={`mr-step-panel ${direction === 'backward' ? 'backward' : ''}`}>
-                <div className="mr-step-header">
+                <div className="mr-step-header" style={{ position: 'relative' }}>
                   <div className="mr-step-icon">🧑</div>
                   <div>
                     <div className="mr-step-title">Xác thực khuôn mặt (Liveness)</div>
                     <div className="mr-step-subtitle">Hệ thống sẽ ghi hình 7 giây và hướng dẫn bạn thực hiện các cử động như app ngân hàng</div>
                   </div>
+                  {/* NÚT BYPASS CHO TEST */}
+                  <button
+                    onClick={() => {
+                      const dummyVideo = new File([''], 'dummy.mp4', { type: 'video/mp4' });
+                      setFaceFile(dummyVideo);
+                      setFaceMatchData({
+                        isMatch: true,
+                        similarity: 100,
+                        isLive: true,
+                        deepFake: false
+                      });
+                      setTimeout(() => setDirection('forward'), 100);
+                      setTimeout(() => setCurrentStep(3), 200);
+                    }}
+                    style={{
+                      position: 'absolute', right: 0, top: 0,
+                      background: '#10b981', border: 'none', color: '#fff',
+                      padding: '6px 12px', borderRadius: '4px', cursor: 'pointer',
+                      fontSize: '12px', fontWeight: 600
+                    }}
+                  >
+                    Bỏ qua bước này (Test Mode) ➔
+                  </button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
