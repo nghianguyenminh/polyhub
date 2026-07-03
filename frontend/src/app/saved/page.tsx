@@ -7,7 +7,9 @@ import { fetchAPI } from '@/lib/api';
 import { Post, Document } from '@/lib/types';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import '@/styles/saved.css'; // Make sure you have or create saved.css if needed
+import '@/styles/saved.css';
+
+type SortOrder = 'newest' | 'oldest';
 
 export default function SavedPage() {
   const { user, loading } = useAuth();
@@ -20,6 +22,8 @@ export default function SavedPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isFetching, setIsFetching] = useState(true);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const [removingId, setRemovingId] = useState<number | null>(null);
 
   const loadSaved = async (p = 1) => {
     setIsFetching(true);
@@ -48,41 +52,71 @@ export default function SavedPage() {
 
   const handleToggleSavedPost = async (e: React.MouseEvent, postId: number) => {
     e.preventDefault();
+    setRemovingId(postId);
     try {
       await fetchAPI(`/api/saved/togglePost`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ postId: postId.toString() })
       });
-      loadSaved(page); // Reload
+      // Small delay for animation
+      setTimeout(() => {
+        loadSaved(page);
+        setRemovingId(null);
+      }, 300);
     } catch (err) {
       console.error('Unsave post failed', err);
+      setRemovingId(null);
     }
   };
 
   const handleToggleSavedDoc = async (e: React.MouseEvent, docId: number) => {
     e.preventDefault();
+    setRemovingId(docId);
     try {
       await fetchAPI(`/api/saved/toggle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ documentId: docId.toString() })
       });
-      loadSaved(page); // Reload
+      setTimeout(() => {
+        loadSaved(page);
+        setRemovingId(null);
+      }, 300);
     } catch (err) {
       console.error('Unsave doc failed', err);
+      setRemovingId(null);
     }
   };
 
-  const getDocIconAndClass = (docType: string) => {
+  const getDocIconClass = (docType: string) => {
     switch (docType) {
-      case 'PDF': return { box: 'bg-danger-soft text-danger', icon: 'bi-file-earmark-pdf-fill' };
-      case 'WORD': return { box: 'bg-primary-soft text-primary', icon: 'bi-file-earmark-word-fill' };
-      case 'EXCEL': return { box: 'bg-success-soft text-success', icon: 'bi-file-earmark-excel-fill' };
-      case 'ZIP': return { box: 'bg-warning-soft text-warning', icon: 'bi-file-earmark-zip-fill' };
-      default: return { box: 'bg-info-soft text-info', icon: 'bi-file-earmark-fill' };
+      case 'PDF': return { cls: 'pdf', icon: 'bi-file-earmark-pdf-fill' };
+      case 'WORD': return { cls: 'word', icon: 'bi-file-earmark-word-fill' };
+      case 'EXCEL': return { cls: 'excel', icon: 'bi-file-earmark-excel-fill' };
+      case 'ZIP': return { cls: 'zip', icon: 'bi-file-earmark-zip-fill' };
+      default: return { cls: 'other', icon: 'bi-file-earmark-fill' };
     }
   };
+
+  const formatFileSize = (bytes: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const sortedPosts = [...savedPosts].sort((a, b) => {
+    if (sortOrder === 'newest') return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
+    return new Date(a.savedAt).getTime() - new Date(b.savedAt).getTime();
+  });
+
+  const sortedDocs = [...savedDocs].sort((a, b) => {
+    if (sortOrder === 'newest') return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
+    return new Date(a.savedAt).getTime() - new Date(b.savedAt).getTime();
+  });
+
+  const totalItems = type === 'posts' ? totalSavedPosts : totalSavedDocs;
 
   return (
     <>
@@ -92,159 +126,276 @@ export default function SavedPage() {
           <LeftSidebar activeMenu="saved" />
           
           <div className="poly-main-feed" style={{ maxWidth: '850px', width: '100%' }}>
-            <div className="poly-card p-3 mb-4 border-0 shadow-sm" style={{ backgroundColor: '#fdfdfd' }}>
-              <div className="d-flex align-items-center gap-3">
-                <div className="icon-box-lg bg-poly-soft text-poly rounded-circle" style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="bi bi-bookmark-fill fs-3"></i>
+
+            {/* ═══ Page Header ═══ */}
+            <div className="sv-page-header">
+              <div className="sv-header-row">
+                <div className="sv-header-icon">
+                  <i className="bi bi-bookmark-heart-fill"></i>
                 </div>
                 <div>
-                  <h5 className="fw-bold mb-1 text-dark">Thư viện của bạn</h5>
-                  <div className="text-muted" style={{ fontSize: '13.5px' }}>Nơi lưu trữ tất cả các bài viết hữu ích và tài liệu quý giá bạn đã sưu tầm.</div>
+                  <h4 className="sv-header-title">Thư viện của bạn</h4>
+                  <p className="sv-header-sub">
+                    Nơi lưu trữ tất cả bài viết hữu ích và tài liệu quý giá bạn đã sưu tầm.
+                  </p>
                 </div>
+              </div>
+              <div className="sv-stats-row">
+                <span className="sv-stat-badge">
+                  <i className="bi bi-file-earmark-richtext"></i>
+                  {totalSavedPosts} bài viết
+                </span>
+                <span className="sv-stat-badge">
+                  <i className="bi bi-file-earmark-zip"></i>
+                  {totalSavedDocs} tài liệu
+                </span>
+                <span className="sv-stat-badge">
+                  <i className="bi bi-collection"></i>
+                  {totalSavedPosts + totalSavedDocs} tổng cộng
+                </span>
               </div>
             </div>
 
-            <div className="d-flex align-items-center gap-2 mb-4 overflow-visible">
-              <button className="filter-coursera shadow-sm fw-bold text-dark border-0">
-                <i className="bi bi-sliders"></i> Lọc
+            {/* ═══ Tab Switcher ═══ */}
+            <div className="sv-tabs-container">
+              <button 
+                className={`sv-tab-btn ${type === 'posts' ? 'active' : ''}`}
+                onClick={() => setType('posts')}
+              >
+                <i className="bi bi-file-earmark-richtext"></i>
+                Bài viết đã lưu
+                <span className="sv-tab-count">{totalSavedPosts}</span>
               </button>
-              <div className="vr mx-1 opacity-25"></div> 
-              
-              <div className="dropdown">
-                <button className="filter-coursera dropdown-toggle border-0" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                  Loại nội dung <i className="bi bi-chevron-down ms-1" style={{ fontSize: '11px' }}></i>
-                </button>
-                <div className="dropdown-menu coursera-dropdown-menu shadow">
-                  <div className="coursera-filter-header">Chọn loại nội dung</div>
-                  <div className="coursera-filter-body">
-                    <div className="form-check custom-radio mb-2">
-                      <input 
-                        className="form-check-input shadow-none" 
-                        type="radio" 
-                        name="type" 
-                        id="s_type2" 
-                        value="posts" 
-                        checked={type === 'posts'}
-                        onChange={() => setType('posts')}
-                      />
-                      <label className="form-check-label d-flex justify-content-between w-100" htmlFor="s_type2">
-                        <span><i className="bi bi-file-earmark-richtext text-poly me-1"></i> Bài viết</span> 
-                        <span className="text-muted">({totalSavedPosts})</span>
-                      </label>
-                    </div>
-                    <div className="form-check custom-radio mb-2">
-                      <input 
-                        className="form-check-input shadow-none" 
-                        type="radio" 
-                        name="type" 
-                        id="s_type3" 
-                        value="documents" 
-                        checked={type === 'documents'}
-                        onChange={() => setType('documents')}
-                      />
-                      <label className="form-check-label d-flex justify-content-between w-100" htmlFor="s_type3">
-                        <span><i className="bi bi-file-earmark-zip text-poly me-1"></i> Tài liệu</span> 
-                        <span className="text-muted">({totalSavedDocs})</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <button 
+                className={`sv-tab-btn ${type === 'documents' ? 'active' : ''}`}
+                onClick={() => setType('documents')}
+              >
+                <i className="bi bi-file-earmark-zip"></i>
+                Tài liệu đã lưu
+                <span className="sv-tab-count">{totalSavedDocs}</span>
+              </button>
             </div>
 
-            <div className="saved-items-list mb-5">
+            {/* ═══ Filter Bar ═══ */}
+            <div className="sv-filter-bar">
+              <button className="sv-filter-btn active">
+                <i className="bi bi-funnel"></i>
+                Tất cả
+              </button>
+              <div className="sv-filter-divider"></div>
+              <select 
+                className="sv-sort-select"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              >
+                <option value="newest">Mới nhất trước</option>
+                <option value="oldest">Cũ nhất trước</option>
+              </select>
+              {totalItems > 0 && (
+                <span style={{ fontSize: '13px', color: '#6c757d', marginLeft: 'auto', fontWeight: 500 }}>
+                  Đang hiển thị {type === 'posts' ? sortedPosts.length : sortedDocs.length} / {totalItems} mục
+                </span>
+              )}
+            </div>
+
+            {/* ═══ Content List ═══ */}
+            <div style={{ marginBottom: '40px' }}>
               {isFetching ? (
-                <div className="text-center my-5">
-                  <div className="spinner-border text-primary" role="status"></div>
+                <div className="sv-loading">
+                  <div className="sv-spinner"></div>
+                  <span className="sv-loading-text">Đang tải thư viện...</span>
                 </div>
               ) : type === 'posts' ? (
-                savedPosts.length === 0 ? (
-                  <div className="text-center py-5">
-                    <i className="bi bi-journal-x text-muted" style={{ fontSize: '3rem' }}></i>
-                    <p className="text-muted mt-3">Bạn chưa lưu bài viết nào.</p>
+                sortedPosts.length === 0 ? (
+                  <div className="sv-empty">
+                    <div className="sv-empty-icon">
+                      <i className="bi bi-journal-bookmark"></i>
+                    </div>
+                    <div className="sv-empty-title">Chưa có bài viết nào</div>
+                    <p className="sv-empty-sub">
+                      Bạn chưa lưu bài viết nào. Hãy khám phá bảng tin và lưu lại những bài viết hay nhé!
+                    </p>
                   </div>
                 ) : (
-                  savedPosts.map(item => (
-                    <div className="poly-card p-0 mb-3 saved-item-wrapper" key={item.id}>
-                      <div className="saved-status-bar text-muted border-bottom mb-0 p-2" style={{ backgroundColor: '#f8f9fa', fontSize: '12.5px' }}>
-                        <i className="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu bài viết này vào <span>{new Date(item.savedAt).toLocaleDateString('vi-VN')}</span>
+                  sortedPosts.map((item, index) => (
+                    <div 
+                      className="sv-post-card" 
+                      key={item.id}
+                      style={{ 
+                        animationDelay: `${index * 0.06}s`,
+                        opacity: removingId === item.post.id ? 0.4 : 1,
+                        transform: removingId === item.post.id ? 'scale(0.96)' : undefined,
+                        transition: 'opacity 0.3s, transform 0.3s'
+                      }}
+                    >
+                      {/* Saved status bar */}
+                      <div className="sv-saved-bar">
+                        <i className="bi bi-bookmark-fill"></i>
+                        <span>Đã lưu vào</span>
+                        <span className="sv-saved-bar-date">
+                          {new Date(item.savedAt).toLocaleDateString('vi-VN', { 
+                            day: '2-digit', month: '2-digit', year: 'numeric', 
+                            hour: '2-digit', minute: '2-digit' 
+                          })}
+                        </span>
                       </div>
                       
-                      <div className="p-3 pb-2 d-flex align-items-center justify-content-between">
-                        <div className="d-flex align-items-center gap-2">
+                      {/* Author row */}
+                      <div className="sv-post-author">
+                        <div className="sv-post-author-left">
                           <img 
-                            src={item.post.user?.avatar && item.post.user.avatar !== 'default.png' ? item.post.user.avatar : `https://ui-avatars.com/api/?name=${item.post.user?.fullname}&background=random`} 
-                            className="rounded-circle border object-fit-cover" 
-                            width="40" 
-                            height="40" 
+                            src={item.post.user?.avatar && item.post.user.avatar !== 'default.png' 
+                              ? item.post.user.avatar 
+                              : `https://ui-avatars.com/api/?name=${item.post.user?.fullname}&background=random`} 
+                            className="sv-author-avatar" 
                             alt="Avatar" 
                           />
-                          <div style={{ lineHeight: 1.3 }}>
-                            <Link href={`/profile/${item.post.user?.username}`} className="fw-bold text-dark text-decoration-none" style={{ fontSize: '14.5px' }}>
+                          <div>
+                            <Link 
+                              href={`/profile/${item.post.user?.username}`} 
+                              className="sv-author-name"
+                            >
                               {item.post.user?.fullname || 'Ẩn danh'}
                             </Link>
-                            <div className="text-muted" style={{ fontSize: '13px' }}>
-                              <span>{new Date(item.post.createdAt).toLocaleDateString('vi-VN')}</span> 
-                              {' • '}
+                            <div className="sv-author-meta">
+                              <i className="bi bi-calendar3"></i>
+                              <span>{new Date(item.post.createdAt).toLocaleDateString('vi-VN')}</span>
+                              <span>•</span>
                               <i className={item.post.isPrivate ? 'bi bi-lock-fill' : 'bi bi-globe-americas'}></i>
+                              <span>{item.post.isPrivate ? 'Riêng tư' : 'Công khai'}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="d-flex gap-2 ms-auto">
-                          <button onClick={(e) => handleToggleSavedPost(e, item.post.id)} className="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved" style={{ fontSize: '13px' }}>
-                            <i className="bi bi-bookmark-x me-1"></i> Bỏ lưu
-                          </button>
-                        </div>
+                        <button 
+                          onClick={(e) => handleToggleSavedPost(e, item.post.id)} 
+                          className="sv-btn-unsave"
+                        >
+                          <i className="bi bi-bookmark-x"></i>
+                          Bỏ lưu
+                        </button>
                       </div>
                       
-                      <div className="px-3 pb-2">
-                        <p className="mb-0" style={{ fontSize: '14.5px', whiteSpace: 'pre-wrap' }}>{item.post.content}</p>
-                      </div>
-                      
-                      {item.post.imageUrl && (
-                        <div className="px-3 pb-3">
-                          <img src={item.post.imageUrl} className="img-fluid rounded" alt="Post img" style={{ maxHeight: '400px', width: '100%', objectFit: 'cover' }} />
-                        </div>
+                      {/* Content */}
+                      {item.post.content && (
+                        <div className="sv-post-content">{item.post.content}</div>
                       )}
+                      
+                      {/* Image */}
+                      {item.post.imageUrl && (
+                        <img 
+                          src={item.post.imageUrl} 
+                          className="sv-post-image" 
+                          alt="Post" 
+                        />
+                      )}
+
+                      {/* Footer stats */}
+                      <div className="sv-post-footer">
+                        <span className="sv-post-footer-stat">
+                          <i className="bi bi-heart-fill" style={{ color: '#F27125' }}></i>
+                          {item.post.likesCount || 0}
+                        </span>
+                        <span className="sv-post-footer-stat">
+                          <i className="bi bi-chat-dots"></i>
+                          {item.post.commentsCount || 0} bình luận
+                        </span>
+                        <span className="sv-post-footer-stat">
+                          <i className="bi bi-share"></i>
+                          {item.post.sharesCount || 0} chia sẻ
+                        </span>
+                      </div>
                     </div>
                   ))
                 )
               ) : (
-                savedDocs.length === 0 ? (
-                  <div className="text-center py-5">
-                    <i className="bi bi-bookmark-dash text-muted" style={{ fontSize: '3rem' }}></i>
-                    <p className="text-muted mt-3">Bạn chưa lưu tài liệu nào.</p>
+                sortedDocs.length === 0 ? (
+                  <div className="sv-empty">
+                    <div className="sv-empty-icon">
+                      <i className="bi bi-folder2-open"></i>
+                    </div>
+                    <div className="sv-empty-title">Chưa có tài liệu nào</div>
+                    <p className="sv-empty-sub">
+                      Bạn chưa lưu tài liệu nào. Hãy ghé thăm kho tài liệu và tìm kiếm tài liệu hữu ích!
+                    </p>
                   </div>
                 ) : (
-                  savedDocs.map(item => {
-                    const { box, icon } = getDocIconAndClass(item.document.documentType);
+                  sortedDocs.map((item, index) => {
+                    const { cls, icon } = getDocIconClass(item.document.documentType);
                     return (
-                      <div className="poly-card p-0 mb-3 saved-item-wrapper" key={item.id}>
-                        <div className="saved-status-bar text-muted p-2" style={{ backgroundColor: '#f8f9fa', fontSize: '12.5px' }}>
-                          <i className="bi bi-bookmark-fill me-1 text-poly"></i> Bạn đã lưu tài liệu này vào <span>{new Date(item.savedAt).toLocaleDateString('vi-VN')}</span>
+                      <div 
+                        className="sv-doc-card" 
+                        key={item.id}
+                        style={{ 
+                          animationDelay: `${index * 0.06}s`,
+                          opacity: removingId === item.document.id ? 0.4 : 1,
+                          transform: removingId === item.document.id ? 'scale(0.96)' : undefined,
+                          transition: 'opacity 0.3s, transform 0.3s'
+                        }}
+                      >
+                        {/* Saved status bar */}
+                        <div className="sv-saved-bar">
+                          <i className="bi bi-bookmark-fill"></i>
+                          <span>Đã lưu vào</span>
+                          <span className="sv-saved-bar-date">
+                            {new Date(item.savedAt).toLocaleDateString('vi-VN', { 
+                              day: '2-digit', month: '2-digit', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit'
+                            })}
+                          </span>
                         </div>
-                        
-                        <div className="d-flex align-items-center gap-3 p-3">
-                          <div className={`doc-icon-box rounded-3 ${box}`} style={{ width: '50px', height: '50px', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+                        {/* Document body */}
+                        <div className="sv-doc-body">
+                          <div className={`sv-doc-icon-box ${cls}`}>
                             <i className={`bi ${icon}`}></i>
                           </div>
-                          <div className="flex-grow-1">
-                            <div className="mb-1">
-                              <span className="badge bg-light text-dark border fw-normal" style={{ fontSize: '11px' }}>{item.document.category?.name || 'Chuyên ngành'}</span>
-                            </div>
-                            <h6 className="text-dark fw-bold mb-1" style={{ fontSize: '14px', lineHeight: 1.4 }}>{item.document.title}</h6>
-                            <div className="text-muted" style={{ fontSize: '12px' }}>
-                              Đăng bởi <span>{item.document.uploader?.fullname || 'Hệ thống'}</span> • <span>{item.document.documentType}</span>
+                          <div className="sv-doc-info">
+                            <span className="sv-doc-category">
+                              <i className="bi bi-tag-fill"></i>
+                              {item.document.category?.name || 'Chuyên ngành'}
+                            </span>
+                            <h6 className="sv-doc-title">{item.document.title}</h6>
+                            <div className="sv-doc-meta">
+                              <span>
+                                <i className="bi bi-person"></i>
+                                {item.document.uploader?.fullname || 'Hệ thống'}
+                              </span>
+                              <span>
+                                <i className="bi bi-file-earmark"></i>
+                                {item.document.documentType}
+                              </span>
+                              {item.document.fileSize > 0 && (
+                                <span>
+                                  <i className="bi bi-hdd"></i>
+                                  {formatFileSize(item.document.fileSize)}
+                                </span>
+                              )}
+                              {item.document.downloadCount > 0 && (
+                                <span>
+                                  <i className="bi bi-download"></i>
+                                  {item.document.downloadCount}
+                                </span>
+                              )}
                             </div>
                           </div>
                           
-                          <div className="d-flex gap-2 ms-auto">
-                            <button onClick={(e) => handleToggleSavedDoc(e, item.document.id)} className="btn btn-sm btn-light text-muted fw-bold rounded-pill px-3 btn-action-saved">
-                              <i className="bi bi-bookmark-x me-1"></i> Bỏ lưu
-                            </button>
-                            <a href={`/api/documents/download/${item.document.id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-poly-gradient fw-bold rounded-pill px-3 text-white text-decoration-none">
-                              <i className="bi bi-download me-1"></i> Tải về
+                          <div className="sv-doc-actions">
+                            <a 
+                              href={`/api/documents/download/${item.document.id}`} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="sv-btn-download"
+                            >
+                              <i className="bi bi-download"></i>
+                              Tải về
                             </a>
+                            <button 
+                              onClick={(e) => handleToggleSavedDoc(e, item.document.id)} 
+                              className="sv-btn-unsave"
+                            >
+                              <i className="bi bi-bookmark-x"></i>
+                              Bỏ lưu
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -254,22 +405,33 @@ export default function SavedPage() {
               )}
             </div>
 
+            {/* ═══ Pagination ═══ */}
             {!isFetching && totalPages > 1 && (
-              <nav aria-label="Page navigation">
-                <ul className="pagination poly-pagination justify-content-center mt-4 mb-5">
-                  <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                    <button className="page-link" onClick={() => loadSaved(page - 1)} disabled={page === 1}><i className="bi bi-chevron-left"></i></button>
-                  </li>
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <li className={`page-item ${page === i + 1 ? 'active' : ''}`} key={i}>
-                      <button className="page-link" onClick={() => loadSaved(i + 1)}>{i + 1}</button>
-                    </li>
-                  ))}
-                  <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                    <button className="page-link" onClick={() => loadSaved(page + 1)} disabled={page === totalPages}><i className="bi bi-chevron-right"></i></button>
-                  </li>
-                </ul>
-              </nav>
+              <div className="sv-pagination">
+                <button 
+                  className="sv-page-btn" 
+                  onClick={() => loadSaved(page - 1)} 
+                  disabled={page === 1}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button 
+                    className={`sv-page-btn ${page === i + 1 ? 'active' : ''}`} 
+                    key={i}
+                    onClick={() => loadSaved(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button 
+                  className="sv-page-btn" 
+                  onClick={() => loadSaved(page + 1)} 
+                  disabled={page === totalPages}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+              </div>
             )}
 
           </div>

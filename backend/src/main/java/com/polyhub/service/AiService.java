@@ -84,8 +84,13 @@ public class AiService {
             
             if (e.getStatusCode().is5xxServerError()) {
                 return "AI đang được nhiều bạn sử dụng quá nên hơi quá tải một chút. Bạn đợi một lát rồi thử lại nha! ⏳";
+            } 
+            
+            String responseBody = e.getResponseBodyAsString();
+            if (e.getStatusCode().value() == 429 || responseBody.contains("RESOURCE_EXHAUSTED") || responseBody.contains("quota")) {
+                return "Hệ thống AI đang nhận quá nhiều yêu cầu cùng lúc (vượt quá giới hạn miễn phí). Sếp vui lòng đợi khoảng 1 phút rồi thử lại nhé! ⏳";
             } else if (e.getStatusCode().is4xxClientError()) {
-                return "Lỗi kết nối đến AI (Có thể do sai cấu hình hệ thống): " + e.getResponseBodyAsString();
+                return "Lỗi kết nối đến AI (Có thể do sai cấu hình hệ thống): " + responseBody;
             }
             return "Lỗi API AI: " + e.getMessage();
             

@@ -47,6 +47,11 @@ export default function BookingsPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Table filters & pagination
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 8;
+
   // Real-time ticking clock for countdowns
   const [now, setNow] = useState<Date>(new Date());
 
@@ -153,6 +158,19 @@ export default function BookingsPage() {
       activeTab === 'student' ? loadStudentBookings() : loadMentorBookings();
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi hủy lịch hẹn');
+    }
+  };
+
+  const handleDeleteBooking = async (id: number) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa lịch hẹn này vĩnh viễn?')) return;
+    setErrorMsg('');
+    try {
+      await fetchAPI(`/api/bookings/${id}`, { method: 'DELETE' });
+      setSuccessMsg('Đã xóa lịch hẹn thành công.');
+      setTimeout(() => setSuccessMsg(''), 3000);
+      activeTab === 'student' ? loadStudentBookings() : loadMentorBookings();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Lỗi xóa lịch hẹn');
     }
   };
 
@@ -368,7 +386,7 @@ export default function BookingsPage() {
             <div className="bkp-tabs">
               <button
                 className={`bkp-tab ${activeTab === 'student' ? 'active' : ''}`}
-                onClick={() => setActiveTab('student')}
+                onClick={() => { setActiveTab('student'); setFilterStatus('ALL'); setCurrentPage(1); }}
               >
                 <i className="bi bi-person" />
                 Lịch hẹn của tôi
@@ -378,7 +396,7 @@ export default function BookingsPage() {
                 <>
                   <button
                     className={`bkp-tab ${activeTab === 'mentor-bookings' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('mentor-bookings')}
+                    onClick={() => { setActiveTab('mentor-bookings'); setFilterStatus('ALL'); setCurrentPage(1); }}
                   >
                     <i className="bi bi-person-workspace" />
                     Yêu cầu đặt lịch
@@ -399,6 +417,22 @@ export default function BookingsPage() {
             ═══════════════════════════════════════ */}
             {activeTab !== 'mentor-schedule' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
+                {/* Lọc theo trạng thái */}
+                <div className="bkp-filters" style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <select 
+                    value={filterStatus} 
+                    onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e0e4ea', outline: 'none', background: '#fff', color: '#495057', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}
+                  >
+                    <option value="ALL">Tất cả trạng thái</option>
+                    <option value="PENDING">Chờ phê duyệt</option>
+                    <option value="APPROVED">Đã phê duyệt</option>
+                    <option value="REJECTED">Đã từ chối</option>
+                    <option value="CANCELLED">Đã hủy</option>
+                    <option value="CLOSED">Đã kết thúc</option>
+                  </select>
+                </div>
+
                 {loadingBookings ? (
                   <div className="bk-loading" style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(0,0,0,0.05)' }}>
                     <div className="bk-spinner" />
@@ -414,146 +448,213 @@ export default function BookingsPage() {
                         : 'Sinh viên chưa gửi yêu cầu đặt lịch nào.'}
                     </p>
                   </div>
-                ) : (
-                  bookings.map((booking, index) => {
-                    const isStudentView = activeTab === 'student';
-                    const targetUser = isStudentView ? booking.mentor : booking.student;
-                    const dateObj = new Date(booking.bookingDate);
-                    const formattedDate = dateObj.toLocaleDateString('vi-VN', {
-                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                    });
-                    const cdt = getCountdownStatus(booking);
-                    const statusInfo = getStatusInfo(booking.status);
+                ) : (() => {
+                  const filteredBookings = bookings.filter(b => filterStatus === 'ALL' || b.status === filterStatus);
+                  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage) || 1;
+                  const currentBookings = filteredBookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+                  if (filteredBookings.length === 0) {
                     return (
-                      <div
-                        key={booking.id}
-                        className={`bkp-card status-${booking.status.toLowerCase()}`}
-                        style={{ animationDelay: `${index * 0.06}s` }}
-                      >
-                        {/* Card Header */}
-                        <div className="bkp-card-header">
-                          <div className="bkp-card-left">
-                            <div className="bkp-avatar-wrap">
-                              <img
-                                src={targetUser?.avatar && targetUser.avatar !== 'default.png'
-                                  ? targetUser.avatar
-                                  : `https://ui-avatars.com/api/?name=${targetUser?.fullname || 'User'}&background=random`}
-                                className="bkp-avatar"
-                                alt="avatar"
-                              />
-                              <div className={`bkp-avatar-status ${
-                                booking.status === 'APPROVED' ? 'online'
-                                : booking.status === 'PENDING' ? 'pending'
-                                : 'offline'
-                              }`} />
-                            </div>
-                            <div className="bkp-card-info">
-                              <p className="bkp-card-name">{targetUser?.fullname}</p>
-                              <p className="bkp-card-role">
-                                <i className="bi bi-briefcase" />
-                                {isStudentView
-                                  ? `Mentor · ${targetUser?.major || 'Đang cập nhật'}`
-                                  : `Sinh viên · ${targetUser?.major || 'Đang cập nhật'}`}
-                              </p>
-                              <div className="bkp-card-time">
-                                <i className="bi bi-clock-fill" />
-                                {booking.startTime} – {booking.endTime}
-                                <span style={{ color: '#9ca3af', fontWeight: 400 }}>({booking.duration} phút)</span>
-                                <span style={{ color: '#9ca3af' }}>·</span>
-                                <span style={{ fontWeight: 500, color: '#6c757d' }}>{formattedDate}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Status Badge */}
-                          <div>
-                            <span className={`bkp-status ${statusInfo.cls}`}>
-                              <i className={`bi ${statusInfo.icon}`} />
-                              {statusInfo.text}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Countdown Strip */}
-                        {booking.status === 'APPROVED' && (
-                          <div className={`bkp-countdown ${
-                            cdt.isClosed ? 'closed' : cdt.isJoinable ? 'joinable' : 'waiting'
-                          }`}>
-                            <i className={`bi ${
-                              cdt.isClosed ? 'bi-x-circle-fill' :
-                              cdt.isJoinable ? 'bi-broadcast-pin' :
-                              'bi-hourglass-split'
-                            }`} />
-                            {cdt.text}
-                          </div>
-                        )}
-
-                        {/* Notes & Reasons */}
-                        {booking.note && (
-                          <div className="bkp-note">
-                            <strong>Ghi chú: </strong>{booking.note}
-                          </div>
-                        )}
-                        {booking.status === 'REJECTED' && booking.rejectionReason && (
-                          <div className="bkp-rejection">
-                            <strong>Lý do từ chối: </strong>{booking.rejectionReason}
-                          </div>
-                        )}
-                        {booking.status === 'CLOSED' && booking.rejectionReason && (
-                          <div className="bkp-closed-reason">
-                            <strong>Chi tiết đóng lịch: </strong>{booking.rejectionReason}
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="bkp-actions">
-                          {booking.status === 'APPROVED' && (
-                            <button
-                              onClick={() => handleJoinCall(booking)}
-                              disabled={!cdt.isJoinable || cdt.isClosed}
-                              className="bkp-btn-join"
-                            >
-                              <i className="bi bi-camera-video-fill" />
-                              Tham gia Call Video
-                            </button>
-                          )}
-
-                          {isStudentView ? (
-                            (booking.status === 'PENDING' || booking.status === 'APPROVED') && !cdt.isClosed && (
-                              <button
-                                onClick={() => handleCancelBooking(booking.id)}
-                                className="bkp-btn-cancel"
-                              >
-                                <i className="bi bi-x-circle me-1" />
-                                Hủy lịch
-                              </button>
-                            )
-                          ) : (
-                            booking.status === 'PENDING' && (
-                              <>
-                                <button
-                                  onClick={() => handleApproveBooking(booking.id)}
-                                  className="bkp-btn-approve"
-                                >
-                                  <i className="bi bi-check-circle-fill" />
-                                  Phê duyệt
-                                </button>
-                                <button
-                                  onClick={() => handleOpenRejectModal(booking)}
-                                  className="bkp-btn-reject"
-                                >
-                                  <i className="bi bi-x-circle me-1" />
-                                  Từ chối
-                                </button>
-                              </>
-                            )
-                          )}
-                        </div>
+                      <div className="bkp-empty" style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <i className="bi bi-search bkp-empty-icon" style={{ opacity: 0.5 }} />
+                        <div className="bkp-empty-title">Không tìm thấy lịch hẹn</div>
+                        <p className="bkp-empty-sub">Không có lịch hẹn nào khớp với bộ lọc trạng thái.</p>
                       </div>
                     );
-                  })
-                )}
+                  }
+
+                  return (
+                    <>
+                      <div className="bkp-table-responsive" style={{ overflowX: 'auto', background: '#fff', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                        <table className="bkp-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                          <thead>
+                            <tr style={{ background: '#f8f9fb', borderBottom: '2px solid #e0e4ea' }}>
+                              <th style={{ padding: '16px', fontWeight: 600, color: '#495057', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{activeTab === 'student' ? 'Mentor' : 'Sinh viên'}</th>
+                              <th style={{ padding: '16px', fontWeight: 600, color: '#495057', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Thời gian</th>
+                              <th style={{ padding: '16px', fontWeight: 600, color: '#495057', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Trạng thái</th>
+                              <th style={{ padding: '16px', fontWeight: 600, color: '#495057', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', width: '25%' }}>Ghi chú / Call</th>
+                              <th style={{ padding: '16px', fontWeight: 600, color: '#495057', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right', whiteSpace: 'nowrap' }}>Thao tác</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentBookings.map((booking) => {
+                              const isStudentView = activeTab === 'student';
+                              const targetUser = isStudentView ? booking.mentor : booking.student;
+                              const dateObj = new Date(booking.bookingDate);
+                              const formattedDate = dateObj.toLocaleDateString('vi-VN', {
+                                weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+                              });
+                              const cdt = getCountdownStatus(booking);
+                              const statusInfo = getStatusInfo(booking.status);
+
+                              return (
+                                <tr key={booking.id} style={{ borderBottom: '1px solid #f1f3f5', transition: 'background 0.2s' }}>
+                                  <td style={{ padding: '16px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                      <div className="bkp-avatar-wrap" style={{ width: '40px', height: '40px', minWidth: '40px' }}>
+                                        <img
+                                          src={targetUser?.avatar && targetUser.avatar !== 'default.png'
+                                            ? targetUser.avatar
+                                            : `https://ui-avatars.com/api/?name=${targetUser?.fullname || 'User'}&background=random`}
+                                          className="bkp-avatar"
+                                          alt="avatar"
+                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                        <div className={`bkp-avatar-status ${
+                                          booking.status === 'APPROVED' ? 'online'
+                                          : booking.status === 'PENDING' ? 'pending'
+                                          : 'offline'
+                                        }`} style={{ width: '12px', height: '12px' }} />
+                                      </div>
+                                      <div>
+                                        <div style={{ fontWeight: 700, color: '#1a1a2e', fontSize: '14px', whiteSpace: 'nowrap' }}>{targetUser?.fullname}</div>
+                                        <div style={{ fontSize: '12px', color: '#6c757d', whiteSpace: 'nowrap' }}>
+                                          {isStudentView ? `Mentor` : `Sinh viên`} · {targetUser?.major || 'Đang cập nhật'}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  <td style={{ padding: '16px' }}>
+                                    <div style={{ fontWeight: 600, color: '#1a1a2e', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                                      <i className="bi bi-clock-fill" style={{ color: '#F27125', marginRight: '6px' }} />
+                                      {booking.startTime} – {booking.endTime}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                                      {formattedDate} ({booking.duration} phút)
+                                    </div>
+                                  </td>
+
+                                  <td style={{ padding: '16px' }}>
+                                    <span className={`bkp-status ${statusInfo.cls}`} style={{ display: 'inline-flex', padding: '6px 10px', fontSize: '12px' }}>
+                                      <i className={`bi ${statusInfo.icon}`} />
+                                      {statusInfo.text}
+                                    </span>
+                                  </td>
+
+                                  <td style={{ padding: '16px' }}>
+                                    {booking.status === 'APPROVED' ? (
+                                      <div className={`bkp-countdown ${
+                                        cdt.isClosed ? 'closed' : cdt.isJoinable ? 'joinable' : 'waiting'
+                                      }`} style={{ marginTop: 0, padding: '6px 10px', fontSize: '12px' }}>
+                                        <i className={`bi ${
+                                          cdt.isClosed ? 'bi-x-circle-fill' :
+                                          cdt.isJoinable ? 'bi-broadcast-pin' :
+                                          'bi-hourglass-split'
+                                        }`} />
+                                        {cdt.text}
+                                      </div>
+                                    ) : booking.status === 'REJECTED' || booking.status === 'CLOSED' ? (
+                                      <div style={{ fontSize: '12px', color: '#dc3545', background: 'rgba(220,53,69,0.08)', padding: '6px 10px', borderRadius: '8px' }}>
+                                        <strong>Lý do: </strong>{booking.rejectionReason || 'Không có'}
+                                      </div>
+                                    ) : booking.note ? (
+                                      <div style={{ fontSize: '12px', color: '#495057', background: '#f8f9fb', padding: '6px 10px', borderRadius: '8px', border: '1px solid #e0e4ea' }}>
+                                        <i className="bi bi-chat-left-text" style={{ marginRight: '6px', color: '#adb5bd' }}/>
+                                        {booking.note}
+                                      </div>
+                                    ) : (
+                                      <span style={{ fontSize: '12px', color: '#adb5bd' }}>-</span>
+                                    )}
+                                  </td>
+
+                                  <td style={{ padding: '16px', textAlign: 'right' }}>
+                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                      {booking.status === 'APPROVED' && (
+                                        <button
+                                          onClick={() => handleJoinCall(booking)}
+                                          disabled={!cdt.isJoinable || cdt.isClosed}
+                                          className="bkp-btn-join"
+                                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                                        >
+                                          <i className="bi bi-camera-video-fill" />
+                                          Vào Call
+                                        </button>
+                                      )}
+
+                                      {isStudentView ? (
+                                        (booking.status === 'PENDING' || booking.status === 'APPROVED') && !cdt.isClosed && (
+                                          <button
+                                            onClick={() => handleCancelBooking(booking.id)}
+                                            className="bkp-btn-cancel"
+                                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                                            title="Hủy lịch hẹn"
+                                          >
+                                            <i className="bi bi-x-circle" style={{ marginRight: 0 }} />
+                                          </button>
+                                        )
+                                      ) : (
+                                        booking.status === 'PENDING' && (
+                                          <>
+                                            <button
+                                              onClick={() => handleApproveBooking(booking.id)}
+                                              className="bkp-btn-approve"
+                                              style={{ padding: '6px 12px', fontSize: '12px' }}
+                                              title="Phê duyệt"
+                                            >
+                                              <i className="bi bi-check-lg" style={{ marginRight: 0 }} />
+                                            </button>
+                                            <button
+                                              onClick={() => handleOpenRejectModal(booking)}
+                                              className="bkp-btn-reject"
+                                              style={{ padding: '6px 12px', fontSize: '12px' }}
+                                              title="Từ chối"
+                                            >
+                                              <i className="bi bi-x-lg" style={{ marginRight: 0 }} />
+                                            </button>
+                                          </>
+                                        )
+                                      )}
+                                      {(booking.status === 'CANCELLED' || booking.status === 'REJECTED' || booking.status === 'CLOSED') && (
+                                        <button
+                                          onClick={() => handleDeleteBooking(booking.id)}
+                                          className="bkp-btn-cancel"
+                                          style={{ padding: '6px 12px', fontSize: '12px', background: 'rgba(220,53,69,0.08)', color: '#dc3545', border: '1px solid rgba(220,53,69,0.2)' }}
+                                          title="Xóa lịch hẹn"
+                                        >
+                                          <i className="bi bi-trash" style={{ marginRight: 0 }} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Pagination Controls */}
+                      {totalPages > 1 && (
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '10px' }}>
+                          <button 
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e0e4ea', background: '#fff', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', color: currentPage === 1 ? '#adb5bd' : '#495057' }}
+                          >
+                            <i className="bi bi-chevron-left" />
+                          </button>
+                          {Array.from({ length: totalPages }).map((_, i) => (
+                            <button 
+                              key={i} 
+                              onClick={() => setCurrentPage(i + 1)}
+                              style={{ padding: '8px 14px', borderRadius: '8px', border: currentPage === i + 1 ? 'none' : '1px solid #e0e4ea', background: currentPage === i + 1 ? '#F27125' : '#fff', color: currentPage === i + 1 ? '#fff' : '#495057', cursor: 'pointer', fontWeight: 600, boxShadow: currentPage === i + 1 ? '0 4px 12px rgba(242,113,37,0.3)' : 'none' }}
+                            >
+                              {i + 1}
+                            </button>
+                          ))}
+                          <button 
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e0e4ea', background: '#fff', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', color: currentPage === totalPages ? '#adb5bd' : '#495057' }}
+                          >
+                            <i className="bi bi-chevron-right" />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               /* ═══════════════════════════════════════
