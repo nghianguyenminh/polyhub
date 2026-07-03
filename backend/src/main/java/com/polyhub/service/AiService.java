@@ -47,12 +47,24 @@ public class AiService {
         }
     }
 
+    public String askAdminCopilot(String question, String contextData) {
+        String prompt = "Bạn là Trợ lý Ảo (Admin Copilot) dành riêng cho người quản trị (Admin) của nền tảng kết nối sinh viên và mentor PolyHUB.\n"
+                + "Bạn cần trả lời một cách lịch sự, chuyên nghiệp, ngắn gọn và chính xác, xưng hô là 'tôi' và 'sếp' hoặc 'bạn'.\n"
+                + "Dưới đây là DỮ LIỆU HỆ THỐNG THỰC TẾ TRONG THỜI GIAN THỰC (Real-time data):\n"
+                + "---------------------\n"
+                + contextData + "\n"
+                + "---------------------\n"
+                + "Nếu câu hỏi liên quan đến số liệu, hãy lấy dữ liệu ở trên để trả lời. Nếu câu hỏi không liên quan đến dữ liệu, hãy cố gắng trả lời dựa trên kiến thức của bạn.\n"
+                + "Câu hỏi của Admin: " + question;
+        return callGemini(createPayload(prompt));
+    }
+
     private String callGemini(ObjectNode payload) {
-        String url = geminiApiUrl; 
+        String url = geminiApiUrl + "?key=" + geminiApiKey; 
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("x-goog-api-key", geminiApiKey); 
+        // headers.set("x-goog-api-key", geminiApiKey); // Dùng query param thay vì header
 
         HttpEntity<String> request = new HttpEntity<>(payload.toString(), headers);
 
@@ -73,7 +85,7 @@ public class AiService {
             if (e.getStatusCode().is5xxServerError()) {
                 return "AI đang được nhiều bạn sử dụng quá nên hơi quá tải một chút. Bạn đợi một lát rồi thử lại nha! ⏳";
             } else if (e.getStatusCode().is4xxClientError()) {
-                return "Lỗi kết nối đến AI (Có thể do sai cấu hình hệ thống).";
+                return "Lỗi kết nối đến AI (Có thể do sai cấu hình hệ thống): " + e.getResponseBodyAsString();
             }
             return "Lỗi API AI: " + e.getMessage();
             
