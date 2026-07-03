@@ -2,6 +2,7 @@ package com.polyhub.controller.api;
 
 import com.polyhub.entity.Category;
 import com.polyhub.entity.Document;
+import com.polyhub.entity.ReportReason;
 import com.polyhub.entity.User;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.CategoryService;
@@ -155,6 +156,46 @@ public class DocumentApiController {
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Không thể tải tài liệu: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/report")
+    public ResponseEntity<?> reportDocument(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            Principal principal) {
+
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Vui lòng đăng nhập để báo cáo tài liệu!"));
+        }
+        User currentUser = userRepository.findById(principal.getName()).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Người dùng không tồn tại"));
+        }
+
+        String reasonStr = body.get("reason");
+        String detail = body.get("detail");
+
+        if (reasonStr == null || reasonStr.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng chọn lý do báo cáo!"));
+        }
+
+        try {
+            ReportReason reason = ReportReason.valueOf(reasonStr);
+            // ...
+            documentClientService.reportDocument(id, currentUser, reason, detail);
+            return ResponseEntity.ok(Map.of("message", "Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét sớm nhất!"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lý do báo cáo không hợp lệ"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            // Thêm dòng này để in lỗi thật ra console của Spring Boot
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Lỗi Server thực sự là: " + e.getMessage()));
         }
     }
 }

@@ -35,6 +35,15 @@ function DocumentCardSkeleton() {
   );
 }
 
+const REPORT_REASONS = [
+  { value: 'COPYRIGHT', label: 'Vi phạm bản quyền / sở hữu trí tuệ' },
+  { value: 'FAKE_CONTENT', label: 'Nội dung sai lệch, giả mạo' },
+  { value: 'INAPPROPRIATE', label: 'Nội dung nhạy cảm, phản cảm' },
+  { value: 'SPAM', label: 'Spam / quảng cáo trái phép' },
+  { value: 'DUPLICATE', label: 'Tài liệu trùng lặp' },
+  { value: 'OTHER', label: 'Lý do khác' },
+];
+
 export default function DocumentsPage() {
   const { user, loading } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -58,6 +67,14 @@ export default function DocumentsPage() {
 
   // View modal state
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+
+  // Report modal state
+  const [reportDoc, setReportDoc] = useState<Document | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetail, setReportDetail] = useState('');
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportError, setReportError] = useState('');
+  const [reportSuccess, setReportSuccess] = useState('');
 
   const loadDocuments = async (p = 1) => {
     setIsFetching(true);
@@ -143,6 +160,51 @@ export default function DocumentsPage() {
       console.error('Upload failed', err);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  // ===== Report handlers =====
+  const handleOpenReport = (e: React.MouseEvent, doc: Document) => {
+    e.stopPropagation();
+    if (!user) return;
+    setReportDoc(doc);
+    setReportReason('');
+    setReportDetail('');
+    setReportError('');
+    setReportSuccess('');
+  };
+
+  const handleCloseReport = () => {
+    setReportDoc(null);
+    setReportReason('');
+    setReportDetail('');
+    setReportError('');
+    setReportSuccess('');
+  };
+
+  const isOtherReason = reportReason === 'OTHER';
+  const isDetailInvalid = isOtherReason && reportDetail.trim() === '';
+
+  const handleSubmitReport = async () => {
+    if (!reportDoc || !reportReason) return;
+    if (isDetailInvalid) return;
+
+    setIsReporting(true);
+    setReportError('');
+    try {
+      const res = await fetchAPI(`/api/documents/${reportDoc.id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reportReason, detail: reportDetail }),
+      });
+      setReportSuccess(res.message || 'Cảm ơn bạn đã báo cáo!');
+      setTimeout(() => {
+        handleCloseReport();
+      }, 1500);
+    } catch (err: any) {
+      setReportError(err?.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+    } finally {
+      setIsReporting(false);
     }
   };
 
@@ -287,13 +349,24 @@ export default function DocumentsPage() {
                           <div className={`doc-icon-box ${box}`}>
                             <i className={`bi ${icon}`}></i>
                           </div> 
-                          <button 
-                            type="button" 
-                            className={`btn-icon-transparent z-3 position-relative border-0 bg-transparent ${doc.isSaved ? 'text-poly' : 'text-muted'}`}
-                            onClick={(e) => handleToggleSave(e, doc.id)}
-                          >
-                            <i className={`bi ${doc.isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
-                          </button>
+                          <div className="d-flex align-items-center gap-2">
+                            <button
+                              type="button"
+                              className="btn-icon-transparent z-3 position-relative border-0 bg-transparent text-muted"
+                              onClick={(e) => handleOpenReport(e, doc)}
+                              title="Báo cáo tài liệu"
+                            >
+                              <i className="bi bi-flag"></i>
+                            </button>
+                            <button 
+                              type="button" 
+                              className={`btn-icon-transparent z-3 position-relative border-0 bg-transparent ${doc.isSaved ? 'text-poly' : 'text-muted'}`}
+                              onClick={(e) => handleToggleSave(e, doc.id)}
+                              title="Lưu tài liệu"
+                            >
+                              <i className={`bi ${doc.isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
+                            </button>
+                          </div>
                         </div>
                         
                         <div className="mb-2 flex-grow-1">
@@ -471,6 +544,78 @@ export default function DocumentsPage() {
           </div>
         </div>
       </div>
+
+      {/* MODAL BÁO CÁO TÀI LIỆU */}
+      {reportDoc && (
+        <div 
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1055, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={handleCloseReport}
+        >
+          <div 
+            style={{ width: '100%', maxWidth: '400px', background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.15)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
+              <span className="fw-bold" style={{ fontSize: '16px' }}>Báo cáo tài liệu</span>
+              <i className="bi bi-x fs-4 text-muted" style={{ cursor: 'pointer' }} onClick={handleCloseReport}></i>
+            </div>
+
+            {reportSuccess ? (
+              <div className="p-4 text-center">
+                <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '32px' }}></i>
+                <p className="mt-2 mb-0 text-dark" style={{ fontSize: '14px' }}>{reportSuccess}</p>
+              </div>
+            ) : (
+              <>
+                <div className="px-3 pt-3 text-muted" style={{ fontSize: '13px' }}>
+                  Vui lòng chọn lý do bạn muốn báo cáo tài liệu <b>{reportDoc.title}</b>.
+                </div>
+
+                <div className="p-2">
+                  {REPORT_REASONS.map(r => (
+                    <div
+                      key={r.value}
+                      onClick={() => setReportReason(r.value)}
+                      className="d-flex justify-content-between align-items-center px-3 py-2 rounded"
+                      style={{ cursor: 'pointer', background: reportReason === r.value ? '#fdf1ea' : 'transparent', fontSize: '14px' }}
+                    >
+                      {r.label} <i className="bi bi-chevron-right text-muted"></i>
+                    </div>
+                  ))}
+                </div>
+
+                {reportReason && (
+                  <div className="px-3 pb-3">
+                    <textarea
+                      className="form-control trendy-input"
+                      rows={3}
+                      placeholder={isOtherReason ? 'Vui lòng mô tả cụ thể lý do báo cáo (bắt buộc)...' : 'Mô tả thêm (không bắt buộc)...'}
+                      value={reportDetail}
+                      onChange={(e) => setReportDetail(e.target.value)}
+                    />
+                    {isDetailInvalid && (
+                      <div className="text-danger mt-1" style={{ fontSize: '12px' }}>
+                        Vui lòng nhập lý do cụ thể để chúng tôi có thể xử lý.
+                      </div>
+                    )}
+                    {reportError && (
+                      <div className="text-danger mt-1" style={{ fontSize: '12px' }}>{reportError}</div>
+                    )}
+                    <button
+                      className="btn w-100 mt-2 fw-bold text-white"
+                      style={{ background: '#f27125', borderRadius: '8px', opacity: isDetailInvalid ? 0.5 : 1 }}
+                      disabled={isReporting || isDetailInvalid}
+                      onClick={handleSubmitReport}
+                    >
+                      {isReporting ? 'Đang gửi...' : 'Gửi báo cáo'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
       
       
 
