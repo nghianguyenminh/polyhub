@@ -8,7 +8,10 @@ import com.polyhub.repository.MentorRequestRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.CategoryService;
 import com.polyhub.service.FileStorageService;
+import com.polyhub.service.FptAiService;
+import com.polyhub.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +41,18 @@ public class MentorApiController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private FptAiService fptAiService;
+    
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+    // Chỉ bật bằng application-dev.properties (app.mentor-test-bypass.enabled=true)
+    // Mặc định là false để đảm bảo production luôn xác thực CCCD thật, không ai
+    // có thể bypass chỉ bằng cách đặt tên file là "dummy.jpg".
+    @Value("${app.mentor-test-bypass.enabled:false}")
+    private boolean testBypassEnabled;
 
     @GetMapping
     public ResponseEntity<?> getMentors(
@@ -121,14 +136,17 @@ public class MentorApiController {
     public ResponseEntity<?> registerMentor(
             @RequestParam("fullname") String fullname,
             @RequestParam("cccdNumber") String cccdNumber,
+            @RequestParam("cccdFrontFile") MultipartFile cccdFrontFile,
+            @RequestParam("cccdBackFile") MultipartFile cccdBackFile,
             @RequestParam("email") String email,
-            @RequestParam("phone") String phone,
+            @RequestParam(value = "phone", required = false) String phone,
             @RequestParam("birthday") String birthdayStr,
             @RequestParam("introduction") String introduction,
             @RequestParam("motivation") String motivation,
             @RequestParam("cvFile") MultipartFile cvFile,
             @RequestParam(value = "certificateFile", required = false) MultipartFile certificateFile,
             @RequestParam(value = "degreeFile", required = false) MultipartFile degreeFile,
+            @RequestParam("faceFile") MultipartFile faceFile,
             Principal principal) {
 
         if (principal == null) {
@@ -151,17 +169,129 @@ public class MentorApiController {
         }
 
         try {
-            LocalDate birthday = LocalDate.parse(birthdayStr);
+            // Xác thực CCCD qua FPT.AI.
+            // Nhánh bypass (dummy.jpg) CHỈ hoạt động khi testBypassEnabled = true
+            // (bật qua app.mentor-test-bypass.enabled trong application-dev.properties).
+            // Ở production, biến này mặc định false => luôn gọi FPT.AI thật,
+            // không ai có thể qua mặt xác thực chỉ bằng cách đặt tên file "dummy.jpg".
+            com.fasterxml.jackson.databind.JsonNode ocrResult;
+            boolean isDummyUpload = cccdFrontFile != null && "dummy.jpg".equals(cccdFrontFile.getOriginalFilename());
+
+            if (testBypassEnabled && isDummyUpload) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.node.ObjectNode mockResult = mapper.createObjectNode();
+                mockResult.put("errorCode", 0);
+                mockResult.put("errorMessage", "success");
+
+                com.fasterxml.jackson.databind.node.ObjectNode mockData = mapper.createObjectNode();
+                mockData.put("id", cccdNumber);
+                mockData.put("name", fullname);
+                try {
+                    LocalDate inputBirthdayForMock = LocalDate.parse(birthdayStr);
+                    java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    mockData.put("dob", inputBirthdayForMock.format(dtf));
+                } catch (Exception e) {
+                    mockData.put("dob", "15/08/1999");
+                }
+                mockData.put("copy_check", "real");
+                mockData.put("fake_check", "real");
+                mockData.put("recaptured_check", "real");
+
+                mockResult.putArray("data").add(mockData);
+                ocrResult = mockResult;
+            } else {
+                ocrResult = fptAiService.extractCccdDetails(cccdFrontFile);
+            }
+
+            int errorCode = ocrResult.path("errorCode").asInt(-1);
+            if (errorCode != 0) {
+                String errorMsg = ocrResult.path("errorMessage").asText("Lỗi không xác định");
+                return ResponseEntity.badRequest().body(Map.of("error", "FPT.AI OCR Error: " + errorMsg));
+            }
+
+            com.fasterxml.jackson.databind.JsonNode dataArray = ocrResult.path("data");
+            if (!dataArray.isArray() || dataArray.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Không thể trích xuất thông tin trên thẻ CCCD"));
+            }
+
+            com.fasterxml.jackson.databind.JsonNode ocrData = dataArray.get(0);
+            String extractedCccd = ocrData.path("id").asText();
+            String extractedName = ocrData.path("name").asText();
+            String extractedDob = ocrData.path("dob").asText(); // định dạng DD/MM/YYYY
+
+            // Kiểm tra chống giả mạo (Anti-spoofing)
+            String copyCheck = ocrData.path("copy_check").asText("real");
+            String fakeCheck = ocrData.path("fake_check").asText("real");
+            String recapturedCheck = ocrData.path("recaptured_check").asText("real");
+
+            if ("photo".equalsIgnoreCase(copyCheck)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Đăng ký thất bại: Phát hiện ảnh CCCD là ảnh photocopy. Vui lòng chụp ảnh gốc."));
+            }
+            if ("fake".equalsIgnoreCase(fakeCheck)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Đăng ký thất bại: Phát hiện cấu trúc thẻ CCCD giả mạo."));
+            }
+            if ("screen_recaptured".equalsIgnoreCase(recapturedCheck)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Đăng ký thất bại: Phát hiện ảnh CCCD được chụp lại từ màn hình khác."));
+            }
+
+            // Đối chiếu chéo thông tin nhập vào với kết quả OCR
+            // Đối chiếu số CCCD
+            if (!extractedCccd.trim().equalsIgnoreCase(cccdNumber.replace(" ", ""))) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Số CCCD nhập vào không khớp với thông tin trên ảnh thẻ."));
+            }
+
+            // Đối chiếu Họ tên
+            String normInputName = fullname.trim().replaceAll("\\s+", " ").toUpperCase();
+            String normExtractedName = extractedName.trim().replaceAll("\\s+", " ").toUpperCase();
+            if (!normInputName.equalsIgnoreCase(normExtractedName)) {
+                String cleanInputName = removeAccent(normInputName);
+                String cleanExtractedName = removeAccent(normExtractedName);
+                if (!cleanInputName.equalsIgnoreCase(cleanExtractedName)) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Họ tên nhập vào không khớp với tên trên thẻ CCCD."));
+                }
+            }
+
+            // Đối chiếu ngày sinh
+            LocalDate inputBirthday = LocalDate.parse(birthdayStr);
+            String[] dobParts = extractedDob.split("/");
+            if (dobParts.length == 3) {
+                try {
+                    int day = Integer.parseInt(dobParts[0]);
+                    int month = Integer.parseInt(dobParts[1]);
+                    int year = Integer.parseInt(dobParts[2]);
+                    LocalDate extractedBirthday = LocalDate.of(year, month, day);
+                    if (!inputBirthday.equals(extractedBirthday)) {
+                        return ResponseEntity.badRequest().body(Map.of("error", "Ngày sinh nhập vào không khớp với ngày sinh trên thẻ CCCD."));
+                    }
+                } catch (Exception e) {
+                    // Dùng dữ liệu đầu vào làm mặc định nếu OCR bị lỗi định dạng ngày sinh
+                }
+            }
+
             request.setUser(currentUser);
             request.setFullname(fullname);
-            request.setCccdNumber(cccdNumber);
+            request.setCccdNumber(extractedCccd);
             request.setEmail(email);
             request.setPhone(phone);
-            request.setBirthday(birthday);
+            request.setBirthday(inputBirthday);
             request.setIntroduction(introduction);
             request.setMotivation(motivation);
             request.setStatus(RequestStatus.PENDING);
             request.setRejectionReason(null);
+
+            // Upload CCCD images
+            if (cccdFrontFile != null && !cccdFrontFile.isEmpty()) {
+                Map<String, Object> frontResult = fileStorageService.uploadFile(cccdFrontFile);
+                request.setCccdFrontFile(frontResult.get("url").toString());
+            }
+            if (cccdBackFile != null && !cccdBackFile.isEmpty()) {
+                Map<String, Object> backResult = fileStorageService.uploadFile(cccdBackFile);
+                request.setCccdBackFile(backResult.get("url").toString());
+            }
+            if (faceFile != null && !faceFile.isEmpty()) {
+                Map<String, Object> faceResult = fileStorageService.uploadFile(faceFile);
+                request.setFaceFile(faceResult.get("url").toString());
+            }
 
             // Upload CV (Required)
             if (cvFile != null && !cvFile.isEmpty()) {
@@ -213,14 +343,32 @@ public class MentorApiController {
         map.put("cvFile", m.getCvFile());
         map.put("certificateFile", m.getCertificateFile());
         map.put("degreeFile", m.getDegreeFile());
+        map.put("faceFile", m.getFaceFile());
         map.put("createdAt", m.getCreatedAt());
+        
+        Double avgRating = 0.0;
+        Long revCount = 0L;
+
         if (m.getUser() != null) {
+            avgRating = reviewRepository.getAverageRatingForMentor(m.getUser());
+            revCount = reviewRepository.countReviewsForMentor(m.getUser());
+
             map.put("user", Map.of(
                     "username", m.getUser().getUsername(),
                     "avatar", m.getUser().getAvatar() != null ? m.getUser().getAvatar() : "",
                     "major", m.getUser().getMajor() != null ? m.getUser().getMajor() : ""
             ));
         }
+        
+        map.put("averageRating", avgRating != null ? Math.round(avgRating * 10.0) / 10.0 : 0.0);
+        map.put("reviewCount", revCount != null ? revCount : 0);
+        
         return map;
+    }
+
+    private String removeAccent(String str) {
+        String temp = java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(temp).replaceAll("").replace("Đ", "D").replace("đ", "d");
     }
 }

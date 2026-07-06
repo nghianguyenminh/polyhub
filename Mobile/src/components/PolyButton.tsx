@@ -108,7 +108,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     elevation: 0,
   },
   text: {
-    fontSize: theme.typography.sizes.body,
+    fontSize: theme?.typography?.sizes?.body || 16,
   },
   textPrimary: {
     color: '#FFFFFF',

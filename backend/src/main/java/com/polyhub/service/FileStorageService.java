@@ -42,26 +42,74 @@ public class FileStorageService {
     }
 
     /**
-     * TẢI LÊN TÀI LIỆU
-     * Hàm này nhận file từ Frontend, đẩy lên Cloudinary và trả về thông tin chi tiết.
-     * 
+     * TẢI LÊN TÀI LIỆU (PDF, DOCX, v.v.)
+     * Hàm này nhận file từ Frontend, đẩy lên Cloudinary dưới dạng "raw" để đảm bảo
+     * file được lưu đúng loại, trình duyệt có thể xem trực tiếp thay vì tải về.
+     *
+     * LÝ DO DÙNG "raw" THAY VÌ "auto":
+     * - "auto" có thể nhầm PDF/DOCX thành "image", khiến Cloudinary trả về
+     *   Content-Disposition: attachment → trình duyệt tải file thay vì hiển thị.
+     * - "raw" đảm bảo file luôn được lưu đúng loại tài liệu.
+     *
      * @param file File cần upload (PDF, DOCX, ZIP, RAR,...)
      * @return Map chứa các thuộc tính do Cloudinary trả về (url, public_id, format, bytes,...)
      * @throws IOException Bắt lỗi nếu file bị hỏng hoặc lỗi mạng
      */
+    /**
+     * TẢI LÊN TÀI LIỆU (PDF, DOCX, v.v.)
+     * Xác định loại file dựa vào đuôi mở rộng để thiết lập "resource_type" phù hợp:
+     * - PDF/Hình ảnh: dùng "image" để trình duyệt có thể mở xem trực tiếp và hiển thị preview trên Cloudinary.
+     * - Các định dạng khác (WORD, EXCEL, ZIP, RAR,...): dùng "raw" và đính kèm đuôi mở rộng vào public_id
+     *   để file được lưu trữ và tải về đúng định dạng gốc.
+     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
-        
-        // Cấu hình các tham số khi đẩy file lên cloud
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        String baseName = "document";
+
+        if (originalFilename != null && originalFilename.contains(".")) {
+            int dotIndex = originalFilename.lastIndexOf(".");
+            baseName = originalFilename.substring(0, dotIndex);
+            extension = originalFilename.substring(dotIndex + 1).toLowerCase();
+        }
+
+        // Loại bỏ ký tự đặc biệt của baseName
+        baseName = baseName.replaceAll("[^a-zA-Z0-9_-]", "_");
+        if (baseName.isEmpty()) {
+            baseName = "doc";
+        }
+
+        // Tạo tên định danh duy nhất (unique public id)
+        String uniqueName = baseName + "_" + System.currentTimeMillis();
+
+        String resourceType;
+        String publicId;
+
+        // Phân loại tài liệu
+        if (isImageExtension(extension)) {
+            resourceType = "image";
+            publicId = uniqueName; // Image không đưa đuôi file vào public_id trên Cloudinary
+        } else {
+            resourceType = "raw";
+            publicId = uniqueName + (extension.isEmpty() ? "" : "." + extension); // raw (bao gồm cả PDF) MUST có đuôi file
+        }
+
         Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
-                "folder", "polyhub_documents", // Tự động tạo thư mục trên Cloudinary để lưu file gọn gàng
-                "resource_type", "auto"        // Tự động nhận diện loại file (image cho ảnh, raw cho zip/pdf/docx...)
+                "folder", "polyhub_documents",
+                "resource_type", resourceType,
+                "public_id", publicId
         );
 
-        // Chuyển file thành biến byte và upload thẳng lên Cloudinary
+        // Upload lên Cloudinary
         Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(file.getBytes(), options);
 
         return uploadResult;
+    }
+
+    private boolean isImageExtension(String ext) {
+        if (ext == null) return false;
+        return java.util.List.of("png", "jpg", "jpeg", "gif", "webp", "bmp", "svg").contains(ext.toLowerCase());
     }
 
     /**
@@ -86,19 +134,20 @@ public class FileStorageService {
      */
     @SuppressWarnings("unchecked")
     public void deleteFile(String publicId) throws IOException {
-        // Khai báo tùy chọn xóa: invalidate = true để cưỡng chế xóa sạch bộ nhớ đệm (cache) trên máy chủ
-        Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
-            "invalidate", true,
-            "resource_type", "raw" // Các file thư mục, zip, word,... thường được Cloud phân loại là "raw"
-        );
+        Map<String, Object> options = new java.util.HashMap<>();
+        options.put("invalidate", true);
         
-        try {
-            // Thử xóa đối tượng với tư cách là file "raw" (Tài liệu thông thường)
-            cloudinary.uploader().destroy(publicId, options);
-        } catch (Exception e) {
-            // Nếu Cloudinary báo lỗi (Do nhận diện file này là hình ảnh - image), 
-            // thì fallback lại xóa theo dạng image mặc định
-            cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("invalidate", true));
+        // Xác định resource_type dựa vào đuôi file trong publicId
+        String resourceType = "image";
+        if (publicId != null && publicId.contains(".")) {
+            String ext = publicId.substring(publicId.lastIndexOf(".") + 1).toLowerCase();
+            // Nếu đuôi file thuộc nhóm raw (docx, xlsx, zip, rar, pdf, etc.)
+            if (!java.util.List.of("png", "jpg", "jpeg", "gif", "webp", "bmp", "svg").contains(ext)) {
+                resourceType = "raw";
+            }
         }
+        options.put("resource_type", resourceType);
+        
+        cloudinary.uploader().destroy(publicId, options);
     }
 }

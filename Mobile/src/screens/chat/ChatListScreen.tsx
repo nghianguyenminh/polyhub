@@ -35,6 +35,7 @@ export const ChatListScreen = () => {
     }, [])
   );
 
+
   const handleRefresh = () => {
     setIsRefreshing(true);
     loadChatRooms(true);
@@ -57,12 +58,12 @@ export const ChatListScreen = () => {
 
   const renderItem = ({ item }: { item: any }) => {
     const hasUnread = item.isLastMessageRead === false && item.lastSenderId !== undefined && item.lastSenderId !== item.username;
-    
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.chatItem}
         activeOpacity={0.7}
-        onPress={() => navigation.navigate('ChatDetail', { 
+        onPress={() => navigation.navigate('ChatDetail', {
           roomId: item.roomId,
           targetUser: {
             username: item.username,
@@ -74,7 +75,7 @@ export const ChatListScreen = () => {
         <View style={styles.avatarContainer}>
           <Image source={{ uri: getAvatarUri(item.avatar) }} style={styles.avatar} />
         </View>
-        
+
         <View style={styles.content}>
           <View style={styles.headerRow}>
             <PolyText weight="bold" style={styles.name}>{item.fullname}</PolyText>
@@ -85,8 +86,8 @@ export const ChatListScreen = () => {
             )}
           </View>
           <View style={styles.messageRow}>
-            <PolyText 
-              variant="caption" 
+            <PolyText
+              variant="caption"
               color={hasUnread ? theme.colors.textMain : theme.colors.textMuted}
               weight={hasUnread ? 'bold' : 'regular'}
               style={styles.lastMessage}
@@ -105,16 +106,16 @@ export const ChatListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <PolyHeader 
-        title="Tin nhắn" 
-        showBack 
+      <PolyHeader
+        title="Tin nhắn"
+        showBack
         onBackPress={() => navigation.goBack()}
       />
-      
+
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Icon name="search" size={20} color={theme.colors.textMuted} style={styles.searchIcon} />
-          <TextInput 
+          <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm bạn bè"
             placeholderTextColor={theme.colors.textLight}

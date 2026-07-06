@@ -26,8 +26,8 @@ export const PolyText: React.FC<PolyTextProps> = ({
       style={[
         styles.base,
         {
-          fontSize: theme.typography.sizes[variant],
-          fontFamily: theme.typography.fontFamily[weight],
+          fontSize: theme?.typography?.sizes?.[variant] || 16,
+          fontFamily: theme?.typography?.fontFamily?.[weight],
           color: finalColor,
           textAlign: align,
         },

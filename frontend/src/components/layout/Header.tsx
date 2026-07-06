@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 interface SystemNotification {
   id: number;
@@ -16,6 +17,7 @@ interface SystemNotification {
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const toast = useToast();
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
@@ -25,6 +27,17 @@ export default function Header() {
       setNotifications(data || []);
       
       const countRes = await fetchAPI('/api/notifications/unread-count');
+      
+      // Hiển thị Toast nếu có thông báo mới
+      if (countRes.count > unreadCount && unreadCount !== 0) {
+        const newNoti = data.find((n: SystemNotification) => !n.isRead);
+        if (newNoti) {
+          toast.showInfo(`🔔 ${newNoti.title} - ${newNoti.content}`);
+        } else {
+          toast.showInfo('🔔 Bạn có thông báo mới. Hãy kiểm tra hộp thư của bạn.');
+        }
+      }
+      
       setUnreadCount(countRes.count || 0);
     } catch (err) {
       console.error('Failed to load notifications', err);

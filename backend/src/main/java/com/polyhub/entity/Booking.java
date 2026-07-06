@@ -64,6 +64,15 @@ public class Booking implements Serializable {
     @Column(name = "started_at")
     private LocalDateTime startedAt;
 
+    @Column(name = "extension_count")
+    private Integer extensionCount = 0; // Số lần đã gia hạn
+
+    @Column(name = "max_extensions")
+    private Integer maxExtensions = 3; // Tối đa 3 lần gia hạn mỗi session
+
+    @Column(name = "extended_minutes")
+    private Integer extendedMinutes = 0; // Tổng số phút đã được gia hạn thêm
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -78,6 +87,9 @@ public class Booking implements Serializable {
         }
         if (mentorJoined == null) mentorJoined = false;
         if (studentJoined == null) studentJoined = false;
+        if (extensionCount == null) extensionCount = 0;
+        if (maxExtensions == null) maxExtensions = 3;
+        if (extendedMinutes == null) extendedMinutes = 0;
     }
 
     @PreUpdate

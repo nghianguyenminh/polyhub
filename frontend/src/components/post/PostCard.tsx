@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Post, Comment } from '@/lib/types';
 import { fetchAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import MentorBadge from '@/components/common/MentorBadge';
 
 interface PostCardProps {
   post: Post;
@@ -262,8 +263,11 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
               )}
             </div>
             <div>
-              <div className="fw-bold text-dark" style={{ fontSize: '14.5px', lineHeight: '1.3' }}>
-                {post.user?.fullname}
+              <div className="fw-bold text-dark" style={{ fontSize: '14.5px', lineHeight: '1.3', display: 'flex', alignItems: 'center' }}>
+                <span style={{ display: 'inline-block', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {post.user?.fullname}
+                </span>
+                {post.user?.role?.id === 'MENTOR' && <MentorBadge size={15} />}
               </div>
               <div className="d-flex align-items-center gap-1" style={{ fontSize: '12px', color: '#65676B' }}>
                 <span>@{post.user?.username}</span>

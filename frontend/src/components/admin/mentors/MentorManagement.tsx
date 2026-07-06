@@ -18,7 +18,7 @@ export default function MentorManagement() {
   // Modal State
   const [rejectReason, setRejectReason] = useState('');
   const [selectedReqId, setSelectedReqId] = useState<number | null>(null);
-  const [actionType, setActionType] = useState<'REJECT' | 'REVOKE' | null>(null);
+  const [actionType, setActionType] = useState<'REJECT' | 'REVOKE' | 'REQUEST_UPDATE' | 'INTERVIEW' | null>(null);
 
   // Detail View Modal State
   const [viewingMentor, setViewingMentor] = useState<any | null>(null);
@@ -98,6 +98,7 @@ export default function MentorManagement() {
   };
 
   const handleApprove = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn duyệt Mentor này?')) return;
     try {
       const result = await fetchAPI(`/api/admin/mentors/${id}/approve`, { method: 'POST' });
       setMessage({ text: result.message, type: 'success' });
@@ -107,7 +108,7 @@ export default function MentorManagement() {
     }
   };
 
-  const openModal = (id: number, type: 'REJECT' | 'REVOKE') => {
+  const openModal = (id: number, type: 'REJECT' | 'REVOKE' | 'REQUEST_UPDATE' | 'INTERVIEW') => {
     setSelectedReqId(id);
     setActionType(type);
     setRejectReason('');
@@ -127,7 +128,12 @@ export default function MentorManagement() {
     if (!selectedReqId || !actionType || !rejectReason.trim()) return;
 
     try {
-      const endpoint = actionType === 'REJECT' ? 'reject' : 'revoke';
+      let endpoint = '';
+      if (actionType === 'REJECT') endpoint = 'reject';
+      else if (actionType === 'REVOKE') endpoint = 'revoke';
+      else if (actionType === 'REQUEST_UPDATE') endpoint = 'request-update';
+      else if (actionType === 'INTERVIEW') endpoint = 'interview';
+
       const result = await fetchAPI(`/api/admin/mentors/${selectedReqId}/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,6 +144,36 @@ export default function MentorManagement() {
       loadRequests(currentPage, statusParam, keywordParam);
     } catch (err: any) {
       setMessage({ text: err.message || 'Lỗi xử lý', type: 'danger' });
+    }
+  };
+
+  const handleViewDocument = (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    if (!url) return;
+
+    // Chuẩn hoá sang HTTPS để trình duyệt không chặn "insecure download"
+    let secureUrl = url.replace('http://', 'https://');
+
+    // Hỗ trợ các tệp cũ tải lên dạng raw không có đuôi mở rộng
+    const isRaw = secureUrl.includes('/raw/upload/');
+    const hasExtension = secureUrl.match(/\.[a-zA-Z0-9]+$/) !== null;
+    if (isRaw && !hasExtension) {
+      secureUrl = `${secureUrl}/cv.pdf`;
+    }
+
+    const lowerUrl = secureUrl.toLowerCase();
+    const isPdf = lowerUrl.endsWith('.pdf') || lowerUrl.includes('/pdf');
+    const isDocx = lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.doc');
+
+    if (isPdf || isDocx) {
+      // Dùng Google Docs Viewer để hiển thị PDF/DOCX trực tiếp trong trình duyệt,
+      // tránh trường hợp trình duyệt tải file về thay vì xem.
+      // Điều này hoạt động cho cả URL dạng /raw/upload/ lẫn /image/upload/.
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(secureUrl)}&embedded=true`;
+      window.open(viewerUrl, '_blank');
+    } else {
+      // Các file khác (ảnh, zip,...) mở trực tiếp
+      window.open(secureUrl, '_blank');
     }
   };
 
@@ -220,6 +256,8 @@ export default function MentorManagement() {
           >
             <option value="ALL">Tất cả trạng thái</option>
             <option value="PENDING">Chờ duyệt</option>
+            <option value="NEEDS_UPDATE">Yêu cầu bổ sung</option>
+            <option value="INTERVIEWING">Đang phỏng vấn</option>
             <option value="APPROVED">Đã duyệt</option>
             <option value="REJECTED">Từ chối</option>
             <option value="REVOKED">Tước quyền</option>
@@ -236,7 +274,7 @@ export default function MentorManagement() {
                 <th>Ứng viên</th>
                 <th>Kinh nghiệm</th>
                 <th>Link tham khảo</th>
-                <th>Ngày đăng ký</th>
+                <th>Ngày đăng ký làm Mentor</th>
                 <th>Trạng thái</th>
                 <th style={{ textAlign: 'right' }}>Hành động</th>
               </tr>
@@ -287,6 +325,8 @@ export default function MentorManagement() {
                     </td>
                     <td>
                       {req.status === 'PENDING' && <span className={`${styles.badge} ${styles.badgePending}`}>Chờ duyệt</span>}
+                      {req.status === 'NEEDS_UPDATE' && <span className={`${styles.badge}`} style={{ backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>Cần bổ sung</span>}
+                      {req.status === 'INTERVIEWING' && <span className={`${styles.badge}`} style={{ backgroundColor: '#dbeafe', color: '#1e40af', border: '1px solid #bfdbfe' }}>Đang phỏng vấn</span>}
                       {req.status === 'APPROVED' && <span className={`${styles.badge} ${styles.badgeApproved}`}>Đã duyệt</span>}
                       {req.status === 'REJECTED' && <span className={`${styles.badge} ${styles.badgeRejected}`}>Từ chối</span>}
                       {req.status === 'REVOKED' && <span className={`${styles.badge} ${styles.badgeRevoked}`}>Bị tước quyền</span>}
@@ -299,14 +339,35 @@ export default function MentorManagement() {
                         {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN' || currentUserRole === 'USER_ADMIN') && (
                           <>
                             {req.status === 'PENDING' && (
-                              <>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                <button onClick={() => openModal(req.id, 'REQUEST_UPDATE')} className={`${styles.btnAction} ${styles.btnReject}`} title="Yêu cầu sửa" style={{ backgroundColor: '#f59e0b', color: 'white', borderColor: '#f59e0b' }}>
+                                  <FileText size={16} /> Bổ sung
+                                </button>
+                                <button onClick={() => openModal(req.id, 'INTERVIEW')} className={`${styles.btnAction} ${styles.btnApprove}`} title="Phỏng vấn" style={{ backgroundColor: '#3b82f6', color: 'white', borderColor: '#3b82f6' }}>
+                                  <UserCheck size={16} /> Phỏng vấn
+                                </button>
+                                <button onClick={() => openModal(req.id, 'REJECT')} className={`${styles.btnAction} ${styles.btnReject}`} title="Từ chối">
+                                  <X size={16} /> Từ chối
+                                </button>
+                                <button onClick={() => handleApprove(req.id)} className={`${styles.btnAction} ${styles.btnApprove}`} title="Duyệt thẳng">
+                                  <Check size={16} /> Duyệt
+                                </button>
+                              </div>
+                            )}
+                            {req.status === 'INTERVIEWING' && (
+                              <div style={{ display: 'flex', gap: '4px' }}>
                                 <button onClick={() => handleApprove(req.id)} className={`${styles.btnAction} ${styles.btnApprove}`} title="Duyệt">
                                   <Check size={16} /> Duyệt
                                 </button>
                                 <button onClick={() => openModal(req.id, 'REJECT')} className={`${styles.btnAction} ${styles.btnReject}`} title="Từ chối">
                                   <X size={16} /> Từ chối
                                 </button>
-                              </>
+                              </div>
+                            )}
+                            {req.status === 'NEEDS_UPDATE' && (
+                              <button onClick={() => openModal(req.id, 'REJECT')} className={`${styles.btnAction} ${styles.btnReject}`} title="Từ chối (Hồ sơ treo quá lâu)">
+                                <X size={16} /> Từ chối
+                              </button>
                             )}
                             {req.status === 'APPROVED' && (
                               <button onClick={() => openModal(req.id, 'REVOKE')} className={`${styles.btnAction} ${styles.btnRevoke}`} title="Tước quyền">
@@ -364,18 +425,28 @@ export default function MentorManagement() {
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              {actionType === 'REJECT' ? 'Từ chối Yêu cầu Mentor' : 'Tước quyền Mentor'}
+              {actionType === 'REJECT' ? 'Từ chối Yêu cầu Mentor' :
+                actionType === 'REVOKE' ? 'Tước quyền Mentor' :
+                  actionType === 'REQUEST_UPDATE' ? 'Yêu cầu bổ sung hồ sơ' : 'Gửi thư mời phỏng vấn'}
             </div>
             <form onSubmit={handleRejectOrRevoke}>
               <div className={styles.modalBody}>
                 <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '16px' }}>
-                  Vui lòng cung cấp lý do. Lý do này sẽ được gửi trực tiếp qua email cho người dùng.
+                  Vui lòng cung cấp nội dung (Lý do/Ghi chú). Nội dung này sẽ được gửi trực tiếp qua email cho người dùng.
                 </p>
-                <label className={styles.modalLabel}>Lý do</label>
+                <label className={styles.modalLabel}>
+                  {actionType === 'INTERVIEW' ? 'Thông tin & Lịch phỏng vấn' :
+                    actionType === 'REQUEST_UPDATE' ? 'Nội dung cần bổ sung' :
+                    actionType === 'REJECT' ? 'Lý do từ chối' : 'Lý do tước quyền'}
+                </label>
                 <textarea
                   className={`${styles.modalTextarea} ${actionType === 'REVOKE' ? styles.modalTextareaRevoke : ''}`}
                   required
-                  placeholder="Nhập lý do tại đây..."
+                  placeholder={
+                    actionType === 'INTERVIEW' ? 'Nhập thời gian, link Google Meet...' :
+                    actionType === 'REQUEST_UPDATE' ? 'Nhập các giấy tờ hoặc thông tin cần ứng viên cung cấp thêm...' :
+                    'Nhập lý do tại đây...'
+                  }
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                 />
@@ -413,6 +484,8 @@ export default function MentorManagement() {
                   <div className={styles.detailEmail}>{viewingMentor.email}</div>
                   <div style={{ marginTop: 8 }}>
                     {viewingMentor.status === 'PENDING' && <span className={`${styles.badge} ${styles.badgePending}`}>⏳ Chờ duyệt</span>}
+                    {viewingMentor.status === 'NEEDS_UPDATE' && <span className={`${styles.badge}`} style={{ backgroundColor: '#fef3c7', color: '#b45309' }}>📝 Cần bổ sung</span>}
+                    {viewingMentor.status === 'INTERVIEWING' && <span className={`${styles.badge}`} style={{ backgroundColor: '#dbeafe', color: '#1e40af' }}>🎙️ Đang phỏng vấn</span>}
                     {viewingMentor.status === 'APPROVED' && <span className={`${styles.badge} ${styles.badgeApproved}`}>✅ Đã duyệt</span>}
                     {viewingMentor.status === 'REJECTED' && <span className={`${styles.badge} ${styles.badgeRejected}`}>❌ Từ chối</span>}
                     {viewingMentor.status === 'REVOKED' && <span className={`${styles.badge} ${styles.badgeRevoked}`}>🚫 Tước quyền</span>}
@@ -438,8 +511,8 @@ export default function MentorManagement() {
                     <div className={styles.detailFieldValue}>{viewingMentor.cccdNumber || '—'}</div>
                   </div>
                   <div className={styles.detailField}>
-                    <div className={styles.detailFieldLabel}><Phone size={13} /> Số điện thoại</div>
-                    <div className={styles.detailFieldValue}>{viewingMentor.phone || '—'}</div>
+                    <div className={styles.detailFieldLabel}><Mail size={13} /> Email</div>
+                    <div className={styles.detailFieldValue}>{viewingMentor.email || '—'}</div>
                   </div>
                   <div className={styles.detailField}>
                     <div className={styles.detailFieldLabel}><Calendar size={13} /> Ngày sinh</div>
@@ -502,37 +575,169 @@ export default function MentorManagement() {
                       </a>
                     </div>
                   )}
+                  {viewingMentor.cccdFrontFile && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Mặt trước CCCD</div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.cccdFrontFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🖼️ Xem Ảnh
+                        </a>
+                        <a
+                          href={viewingMentor.cccdFrontFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {viewingMentor.cccdBackFile && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Mặt sau CCCD</div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.cccdBackFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🖼️ Xem Ảnh
+                        </a>
+                        <a
+                          href={viewingMentor.cccdBackFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {viewingMentor.faceFile && (
+                    <div className={styles.detailField}>
+                      <div className={styles.detailFieldLabel}><FileText size={13} /> Ảnh chân dung</div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.faceFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🖼️ Xem Ảnh
+                        </a>
+                        <a
+                          href={viewingMentor.faceFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
+                    </div>
+                  )}
                   {viewingMentor.cvFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> CV</div>
-                      <a href={viewingMentor.cvFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
-                        📄 Xem CV
-                      </a>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.cvFile)}
+                          className={styles.detailFileChip}
+                        >
+                          📄 Xem CV
+                        </a>
+                        <a
+                          href={viewingMentor.cvFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
                     </div>
                   )}
                   {viewingMentor.certificateFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Chứng chỉ</div>
-                      <a href={viewingMentor.certificateFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
-                        📜 Xem Chứng chỉ
-                      </a>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.certificateFile)}
+                          className={styles.detailFileChip}
+                        >
+                          📜 Xem Chứng chỉ
+                        </a>
+                        <a
+                          href={viewingMentor.certificateFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
                     </div>
                   )}
                   {viewingMentor.degreeFile && (
                     <div className={styles.detailField}>
                       <div className={styles.detailFieldLabel}><FileText size={13} /> Bằng cấp</div>
-                      <a href={viewingMentor.degreeFile} target="_blank" rel="noopener noreferrer" className={styles.detailFileChip}>
-                        🎓 Xem Bằng cấp
-                      </a>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleViewDocument(e, viewingMentor.degreeFile)}
+                          className={styles.detailFileChip}
+                        >
+                          🎓 Xem Bằng cấp
+                        </a>
+                        <a
+                          href={viewingMentor.degreeFile}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.detailFileChip}
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                          title="Tải trực tiếp từ Cloudinary"
+                        >
+                          📥 Tải về
+                        </a>
+                      </div>
                     </div>
                   )}
-                  {!viewingMentor.portfolioLink && !viewingMentor.cvUrl && !viewingMentor.certificateUrl && !viewingMentor.degreeUrl && (
+                  {!viewingMentor.portfolioLink && !viewingMentor.cvFile && !viewingMentor.certificateFile && !viewingMentor.degreeFile && !viewingMentor.faceFile && (
                     <div style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.875rem', padding: '8px 0' }}>
                       Không có tài liệu đính kèm.
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Admin Notes if any */}
+              {viewingMentor.adminNotes && (
+                <div className={styles.detailSection}>
+                  <div className={styles.detailSectionTitle} style={{ color: '#b91c1c' }}>
+                    <FileText size={15} /> Ghi chú của Admin / Phỏng vấn
+                  </div>
+                  <div className={`${styles.detailFieldValue} ${styles.detailTextBlock} ${styles.detailRejectBlock}`} style={{ backgroundColor: '#fef3c7', color: '#92400e', borderLeftColor: '#f59e0b' }}>
+                    {viewingMentor.adminNotes}
+                  </div>
+                </div>
+              )}
 
               {/* Rejection reason if any */}
               {(viewingMentor.status === 'REJECTED' || viewingMentor.status === 'REVOKED') && viewingMentor.rejectionReason && (
@@ -555,7 +760,21 @@ export default function MentorManagement() {
               {(currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN' || currentUserRole === 'USER_ADMIN') && (
                 <>
                   {viewingMentor.status === 'PENDING' && (
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnApprove}`}
+                        style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', borderColor: '#3b82f6' }}
+                        onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'INTERVIEW'); }}
+                      >
+                        <UserCheck size={16} /> Phỏng vấn
+                      </button>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnReject}`}
+                        style={{ padding: '8px 16px', backgroundColor: '#f59e0b', color: 'white', borderColor: '#f59e0b' }}
+                        onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REQUEST_UPDATE'); }}
+                      >
+                        <FileText size={16} /> Yêu cầu bổ sung
+                      </button>
                       <button
                         className={`${styles.btnAction} ${styles.btnApprove}`}
                         style={{ padding: '8px 16px' }}
@@ -571,6 +790,33 @@ export default function MentorManagement() {
                         <X size={16} /> Từ chối
                       </button>
                     </div>
+                  )}
+                  {viewingMentor.status === 'INTERVIEWING' && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnApprove}`}
+                        style={{ padding: '8px 16px' }}
+                        onClick={() => { closeDetailModal(); handleApprove(viewingMentor.id); }}
+                      >
+                        <Check size={16} /> Duyệt
+                      </button>
+                      <button
+                        className={`${styles.btnAction} ${styles.btnReject}`}
+                        style={{ padding: '8px 16px' }}
+                        onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REJECT'); }}
+                      >
+                        <X size={16} /> Từ chối
+                      </button>
+                    </div>
+                  )}
+                  {viewingMentor.status === 'NEEDS_UPDATE' && (
+                    <button
+                      className={`${styles.btnAction} ${styles.btnReject}`}
+                      style={{ padding: '8px 16px' }}
+                      onClick={() => { closeDetailModal(); openModal(viewingMentor.id, 'REJECT'); }}
+                    >
+                      <X size={16} /> Từ chối
+                    </button>
                   )}
                   {viewingMentor.status === 'APPROVED' && (
                     <button

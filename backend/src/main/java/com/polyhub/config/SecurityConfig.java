@@ -69,7 +69,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws-chat/**").permitAll()
                 // API công khai: xem feed, xem bài viết, tài liệu, mentors, categories (không cần đăng nhập)
                 .requestMatchers("/api/v2/posts/feed", "/api/v2/posts/user/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/categories").permitAll()
+                .requestMatchers("/api/categories", "/api/categories/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/documents").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/documents/download/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mentors").permitAll()
@@ -101,5 +101,6 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+        
     }
 }

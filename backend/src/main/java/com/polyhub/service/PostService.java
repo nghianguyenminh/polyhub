@@ -41,7 +41,7 @@ public class PostService {
 
         // Nêú có ảnh đính kèm thì upload lên Cloudinary
         if (image != null && !image.isEmpty()) {
-            Map<String, Object> uploadResult = fileStorageService.uploadFile(image);
+            Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");
             post.setImageUrl((String) uploadResult.get("url"));
             post.setImagePublicId((String) uploadResult.get("public_id"));
         }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { SplashScreen } from '../components/SplashScreen';
 import { StatusBar } from 'expo-status-bar';
@@ -53,8 +53,10 @@ export const RootNavigator = () => {
     <View style={styles.container}>
       <StatusBar style={theme.isDark ? 'light' : 'dark'} />
       <NavigationContainer theme={{
+        ...(theme.isDark ? DarkTheme : DefaultTheme),
         dark: theme.isDark,
         colors: {
+          ...(theme.isDark ? DarkTheme.colors : DefaultTheme.colors),
           primary: theme.colors.primary,
           background: theme.colors.background,
           card: theme.colors.card,

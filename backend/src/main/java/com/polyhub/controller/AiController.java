@@ -1,6 +1,7 @@
 package com.polyhub.controller;
 
 import com.polyhub.service.AiService;
+import com.polyhub.service.FptAiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,31 @@ public class AiController {
 
     @Autowired
     private AiService aiService;
+
+    @Autowired
+    private FptAiService fptAiService;
+
+    @PostMapping("/verify-face")
+    public ResponseEntity<?> verifyFace(
+            @RequestParam("video") MultipartFile video,
+            @RequestParam("cccd") MultipartFile cccd) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode result = fptAiService.verifyLivenessAndFaceMatch(video, cccd);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/ocr-cccd")
+    public ResponseEntity<?> ocrCccd(@RequestParam("image") MultipartFile image) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode result = fptAiService.extractCccdDetails(image);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
 
     @PostMapping("/suggest-caption")
     public ResponseEntity<String> suggestCaptionFromImage(@RequestParam("image") MultipartFile image) {

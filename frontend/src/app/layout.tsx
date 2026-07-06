@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 import "./globals.css";
 import "../styles/style.css";
 import "../styles/sidebar.css";
+import GlobalBookingCall from "@/components/common/GlobalBookingCall";
 
 export const metadata: Metadata = {
   title: "PolyHUB - FPT Polytechnic",
@@ -16,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    
-    <html lang="vi" data-scroll-behavior="smooth">
+    // Đã thêm suppressHydrationWarning vào đây để chặn lỗi do Extension con trỏ chuột gây ra
+    <html lang="vi" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <link 
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
@@ -36,7 +38,10 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
-          {children}
+          <ToastProvider>
+            {children}
+            <GlobalBookingCall />
+          </ToastProvider>
         </AuthProvider>
         <Script 
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 

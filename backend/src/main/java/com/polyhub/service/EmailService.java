@@ -23,6 +23,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Tài liệu của bạn KHÔNG ĐƯỢC PHÊ DUYỆT");
@@ -46,7 +47,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
             // Vì chạy nền Async, ko ném exception chết App, chỉ log lỗi ở Console
         }
@@ -57,6 +58,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Yêu cầu đăng ký Mentor bị từ chối");
@@ -79,7 +81,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
@@ -89,6 +91,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Chúc mừng! Bạn đã trở thành Mentor");
@@ -107,7 +110,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
@@ -117,6 +120,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Quyền Mentor của bạn đã bị thu hồi");
@@ -139,7 +143,7 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
@@ -149,6 +153,7 @@ public class EmailService {
         try {
             jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
             org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Yêu cầu Cấp lại Mật khẩu");
             String htmlContent = "<div style=\"font-family: Inter, Arial, sans-serif; padding: 20px; background-color: #f3f4f6;\">"
@@ -167,14 +172,16 @@ public class EmailService {
                     + "</div></div>";
             helper.setText(htmlContent, true);
             mailSender.send(message);
-        } catch (jakarta.mail.MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi OTP Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     public void sendAccountLockEmail(String toEmail, String fullname, String reason) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã bị khóa");
@@ -197,8 +204,9 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -207,6 +215,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã được mở khóa");
@@ -225,8 +234,9 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     @Async
@@ -234,6 +244,7 @@ public class EmailService {
         try {
             jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
             org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Thông báo: Cập nhật quyền hạn tài khoản");
@@ -253,8 +264,9 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (jakarta.mail.MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -263,6 +275,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             String statusText = "APPROVED".equalsIgnoreCase(status) ? "ĐÃ ĐƯỢC PHÊ DUYỆT" : "BỊ TỪ CHỐI";
@@ -294,8 +307,9 @@ public class EmailService {
             helper.setText(htmlContent, true);
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email thông báo lịch hẹn: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -304,6 +318,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - CẢNH BÁO: Bài viết của bạn bị báo cáo vi phạm");
@@ -328,8 +343,9 @@ public class EmailService {
 
             helper.setText(htmlContent, true);
             mailSender.send(message);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email cảnh báo: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -338,6 +354,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
 
             helper.setTo(toEmail);
             helper.setSubject("PolyHUB - Yêu cầu khóa tài khoản người dùng vi phạm");
@@ -361,8 +378,70 @@ public class EmailService {
 
             helper.setText(htmlContent, true);
             mailSender.send(message);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Lỗi gửi Email yêu cầu khóa: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void sendMentorUpdateEmail(String toEmail, String fullname, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu bổ sung hồ sơ Mentor");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #f59e0b; text-align: center;\">Yêu Cầu Bổ Sung Hồ Sơ</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Ban quản trị PolyHUB đã xem xét hồ sơ đăng ký Mentor của bạn và nhận thấy cần bổ sung một số thông tin trước khi tiếp tục:</p>"
+                    + "<div style=\"background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; color: #b45309;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Vui lòng đăng nhập vào PolyHUB và cập nhật lại hồ sơ của bạn theo yêu cầu trên.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendMentorInterviewEmail(String toEmail, String fullname, String notes) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Lịch phỏng vấn Mentor");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #3b82f6; text-align: center;\">Thư Mời Phỏng Vấn</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Hồ sơ của bạn đã vượt qua vòng sơ loại của chương trình Mentor trên PolyHUB!</p>"
+                    + "<p>Chúng tôi muốn mời bạn tham gia một buổi trao đổi ngắn để hiểu rõ hơn về định hướng và kỹ năng của bạn. Chi tiết như sau:</p>"
+                    + "<div style=\"background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; color: #1e40af;\">"
+                    +   "<em>\"" + notes + "\"</em>"
+                    + "</div>"
+                    + "<p>Vui lòng kiểm tra kỹ thời gian và đường dẫn tham gia. Nếu có bất kỳ thay đổi nào, hãy liên hệ với chúng tôi.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
         }
     }
 }

@@ -1,54 +1,688 @@
 /* =========================================
-   GIAO DIỆN MỤC ĐÃ LƯU (SAVED PAGE)
+   GIAO DIỆN MỤC ĐÃ LƯU (SAVED PAGE) - PREMIUM REDESIGN
    ========================================= */
 
-/* --- THANH TRẠNG THÁI ĐÃ LƯU (SAVED BAR) --- */
-.saved-item-wrapper {
-    overflow: hidden;
-    transition: all 0.2s ease;
+/* ---- Animations ---- */
+@keyframes sv-fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.saved-item-wrapper:hover {
-    border-color: rgba(242, 113, 37, 0.25);
-    transform: translateX(3px); /* Hiệu ứng lướt nhẹ khi hover mục đã lưu */
+@keyframes sv-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes sv-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+@keyframes sv-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes sv-slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes sv-bounceIn {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-.saved-status-bar {
-    background-color: #fff8f3; /* Màu nền cam siêu nhạt */
-    border-bottom: 1px solid rgba(242, 113, 37, 0.1);
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 500;
+/* ================================================
+   1. PAGE HEADER CARD
+   ================================================ */
+.sv-page-header {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+  animation: sv-fadeInUp 0.35s ease;
+}
+.sv-page-header::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 220px; height: 100%;
+  background: linear-gradient(135deg, transparent, rgba(242,113,37,0.04));
+  pointer-events: none;
+}
+.sv-page-header::after {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(242,113,37,0.05);
+  pointer-events: none;
 }
 
-/* Nút Action trong mục đã lưu (Thu nhỏ size một chút) */
-.btn-action-saved {
-    font-size: 13px !important;
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
+.sv-header-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.sv-header-icon {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #F27125, #FF9350);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  box-shadow: 0 6px 16px rgba(242,113,37,0.3);
+  flex-shrink: 0;
+}
+.sv-header-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+.sv-header-sub {
+  font-size: 13.5px;
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.5;
 }
 
-/* --- REUSE STYLE TỪ CÁC TRANG KHÁC (Để đảm bảo render đúng ở saved feed) --- */
+/* Stats badges */
+.sv-stats-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+.sv-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 50rem;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: rgba(242,113,37,0.06);
+  color: #F27125;
+  border: 1px solid rgba(242,113,37,0.12);
+  transition: all 0.2s;
+}
+.sv-stat-badge i { font-size: 14px; }
+.sv-stat-badge:hover {
+  background: rgba(242,113,37,0.1);
+  transform: translateY(-1px);
+}
 
-/* Các màu Soft Background cho Icon Tài liệu */
+/* ================================================
+   2. FILTER TAB BAR (Type Switcher)
+   ================================================ */
+.sv-tabs-container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 6px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.04);
+  display: flex;
+  gap: 6px;
+  animation: sv-fadeInUp 0.4s ease;
+}
+.sv-tab-btn {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  position: relative;
+}
+.sv-tab-btn:hover:not(.active) {
+  background: rgba(242,113,37,0.06);
+  color: #F27125;
+}
+.sv-tab-btn.active {
+  background: linear-gradient(135deg, #F27125, #FF9350);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(242,113,37,0.3);
+}
+.sv-tab-btn i { font-size: 16px; }
+
+.sv-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 50rem;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0,0,0,0.08);
+  color: inherit;
+  transition: background 0.2s;
+}
+.sv-tab-btn.active .sv-tab-count {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ================================================
+   3. FILTER CONTROLS
+   ================================================ */
+.sv-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  animation: sv-fadeInUp 0.45s ease;
+}
+.sv-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 50rem;
+  border: 1.5px solid #e0e4ea;
+  background: #fff;
+  color: #495057;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  white-space: nowrap;
+}
+.sv-filter-btn:hover {
+  border-color: rgba(242,113,37,0.4);
+  color: #F27125;
+  background: rgba(242,113,37,0.04);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(242,113,37,0.1);
+}
+.sv-filter-btn.active {
+  background: linear-gradient(135deg, #F27125, #FF9350);
+  color: #fff;
+  border-color: #F27125;
+  box-shadow: 0 4px 14px rgba(242,113,37,0.3);
+}
+.sv-filter-btn i { font-size: 14px; }
+
+.sv-filter-divider {
+  width: 1px;
+  height: 28px;
+  background: #e0e4ea;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Sort dropdown */
+.sv-sort-select {
+  padding: 9px 16px;
+  border-radius: 50rem;
+  border: 1.5px solid #e0e4ea;
+  background: #fff;
+  color: #495057;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 34px;
+}
+.sv-sort-select:hover, .sv-sort-select:focus {
+  border-color: rgba(242,113,37,0.4);
+  box-shadow: 0 2px 8px rgba(242,113,37,0.1);
+}
+
+/* ================================================
+   4. SAVED ITEM CARDS
+   ================================================ */
+
+/* -- Post Cards -- */
+.sv-post-card {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: sv-fadeInUp 0.35s ease both;
+  margin-bottom: 16px;
+}
+.sv-post-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  border-color: rgba(242,113,37,0.15);
+}
+
+/* Saved status bar */
+.sv-saved-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, rgba(242,113,37,0.04), rgba(255,195,113,0.04));
+  border-bottom: 1px solid rgba(242,113,37,0.08);
+  font-size: 12px;
+  font-weight: 500;
+  color: #6c757d;
+}
+.sv-saved-bar i {
+  color: #F27125;
+  font-size: 13px;
+}
+.sv-saved-bar-date {
+  color: #F27125;
+  font-weight: 600;
+}
+
+/* Post author row */
+.sv-post-author {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 8px;
+}
+.sv-post-author-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sv-author-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(242,113,37,0.15);
+  transition: border-color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.sv-author-avatar:hover {
+  border-color: rgba(242,113,37,0.4);
+  transform: scale(1.05);
+}
+.sv-author-name {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #1a1a2e;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.sv-author-name:hover { color: #F27125; }
+.sv-author-meta {
+  font-size: 12.5px;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+/* Unsave button */
+.sv-btn-unsave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 50rem;
+  border: 1.5px solid #e0e4ea;
+  background: #fff;
+  color: #6c757d;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sv-btn-unsave:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+  background: rgba(220,53,69,0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220,53,69,0.12);
+}
+.sv-btn-unsave i { font-size: 14px; }
+
+/* Post content */
+.sv-post-content {
+  padding: 6px 18px 14px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #2d2d2d;
+  white-space: pre-wrap;
+}
+
+/* Post image */
+.sv-post-image {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Post footer stats */
+.sv-post-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px 14px;
+  font-size: 12.5px;
+  color: #6c757d;
+}
+.sv-post-footer-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.sv-post-footer-stat i {
+  font-size: 14px;
+  color: #adb5bd;
+}
+
+/* -- Document Cards -- */
+.sv-doc-card {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: sv-fadeInUp 0.35s ease both;
+  margin-bottom: 16px;
+}
+.sv-doc-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  border-color: rgba(242,113,37,0.15);
+}
+
+.sv-doc-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+/* Document icon box */
+.sv-doc-icon-box {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.sv-doc-card:hover .sv-doc-icon-box {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.sv-doc-icon-box.pdf {
+  background: linear-gradient(135deg, rgba(220,53,69,0.1), rgba(220,53,69,0.05));
+  color: #dc3545;
+  border: 1px solid rgba(220,53,69,0.12);
+}
+.sv-doc-icon-box.word {
+  background: linear-gradient(135deg, rgba(13,110,253,0.1), rgba(13,110,253,0.05));
+  color: #0d6efd;
+  border: 1px solid rgba(13,110,253,0.12);
+}
+.sv-doc-icon-box.excel {
+  background: linear-gradient(135deg, rgba(25,135,84,0.1), rgba(25,135,84,0.05));
+  color: #198754;
+  border: 1px solid rgba(25,135,84,0.12);
+}
+.sv-doc-icon-box.zip {
+  background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,193,7,0.05));
+  color: #cc9a06;
+  border: 1px solid rgba(255,193,7,0.2);
+}
+.sv-doc-icon-box.other {
+  background: linear-gradient(135deg, rgba(108,117,125,0.1), rgba(108,117,125,0.05));
+  color: #6c757d;
+  border: 1px solid rgba(108,117,125,0.12);
+}
+
+/* Document info */
+.sv-doc-info {
+  flex: 1;
+  min-width: 0;
+}
+.sv-doc-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 50rem;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(242,113,37,0.06);
+  color: #F27125;
+  border: 1px solid rgba(242,113,37,0.12);
+  margin-bottom: 6px;
+}
+.sv-doc-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 5px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sv-doc-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #6c757d;
+}
+.sv-doc-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sv-doc-meta i {
+  font-size: 13px;
+  color: #adb5bd;
+}
+
+/* Document actions */
+.sv-doc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.sv-btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 50rem;
+  border: none;
+  background: linear-gradient(135deg, #F27125, #FF9350);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(242,113,37,0.25);
+  white-space: nowrap;
+}
+.sv-btn-download:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(242,113,37,0.35);
+  color: #fff;
+}
+.sv-btn-download i { font-size: 14px; }
+
+/* ================================================
+   5. LOADING STATE
+   ================================================ */
+.sv-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  gap: 16px;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  animation: sv-fadeInUp 0.3s ease;
+}
+.sv-spinner {
+  width: 44px; height: 44px;
+  border: 3px solid rgba(242,113,37,0.15);
+  border-top-color: #F27125;
+  border-radius: 50%;
+  animation: sv-spin 0.8s linear infinite;
+}
+.sv-loading-text {
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* ================================================
+   6. EMPTY STATE
+   ================================================ */
+.sv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  animation: sv-bounceIn 0.4s ease;
+}
+.sv-empty-icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(242,113,37,0.08), rgba(255,195,113,0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.sv-empty-icon i {
+  font-size: 32px;
+  background: linear-gradient(135deg, #F27125, #FFC371);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sv-empty-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 6px;
+}
+.sv-empty-sub {
+  font-size: 13.5px;
+  color: #6c757d;
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* ================================================
+   7. PAGINATION (Reuse poly-pagination, but enhance)
+   ================================================ */
+.sv-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  margin-bottom: 40px;
+  animation: sv-fadeInUp 0.4s ease;
+}
+.sv-page-btn {
+  width: 38px; height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1.5px solid #e0e4ea;
+  background: #fff;
+  color: #495057;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sv-page-btn:hover:not(:disabled):not(.active) {
+  background: rgba(242,113,37,0.06);
+  border-color: rgba(242,113,37,0.3);
+  color: #F27125;
+  transform: translateY(-1px);
+}
+.sv-page-btn.active {
+  background: linear-gradient(135deg, #F27125, #FF9350);
+  color: #fff;
+  border-color: #F27125;
+  box-shadow: 0 4px 12px rgba(242,113,37,0.3);
+}
+.sv-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ================================================
+   8. RESPONSIVE
+   ================================================ */
+@media (max-width: 768px) {
+  .sv-page-header { padding: 18px 16px; }
+  .sv-header-title { font-size: 18px; }
+  .sv-header-icon { width: 40px; height: 40px; font-size: 16px; }
+  .sv-stats-row { flex-wrap: wrap; }
+  .sv-tabs-container { flex-direction: column; }
+  .sv-filter-bar { flex-wrap: wrap; }
+  .sv-doc-body { flex-direction: column; text-align: center; }
+  .sv-doc-actions { flex-direction: row; width: 100%; }
+  .sv-doc-actions > * { flex: 1; justify-content: center; }
+  .sv-doc-meta { justify-content: center; }
+  .sv-post-author { flex-direction: column; gap: 12px; align-items: flex-start; }
+}
+
+/* ================================================
+   9. LEGACY SOFT BACKGROUND COLORS (still needed)
+   ================================================ */
 .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
 .bg-warning-soft { background-color: rgba(255, 193, 7, 0.15); }
 .bg-poly-soft { background-color: rgba(242, 113, 37, 0.1); }
 
-/* Nút Tải về Soft-UI */
-.btn-download {
-    background-color: var(--poly-primary-soft);
-    color: var(--poly-primary);
-    border: none;
-    transition: all 0.3s ease;
-}
-.btn-download:hover {
-    background: linear-gradient(135deg, var(--poly-primary), #FFC371);
-    color: white;
-    box-shadow: 0 4px 8px rgba(242, 113, 37, 0.3);
-}
-
-/* Kích thước Icon to ở Header */
+/* Kích thước Icon to ở Header (legacy) */
 .icon-box-lg {
-    width: 60px; height: 60px;
-    display: flex; align-items: center; justify-content: center;
+  width: 60px; height: 60px;
+  display: flex; align-items: center; justify-content: center;
 }
