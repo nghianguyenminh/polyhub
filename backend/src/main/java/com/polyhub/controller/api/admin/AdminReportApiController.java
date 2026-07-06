@@ -1,12 +1,18 @@
 package com.polyhub.controller.api.admin;
 
+import com.polyhub.entity.DocumentReport;
 import com.polyhub.entity.Post;
 import com.polyhub.entity.PostReport;
+import com.polyhub.entity.ReportReason;
+import com.polyhub.entity.ReportStatus;
 import com.polyhub.entity.User;
+import com.polyhub.repository.DocumentReportRepository;
 import com.polyhub.repository.PostReportRepository;
 import com.polyhub.repository.PostRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.EmailService;
+import com.polyhub.service.admin.DocumentAdminService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,7 +22,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,6 +38,8 @@ public class AdminReportApiController {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final DocumentReportRepository documentReportRepository;
+    private final DocumentAdminService documentAdminService;
 
     @jakarta.annotation.PostConstruct
     public void initDatabaseSchema() {
@@ -42,28 +52,26 @@ public class AdminReportApiController {
 
     @GetMapping
     public ResponseEntity<?> getReports(@RequestParam(defaultValue = "1") int page) {
-        Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<PostReport> reportPage = postReportRepository.findByStatusIn(
-            java.util.List.of("PENDING", "WARNED", "LOCK_REQUESTED"),
-            pageable
-        );
-        
-        long pendingCount = postReportRepository.countByStatus("PENDING") +
-                             postReportRepository.countByStatus("WARNED") +
-                             postReportRepository.countByStatus("LOCK_REQUESTED");
-        long resolvedCount = postReportRepository.countByStatus("RESOLVED");
-        long falseCount = postReportRepository.countByStatus("REJECTED");
+        // ===== Lấy toàn bộ báo cáo bài viết đang cần theo dõi =====
+        List<PostReport> postReports = postReportRepository.findByStatusInUnpaged(
+                java.util.List.of("PENDING", "WARNED", "LOCK_REQUESTED"));
 
-        // Build response manually to avoid lazy-loading serialization errors
-        java.util.List<Map<String, Object>> reportList = new java.util.ArrayList<>();
-        for (PostReport r : reportPage.getContent()) {
+        // ===== Lấy toàn bộ báo cáo tài liệu đang chờ xử lý =====
+        List<DocumentReport> docReports = documentReportRepository.findByStatusInWithDetails(
+                java.util.List.of(ReportStatus.PENDING));
+
+        // ===== Build từng item, gộp chung 1 danh sách =====
+        java.util.List<Map<String, Object>> merged = new java.util.ArrayList<>();
+
+        for (PostReport r : postReports) {
             Map<String, Object> item = new HashMap<>();
             item.put("id", r.getId());
+            item.put("type", "POST");
             item.put("reason", r.getReason());
             item.put("status", r.getStatus() != null ? r.getStatus() : "PENDING");
             item.put("createdAt", r.getCreatedAt());
+            item.put("createdAtRaw", r.getCreatedAt());
 
-            // Post info
             if (r.getPost() != null) {
                 Map<String, Object> postMap = new HashMap<>();
                 postMap.put("id", r.getPost().getId());
@@ -81,7 +89,6 @@ public class AdminReportApiController {
                 item.put("post", postMap);
             }
 
-            // Reporter info
             if (r.getReporter() != null) {
                 Map<String, Object> reporterMap = new HashMap<>();
                 reporterMap.put("username", r.getReporter().getUsername());
@@ -89,18 +96,94 @@ public class AdminReportApiController {
                 item.put("reporter", reporterMap);
             }
 
-            reportList.add(item);
+            merged.add(item);
         }
+
+        for (DocumentReport r : docReports) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", r.getId());
+            item.put("type", "DOCUMENT");
+            item.put("reason", reasonLabel(r.getReason()));
+            item.put("detail", r.getDetail());
+            item.put("status", r.getStatus() != null ? r.getStatus().name() : "PENDING");
+            item.put("createdAt", r.getCreatedAt());
+            item.put("createdAtRaw", r.getCreatedAt());
+
+            if (r.getDocument() != null) {
+                Map<String, Object> docMap = new HashMap<>();
+                docMap.put("id", r.getDocument().getId());
+                docMap.put("title", r.getDocument().getTitle());
+                docMap.put("documentType", r.getDocument().getDocumentType());
+                if (r.getDocument().getUploader() != null) {
+                    Map<String, Object> uploaderMap = new HashMap<>();
+                    uploaderMap.put("username", r.getDocument().getUploader().getUsername());
+                    uploaderMap.put("fullname", r.getDocument().getUploader().getFullname());
+                    uploaderMap.put("avatar", r.getDocument().getUploader().getAvatar());
+                    docMap.put("user", uploaderMap);
+                }
+                item.put("document", docMap);
+            }
+
+            if (r.getReporter() != null) {
+                Map<String, Object> reporterMap = new HashMap<>();
+                reporterMap.put("username", r.getReporter().getUsername());
+                reporterMap.put("fullname", r.getReporter().getFullname());
+                item.put("reporter", reporterMap);
+            }
+
+            merged.add(item);
+        }
+
+        // ===== Sắp xếp mới nhất lên đầu =====
+        merged.sort((a, b) -> {
+            java.time.LocalDateTime ta = (java.time.LocalDateTime) a.get("createdAtRaw");
+            java.time.LocalDateTime tb = (java.time.LocalDateTime) b.get("createdAtRaw");
+            if (ta == null || tb == null)
+                return 0;
+            return tb.compareTo(ta);
+        });
+
+        // ===== Phân trang thủ công (10 dòng/trang, giữ đúng size cũ) =====
+        int size = 10;
+        int total = merged.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) total / size));
+        int fromIndex = Math.min((page - 1) * size, total);
+        int toIndex = Math.min(fromIndex + size, total);
+        java.util.List<Map<String, Object>> reportList = new java.util.ArrayList<>(merged.subList(fromIndex, toIndex));
+        reportList.forEach(m -> m.remove("createdAtRaw"));
+
+        // ===== Số liệu tổng (post + document) =====
+        long pendingCount = postReportRepository.countByStatus("PENDING") +
+                postReportRepository.countByStatus("WARNED") +
+                postReportRepository.countByStatus("LOCK_REQUESTED") +
+                documentReportRepository.countByStatus(ReportStatus.PENDING);
+        long resolvedCount = postReportRepository.countByStatus("RESOLVED") +
+                documentReportRepository.countByStatus(ReportStatus.RESOLVED);
+        long falseCount = postReportRepository.countByStatus("REJECTED") +
+                documentReportRepository.countByStatus(ReportStatus.DISMISSED);
 
         Map<String, Object> response = new HashMap<>();
         response.put("reports", reportList);
         response.put("currentPage", page);
-        response.put("totalPages", reportPage.getTotalPages());
+        response.put("totalPages", totalPages);
         response.put("pendingCount", pendingCount);
         response.put("resolvedCount", resolvedCount);
         response.put("falseCount", falseCount);
 
         return ResponseEntity.ok(response);
+    }
+
+    private String reasonLabel(ReportReason reason) {
+        if (reason == null)
+            return "";
+        return switch (reason) {
+            case COPYRIGHT -> "Vi phạm bản quyền / sở hữu trí tuệ";
+            case FAKE_CONTENT -> "Nội dung sai lệch, giả mạo";
+            case INAPPROPRIATE -> "Nội dung nhạy cảm, phản cảm";
+            case SPAM -> "Spam / quảng cáo trái phép";
+            case DUPLICATE -> "Tài liệu trùng lặp";
+            case OTHER -> "Lý do khác";
+        };
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
@@ -117,7 +200,7 @@ public class AdminReportApiController {
                     r.setStatus("RESOLVED");
                     postReportRepository.save(r);
                 }
-                postRepository.delete(post); 
+                postRepository.delete(post);
                 return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết vi phạm thành công."));
             }
             return ResponseEntity.status(400).body(Map.of("message", "Lỗi xử lý báo cáo."));
@@ -145,14 +228,14 @@ public class AdminReportApiController {
         if (report != null && report.getPost() != null && report.getPost().getUser() != null) {
             User reportedUser = report.getPost().getUser();
             emailService.sendPostWarningEmail(
-                reportedUser.getEmail(), 
-                reportedUser.getFullname(), 
-                report.getPost().getContent(), 
-                report.getReason()
-            );
+                    reportedUser.getEmail(),
+                    reportedUser.getFullname(),
+                    report.getPost().getContent(),
+                    report.getReason());
             report.setStatus("WARNED");
             postReportRepository.save(report);
-            return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh báo yêu cầu chỉnh sửa/xóa bài viết đến người dùng " + reportedUser.getUsername() + " thành công (Hạn chót 2 ngày)."));
+            return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh báo yêu cầu chỉnh sửa/xóa bài viết đến người dùng "
+                    + reportedUser.getUsername() + " thành công (Hạn chót 2 ngày)."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Không tìm thấy thông tin báo cáo hoặc người dùng."));
     }
@@ -166,19 +249,52 @@ public class AdminReportApiController {
             if (managers != null && !managers.isEmpty()) {
                 for (User manager : managers) {
                     emailService.sendLockRequestEmail(
-                        manager.getEmail(), 
-                        manager.getFullname(), 
-                        reportedUser.getFullname(), 
-                        reportedUser.getUsername(), 
-                        report.getPost().getContent(), 
-                        report.getReason()
-                    );
+                            manager.getEmail(),
+                            manager.getFullname(),
+                            reportedUser.getFullname(),
+                            reportedUser.getUsername(),
+                            report.getPost().getContent(),
+                            report.getReason());
                 }
             }
             report.setStatus("LOCK_REQUESTED");
             postReportRepository.save(report);
-            return ResponseEntity.ok(Map.of("message", "Đã gửi yêu cầu khóa tài khoản của người dùng " + reportedUser.getUsername() + " đến ban quản lý người dùng thành công."));
+            return ResponseEntity.ok(Map.of("message", "Đã gửi yêu cầu khóa tài khoản của người dùng "
+                    + reportedUser.getUsername() + " đến ban quản lý người dùng thành công."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Không tìm thấy thông tin báo cáo hoặc người dùng."));
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
+    @PostMapping("/documents/{id}/resolve")
+    public ResponseEntity<?> resolveDocumentReport(@PathVariable Long id) {
+        try {
+            DocumentReport report = documentReportRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy báo cáo"));
+
+            report.setStatus(ReportStatus.RESOLVED);
+            report.setResolvedAt(LocalDateTime.now());
+            documentReportRepository.save(report);
+
+            String reason = "Tài liệu bị báo cáo vi phạm: " + reasonLabel(report.getReason());
+            documentAdminService.rejectOrTakedownDocument(report.getDocument().getId(), reason);
+
+            return ResponseEntity.ok(Map.of("message", "Đã gỡ tài liệu vi phạm thành công."));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("message", "Lỗi: " + e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
+    @PostMapping("/documents/{id}/dismiss")
+    public ResponseEntity<?> dismissDocumentReport(@PathVariable Long id) {
+        DocumentReport report = documentReportRepository.findById(id).orElse(null);
+        if (report != null) {
+            report.setStatus(ReportStatus.DISMISSED);
+            report.setResolvedAt(LocalDateTime.now());
+            documentReportRepository.save(report);
+            return ResponseEntity.ok(Map.of("message", "Đã từ chối báo cáo tài liệu này."));
+        }
+        return ResponseEntity.status(400).body(Map.of("message", "Lỗi từ chối báo cáo."));
     }
 }

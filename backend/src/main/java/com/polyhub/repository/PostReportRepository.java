@@ -20,6 +20,10 @@ public interface PostReportRepository extends JpaRepository<PostReport, Long> {
     @Query("SELECT r FROM PostReport r WHERE r.status IN :statuses OR (r.status IS NULL AND 'PENDING' IN :statuses)")
     Page<PostReport> findByStatusIn(@Param("statuses") List<String> statuses, Pageable pageable);
 
+    @Query("SELECT r FROM PostReport r WHERE r.status IN :statuses OR (r.status IS NULL AND 'PENDING' IN :statuses) " +
+            "ORDER BY r.createdAt DESC")
+    List<PostReport> findByStatusInUnpaged(@Param("statuses") List<String> statuses);
+
     @Query("SELECT COUNT(r) FROM PostReport r WHERE r.status = :status OR (r.status IS NULL AND :status = 'PENDING')")
     long countByStatus(@Param("status") String status);
 }
