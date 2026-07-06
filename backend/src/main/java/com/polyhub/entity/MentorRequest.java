@@ -38,6 +38,15 @@ public class MentorRequest implements Serializable {
     @Column(name = "cccd_number", length = 20, nullable = false)
     private String cccdNumber;
 
+    @Column(name = "cccd_front_file")
+    private String cccdFrontFile;
+
+    @Column(name = "cccd_back_file")
+    private String cccdBackFile;
+
+    @Column(name = "face_file")
+    private String faceFile;
+
     @Column(columnDefinition = "nvarchar(1500)", nullable = false)
     private String introduction;
 
@@ -54,11 +63,14 @@ public class MentorRequest implements Serializable {
     private String degreeFile;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(50)")
     private RequestStatus status = RequestStatus.PENDING;
 
     @Column(name = "rejection_reason", columnDefinition = "nvarchar(1000)")
     private String rejectionReason;
+
+    @Column(name = "admin_notes", columnDefinition = "nvarchar(1000)")
+    private String adminNotes;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

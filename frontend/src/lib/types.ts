@@ -19,6 +19,10 @@ export interface SimpleUser {
   fullname: string;
   avatar?: string;
   major?: string;
+  role?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface Post {
@@ -83,6 +87,8 @@ export interface Mentor {
   certificateFile?: string;
   degreeFile?: string;
   createdAt: string;
+  averageRating?: number;
+  reviewCount?: number;
   user?: {
     username: string;
     avatar: string;

@@ -87,12 +87,12 @@ public class FileStorageService {
         String publicId;
 
         // Phân loại tài liệu
-        if ("pdf".equals(extension) || isImageExtension(extension)) {
+        if (isImageExtension(extension)) {
             resourceType = "image";
-            publicId = uniqueName; // PDF và Image không đưa đuôi file vào public_id trên Cloudinary
+            publicId = uniqueName; // Image không đưa đuôi file vào public_id trên Cloudinary
         } else {
             resourceType = "raw";
-            publicId = uniqueName + (extension.isEmpty() ? "" : "." + extension); // raw MUST có đuôi file
+            publicId = uniqueName + (extension.isEmpty() ? "" : "." + extension); // raw (bao gồm cả PDF) MUST có đuôi file
         }
 
         Map<String, Object> options = (Map<String, Object>) (Map<?, ?>) ObjectUtils.asMap(
@@ -141,8 +141,8 @@ public class FileStorageService {
         String resourceType = "image";
         if (publicId != null && publicId.contains(".")) {
             String ext = publicId.substring(publicId.lastIndexOf(".") + 1).toLowerCase();
-            // Nếu đuôi file thuộc nhóm raw (docx, xlsx, zip, rar, etc.)
-            if (!java.util.List.of("png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "pdf").contains(ext)) {
+            // Nếu đuôi file thuộc nhóm raw (docx, xlsx, zip, rar, pdf, etc.)
+            if (!java.util.List.of("png", "jpg", "jpeg", "gif", "webp", "bmp", "svg").contains(ext)) {
                 resourceType = "raw";
             }
         }

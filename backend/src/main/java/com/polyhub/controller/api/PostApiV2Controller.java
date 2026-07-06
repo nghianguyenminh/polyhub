@@ -257,6 +257,12 @@ public class PostApiV2Controller {
             userMap.put("username", post.getUser().getUsername());
             userMap.put("fullname", post.getUser().getFullname());
             userMap.put("avatar", post.getUser().getAvatar());
+            if (post.getUser().getRole() != null) {
+                userMap.put("role", Map.of(
+                    "id", post.getUser().getRole().getId(),
+                    "name", post.getUser().getRole().getName()
+                ));
+            }
             map.put("user", userMap);
         }
 
@@ -279,6 +285,12 @@ public class PostApiV2Controller {
                 sharedUserMap.put("username", shared.getUser().getUsername());
                 sharedUserMap.put("fullname", shared.getUser().getFullname());
                 sharedUserMap.put("avatar", shared.getUser().getAvatar());
+                if (shared.getUser().getRole() != null) {
+                    sharedUserMap.put("role", Map.of(
+                        "id", shared.getUser().getRole().getId(),
+                        "name", shared.getUser().getRole().getName()
+                    ));
+                }
                 sharedMap.put("user", sharedUserMap);
             }
             map.put("sharedPost", sharedMap);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI } from '@/lib/api';
+import CustomDatePicker from '@/components/common/CustomDatePicker';
 import '@/styles/auth.css';
 
 export default function RegisterPage() {
@@ -213,7 +214,7 @@ export default function RegisterPage() {
       errs.fullname = 'Vui lòng nhập họ và tên';
     } else if (cleanFullname.length < 2) {
       errs.fullname = 'Họ tên phải có ít nhất 2 ký tự';
-    } else if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠưăâêôơ\s]+$/.test(cleanFullname)) {
+    } else if (!/^[\p{L}\s]+$/u.test(cleanFullname)) {
       errs.fullname = 'Họ tên không chứa số hoặc ký tự đặc biệt';
     }
 
@@ -225,12 +226,12 @@ export default function RegisterPage() {
       errs.username = 'Mã sinh viên không hợp lệ (VD: PS12345, PC12345)';
     }
 
-    // 3. Validate email (Chấp nhận fpt.edu.vn và fe.edu.vn)
+    // 3. Validate email (Chấp nhận tất cả định dạng email hợp lệ)
     const cleanEmail = email.trim();
     if (!cleanEmail) {
       errs.email = 'Vui lòng nhập email';
-    } else if (!/^[a-zA-Z0-9._%+-]+@(fpt\.edu\.vn|fe\.edu\.vn)$/i.test(cleanEmail)) {
-      errs.email = 'Vui lòng sử dụng email FPT Polytechnic (@fpt.edu.vn hoặc @fe.edu.vn)';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(cleanEmail)) {
+      errs.email = 'Email không hợp lệ (Ví dụ: user@example.com)';
     }
 
     // 4. Validate phone
@@ -404,17 +405,14 @@ export default function RegisterPage() {
               </div>
               <div className="col-md-6 form-group">
                 <label className="form-label" htmlFor="birthday">Ngày sinh</label>
-                <div className="input-wrapper">
-                  <i className="bi bi-calendar-event input-icon"></i>
-                  <input 
-                    type="date" 
-                    className={`form-control-custom ${!birthday ? 'input-placeholder-color' : ''} ${fieldErrors.birthday ? 'error-field' : ''}`} 
-                    id="birthday" 
-                    value={birthday}
-                    onChange={(e) => { setBirthday(e.target.value); setFieldErrors(p => ({...p, birthday: ''})); }}
-                  />
-                </div>
-                {fieldErrors.birthday && <span className="auth-field-error">⚠ {fieldErrors.birthday}</span>}
+                <CustomDatePicker
+                  id="birthday"
+                  value={birthday}
+                  onChange={(val) => { setBirthday(val); setFieldErrors(p => ({...p, birthday: ''})); }}
+                  error={!!fieldErrors.birthday}
+                  placeholder="Chọn ngày sinh"
+                />
+                {fieldErrors.birthday && <span className="auth-field-error" style={{ marginTop: '6px' }}>⚠ {fieldErrors.birthday}</span>}
               </div>
             </div>
 

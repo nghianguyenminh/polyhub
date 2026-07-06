@@ -612,5 +612,33 @@ public class BookingApiController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> deleteBooking(@PathVariable Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Vui lòng đăng nhập"));
+        }
+        User user = userRepository.findByUsername(principal.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Không tìm thấy user"));
+        }
+
+        Booking booking = bookingRepository.findById(id).orElse(null);
+        if (booking == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Không tìm thấy lịch hẹn"));
+        }
+
+        if (booking.getStatus() != BookingStatus.CANCELLED && booking.getStatus() != BookingStatus.REJECTED && booking.getStatus() != BookingStatus.CLOSED) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Chỉ có thể xóa lịch hẹn đã kết thúc, đã hủy hoặc bị từ chối"));
+        }
+
+        if (!booking.getStudent().getUsername().equals(user.getUsername()) && !booking.getMentor().getUsername().equals(user.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("message", "Không có quyền xóa lịch hẹn này"));
+        }
+
+        bookingRepository.delete(booking);
+        return ResponseEntity.ok(Collections.singletonMap("message", "Đã xóa lịch hẹn thành công"));
+    }
 }
 

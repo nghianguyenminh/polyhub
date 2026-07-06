@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import AdminSidebar from '@/components/admin/layout/AdminSidebar';
 import AdminHeader from '@/components/admin/layout/AdminHeader';
+import AdminCopilot from '@/components/admin/AdminCopilot';
 import styles from '@/components/admin/layout/AdminLayout.module.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <main className={styles.pageContent}>
           {children}
         </main>
+        <AdminCopilot />
       </div>
     </div>
   );

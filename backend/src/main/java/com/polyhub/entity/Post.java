@@ -65,6 +65,10 @@ public class Post {
     @Builder.Default
     private Boolean isPrivate = false;
 
+    @Column(name = "hot_score", nullable = false)
+    @Builder.Default
+    private Double hotScore = 0.0;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
