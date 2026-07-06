@@ -234,41 +234,41 @@ export default function MentorRegisterPage() {
   const analyzeImageQuality = (canvas: HTMLCanvasElement): { isOk: boolean; reason: string } => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return { isOk: true, reason: '' };
-    
+
     const w = canvas.width;
     const h = canvas.height;
     const sampleW = Math.floor(w * 0.4);
     const sampleH = Math.floor(h * 0.4);
     const startX = Math.floor((w - sampleW) / 2);
     const startY = Math.floor((h - sampleH) / 2);
-    
+
     try {
       const imgData = ctx.getImageData(startX, startY, sampleW, sampleH);
       const data = imgData.data;
-      
+
       let totalBrightness = 0;
       let brightPixels = 0;
       let darkPixels = 0;
       const totalPixels = sampleW * sampleH;
-      
+
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
-        const g = data[i+1];
-        const b = data[i+2];
+        const g = data[i + 1];
+        const b = data[i + 2];
         const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
         totalBrightness += brightness;
-        
+
         if (brightness > 240) {
           brightPixels++;
         } else if (brightness < 40) {
           darkPixels++;
         }
       }
-      
+
       const avgBrightness = totalBrightness / totalPixels;
       const brightRatio = brightPixels / totalPixels;
       const darkRatio = darkPixels / totalPixels;
-      
+
       if (brightRatio > 0.15) {
         return { isOk: false, reason: 'Phát hiện chói sáng/lóa sáng mạnh. Vui lòng đổi góc chụp.' };
       }
@@ -286,13 +286,13 @@ export default function MentorRegisterPage() {
       try {
         mediaRecorderRef.current.onstop = null;
         mediaRecorderRef.current.stop();
-      } catch (e) {}
+      } catch (e) { }
     }
     mediaRecorderRef.current = null;
     chunksRef.current = [];
     isRecordingStartedRef.current = false;
     setIsRecording(false);
-    
+
     stepRef.current = 0;
     setLivenessStep(0);
     setRecordingProgress(0);
@@ -303,7 +303,7 @@ export default function MentorRegisterPage() {
     if (!isCameraOpenRef.current) return;
 
     const hasFace = results && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0;
-    
+
     const nowLog = Date.now();
     const shouldLog = !lastLogTimeRef.current || nowLog - lastLogTimeRef.current > 1500;
     if (shouldLog) {
@@ -332,7 +332,7 @@ export default function MentorRegisterPage() {
         const rightEye = landmarks[263];
         const eyeDist = Math.abs(leftEye.x - rightEye.x);
 
-        const isCentered = nose.x >= 0.20 && nose.x <= 0.80; 
+        const isCentered = nose.x >= 0.20 && nose.x <= 0.80;
         const isCorrectDistance = eyeDist >= 0.05 && eyeDist <= 0.55;
 
         if (!isCentered) {
@@ -369,7 +369,7 @@ export default function MentorRegisterPage() {
     const now = Date.now();
 
     switch (stepRef.current) {
-      case 0: 
+      case 0:
         {
           const isCentered = nose.x >= 0.35 && nose.x <= 0.65;
           const isCorrectDistance = eyeDist >= 0.08 && eyeDist <= 0.45;
@@ -456,14 +456,14 @@ export default function MentorRegisterPage() {
   const startPredictionLoop = () => {
     let active = true;
     let isProcessing = false;
-    
+
     const predict = async () => {
       if (!active || !isCameraOpenRef.current || !videoRef.current) return;
-      
-      if (videoRef.current.readyState >= 2 && 
-          videoRef.current.videoWidth > 0 && 
-          faceMeshRef.current && 
-          !isProcessing) {
+
+      if (videoRef.current.readyState >= 2 &&
+        videoRef.current.videoWidth > 0 &&
+        faceMeshRef.current &&
+        !isProcessing) {
         isProcessing = true;
         try {
           const video = videoRef.current;
@@ -486,7 +486,7 @@ export default function MentorRegisterPage() {
     };
 
     animFrameIdRef.current = requestAnimationFrame(predict);
-    
+
     return () => {
       active = false;
       if (animFrameIdRef.current) {
@@ -502,7 +502,7 @@ export default function MentorRegisterPage() {
       if (!(window as any).FaceMesh) {
         throw new Error('Thư viện FaceMesh không được khởi tạo.');
       }
-      
+
       const faceMesh = new (window as any).FaceMesh({
         locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
       });
@@ -540,17 +540,17 @@ export default function MentorRegisterPage() {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          width: { ideal: 1280 }, 
-          height: { ideal: 720 }, 
-          frameRate: { ideal: 30 } 
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
         },
         audio: false
       });
       setCameraStream(stream);
       cameraStreamRef.current = stream;
       setLivenessInstruction('Căn chỉnh khuôn mặt vào giữa khung oval...');
-      
+
     } catch (err: any) {
       console.error(err);
       setFaceMatchError('Không thể mở camera hoặc tải mô hình AI. Vui lòng kiểm tra quyền và kết nối mạng.');
@@ -646,7 +646,7 @@ export default function MentorRegisterPage() {
   const translateFptError = (msg: string): string => {
     if (!msg) return 'Lỗi xác thực khuôn mặt.';
     const lower = msg.toLowerCase();
-    
+
     if (lower.includes('backlight')) {
       return 'Chất lượng ảnh không đạt yêu cầu: Khuôn mặt bị ngược sáng hoặc quá tối.';
     }
@@ -680,6 +680,9 @@ export default function MentorRegisterPage() {
     if (lower.includes('face quality')) {
       return 'Chất lượng ảnh khuôn mặt không đạt yêu cầu (có thể do mờ, tối hoặc ngược sáng).';
     }
+    if (lower.includes('you cannot consume this service')) {
+      return 'API Key chưa được đăng ký gói Face Match. Vui lòng vào FPT.AI Console, tìm dịch vụ "Face Match" (So khớp khuôn mặt) và mua gói Free cho dự án này.';
+    }
     return msg;
   };
 
@@ -699,17 +702,14 @@ export default function MentorRegisterPage() {
       formData.append('video', video);
       // Chỉ gửi CCCD nếu file hợp lệ (không phải file dummy)
       if (cccdFrontFile && cccdFrontFile.size > 0) {
-        formData.append('cmnd', cccdFrontFile);
+        formData.append('cccd', cccdFrontFile);
       }
 
-      const res = await fetch('https://api.fpt.ai/dmp/liveness/v3', {
+      const data = await fetchAPI('/api/ai/verify-face', {
         method: 'POST',
-        headers: {
-          'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
-        },
-        body: formData
+        body: formData,
+        noRedirectOn401: true
       });
-      const data = await res.json();
 
       const isSuccessCode = String(data.code) === '200' || String(data.code) === '0' || String(data.errorCode) === '0';
       const isSuccessMessage = data.message && (data.message.toLowerCase().includes('success') || data.message.toLowerCase() === 'ok');
@@ -721,12 +721,15 @@ export default function MentorRegisterPage() {
 
         if (liveness) {
           const isLive = String(liveness.is_live).toLowerCase() === 'true';
-          const isMatch = faceMatch ? (String(faceMatch.is_match).toLowerCase() === 'true') : true;
+          // FPT Liveness v3 trả về "isMatch" (camelCase), không phải "is_match"
+          const rawIsMatch = faceMatch ? (faceMatch.isMatch ?? faceMatch.is_match) : undefined;
+          const isMatch = faceMatch ? (String(rawIsMatch).toLowerCase() === 'true') : true;
+          const similarity = faceMatch?.similarity ?? 100;
 
           if (isLive && isMatch) {
             setFaceMatchData({
               isMatch: isMatch,
-              similarity: faceMatch?.similarity || 100,
+              similarity: similarity,
               isLive: isLive,
               deepFake: liveness.deep_fake || false
             });
@@ -1357,7 +1360,7 @@ export default function MentorRegisterPage() {
                                 zIndex: 10
                               }} />
                             </div>
-                            
+
                             {!isRecording ? (
                               <div style={{ marginTop: 16, fontSize: 14, color: '#ea580c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
                                 <span style={{ display: 'inline-block', width: 8, height: 8, background: '#ea580c', borderRadius: '50%', animation: 'ping 1.2s infinite' }} />
@@ -1396,13 +1399,13 @@ export default function MentorRegisterPage() {
 
                     {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt và kiểm tra liveness...</div>}
                     {faceMatchError && (
-                      <div style={{ 
-                        background: 'rgba(239, 68, 68, 0.1)', 
-                        border: '1px solid rgba(239, 68, 68, 0.2)', 
-                        borderRadius: '8px', 
-                        padding: '16px', 
-                        marginTop: '16px', 
-                        textAlign: 'center' 
+                      <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        marginTop: '16px',
+                        textAlign: 'center'
                       }}>
                         <div style={{ fontSize: 14, color: '#f87171', fontWeight: 600, marginBottom: 8 }}>
                           ❌ Xác thực thất bại
@@ -1421,7 +1424,7 @@ export default function MentorRegisterPage() {
                           >
                             🔄 Thực hiện quét lại khuôn mặt
                           </button>
-                          
+
                           <button
                             onClick={() => {
                               if (!faceFile) {
