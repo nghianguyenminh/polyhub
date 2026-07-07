@@ -1,0 +1,59 @@
+[33m19ba581[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32m2step-verification[m[33m, [m[1;31morigin/modernize/java-20260601151502[m[33m)[m HEAD@{0}: reset: moving to 19ba5817b613ccbbb6b763f1360767a7dc95b7e0
+[33m861fe9a[m HEAD@{1}: commit: 2 step verify 90%
+[33m80f92b1[m[33m ([m[1;31morigin/2step-verification[m[33m)[m HEAD@{2}: checkout: moving from modernize/java-20260601151502 to 2step-verification
+[33m80f92b1[m[33m ([m[1;31morigin/2step-verification[m[33m)[m HEAD@{3}: pull --tags origin modernize/java-20260601151502: Fast-forward
+[33m6c6f73e[m HEAD@{4}: checkout: moving from modernize/java-20260601151502 to modernize/java-20260601151502
+[33m6c6f73e[m HEAD@{5}: checkout: moving from modernize/java-20260601151502 to modernize/java-20260601151502
+[33m6c6f73e[m HEAD@{6}: checkout: moving from modernize/java-20260601151502 to modernize/java-20260601151502
+[33m6c6f73e[m HEAD@{7}: checkout: moving from dang to modernize/java-20260601151502
+[33maa324d6[m[33m ([m[1;32mdang[m[33m)[m HEAD@{8}: checkout: moving from DemoASM1 to dang
+[33m65eed5a[m HEAD@{9}: checkout: moving from dang to DemoASM1
+[33maa324d6[m[33m ([m[1;32mdang[m[33m)[m HEAD@{10}: reset: moving to aa324d6b922046b253be5ed1efe47c2af88a6f0d
+[33m37c0782[m HEAD@{11}: merge origin/DemoASM1: Merge made by the 'ort' strategy.
+[33me20dd4f[m HEAD@{12}: commit (merge): Chot code sau khi fix conflict
+[33mfdce120[m[33m ([m[1;31morigin/dang[m[33m)[m HEAD@{13}: checkout: moving from main to dang
+[33ma8e8937[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/LongBui[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{14}: checkout: moving from dang to main
+[33m2a607e8[m HEAD@{15}: commit: fail merge
+[33mec2f020[m HEAD@{16}: commit: Squashed commit of the following:
+[33m205dc4c[m HEAD@{17}: reset: moving to 205dc4c5c3c6f474a6441abb4e50cff609ff0e79
+[33maa324d6[m[33m ([m[1;32mdang[m[33m)[m HEAD@{18}: reset: moving to HEAD
+[33maa324d6[m[33m ([m[1;32mdang[m[33m)[m HEAD@{19}: commit (cherry-pick): testcom
+[33mfdce120[m[33m ([m[1;31morigin/dang[m[33m)[m HEAD@{20}: commit: setting 90% done
+[33m4a9e81e[m HEAD@{21}: commit: setting done
+[33m0c274b7[m HEAD@{22}: reset: moving to 0c274b7a398744de5373de51b1152111cbcb0d70
+[33m0c274b7[m HEAD@{23}: commit: mentor-chat-merge dang
+[33m8837a0b[m HEAD@{24}: commit (cherry-pick): mentor-chat-merge dang
+[33mdec85a0[m HEAD@{25}: commit: dang
+[33m64742c8[m HEAD@{26}: commit (cherry-pick): mentor - chat (version 1) done
+[33m59bbf18[m HEAD@{27}: reset: moving to 59bbf186df429bfc1090f1a17173b8c3c6b53296
+[33m59bbf18[m HEAD@{28}: commit: setting done
+[33m1bea4ef[m HEAD@{29}: commit: update profile
+[33m4320958[m HEAD@{30}: commit: Merge commit '34b8b797c3480ff8a3fda4cb9ec842d8fb423014'
+[33m1ea7be3[m HEAD@{31}: reset: moving to 1ea7be32850333fdfc608294de892814730590a1
+[33m1ea7be3[m HEAD@{32}: reset: moving to 1ea7be32850333fdfc608294de892814730590a1
+[33m1ea7be3[m HEAD@{33}: reset: moving to 1ea7be32850333fdfc608294de892814730590a1
+[33m1ea7be3[m HEAD@{34}: commit (cherry-pick): editAipost
+[33m13f98ed[m HEAD@{35}: commit: dang done
+[33mc010ac7[m HEAD@{36}: commit (merge): Merge branch 'dang' of https://github.com/nghianguyenminh/polyhub into dang
+[33m7a61cb7[m HEAD@{37}: commit: dang da code duoc r ne
+[33m04b93d5[m HEAD@{38}: commit: done
+[33m9b1e50e[m HEAD@{39}: reset: moving to 9b1e50ea7b9a8e0e5716c6b15f293f1fa96084eb
+[33mf06ea07[m HEAD@{40}: checkout: moving from Thinh to dang
+[33m43d4da9[m HEAD@{41}: checkout: moving from dang to Thinh
+[33mf06ea07[m HEAD@{42}: checkout: moving from Thinh to dang
+[33m43d4da9[m HEAD@{43}: checkout: moving from dang to Thinh
+[33mf06ea07[m HEAD@{44}: checkout: moving from feature/auth-system to dang
+[33m5207a4e[m HEAD@{45}: checkout: moving from Thinh to feature/auth-system
+[33m43d4da9[m HEAD@{46}: checkout: moving from dang to Thinh
+[33mf06ea07[m HEAD@{47}: commit: hai dang - clone du an
+[33mbea398b[m HEAD@{48}: checkout: moving from feature/auth-system to dang
+[33m5207a4e[m HEAD@{49}: checkout: moving from dang to feature/auth-system
+[33mbea398b[m HEAD@{50}: checkout: moving from feature/auth-system to dang
+[33m5207a4e[m HEAD@{51}: reset: moving to HEAD
+[33m5207a4e[m HEAD@{52}: checkout: moving from dang to feature/auth-system
+[33mbea398b[m HEAD@{53}: checkout: moving from feature/auth-system to dang
+[33m5207a4e[m HEAD@{54}: checkout: moving from dang to feature/auth-system
+[33mbea398b[m HEAD@{55}: checkout: moving from Thinh to dang
+[33mbea398b[m HEAD@{56}: checkout: moving from feature/auth-system to Thinh
+[33m5207a4e[m HEAD@{57}: checkout: moving from main to feature/auth-system
+[33m6e0624f[m HEAD@{58}: clone: from https://github.com/nghianguyenminh/polyhub.git
