@@ -102,10 +102,19 @@ public class SavedApiController {
                         if (sp.getPost() != null) {
                             Map<String, Object> postMap = new HashMap<>();
                             postMap.put("id", sp.getPost().getId());
-                            postMap.put("content", sp.getPost().getContent());
-                            postMap.put("imageUrl", sp.getPost().getImageUrl());
+                            
+                            if (Boolean.TRUE.equals(sp.getPost().getIsDeleted())) {
+                                postMap.put("content", "Bài viết đã bị xóa");
+                                postMap.put("imageUrl", null);
+                            } else {
+                                postMap.put("content", sp.getPost().getContent());
+                                postMap.put("imageUrl", sp.getPost().getImageUrl());
+                            }
+                            
+                            postMap.put("isDeleted", sp.getPost().getIsDeleted());
                             postMap.put("isPrivate", sp.getPost().getIsPrivate());
                             postMap.put("createdAt", sp.getPost().getCreatedAt());
+                            
                             if (sp.getPost().getUser() != null) {
                                 postMap.put("user", Map.of(
                                         "username", sp.getPost().getUser().getUsername(),

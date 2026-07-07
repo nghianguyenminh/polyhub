@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Tránh lỗi Lazy Loading khi chuyển sang JSON
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Post {
 
     @Id
@@ -37,14 +37,13 @@ public class Post {
     @JoinColumn(name = "username", nullable = false)
     private User user;
 
-    // --- Tính năng Share ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shared_post_id")
     private Post sharedPost;
     
     @OneToMany(mappedBy = "sharedPost", cascade = CascadeType.ALL)
     @Builder.Default
-    @JsonIgnore // CHẶN VÒNG LẶP: Không trả về danh sách các bài đã share khi xem một bài viết
+    @JsonIgnore
     private List<Post> shares = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,7 +52,7 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    @JsonIgnore // CHẶN VÒNG LẶP: Không cần thiết trả về danh sách report trong API bài viết thông thường
+    @JsonIgnore
     private List<PostReport> reports = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -64,6 +63,10 @@ public class Post {
     @Column(name = "is_private")
     @Builder.Default
     private Boolean isPrivate = false;
+
+    @Column(name = "is_deleted")
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     @Column(name = "hot_score", nullable = false)
     @Builder.Default
