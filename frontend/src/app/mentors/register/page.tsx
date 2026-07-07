@@ -133,14 +133,11 @@ export default function MentorRegisterPage() {
       try {
         const formData = new FormData();
         formData.append('image', f);
-        const res = await fetch('https://api.fpt.ai/vision/idr/vnm', {
+        const data = await fetchAPI('/api/ai/ocr-cccd', {
           method: 'POST',
-          headers: {
-            'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
-          },
-          body: formData
+          body: formData,
+          noRedirectOn401: true
         });
-        const data = await res.json();
         if (data.errorCode === 0 && data.data && data.data.length > 0) {
           const info = data.data[0];
           if (info.type && info.type.includes('back')) {
@@ -177,7 +174,7 @@ export default function MentorRegisterPage() {
         });
         if (data.errorCode === 0 && data.data && data.data.length > 0) {
           const info = data.data[0];
-          if (info.type && (info.type.includes('front') || info.id)) {
+          if (info.type && info.type.includes('front')) {
             setBackIdError('Đây có vẻ là mặt trước. Vui lòng tải lên mặt sau CCCD.');
           } else {
             setBackIdData(info);
@@ -200,51 +197,414 @@ export default function MentorRegisterPage() {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // AI FaceMesh states and refs
+  const [livenessStep, setLivenessStep] = useState(0); // 0: wait calibrate, 1: straight, 2: left, 3: right, 4: smile, 5: success
+  const stepRef = useRef(0);
+  const faceMeshRef = useRef<any>(null);
+  const animFrameIdRef = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<any>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const stepStartTimeRef = useRef<number>(0);
+  const isRecordingStartedRef = useRef<boolean>(false);
+  const timeoutTimerRef = useRef<any>(null);
+  const isCameraOpenRef = useRef(false);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const lastLogTimeRef = useRef<number>(0);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
   useEffect(() => {
-    if (isCameraOpen && videoRef.current && cameraStream) {
-      videoRef.current.srcObject = cameraStream;
+    isCameraOpenRef.current = isCameraOpen;
+  }, [isCameraOpen]);
+
+  const loadFaceMeshScript = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).FaceMesh) {
+        resolve();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Không thể tải thư viện AI FaceMesh từ CDN.'));
+      document.body.appendChild(script);
+    });
+  };
+
+  const analyzeImageQuality = (canvas: HTMLCanvasElement): { isOk: boolean; reason: string } => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return { isOk: true, reason: '' };
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const sampleW = Math.floor(w * 0.4);
+    const sampleH = Math.floor(h * 0.4);
+    const startX = Math.floor((w - sampleW) / 2);
+    const startY = Math.floor((h - sampleH) / 2);
+
+    try {
+      const imgData = ctx.getImageData(startX, startY, sampleW, sampleH);
+      const data = imgData.data;
+
+      let totalBrightness = 0;
+      let brightPixels = 0;
+      let darkPixels = 0;
+      const totalPixels = sampleW * sampleH;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+        totalBrightness += brightness;
+
+        if (brightness > 240) {
+          brightPixels++;
+        } else if (brightness < 40) {
+          darkPixels++;
+        }
+      }
+
+      const avgBrightness = totalBrightness / totalPixels;
+      const brightRatio = brightPixels / totalPixels;
+      const darkRatio = darkPixels / totalPixels;
+
+      if (brightRatio > 0.15) {
+        return { isOk: false, reason: 'Phát hiện chói sáng/lóa sáng mạnh. Vui lòng đổi góc chụp.' };
+      }
+      if (avgBrightness < 50 || darkRatio > 0.60) {
+        return { isOk: false, reason: 'Ảnh quá tối hoặc ngược sáng. Vui lòng bật thêm đèn.' };
+      }
+      return { isOk: true, reason: '' };
+    } catch (e) {
+      return { isOk: true, reason: '' };
     }
-  }, [isCameraOpen, cameraStream]);
+  };
+
+  const resetLivenessRecording = (reason: string) => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.onstop = null;
+        mediaRecorderRef.current.stop();
+      } catch (e) { }
+    }
+    mediaRecorderRef.current = null;
+    chunksRef.current = [];
+    isRecordingStartedRef.current = false;
+    setIsRecording(false);
+
+    stepRef.current = 0;
+    setLivenessStep(0);
+    setRecordingProgress(0);
+    setLivenessInstruction(reason);
+  };
+
+  const onFaceMeshResults = (results: any) => {
+    if (!isCameraOpenRef.current) return;
+
+    const hasFace = results && results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0;
+
+    const nowLog = Date.now();
+    const shouldLog = !lastLogTimeRef.current || nowLog - lastLogTimeRef.current > 1500;
+    if (shouldLog) {
+      console.warn(`[AI DIAGNOSTIC] hasFace: ${hasFace}, landmarksCount: ${results && results.multiFaceLandmarks ? results.multiFaceLandmarks.length : 0}`);
+      lastLogTimeRef.current = nowLog;
+    }
+
+    let qualityOk = true;
+    let qualityReason = '';
+    if (canvasRef.current) {
+      const qRes = analyzeImageQuality(canvasRef.current);
+      qualityOk = qRes.isOk;
+      qualityReason = qRes.reason;
+    }
+
+    if (stepRef.current > 0 && stepRef.current < 5) {
+      let livenessError = '';
+      if (!hasFace) {
+        livenessError = 'Vui lòng giữ khuôn mặt trong khung hình oval';
+      } else if (!qualityOk) {
+        livenessError = qualityReason;
+      } else {
+        const landmarks = results.multiFaceLandmarks[0];
+        const nose = landmarks[4];
+        const leftEye = landmarks[33];
+        const rightEye = landmarks[263];
+        const eyeDist = Math.abs(leftEye.x - rightEye.x);
+
+        const isCentered = nose.x >= 0.20 && nose.x <= 0.80;
+        const isCorrectDistance = eyeDist >= 0.05 && eyeDist <= 0.55;
+
+        if (!isCentered) {
+          livenessError = 'Khuôn mặt bị lệch ngoài khung hình oval. Vui lòng giữ ở giữa.';
+        } else if (!isCorrectDistance) {
+          livenessError = 'Khoảng cách camera không phù hợp. Vui lòng điều chỉnh lại.';
+        }
+      }
+
+      if (livenessError) {
+        resetLivenessRecording(livenessError);
+        return;
+      }
+    }
+
+    if (!hasFace) {
+      return;
+    }
+
+    const landmarks = results.multiFaceLandmarks[0];
+    const nose = landmarks[4];
+    const leftEye = landmarks[33];
+    const rightEye = landmarks[263];
+
+    const dLeft = Math.abs(nose.x - leftEye.x);
+    const dRight = Math.abs(nose.x - rightEye.x);
+    const ratio = dLeft / (dRight || 0.0001);
+    const eyeDist = Math.abs(leftEye.x - rightEye.x);
+
+    if (shouldLog) {
+      console.warn(`[AI RAW DATA] Step: ${stepRef.current}, Ratio: ${ratio.toFixed(2)}, Center: ${nose.x.toFixed(2)}, Dist: ${eyeDist.toFixed(2)}`);
+    }
+
+    const now = Date.now();
+
+    switch (stepRef.current) {
+      case 0:
+        {
+          const isCentered = nose.x >= 0.35 && nose.x <= 0.65;
+          const isCorrectDistance = eyeDist >= 0.08 && eyeDist <= 0.45;
+
+          if (!qualityOk) {
+            setLivenessInstruction(qualityReason);
+          } else if (!isCentered) {
+            setLivenessInstruction('Hãy di chuyển khuôn mặt vào giữa khung hình oval');
+          } else if (!isCorrectDistance) {
+            setLivenessInstruction('Hãy điều chỉnh khoảng cách xa/gần camera vừa phải');
+          } else {
+            startRecordingStream();
+          }
+        }
+        break;
+
+      case 1: // Nhìn thẳng: giữ yên 1.5s (Ngưỡng rộng từ 0.55 đến 1.85)
+        {
+          const isLookingStraight = ratio >= 0.55 && ratio <= 1.85;
+          if (isLookingStraight) {
+            if (now - stepStartTimeRef.current >= 1500) {
+              stepRef.current = 2;
+              setLivenessStep(2);
+              setRecordingProgress(25);
+              setLivenessInstruction('👈 Từ từ quay đầu sang bên trái');
+              stepStartTimeRef.current = now;
+            }
+          } else {
+            stepStartTimeRef.current = now;
+            setLivenessInstruction('Nhìn thẳng và giữ yên...');
+          }
+        }
+        break;
+
+      case 2: // Quay trái: tỷ lệ < 0.50 (Dễ quay hơn mức 0.45)
+        {
+          if (ratio < 0.50) {
+            stepRef.current = 3;
+            setLivenessStep(3);
+            setRecordingProgress(50);
+            setLivenessInstruction('👉 Từ từ quay đầu sang bên phải');
+            stepStartTimeRef.current = now;
+          }
+        }
+        break;
+
+      case 3: // Quay phải: tỷ lệ > 2.0 (Dễ quay hơn mức 2.2)
+        {
+          if (ratio > 2.00) {
+            stepRef.current = 4;
+            setLivenessStep(4);
+            setRecordingProgress(75);
+            setLivenessInstruction('Smile! Nhìn thẳng và mỉm cười');
+            stepStartTimeRef.current = now;
+          }
+        }
+        break;
+
+      case 4: // Nhìn thẳng cười: giữ yên 1.5s
+        {
+          const isLookingStraight = ratio >= 0.55 && ratio <= 1.85;
+          if (isLookingStraight) {
+            if (now - stepStartTimeRef.current >= 1500) {
+              stepRef.current = 5;
+              setLivenessStep(5);
+              setRecordingProgress(100);
+              setLivenessInstruction('Đang hoàn tất ghi hình...');
+              if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                mediaRecorderRef.current.stop();
+              }
+            }
+          } else {
+            stepStartTimeRef.current = now;
+            setLivenessInstruction('Hãy nhìn thẳng và mỉm cười...');
+          }
+        }
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  const startPredictionLoop = () => {
+    let active = true;
+    let isProcessing = false;
+
+    const predict = async () => {
+      if (!active || !isCameraOpenRef.current || !videoRef.current) return;
+
+      if (videoRef.current.readyState >= 2 &&
+        videoRef.current.videoWidth > 0 &&
+        faceMeshRef.current &&
+        !isProcessing) {
+        isProcessing = true;
+        try {
+          const video = videoRef.current;
+          const canvas = canvasRef.current || document.createElement('canvas');
+          canvasRef.current = canvas;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            await faceMeshRef.current.send({ image: canvas });
+          }
+        } catch (err) {
+          console.error("Lỗi gửi frame sang FaceMesh:", err);
+        } finally {
+          isProcessing = false;
+        }
+      }
+      animFrameIdRef.current = requestAnimationFrame(predict);
+    };
+
+    animFrameIdRef.current = requestAnimationFrame(predict);
+
+    return () => {
+      active = false;
+      if (animFrameIdRef.current) {
+        cancelAnimationFrame(animFrameIdRef.current);
+        animFrameIdRef.current = null;
+      }
+    };
+  };
+
+  const initFaceMesh = async () => {
+    try {
+      await loadFaceMeshScript();
+      if (!(window as any).FaceMesh) {
+        throw new Error('Thư viện FaceMesh không được khởi tạo.');
+      }
+
+      const faceMesh = new (window as any).FaceMesh({
+        locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+      });
+
+      faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: false,
+        minDetectionConfidence: 0.3,
+        minTrackingConfidence: 0.3
+      });
+
+      faceMesh.onResults(onFaceMeshResults);
+      faceMeshRef.current = faceMesh;
+      console.log("Khởi tạo AI FaceMesh thành công!");
+    } catch (err: any) {
+      console.error(err);
+      setFaceMatchError(err.message || 'Không thể tải mô hình AI. Vui lòng kiểm tra kết nối mạng.');
+    }
+  };
 
   const startCamera = async () => {
     setFaceMatchError('');
+    setIsCameraOpen(true);
+    setLivenessStep(0);
+    stepRef.current = 0;
+    setRecordingProgress(0);
+    setLivenessInstruction('Đang tải mô hình AI...');
+    setFaceFile(null);
+    setFaceMatchData(null);
+    isRecordingStartedRef.current = false;
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      if (!faceMeshRef.current) {
+        await initFaceMesh();
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        },
+        audio: false
+      });
       setCameraStream(stream);
-      setIsCameraOpen(true);
-      setFaceFile(null);
-      setFaceMatchData(null);
-    } catch (err) {
-      setFaceMatchError('Không thể mở camera. Vui lòng cấp quyền truy cập.');
+      cameraStreamRef.current = stream;
+      setLivenessInstruction('Căn chỉnh khuôn mặt vào giữa khung oval...');
+
+    } catch (err: any) {
+      console.error(err);
+      setFaceMatchError('Không thể mở camera hoặc tải mô hình AI. Vui lòng kiểm tra quyền và kết nối mạng.');
+      setIsCameraOpen(false);
     }
   };
 
   const stopCamera = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach(track => track.stop());
     }
     setCameraStream(null);
+    cameraStreamRef.current = null;
     setIsCameraOpen(false);
+    setIsRecording(false);
+    setRecordingProgress(0);
+
+    if (animFrameIdRef.current) {
+      cancelAnimationFrame(animFrameIdRef.current);
+      animFrameIdRef.current = null;
+    }
+
+    if (timeoutTimerRef.current) {
+      clearTimeout(timeoutTimerRef.current);
+      timeoutTimerRef.current = null;
+    }
   };
 
-  const startRecording = () => {
-    if (!cameraStream) return;
-    setFaceMatchError('');
+  const startRecordingStream = () => {
+    const stream = cameraStreamRef.current;
+    if (!stream || isRecordingStartedRef.current) return;
+    isRecordingStartedRef.current = true;
     setIsRecording(true);
-    const stream = cameraStream;
+    setLivenessStep(1);
+    stepRef.current = 1;
+    stepStartTimeRef.current = Date.now();
+    setLivenessInstruction('Nhìn thẳng và giữ yên...');
+
     let mimeType = 'video/webm';
     if (!MediaRecorder.isTypeSupported(mimeType)) {
       mimeType = 'video/mp4';
     }
+
     const mediaRecorder = new MediaRecorder(stream, { mimeType });
-    const chunks: Blob[] = [];
+    chunksRef.current = [];
 
     mediaRecorder.ondataavailable = e => {
-      if (e.data && e.data.size > 0) chunks.push(e.data);
+      if (e.data && e.data.size > 0) {
+        chunksRef.current.push(e.data);
+      }
     };
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(chunks, { type: mimeType });
+      const blob = new Blob(chunksRef.current, { type: mimeType });
       const extension = mimeType === 'video/mp4' ? 'mp4' : 'webm';
       const file = new File([blob], `liveness.${extension}`, { type: mimeType });
       setFaceFile(file);
@@ -252,45 +612,79 @@ export default function MentorRegisterPage() {
       handleLivenessVerification(file);
     };
 
+    mediaRecorderRef.current = mediaRecorder;
     mediaRecorder.start();
 
-    // Logic eKYC tự động: quét 8.5s, cập nhật chỉ dẫn liên tục
-    let time = 0;
-    setLivenessInstruction('Vui lòng nhìn thẳng và giữ yên...');
-
-    const interval = setInterval(() => {
-      time += 100;
-      setRecordingProgress((time / 8500) * 100);
-
-      if (time === 2000) setLivenessInstruction('Từ từ quay mặt sang trái');
-      if (time === 4500) setLivenessInstruction('Từ từ quay mặt sang phải');
-      if (time === 7000) setLivenessInstruction('Nhìn thẳng và mỉm cười');
-
-      if (time >= 8500) {
-        clearInterval(interval);
-        if (mediaRecorder.state !== 'inactive') {
-          mediaRecorder.stop();
-        }
-        setIsRecording(false);
-        setRecordingProgress(0);
-        setLivenessInstruction('Đưa khuôn mặt vào trong khung oval');
+    if (timeoutTimerRef.current) clearTimeout(timeoutTimerRef.current);
+    timeoutTimerRef.current = setTimeout(() => {
+      if (stepRef.current > 0 && stepRef.current < 5) {
+        console.log("eKYC Timeout triggered");
+        stopCamera();
+        setFaceMatchError('Hết thời gian quét. Vui lòng di chuyển theo đúng hướng dẫn nhanh hơn.');
       }
-    }, 100);
+    }, 15000);
   };
 
-  // Tự động kích hoạt ghi hình khi camera mở sẵn sàng
   useEffect(() => {
-    if (!cameraStream || !isCameraOpen) return;
+    let cleanPredictionLoop: (() => void) | null = null;
 
-    setLivenessInstruction('Chuẩn bị... Vui lòng đưa khuôn mặt vào trong khung oval');
-    setRecordingProgress(0);
+    if (isCameraOpen && videoRef.current && cameraStream) {
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current?.play();
+        cleanPredictionLoop = startPredictionLoop();
+      };
+      videoRef.current.srcObject = cameraStream;
+    }
 
-    const timer = setTimeout(() => {
-      startRecording();
-    }, 1500);
+    return () => {
+      if (cleanPredictionLoop) {
+        cleanPredictionLoop();
+      }
+    };
+  }, [isCameraOpen, cameraStream]);
 
-    return () => clearTimeout(timer);
-  }, [cameraStream, isCameraOpen]);
+  const translateFptError = (msg: string): string => {
+    if (!msg) return 'Lỗi xác thực khuôn mặt.';
+    const lower = msg.toLowerCase();
+
+    if (lower.includes('backlight')) {
+      return 'Chất lượng ảnh không đạt yêu cầu: Khuôn mặt bị ngược sáng hoặc quá tối.';
+    }
+    if (lower.includes('blur')) {
+      return 'Chất lượng ảnh không đạt yêu cầu: Khuôn mặt bị mờ, nhòe hoặc mất nét.';
+    }
+    if (lower.includes('quality is not good enough')) {
+      return 'Chất lượng ảnh chụp khuôn mặt không đủ tốt hoặc không đạt yêu cầu.';
+    }
+    if (lower.includes('no face')) {
+      return 'Không phát hiện thấy khuôn mặt trong video.';
+    }
+    if (lower.includes('multiple face')) {
+      return 'Phát hiện nhiều hơn một khuôn mặt trong khung hình. Vui lòng chỉ quay một mình.';
+    }
+    if (lower.includes('too close')) {
+      return 'Khuôn mặt để quá gần camera.';
+    }
+    if (lower.includes('too far')) {
+      return 'Khuôn mặt để quá xa camera.';
+    }
+    if (lower.includes('not looking straight')) {
+      return 'Khuôn mặt không nhìn thẳng vào camera.';
+    }
+    if (lower.includes('deepfake')) {
+      return 'Cảnh báo giả mạo khuôn mặt (Deepfake).';
+    }
+    if (lower.includes('cannot extract')) {
+      return 'Không thể nhận diện hoặc trích xuất khuôn mặt từ video.';
+    }
+    if (lower.includes('face quality')) {
+      return 'Chất lượng ảnh khuôn mặt không đạt yêu cầu (có thể do mờ, tối hoặc ngược sáng).';
+    }
+    if (lower.includes('you cannot consume this service')) {
+      return 'API Key chưa được đăng ký gói Face Match. Vui lòng vào FPT.AI Console, tìm dịch vụ "Face Match" (So khớp khuôn mặt) và mua gói Free cho dự án này.';
+    }
+    return msg;
+  };
 
   const handleLivenessVerification = async (video: File) => {
     setFieldErrors(p => ({ ...p, faceFile: '' }));
@@ -308,17 +702,14 @@ export default function MentorRegisterPage() {
       formData.append('video', video);
       // Chỉ gửi CCCD nếu file hợp lệ (không phải file dummy)
       if (cccdFrontFile && cccdFrontFile.size > 0) {
-        formData.append('cmnd', cccdFrontFile);
+        formData.append('cccd', cccdFrontFile);
       }
 
-      const res = await fetch('https://api.fpt.ai/dmp/liveness/v3', {
+      const data = await fetchAPI('/api/ai/verify-face', {
         method: 'POST',
-        headers: {
-          'api-key': '2ynAuIpVGVe1idlYYZ8nUtAkXSYu6L2T'
-        },
-        body: formData
+        body: formData,
+        noRedirectOn401: true
       });
-      const data = await res.json();
 
       const isSuccessCode = String(data.code) === '200' || String(data.code) === '0' || String(data.errorCode) === '0';
       const isSuccessMessage = data.message && (data.message.toLowerCase().includes('success') || data.message.toLowerCase() === 'ok');
@@ -330,12 +721,15 @@ export default function MentorRegisterPage() {
 
         if (liveness) {
           const isLive = String(liveness.is_live).toLowerCase() === 'true';
-          const isMatch = faceMatch ? (String(faceMatch.is_match).toLowerCase() === 'true') : true;
+          // FPT Liveness v3 trả về "isMatch" (camelCase), không phải "is_match"
+          const rawIsMatch = faceMatch ? (faceMatch.isMatch ?? faceMatch.is_match) : undefined;
+          const isMatch = faceMatch ? (String(rawIsMatch).toLowerCase() === 'true') : true;
+          const similarity = faceMatch?.similarity ?? 100;
 
           if (isLive && isMatch) {
             setFaceMatchData({
               isMatch: isMatch,
-              similarity: faceMatch?.similarity || 100,
+              similarity: similarity,
               isLive: isLive,
               deepFake: liveness.deep_fake || false
             });
@@ -352,7 +746,7 @@ export default function MentorRegisterPage() {
           });
         }
       } else {
-        setFaceMatchError(data.message || 'Lỗi xác thực khuôn mặt.');
+        setFaceMatchError(translateFptError(data.message || 'Lỗi xác thực khuôn mặt.'));
       }
     } catch (err) {
       setFaceMatchError('Lỗi kết nối đến máy chủ xác thực.');
@@ -951,35 +1345,35 @@ export default function MentorRegisterPage() {
                                 playsInline
                                 style={{ width: '100%', height: '400px', objectFit: 'cover', display: 'block', transform: 'scaleX(-1)', opacity: isRecording ? 1 : 0.7, transition: 'opacity 0.3s' }}
                               />
-                              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-                                <defs>
-                                  <mask id="oval-mask" x="0" y="0" width="100" height="100">
-                                    <rect x="0" y="0" width="100" height="100" fill="white" />
-                                    <ellipse cx="50" cy="50" rx="35" ry="46" fill="black" />
-                                  </mask>
-                                </defs>
-                                <rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0.7)" mask="url(#oval-mask)" />
-                                <ellipse cx="50" cy="50" rx="35" ry="46" fill="none" stroke={isRecording ? '#10b981' : '#fcd34d'} strokeWidth="0.8" strokeDasharray={isRecording ? 'none' : '2,2'} />
-                              </svg>
-                              <div style={{ position: 'absolute', bottom: '10%', width: '100%', textAlign: 'center' }}>
-                                <span style={{ background: 'rgba(0,0,0,0.6)', padding: '6px 16px', borderRadius: 20, color: isRecording ? '#10b981' : '#fff', fontWeight: 600, fontSize: 14, backdropFilter: 'blur(4px)' }}>
-                                  {livenessInstruction}
-                                </span>
-                              </div>
+                              {/* Khung hình oval dọc chuẩn khuôn mặt */}
+                              <div style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: '220px',
+                                height: '290px',
+                                borderRadius: '50%',
+                                border: `3px ${isRecording ? 'solid' : 'dashed'} ${isRecording ? '#10b981' : '#fcd34d'}`,
+                                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)',
+                                pointerEvents: 'none',
+                                zIndex: 10
+                              }} />
                             </div>
 
                             {!isRecording ? (
-                              <div style={{ marginTop: 16, fontSize: 14, color: '#fcd34d', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ display: 'inline-block', width: 8, height: 8, background: '#fcd34d', borderRadius: '50%', animation: 'ping 1s infinite' }} />
-                                Đang chuẩn bị quét tự động... Vui lòng nhìn thẳng
+                              <div style={{ marginTop: 16, fontSize: 14, color: '#ea580c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                                <span style={{ display: 'inline-block', width: 8, height: 8, background: '#ea580c', borderRadius: '50%', animation: 'ping 1.2s infinite' }} />
+                                {livenessInstruction}
                               </div>
                             ) : (
                               <div style={{ width: '100%', marginTop: 12 }}>
-                                <div style={{ fontSize: 13, color: '#f87171', textAlign: 'center', marginBottom: 4 }}>
-                                  Đang quét...
+                                <div style={{ fontSize: 14, color: '#e11d48', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 6 }}>
+                                  <span style={{ display: 'inline-block', width: 8, height: 8, background: '#e11d48', borderRadius: '50%', animation: 'ping 0.8s infinite' }} />
+                                  {livenessInstruction}
                                 </div>
-                                <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
-                                  <div style={{ width: `${recordingProgress}%`, height: '100%', background: '#f87171', borderRadius: 2, transition: 'width 0.1s' }} />
+                                <div style={{ width: '100%', height: 6, background: 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                                  <div style={{ width: `${recordingProgress}%`, height: '100%', background: '#e11d48', borderRadius: 3, transition: 'width 0.2s ease-out' }} />
                                 </div>
                               </div>
                             )}
@@ -1005,19 +1399,19 @@ export default function MentorRegisterPage() {
 
                     {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt và kiểm tra liveness...</div>}
                     {faceMatchError && (
-                      <div style={{ 
-                        background: 'rgba(239, 68, 68, 0.1)', 
-                        border: '1px solid rgba(239, 68, 68, 0.2)', 
-                        borderRadius: '8px', 
-                        padding: '16px', 
-                        marginTop: '16px', 
-                        textAlign: 'center' 
+                      <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        marginTop: '16px',
+                        textAlign: 'center'
                       }}>
                         <div style={{ fontSize: 14, color: '#f87171', fontWeight: 600, marginBottom: 8 }}>
                           ❌ Xác thực thất bại
                         </div>
                         <div style={{ fontSize: 13, color: '#fca5a5', marginBottom: 16 }}>
-                          Chi tiết: {faceMatchError}
+                          Chi tiết: {translateFptError(faceMatchError)}
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
                           <button
@@ -1030,7 +1424,7 @@ export default function MentorRegisterPage() {
                           >
                             🔄 Thực hiện quét lại khuôn mặt
                           </button>
-                          
+
                           <button
                             onClick={() => {
                               if (!faceFile) {
