@@ -505,17 +505,17 @@ function AdminReportsContent() {
                 <button
                   onClick={() => handleReject(selectedReport.id)}
                   className="btn btn-sm btn-outline-secondary"
-                  title="Từ chối báo cáo này (Báo cáo sai)"
+                  title="Từ chối khóa bài viết"
                 >
-                  Từ chối
+                  Từ chối khóa bài
                 </button>
                 {selectedReport.post && (
                   <button
                     onClick={() => handleApprove(selectedReport.id)}
                     className="btn btn-sm btn-danger"
-                    title="Xóa bài viết vi phạm ngay lập tức"
+                    title="Khóa bài viết vi phạm"
                   >
-                    Xóa bài
+                    Khóa bài
                   </button>
                 )}
               </div>
