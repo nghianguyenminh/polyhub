@@ -8,6 +8,7 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import dynamic from 'next/dynamic';
 import ClockPicker from '@/components/common/ClockPicker';
+import RatingModal from '@/components/common/RatingModal';
 import '@/styles/bookings.css';
 
 const VideoCallRoom = dynamic(() => import('@/components/chat/VideoCallRoom'), {
@@ -52,6 +53,9 @@ export default function BookingsPage() {
   // Call video states
   const [activeCallRoomId, setActiveCallRoomId] = useState<string | null>(null);
   const [selectedBookingForCall, setSelectedBookingForCall] = useState<Booking | null>(null);
+  
+  // Rating Modal state
+  const [ratingBooking, setRatingBooking] = useState<Booking | null>(null);
 
   // Mentor availability config states
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
@@ -793,12 +797,23 @@ export default function BookingsPage() {
           user={{ username: user.username, fullname: user.fullname }}
           onLeaveRoom={() => {
             setActiveCallRoomId(null);
+            if (activeTab === 'student') {
+              setRatingBooking(selectedBookingForCall);
+            }
             setSelectedBookingForCall(null);
             activeTab === 'student' ? loadStudentBookings() : loadMentorBookings();
           }}
           bookingId={selectedBookingForCall.id}
           duration={selectedBookingForCall.duration}
           startedAt={selectedBookingForCall.startedAt || new Date().toISOString()}
+        />
+      )}
+      
+      {ratingBooking && (
+        <RatingModal
+          bookingId={ratingBooking.id}
+          mentorName={ratingBooking.mentor?.fullname || 'Mentor'}
+          onClose={() => setRatingBooking(null)}
         />
       )}
     </>

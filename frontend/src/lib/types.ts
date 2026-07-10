@@ -87,6 +87,8 @@ export interface Mentor {
   certificateFile?: string;
   degreeFile?: string;
   createdAt: string;
+  averageRating?: number;
+  reviewCount?: number;
   user?: {
     username: string;
     avatar: string;
