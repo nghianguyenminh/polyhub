@@ -683,6 +683,19 @@ export default function MentorRegisterPage() {
     if (lower.includes('you cannot consume this service')) {
       return 'API Key chưa được đăng ký gói Face Match. Vui lòng vào FPT.AI Console, tìm dịch vụ "Face Match" (So khớp khuôn mặt) và mua gói Free cho dự án này.';
     }
+    // ── Các lỗi mới từ backend dùng FPT AI Marketplace (Qwen2.5-VL) ──
+    if (lower.includes('ffmpeg') || lower.includes('trích xuất khung hình')) {
+      return 'Hệ thống gặp sự cố khi xử lý video xác thực. Vui lòng thử quay lại video khác, hoặc liên hệ quản trị viên nếu lỗi lặp lại.';
+    }
+    if (lower.includes('parse json') || lower.includes('không thể phân tích kết quả')) {
+      return 'Hệ thống xác thực khuôn mặt tạm thời không phản hồi đúng định dạng. Vui lòng thử lại sau ít phút.';
+    }
+    if (lower.includes('marketplace')) {
+      return 'Không thể kết nối tới dịch vụ xác thực khuôn mặt. Vui lòng kiểm tra kết nối mạng và thử lại sau.';
+    }
+    if (lower.includes('timeout')) {
+      return 'Quá trình xác thực mất quá nhiều thời gian. Vui lòng thử lại với video ngắn hơn hoặc kết nối mạng ổn định hơn.';
+    }
     return msg;
   };
 
@@ -749,7 +762,8 @@ export default function MentorRegisterPage() {
         setFaceMatchError(translateFptError(data.message || 'Lỗi xác thực khuôn mặt.'));
       }
     } catch (err) {
-      setFaceMatchError('Lỗi kết nối đến máy chủ xác thực.');
+      const rawMessage = err instanceof Error ? err.message : '';
+      setFaceMatchError(rawMessage ? translateFptError(rawMessage) : 'Lỗi kết nối đến máy chủ xác thực. Vui lòng thử lại.');
     } finally {
       setIsVerifyingFaceMatch(false);
     }
@@ -1397,7 +1411,7 @@ export default function MentorRegisterPage() {
                       {fieldErrors.faceFile && <div className="mr-field-error">⚠ {fieldErrors.faceFile}</div>}
                     </div>
 
-                    {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt và kiểm tra liveness...</div>}
+                    {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt và kiểm tra liveness... (quá trình này có thể mất 10-20 giây)</div>}
                     {faceMatchError && (
                       <div style={{
                         background: 'rgba(239, 68, 68, 0.1)',
