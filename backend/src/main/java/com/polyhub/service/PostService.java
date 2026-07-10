@@ -22,6 +22,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
     private final PostReportRepository postReportRepository;
+    private final NotificationService notificationService;
 
     public Post createPost(String content, MultipartFile image, String username) throws IOException {
         // Tìm User trong DB, nếu không có thì lấy một tài khoản mặc định để demo
@@ -65,7 +66,19 @@ public class PostService {
         sharedPost.setUser(user);
         sharedPost.setSharedPost(rootPost);
 
-        return postRepository.save(sharedPost);
+        Post savedPost = postRepository.save(sharedPost);
+
+        if (rootPost.getUser() != null) {
+            notificationService.createNotification(
+                rootPost.getUser().getUsername(),
+                username,
+                "đã chia sẻ bài viết của bạn.",
+                "SHARE",
+                savedPost.getId()
+            );
+        }
+
+        return savedPost;
     }
 
     // --- Tính năng Sửa bài viết ---

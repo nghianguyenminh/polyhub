@@ -8,6 +8,7 @@ import com.polyhub.repository.PostRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.PostService;
 import com.polyhub.service.client.SavedPostService;
+import com.polyhub.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,9 @@ public class PostApiV2Controller {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * POST /api/v2/posts/create
@@ -178,6 +182,20 @@ public class PostApiV2Controller {
         }
 
         long likesCount = likeRepository.countByPostId(postId);
+        
+        if (isLiked) {
+            Post post = postRepository.findById(postId).orElse(null);
+            if (post != null && post.getUser() != null) {
+                notificationService.createNotification(
+                    post.getUser().getUsername(),
+                    username,
+                    "đã thích bài viết của bạn.",
+                    "LIKE",
+                    postId
+                );
+            }
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("isLiked", isLiked);
         response.put("likesCount", likesCount);

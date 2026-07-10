@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import com.polyhub.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/admin/reports")
@@ -24,6 +27,7 @@ public class AdminReportApiController {
 
     private final PostReportRepository postReportRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
     @GetMapping
     public ResponseEntity<?> getReports(@RequestParam(defaultValue = "1") int page) {
@@ -50,8 +54,19 @@ public class AdminReportApiController {
         PostReport report = postReportRepository.findById(id).orElse(null);
         if (report != null && report.getPost() != null) {
             Post post = report.getPost();
-            postRepository.delete(post); 
-            return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết vi phạm thành công."));
+            post.setIsLocked(true);
+            postRepository.save(post);
+            postReportRepository.delete(report);
+            
+            notificationService.createNotification(
+                post.getUser().getUsername(),
+                null,
+                "Bài viết của bạn đã bị khóa bởi Quản trị viên do vi phạm quy chuẩn cộng đồng.",
+                "SYSTEM",
+                post.getId()
+            );
+
+            return ResponseEntity.ok(Map.of("message", "Đã khóa bài viết vi phạm thành công."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Lỗi xử lý báo cáo."));
     }
@@ -63,5 +78,55 @@ public class AdminReportApiController {
             return ResponseEntity.ok(Map.of("message", "Đã từ chối báo cáo."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Lỗi từ chối báo cáo."));
+    }
+
+    @GetMapping("/locked")
+    public ResponseEntity<?> getLockedPosts(@RequestParam(defaultValue = "1") int page) {
+        Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Post> lockedPage = postRepository.findByIsLockedTrue(pageable);
+        
+        List<Map<String, Object>> posts = new ArrayList<>();
+        for (Post post : lockedPage.getContent()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", post.getId());
+            map.put("content", post.getContent());
+            map.put("imageUrl", post.getImageUrl());
+            map.put("createdAt", post.getCreatedAt());
+            if (post.getUser() != null) {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("username", post.getUser().getUsername());
+                userMap.put("fullname", post.getUser().getFullname());
+                userMap.put("avatar", post.getUser().getAvatar());
+                map.put("user", userMap);
+            }
+            posts.add(map);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("posts", posts);
+        response.put("currentPage", page);
+        response.put("totalPages", lockedPage.getTotalPages());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/posts/{postId}/unlock")
+    public ResponseEntity<?> unlockPost(@PathVariable Long postId) {
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post != null) {
+            post.setIsLocked(false);
+            postRepository.save(post);
+            
+            // Gửi thông báo hệ thống cho chủ bài viết
+            notificationService.createNotification(
+                post.getUser().getUsername(),
+                null,
+                "Bài viết của bạn đã được mở khóa bởi Quản trị viên.",
+                "SYSTEM",
+                post.getId()
+            );
+            
+            return ResponseEntity.ok(Map.of("message", "Đã mở khóa bài viết thành công."));
+        }
+        return ResponseEntity.status(400).body(Map.of("message", "Không tìm thấy bài viết."));
     }
 }
