@@ -1005,13 +1005,13 @@ export default function MentorRegisterPage() {
 
                     {isVerifyingFaceMatch && <div style={{ fontSize: 13, color: '#60a5fa', marginTop: 8 }}>⏳ Đang đối chiếu khuôn mặt và kiểm tra liveness...</div>}
                     {faceMatchError && (
-                      <div style={{ 
-                        background: 'rgba(239, 68, 68, 0.1)', 
-                        border: '1px solid rgba(239, 68, 68, 0.2)', 
-                        borderRadius: '8px', 
-                        padding: '16px', 
-                        marginTop: '16px', 
-                        textAlign: 'center' 
+                      <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        marginTop: '16px',
+                        textAlign: 'center'
                       }}>
                         <div style={{ fontSize: 14, color: '#f87171', fontWeight: 600, marginBottom: 8 }}>
                           ❌ Xác thực thất bại
@@ -1030,7 +1030,7 @@ export default function MentorRegisterPage() {
                           >
                             🔄 Thực hiện quét lại khuôn mặt
                           </button>
-                          
+
                           <button
                             onClick={() => {
                               if (!faceFile) {
