@@ -3,6 +3,7 @@ package com.polyhub.controller.api.admin;
 import com.polyhub.entity.Category;
 import com.polyhub.service.CategoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/categories")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
 public class AdminCategoryApiController {
 
     private final CategoryService categoryService;

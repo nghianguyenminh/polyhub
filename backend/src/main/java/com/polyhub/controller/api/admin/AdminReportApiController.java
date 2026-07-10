@@ -13,14 +13,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import com.polyhub.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/admin/reports")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
 public class AdminReportApiController {
 
     private final PostReportRepository postReportRepository;
@@ -28,6 +33,7 @@ public class AdminReportApiController {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final NotificationService notificationService;
 
     @jakarta.annotation.PostConstruct
     public void initDatabaseSchema() {
@@ -107,15 +113,24 @@ public class AdminReportApiController {
             PostReport report = postReportRepository.findById(id).orElse(null);
             if (report != null && report.getPost() != null) {
                 Post post = report.getPost();
-                // Disassociate all reports related to this post before deleting the post
+                post.setIsLocked(true);
+                postRepository.save(post);
+                
                 java.util.List<PostReport> relatedReports = postReportRepository.findByPostId(post.getId());
                 for (PostReport r : relatedReports) {
-                    r.setPost(null);
                     r.setStatus("RESOLVED");
                     postReportRepository.save(r);
                 }
-                postRepository.delete(post); 
-                return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết vi phạm thành công."));
+                
+                notificationService.createNotification(
+                    post.getUser().getUsername(),
+                    null,
+                    "Bài viết của bạn đã bị khóa bởi Quản trị viên do vi phạm quy chuẩn cộng đồng.",
+                    "SYSTEM",
+                    post.getId()
+                );
+
+                return ResponseEntity.ok(Map.of("message", "Đã khóa bài viết vi phạm thành công."));
             }
             return ResponseEntity.status(400).body(Map.of("message", "Lỗi xử lý báo cáo."));
         } catch (Exception e) {
@@ -135,46 +150,53 @@ public class AdminReportApiController {
         return ResponseEntity.status(400).body(Map.of("message", "Lỗi từ chối báo cáo."));
     }
 
-    @PostMapping("/{id}/warn")
-    public ResponseEntity<?> warnUser(@PathVariable Long id) {
-        PostReport report = postReportRepository.findById(id).orElse(null);
-        if (report != null && report.getPost() != null && report.getPost().getUser() != null) {
-            User reportedUser = report.getPost().getUser();
-            emailService.sendPostWarningEmail(
-                reportedUser.getEmail(), 
-                reportedUser.getFullname(), 
-                report.getPost().getContent(), 
-                report.getReason()
-            );
-            report.setStatus("WARNED");
-            postReportRepository.save(report);
-            return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh báo yêu cầu chỉnh sửa/xóa bài viết đến người dùng " + reportedUser.getUsername() + " thành công (Hạn chót 2 ngày)."));
+    @GetMapping("/locked")
+    public ResponseEntity<?> getLockedPosts(@RequestParam(defaultValue = "1") int page) {
+        Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Post> lockedPage = postRepository.findByIsLockedTrue(pageable);
+        
+        List<Map<String, Object>> posts = new ArrayList<>();
+        for (Post post : lockedPage.getContent()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", post.getId());
+            map.put("content", post.getContent());
+            map.put("imageUrl", post.getImageUrl());
+            map.put("createdAt", post.getCreatedAt());
+            if (post.getUser() != null) {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("username", post.getUser().getUsername());
+                userMap.put("fullname", post.getUser().getFullname());
+                userMap.put("avatar", post.getUser().getAvatar());
+                map.put("user", userMap);
+            }
+            posts.add(map);
         }
-        return ResponseEntity.status(400).body(Map.of("message", "Không tìm thấy thông tin báo cáo hoặc người dùng."));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("posts", posts);
+        response.put("currentPage", page);
+        response.put("totalPages", lockedPage.getTotalPages());
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/request-lock")
-    public ResponseEntity<?> requestLock(@PathVariable Long id) {
-        PostReport report = postReportRepository.findById(id).orElse(null);
-        if (report != null && report.getPost() != null && report.getPost().getUser() != null) {
-            User reportedUser = report.getPost().getUser();
-            java.util.List<User> managers = userRepository.findUserManagers();
-            if (managers != null && !managers.isEmpty()) {
-                for (User manager : managers) {
-                    emailService.sendLockRequestEmail(
-                        manager.getEmail(), 
-                        manager.getFullname(), 
-                        reportedUser.getFullname(), 
-                        reportedUser.getUsername(), 
-                        report.getPost().getContent(), 
-                        report.getReason()
-                    );
-                }
-            }
-            report.setStatus("LOCK_REQUESTED");
-            postReportRepository.save(report);
-            return ResponseEntity.ok(Map.of("message", "Đã gửi yêu cầu khóa tài khoản của người dùng " + reportedUser.getUsername() + " đến ban quản lý người dùng thành công."));
+    @PostMapping("/posts/{postId}/unlock")
+    public ResponseEntity<?> unlockPost(@PathVariable Long postId) {
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post != null) {
+            post.setIsLocked(false);
+            postRepository.save(post);
+            
+            // Gửi thông báo hệ thống cho chủ bài viết
+            notificationService.createNotification(
+                post.getUser().getUsername(),
+                null,
+                "Bài viết của bạn đã được mở khóa bởi Quản trị viên.",
+                "SYSTEM",
+                post.getId()
+            );
+            
+            return ResponseEntity.ok(Map.of("message", "Đã mở khóa bài viết thành công."));
         }
-        return ResponseEntity.status(400).body(Map.of("message", "Không tìm thấy thông tin báo cáo hoặc người dùng."));
+        return ResponseEntity.status(400).body(Map.of("message", "Không tìm thấy bài viết."));
     }
 }

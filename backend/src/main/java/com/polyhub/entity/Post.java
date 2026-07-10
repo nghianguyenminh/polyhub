@@ -65,6 +65,10 @@ public class Post {
     @Builder.Default
     private Boolean isPrivate = false;
 
+    @Column(name = "is_locked")
+    @Builder.Default
+    private Boolean isLocked = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

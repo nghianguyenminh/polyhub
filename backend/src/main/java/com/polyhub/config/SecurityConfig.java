@@ -91,6 +91,11 @@ public class SecurityConfig {
                     response.setStatus(401);
                     response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\"}");
                 })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(403);
+                    response.getWriter().write("{\"error\": \"Forbidden\", \"message\": \"Bạn không có quyền thực hiện chức năng này.\"}");
+                })
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
