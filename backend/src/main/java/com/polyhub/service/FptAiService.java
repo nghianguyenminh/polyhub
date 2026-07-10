@@ -122,9 +122,11 @@ public class FptAiService {
 
         // Thêm file video ghi hình gương mặt
         HttpHeaders videoHeaders = new HttpHeaders();
-        videoHeaders.setContentType(MediaType.valueOf("video/mp4"));
         final String videoFilename = (videoFile.getOriginalFilename() != null && !videoFile.getOriginalFilename().isEmpty())
-                ? videoFile.getOriginalFilename() : "video.mp4";
+                ? videoFile.getOriginalFilename() : "video.webm";
+        // Detect MIME type from filename (browser records webm by default)
+        String videoMimeType = videoFilename.toLowerCase().endsWith(".mp4") ? "video/mp4" : "video/webm";
+        videoHeaders.setContentType(MediaType.valueOf(videoMimeType));
         ByteArrayResource videoResource = new ByteArrayResource(videoFile.getBytes()) {
             @Override
             public String getFilename() {

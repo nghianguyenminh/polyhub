@@ -31,17 +31,18 @@ public class AdminDocumentApiController {
             @RequestParam(value = "status", required = false) DocumentStatus status,
             @RequestParam(value = "document_type", required = false) String documentType,
             @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "include_stats", defaultValue = "false") boolean includeStats,
             @RequestParam(value = "include_categories", defaultValue = "false") boolean includeCategories) {
 
-        int size = 10;
-        Page<Document> documentPage = documentAdminService.getDocuments(keyword, categoryId, status, documentType, page,
-                size);
+        Page<Document> documentPage = documentAdminService.getDocuments(
+                keyword, categoryId, status, documentType, page, size);
 
         Map<String, Object> response = new HashMap<>();
         response.put("documents", documentPage.getContent());
         response.put("currentPage", page);
         response.put("totalPages", documentPage.getTotalPages());
+        response.put("totalElements", documentPage.getTotalElements());
 
         if (includeCategories) {
             List<Category> categories = categoryService.getAllCategoriesForAdmin();

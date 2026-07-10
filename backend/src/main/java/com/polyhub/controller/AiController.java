@@ -19,13 +19,18 @@ public class AiController {
     @Autowired
     private FptAiService fptAiService;
 
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
     @PostMapping("/verify-face")
     public ResponseEntity<?> verifyFace(
             @RequestParam("video") MultipartFile video,
             @RequestParam("cccd") MultipartFile cccd) {
         try {
             com.fasterxml.jackson.databind.JsonNode result = fptAiService.verifyLivenessAndFaceMatch(video, cccd);
-            return ResponseEntity.ok(result);
+            String jsonStr = objectMapper.writeValueAsString(result);
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .body(jsonStr);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
@@ -35,7 +40,10 @@ public class AiController {
     public ResponseEntity<?> ocrCccd(@RequestParam("image") MultipartFile image) {
         try {
             com.fasterxml.jackson.databind.JsonNode result = fptAiService.extractCccdDetails(image);
-            return ResponseEntity.ok(result);
+            String jsonStr = objectMapper.writeValueAsString(result);
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .body(jsonStr);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
