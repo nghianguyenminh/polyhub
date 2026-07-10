@@ -19,10 +19,10 @@ interface StepProps {
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Cá nhân',    icon: '👤', title: 'Thông tin cá nhân' },
+  { id: 1, label: 'Cá nhân', icon: '👤', title: 'Thông tin cá nhân' },
   { id: 2, label: 'Kinh nghiệm', icon: '💼', title: 'Kinh nghiệm & Động lực' },
-  { id: 3, label: 'Hồ sơ',      icon: '📎', title: 'Hồ sơ đính kèm' },
-  { id: 4, label: 'Xác nhận',   icon: '✅', title: 'Xác nhận & Gửi' },
+  { id: 3, label: 'Hồ sơ', icon: '📎', title: 'Hồ sơ đính kèm' },
+  { id: 4, label: 'Xác nhận', icon: '✅', title: 'Xác nhận & Gửi' },
 ];
 
 
@@ -32,27 +32,27 @@ const STEPS = [
 export default function MentorRegisterPage() {
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
-  const [loading, setLoading]       = useState(false);
+  const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
-  const [error, setError]           = useState('');
+  const [error, setError] = useState('');
   const [userStatus, setUserStatus] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [direction, setDirection]   = useState<'forward' | 'backward'>('forward');
-  const [agreed, setAgreed]         = useState(false);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const [agreed, setAgreed] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
   // Form states
-  const [fullname, setFullname]             = useState('');
-  const [cccdNumber, setCccdNumber]         = useState('');
-  const [email, setEmail]                   = useState('');
-  const [phone, setPhone]                   = useState('');
-  const [birthday, setBirthday]             = useState('');
-  const [introduction, setIntroduction]     = useState('');
-  const [motivation, setMotivation]         = useState('');
-  const [cvFile, setCvFile]                 = useState<File | null>(null);
+  const [fullname, setFullname] = useState('');
+  const [cccdNumber, setCccdNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [introduction, setIntroduction] = useState('');
+  const [motivation, setMotivation] = useState('');
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const [degreeFile, setDegreeFile]         = useState<File | null>(null);
+  const [degreeFile, setDegreeFile] = useState<File | null>(null);
 
   useEffect(() => { checkStatus(); }, []);
 
@@ -107,14 +107,15 @@ export default function MentorRegisterPage() {
         if (provinceCode < 1 || provinceCode > 96) {
           errs.cccdNumber = 'Mã tỉnh/thành phố trên CCCD (3 số đầu) không hợp lệ';
         }
-        
+
         if (birthday) {
           const birthYear = new Date(birthday).getFullYear();
           const birthYearSuffix = birthYear.toString().slice(-2);
           const cccdYearSuffix = cleanCCCD.slice(4, 6);
           if (cccdYearSuffix !== birthYearSuffix) {
-            errs.cccdNumber = 'Năm sinh trên CCCD (số thứ 5 & 6) không khớp với ngày sinh';
-          } else {
+            // errs.cccdNumber = 'Năm sinh trên CCCD (số thứ 5 & 6) không khớp với ngày sinh';
+          }
+          else {
             // Kiểm tra chữ số thứ 4: Mã thế kỷ và giới tính
             const genderDigit = parseInt(cleanCCCD.charAt(3), 10);
             let expectedDigitNam: number | null = null;
@@ -274,7 +275,7 @@ export default function MentorRegisterPage() {
     formData.append('motivation', motivation);
     formData.append('cvFile', cvFile!);
     if (certificateFile) formData.append('certificateFile', certificateFile);
-    if (degreeFile)      formData.append('degreeFile', degreeFile);
+    if (degreeFile) formData.append('degreeFile', degreeFile);
 
     try {
       await fetchAPI('/api/mentors/register', {
@@ -330,7 +331,7 @@ export default function MentorRegisterPage() {
   if (pageLoading) {
     return (
       <>
-       
+
         <Header />
         <div className="mr-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
@@ -346,7 +347,7 @@ export default function MentorRegisterPage() {
   if (userStatus?.hasRequest && (userStatus.requestStatus === 'PENDING' || userStatus.requestStatus === 'APPROVED')) {
     return (
       <>
-        
+
         <Header />
         <div className="mr-root">
           <div className="mr-particle mr-particle-1" />
@@ -373,7 +374,7 @@ export default function MentorRegisterPage() {
 
   return (
     <>
-     
+
       <Header />
       <div className="mr-root">
         <div className="mr-particle mr-particle-1" />
@@ -459,7 +460,7 @@ export default function MentorRegisterPage() {
                       className={`mr-input ${fieldErrors.fullname ? 'error-field' : ''}`}
                       placeholder="Nguyễn Văn A"
                       value={fullname}
-                      onChange={e => { setFullname(e.target.value); setFieldErrors(p => ({...p, fullname: ''})); }}
+                      onChange={e => { setFullname(e.target.value); setFieldErrors(p => ({ ...p, fullname: '' })); }}
                     />
                     {fieldErrors.fullname && <div className="mr-field-error">⚠ {fieldErrors.fullname}</div>}
                   </div>
@@ -469,7 +470,7 @@ export default function MentorRegisterPage() {
                       className={`mr-input ${fieldErrors.cccdNumber ? 'error-field' : ''}`}
                       placeholder="012345678901"
                       value={cccdNumber}
-                      onChange={e => { setCccdNumber(e.target.value); setFieldErrors(p => ({...p, cccdNumber: ''})); }}
+                      onChange={e => { setCccdNumber(e.target.value); setFieldErrors(p => ({ ...p, cccdNumber: '' })); }}
                     />
                     {fieldErrors.cccdNumber && <div className="mr-field-error">⚠ {fieldErrors.cccdNumber}</div>}
                   </div>
@@ -483,7 +484,7 @@ export default function MentorRegisterPage() {
                       className={`mr-input ${fieldErrors.email ? 'error-field' : ''}`}
                       placeholder="example@gmail.com"
                       value={email}
-                      onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({...p, email: ''})); }}
+                      onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({ ...p, email: '' })); }}
                       disabled
                     />
                     {fieldErrors.email && <div className="mr-field-error">⚠ {fieldErrors.email}</div>}
@@ -495,7 +496,7 @@ export default function MentorRegisterPage() {
                       className={`mr-input ${fieldErrors.phone ? 'error-field' : ''}`}
                       placeholder="0901 234 567"
                       value={phone}
-                      onChange={e => { setPhone(e.target.value); setFieldErrors(p => ({...p, phone: ''})); }}
+                      onChange={e => { setPhone(e.target.value); setFieldErrors(p => ({ ...p, phone: '' })); }}
                     />
                     {fieldErrors.phone && <div className="mr-field-error">⚠ {fieldErrors.phone}</div>}
                   </div>
@@ -506,7 +507,7 @@ export default function MentorRegisterPage() {
                   <CustomDatePicker
                     id="birthday"
                     value={birthday}
-                    onChange={val => { setBirthday(val); setFieldErrors(p => ({...p, birthday: ''})); }}
+                    onChange={val => { setBirthday(val); setFieldErrors(p => ({ ...p, birthday: '' })); }}
                     error={!!fieldErrors.birthday}
                     placeholder="Chọn ngày sinh"
                   />
@@ -532,7 +533,7 @@ export default function MentorRegisterPage() {
                     className={`mr-input mr-textarea ${fieldErrors.introduction ? 'error-field' : ''}`}
                     placeholder="Ví dụ: Tôi đã có 3 năm kinh nghiệm lập trình Java, từng tham gia dự án thương mại điện tử cho công ty ABC..."
                     value={introduction}
-                    onChange={e => { setIntroduction(e.target.value); setFieldErrors(p => ({...p, introduction: ''})); }}
+                    onChange={e => { setIntroduction(e.target.value); setFieldErrors(p => ({ ...p, introduction: '' })); }}
                     rows={5}
                   />
                   <div className="mr-hint">Mô tả ngắn về chuyên môn, dự án đã làm hoặc thành tích nổi bật.</div>
@@ -545,7 +546,7 @@ export default function MentorRegisterPage() {
                     className={`mr-input mr-textarea ${fieldErrors.motivation ? 'error-field' : ''}`}
                     placeholder="Vì sao bạn muốn tham gia chia sẻ kiến thức cùng cộng đồng PolyHUB?"
                     value={motivation}
-                    onChange={e => { setMotivation(e.target.value); setFieldErrors(p => ({...p, motivation: ''})); }}
+                    onChange={e => { setMotivation(e.target.value); setFieldErrors(p => ({ ...p, motivation: '' })); }}
                     rows={4}
                   />
                   {fieldErrors.motivation && <div className="mr-field-error">⚠ {fieldErrors.motivation}</div>}
@@ -569,7 +570,7 @@ export default function MentorRegisterPage() {
                   hint="PDF, DOC, DOCX — Tối đa 10MB"
                   accept=".pdf,.doc,.docx"
                   file={cvFile}
-                  onChange={f => { setCvFile(f); setFieldErrors(p => ({...p, cvFile: ''})); }}
+                  onChange={f => { setCvFile(f); setFieldErrors(p => ({ ...p, cvFile: '' })); }}
                 />
 
                 <div className="mr-row">
