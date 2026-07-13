@@ -20,7 +20,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * - Ở mỗi nhóm ưu tiên, sắp xếp giảm dần theo thời gian tạo (bài mới nhất lên đầu).
      */
     @Query("SELECT p FROM Post p " +
-           "WHERE (p.isPrivate = false OR p.isPrivate IS NULL) OR p.user.username = :viewerUsername " +
+           "WHERE ((p.isPrivate = false OR p.isPrivate IS NULL) OR p.user.username = :viewerUsername) " +
+           "AND (p.isLocked = false OR p.isLocked IS NULL) " +
            "ORDER BY " +
            "  CASE " +
            // Trọng số 1: Nếu bài viết là của chính user đang xem
@@ -37,8 +38,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findVisiblePostsForFeed(@Param("viewerUsername") String viewerUsername, Pageable pageable);
 
     // Lấy bài ở profile giữ nguyên
-    @Query("SELECT p FROM Post p WHERE p.user.username = :username ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Post p WHERE p.user.username = :username AND (p.isLocked = false OR p.isLocked IS NULL) ORDER BY p.createdAt DESC")
     Page<Post> findByUsernameOrderByCreatedAtDesc(String username, Pageable pageable);
+
+    Page<Post> findByIsLockedTrue(Pageable pageable);
 
     List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
 }

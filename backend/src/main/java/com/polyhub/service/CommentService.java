@@ -27,6 +27,9 @@ public class CommentService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     // Lấy danh sách bình luận (có lồng ghép các reply bên trong nhờ mapToDTO)
     public List<CommentDTO> getCommentsByPostId(Long postId) {
         List<Comment> parentComments = commentRepository.findByPostIdAndParentCommentIsNullOrderByCreatedAtAsc(postId);
@@ -53,6 +56,32 @@ public class CommentService {
         }
 
         Comment savedComment = commentRepository.save(comment);
+
+        if (comment.getParentComment() != null) {
+            User parentCommentOwner = comment.getParentComment().getUser();
+            if (parentCommentOwner != null && !parentCommentOwner.getUsername().equals(username)) {
+                String preview = comment.getContent().length() > 50 ? comment.getContent().substring(0, 47) + "..." : comment.getContent();
+                notificationService.createNotification(
+                    parentCommentOwner.getUsername(),
+                    username,
+                    "đã trả lời bình luận của bạn: \"" + preview + "\"",
+                    "COMMENT",
+                    post.getId()
+                );
+            }
+        } else {
+            if (post.getUser() != null && !post.getUser().getUsername().equals(username)) {
+                String preview = comment.getContent().length() > 50 ? comment.getContent().substring(0, 47) + "..." : comment.getContent();
+                notificationService.createNotification(
+                    post.getUser().getUsername(),
+                    username,
+                    "đã bình luận về bài viết của bạn: \"" + preview + "\"",
+                    "COMMENT",
+                    post.getId()
+                );
+            }
+        }
+
         return mapToDTO(savedComment);
     }
 

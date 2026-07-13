@@ -13,6 +13,9 @@ public class FollowService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public void follow(String fromUsername, String toUsername) {
         Optional<User> fromUserOptional = userRepository.findById(fromUsername);
         Optional<User> toUserOptional = userRepository.findById(toUsername);
@@ -26,6 +29,14 @@ public class FollowService {
 
             userRepository.save(fromUser);
             userRepository.save(toUser);
+
+            notificationService.createNotification(
+                toUsername,
+                fromUsername,
+                "đã bắt đầu theo dõi bạn.",
+                "FOLLOW",
+                null
+            );
         }
     }
 

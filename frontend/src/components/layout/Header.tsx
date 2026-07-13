@@ -2,43 +2,53 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 
-interface SystemNotification {
-  id: number;
-  title: string;
-  content: string;
-  link: string;
-  isRead: boolean;
-  createdAt: string;
+function formatTimeAgo(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHr / 24);
+
+  if (diffSec < 60) return 'Vừa xong';
+  if (diffMin < 60) return `${diffMin} phút trước`;
+  if (diffHr < 24) return `${diffHr} giờ trước`;
+  if (diffDays < 30) return `${diffDays} ngày trước`;
+  return date.toLocaleDateString('vi-VN');
 }
 
 export default function Header() {
   const { user, logout } = useAuth();
   const toast = useToast();
-  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const router = useRouter();
+
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const loadNotifications = async () => {
     try {
-      const data = await fetchAPI('/api/notifications');
-      setNotifications(data || []);
-      
-      const countRes = await fetchAPI('/api/notifications/unread-count');
+      const data = await fetchAPI('/api/notifications?page=1&size=20');
+      const newNotifications = data.notifications || [];
+      const newUnreadCount = data.unreadCount || 0;
       
       // Hiển thị Toast nếu có thông báo mới
-      if (countRes.count > unreadCount && unreadCount !== 0) {
-        const newNoti = data.find((n: SystemNotification) => !n.isRead);
+      if (newUnreadCount > unreadCount && unreadCount !== 0) {
+        const newNoti = newNotifications.find((n: any) => !n.isRead);
         if (newNoti) {
-          toast.showInfo(`🔔 ${newNoti.title} - ${newNoti.content}`);
+          toast.showInfo(`🔔 ${newNoti.message || 'Bạn có thông báo mới'}`);
         } else {
           toast.showInfo('🔔 Bạn có thông báo mới. Hãy kiểm tra hộp thư của bạn.');
         }
       }
       
-      setUnreadCount(countRes.count || 0);
+      setNotifications(newNotifications);
+      setUnreadCount(newUnreadCount);
     } catch (err) {
       console.error('Failed to load notifications', err);
     }
@@ -53,40 +63,34 @@ export default function Header() {
     }
   }, [user]);
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      await fetchAPI('/api/notifications/read', { method: 'PUT' });
-      setUnreadCount(0);
-      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-    } catch (err) {
-      console.error('Failed to mark all as read', err);
-    }
-  };
-
   const handleMarkAsRead = async (id: number) => {
     try {
-      const noti = notifications.find(n => n.id === id);
-      if (noti && !noti.isRead) {
-        await fetchAPI(`/api/notifications/${id}/read`, { method: 'PUT' });
-        setUnreadCount(prev => Math.max(0, prev - 1));
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-      }
+      await fetchAPI(`/api/notifications/${id}/read`, { method: 'POST' });
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Failed to mark notification as read', err);
     }
   };
 
-  const formatTime = (timeStr: string) => {
+  const handleMarkAllAsRead = async () => {
     try {
-      const diff = Date.now() - new Date(timeStr).getTime();
-      const mins = Math.floor(diff / 60000);
-      if (mins < 1) return 'Vừa xong';
-      if (mins < 60) return `${mins} phút trước`;
-      const hrs = Math.floor(mins / 60);
-      if (hrs < 24) return `${hrs} giờ trước`;
-      return new Date(timeStr).toLocaleDateString('vi-VN');
-    } catch (e) {
-      return 'Vài giây trước';
+      await fetchAPI('/api/notifications/read-all', { method: 'POST' });
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all notifications as read', err);
+    }
+  };
+
+  const handleNotificationClick = async (noti: any) => {
+    if (!noti.isRead) {
+      await handleMarkAsRead(noti.id);
+    }
+    if (noti.type === 'FOLLOW' && noti.sender) {
+      router.push(`/profile/${noti.sender.username}`);
+    } else {
+      router.push('/');
     }
   };
 
@@ -122,12 +126,12 @@ export default function Header() {
 
               <div className="dropdown-menu dropdown-menu-end poly-noti-dropdown p-0 shadow-lg border-0 mt-2" aria-labelledby="notificationDropdown">
                 <div className="p-3 d-flex justify-content-between align-items-center border-bottom">
-                  <h5 className="fw-bold mb-0" style={{ fontSize: '16px' }}>Thông Báo</h5>
+                  <h5 className="fw-bold mb-0" style={{ fontSize: '18px' }}>Thông Báo</h5>
                   {unreadCount > 0 && (
                     <button 
+                      className="text-decoration-none fw-medium btn btn-link p-0 shadow-none border-0" 
+                      style={{ color: 'var(--poly-primary)', fontSize: '13.5px' }} 
                       onClick={handleMarkAllAsRead}
-                      className="text-decoration-none fw-semibold btn btn-link p-0 shadow-none border-0 fs-7" 
-                      style={{ color: '#F27125' }}
                     >
                       Đánh dấu đã đọc
                     </button>
@@ -135,49 +139,40 @@ export default function Header() {
                 </div>
                 <div className="noti-list" style={{ maxHeight: '350px', overflowY: 'auto' }}>
                   {notifications.length === 0 ? (
-                    <div className="text-center py-4 text-muted fs-7">
-                      Không có thông báo nào.
-                    </div>
+                    <div className="p-4 text-center text-muted" style={{ fontSize: '13.5px' }}>Không có thông báo nào.</div>
                   ) : (
-                    notifications.map((noti) => (
-                      <Link 
-                        key={noti.id}
-                        href={noti.link || '#'} 
-                        onClick={() => handleMarkAsRead(noti.id)}
-                        className={`noti-item d-flex gap-2 text-decoration-none p-3 border-bottom transition-all ${!noti.isRead ? 'bg-light bg-opacity-75' : ''}`}
+                    notifications.map(noti => (
+                      <div 
+                        key={noti.id} 
+                        className={`noti-item d-flex gap-2 p-3 border-bottom transition-all ${!noti.isRead ? 'bg-light bg-opacity-50' : ''}`}
+                        onClick={() => handleNotificationClick(noti)}
                         style={{ cursor: 'pointer' }}
                       >
-                        <div className="flex-shrink-0">
-                          <div 
-                            className="rounded-circle d-flex align-items-center justify-content-center text-white" 
-                            style={{ 
-                              width: '40px', 
-                              height: '40px', 
-                              backgroundColor: !noti.isRead ? '#F27125' : '#6c757d',
-                              fontSize: '16px' 
-                            }}
-                          >
-                            <i className="bi bi-calendar-check-fill"></i>
-                          </div>
-                        </div>
+                        <img 
+                          src={noti.sender && noti.sender.avatar && noti.sender.avatar !== 'default.png' ? noti.sender.avatar : `https://ui-avatars.com/api/?name=${noti.sender ? noti.sender.fullname : 'System'}`} 
+                          className="rounded-circle" width="40" height="40" alt="avatar" 
+                          style={{ objectFit: 'cover' }}
+                        />
                         <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                          <h6 className={`mb-1 fs-7 text-dark ${!noti.isRead ? 'fw-bold' : 'fw-semibold'}`}>
-                            {noti.title}
-                          </h6>
-                          <p className="mb-1 text-wrap text-muted fs-8" style={{ lineHeight: '1.4' }}>
-                            {noti.content}
+                          <p className="mb-1 text-wrap text-dark" style={{ fontSize: '13px' }}>
+                            {noti.sender ? (
+                              <strong>{noti.sender.fullname}</strong>
+                            ) : (
+                              <strong>Hệ thống</strong>
+                            )}{' '}
+                            {noti.message}
                           </p>
-                          <span className="text-muted fs-9">
+                          <p className="text-muted mb-0" style={{ fontSize: '11px' }}>
                             <i className="bi bi-clock me-1"></i>
-                            {formatTime(noti.createdAt)}
-                          </span>
+                            {formatTimeAgo(noti.createdAt)}
+                          </p>
                         </div>
                         {!noti.isRead && (
                           <div className="d-flex align-items-center justify-content-center ps-1">
                             <div className="bg-primary rounded-circle" style={{ width: '8px', height: '8px' }}></div>
                           </div>
                         )}
-                      </Link>
+                      </div>
                     ))
                   )}
                 </div>

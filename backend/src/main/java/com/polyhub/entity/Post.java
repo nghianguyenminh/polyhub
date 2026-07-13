@@ -69,6 +69,10 @@ public class Post {
     @Builder.Default
     private Double hotScore = 0.0;
 
+    @Column(name = "is_locked")
+    @Builder.Default
+    private Boolean isLocked = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -8,6 +8,8 @@ import { Suspense } from "react";
 
 function AdminReportsContent() {
   const [reports, setReports] = useState<any[]>([]);
+  const [lockedPosts, setLockedPosts] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'reports' | 'locked'>('reports');
   const [stats, setStats] = useState({
     pending: 0,
     resolved: 0,
@@ -33,8 +35,12 @@ function AdminReportsContent() {
   useEffect(() => {
     const page = pageParam ? parseInt(pageParam, 10) : 1;
     setCurrentPage(page);
-    loadReports(page);
-  }, [pageParam]);
+    if (activeTab === 'reports') {
+      loadReports(page);
+    } else {
+      loadLockedPosts(page);
+    }
+  }, [pageParam, activeTab]);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -73,24 +79,43 @@ function AdminReportsContent() {
     }
   };
 
+  const loadLockedPosts = async (page: number) => {
+    setLoading(true);
+    try {
+      const data = await fetchAPI(`/api/admin/reports/locked?page=${page}`);
+      setLockedPosts(data.posts || []);
+      setTotalPages(data.totalPages || 1);
+      
+      const statsData = await fetchAPI('/api/admin/reports?page=1');
+      setStats({
+        pending: statsData.pendingCount || 0,
+        resolved: statsData.resolvedCount || 0,
+        falseCount: statsData.falseCount || 0
+      });
+    } catch (err) {
+      console.error('Failed to fetch locked posts', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePageChange = (page: number) => {
     router.push(`/admin/reports?page=${page}`);
   };
 
   const handleApprove = async (id: number) => {
-    if (
-      !confirm(
-        "Hành động này sẽ XÓA bài viết và xử lý báo cáo. Bạn có chắc không?",
-      )
-    )
-      return;
+    if (!confirm('Hành động này sẽ KHÓA bài viết và xử lý báo cáo. Bạn có chắc không?')) return;
     try {
       const result = await fetchAPI(`/api/admin/reports/${id}/approve`, {
         method: "POST",
       });
       setMessage({ text: result.message, type: "success" });
       if (showDetailModal) setShowDetailModal(false);
-      loadReports(currentPage);
+      if (activeTab === 'reports') {
+        loadReports(currentPage);
+      } else {
+        loadLockedPosts(currentPage);
+      }
     } catch (err: any) {
       setMessage({ text: err.message || "Lỗi xử lý báo cáo", type: "danger" });
     }
@@ -107,7 +132,11 @@ function AdminReportsContent() {
       });
       setMessage({ text: result.message, type: "success" });
       if (showDetailModal) setShowDetailModal(false);
-      loadReports(currentPage);
+      if (activeTab === 'reports') {
+        loadReports(currentPage);
+      } else {
+        loadLockedPosts(currentPage);
+      }
     } catch (err: any) {
       setMessage({
         text: err.message || "Lỗi từ chối báo cáo",
@@ -198,6 +227,21 @@ function AdminReportsContent() {
     }
   };
 
+  const handleUnlock = async (postId: number) => {
+    if (!confirm('Bạn có chắc chắn muốn MỞ KHÓA bài viết này?')) return;
+    try {
+      const result = await fetchAPI(`/api/admin/reports/posts/${postId}/unlock`, { method: 'POST' });
+      setMessage({ text: result.message, type: 'success' });
+      if (activeTab === 'reports') {
+        loadReports(currentPage);
+      } else {
+        loadLockedPosts(currentPage);
+      }
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Lỗi mở khóa bài viết', type: 'danger' });
+    }
+  };
+
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -280,21 +324,42 @@ function AdminReportsContent() {
         </div>
         <div className="col-12 col-md-4">
           <div className="poly-card p-3 bg-white rounded-3 shadow-sm border-0 border-start border-4 border-success h-100">
-            <div className="text-muted fw-medium" style={{ fontSize: "13px" }}>
-              Đã xử lý (Xóa bài)
-            </div>
+            <div className="text-muted fw-medium" style={{ fontSize: "13px" }}>Đã xử lý (Khóa bài)</div>
             <h3 className="fw-bold text-dark mt-1 mb-0">{stats.resolved}</h3>
           </div>
         </div>
         <div className="col-12 col-md-4">
           <div className="poly-card p-3 bg-white rounded-3 shadow-sm border-0 border-start border-4 border-danger h-100">
-            <div className="text-muted fw-medium" style={{ fontSize: "13px" }}>
-              Từ Chối Xóa Bài{" "}
-            </div>
+            <div className="text-muted fw-medium" style={{ fontSize: "13px" }}>Từ chối báo cáo</div>
             <h3 className="fw-bold text-dark mt-1 mb-0">{stats.falseCount}</h3>
           </div>
         </div>
       </div>
+
+      <ul className="nav nav-tabs mb-3 border-bottom-0">
+        <li className="nav-item">
+          <button 
+            className={`nav-link fw-bold px-4 py-2 border-0 rounded-3 me-2 shadow-none ${activeTab === 'reports' ? 'active bg-primary text-white' : 'text-muted bg-light'}`}
+            onClick={() => {
+              setActiveTab('reports');
+              router.push('/admin/reports?page=1');
+            }}
+          >
+            <i className="bi bi-flag-fill me-1"></i> Báo cáo chưa xử lý
+          </button>
+        </li>
+        <li className="nav-item">
+          <button 
+            className={`nav-link fw-bold px-4 py-2 border-0 rounded-3 shadow-none ${activeTab === 'locked' ? 'active bg-primary text-white' : 'text-muted bg-light'}`}
+            onClick={() => {
+              setActiveTab('locked');
+              router.push('/admin/reports?page=1');
+            }}
+          >
+            <i className="bi bi-lock-fill me-1"></i> Bài viết đã khóa
+          </button>
+        </li>
+      </ul>
 
       <div className="table-container bg-white rounded-3 shadow-sm border border-light overflow-hidden mb-4">
         <div className="table-responsive">
@@ -303,17 +368,30 @@ function AdminReportsContent() {
             style={{ fontSize: "13.5px" }}
           >
             <thead className="table-light">
-              <tr>
-                <th scope="col" className="ps-4">
-                  Nội dung báo cáo
-                </th>
-                <th scope="col">Người bị báo cáo</th>
-                <th scope="col">Người báo cáo</th>
-                <th scope="col">Ngày gửi</th>
-                <th scope="col" className="text-end pe-4">
-                  Hành động
-                </th>
-              </tr>
+              {activeTab === "reports" ? (
+                <tr>
+                  <th scope="col" className="ps-4">
+                    Nội dung báo cáo
+                  </th>
+                  <th scope="col">Người bị báo cáo</th>
+                  <th scope="col">Người báo cáo</th>
+                  <th scope="col">Ngày gửi</th>
+                  <th scope="col" className="text-end pe-4">
+                    Hành động
+                  </th>
+                </tr>
+              ) : (
+                <tr>
+                  <th scope="col" className="ps-4">
+                    Nội dung bài viết
+                  </th>
+                  <th scope="col">Người đăng</th>
+                  <th scope="col">Ngày đăng</th>
+                  <th scope="col" className="text-end pe-4">
+                    Hành động
+                  </th>
+                </tr>
+              )}
             </thead>
             <tbody>
               {loading ? (
@@ -322,86 +400,197 @@ function AdminReportsContent() {
                     <div className="spinner-border text-primary" />
                   </td>
                 </tr>
-              ) : reports.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-4 text-muted">
-                    Không có báo cáo vi phạm nào.
-                  </td>
-                </tr>
+              ) : activeTab === "reports" ? (
+                reports.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-muted">
+                      Không có báo cáo vi phạm nào.
+                    </td>
+                  </tr>
+                ) : (
+                  reports.map((report) => {
+                    const isDocument = report.type === "DOCUMENT";
+                    const targetUser = isDocument
+                      ? report.document?.user
+                      : report.post?.user;
+                    return (
+                      <tr key={`${report.type}-${report.id}`}>
+                        <td className="ps-4 py-3">
+                          <div className="fw-semibold text-danger mb-1 d-flex align-items-center gap-2 flex-wrap">
+                            <i
+                              className={`bi ${isDocument ? "bi-file-earmark-x-fill" : "bi-exclamation-triangle-fill"} me-1`}
+                            ></i>{" "}
+                            {report.reason}
+                            {isDocument && (
+                              <span
+                                className="badge bg-info text-white"
+                                style={{ fontSize: "10px", fontWeight: 600 }}
+                              >
+                                Tài liệu
+                              </span>
+                            )}
+                            {report.status === "WARNED" && (
+                              <span
+                                className="badge bg-warning text-dark"
+                                style={{ fontSize: "10px", fontWeight: 600 }}
+                              >
+                                Đã cảnh báo
+                              </span>
+                            )}
+                            {report.status === "LOCK_REQUESTED" && (
+                              <span
+                                className="badge bg-danger text-white"
+                                style={{ fontSize: "10px", fontWeight: 600 }}
+                              >
+                                Y/C khóa acc
+                              </span>
+                            )}
+                            {(report.status === "PENDING" || !report.status) && (
+                              <span
+                                className="badge bg-secondary text-white"
+                                style={{ fontSize: "10px", fontWeight: 600 }}
+                              >
+                                Chờ xử lý
+                              </span>
+                            )}
+                          </div>
+                          <div
+                            className="text-muted text-truncate"
+                            style={{ maxWidth: "300px", fontSize: "12px" }}
+                          >
+                            {isDocument
+                              ? `Tài liệu: ${report.document?.title || "Đã bị xóa"}`
+                              : `Bài viết: ${report.post?.content || "Đã bị khóa"}`}
+                          </div>
+                        </td>
+                        <td>
+                          {targetUser ? (
+                            <div className="d-flex align-items-center gap-2">
+                              <img
+                                src={
+                                  targetUser.avatar &&
+                                  targetUser.avatar !== "default.png"
+                                    ? targetUser.avatar
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(targetUser.fullname)}`
+                                }
+                                className="rounded-circle"
+                                width="24"
+                                height="24"
+                                alt="avatar"
+                                style={{ objectFit: "cover" }}
+                              />
+                              <span className="fw-medium text-dark">
+                                {targetUser.fullname}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted fst-italic">
+                              Không rõ
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {report.reporter ? (
+                            <span className="text-muted">
+                              {report.reporter.fullname}
+                            </span>
+                          ) : (
+                            <span className="text-muted">Ẩn danh</span>
+                          )}
+                        </td>
+                        <td className="text-muted">
+                          {new Date(report.createdAt).toLocaleDateString("vi-VN")}
+                        </td>
+                        <td className="text-end pe-4">
+                          <button
+                            onClick={() => {
+                              setSelectedReport(report);
+                              setShowDetailModal(true);
+                            }}
+                            className="btn btn-sm btn-outline-primary me-2"
+                            title="Xem chi tiết báo cáo"
+                          >
+                            <i className="bi bi-eye"></i> Chi tiết
+                          </button>
+                          {isDocument ? (
+                            <button
+                              onClick={() => handleDismissDocument(report.id)}
+                              className="btn btn-sm btn-outline-secondary"
+                              title="Từ chối (Báo cáo sai)"
+                            >
+                              <i className="bi bi-x-circle"></i> Từ chối
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleApprove(report.id)}
+                                className="btn btn-sm btn-outline-danger me-2"
+                                title="Khóa bài viết (Đồng ý báo cáo)"
+                              >
+                                <i className="bi bi-lock"></i> Khóa bài
+                              </button>
+                              <button
+                                onClick={() => handleReject(report.id)}
+                                className="btn btn-sm btn-outline-secondary"
+                                title="Từ chối khóa bài viết"
+                              >
+                                <i className="bi bi-x-circle"></i> Từ chối
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )
               ) : (
-                reports.map((report) => {
-                  const isDocument = report.type === "DOCUMENT";
-                  const targetUser = isDocument
-                    ? report.document?.user
-                    : report.post?.user;
-                  return (
-                    <tr key={`${report.type}-${report.id}`}>
+                lockedPosts.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-muted">
+                      Không có bài viết nào đang bị khóa.
+                    </td>
+                  </tr>
+                ) : (
+                  lockedPosts.map((post) => (
+                    <tr key={post.id}>
                       <td className="ps-4 py-3">
-                        <div className="fw-semibold text-danger mb-1 d-flex align-items-center gap-2 flex-wrap">
-                          <i
-                            className={`bi ${isDocument ? "bi-file-earmark-x-fill" : "bi-exclamation-triangle-fill"} me-1`}
-                          ></i>{" "}
-                          {report.reason}
-                          {isDocument && (
-                            <span
-                              className="badge bg-info text-white"
-                              style={{ fontSize: "10px", fontWeight: 600 }}
-                            >
-                              Tài liệu
-                            </span>
-                          )}
-                          {report.status === "WARNED" && (
-                            <span
-                              className="badge bg-warning text-dark"
-                              style={{ fontSize: "10px", fontWeight: 600 }}
-                            >
-                              Đã cảnh báo
-                            </span>
-                          )}
-                          {report.status === "LOCK_REQUESTED" && (
-                            <span
-                              className="badge bg-danger text-white"
-                              style={{ fontSize: "10px", fontWeight: 600 }}
-                            >
-                              Y/C khóa acc
-                            </span>
-                          )}
-                          {(report.status === "PENDING" || !report.status) && (
-                            <span
-                              className="badge bg-secondary text-white"
-                              style={{ fontSize: "10px", fontWeight: 600 }}
-                            >
-                              Chờ xử lý
-                            </span>
-                          )}
-                        </div>
                         <div
-                          className="text-muted text-truncate"
-                          style={{ maxWidth: "300px", fontSize: "12px" }}
+                          className="text-dark text-truncate"
+                          style={{ maxWidth: "400px", fontSize: "13.5px" }}
                         >
-                          {isDocument
-                            ? `Tài liệu: ${report.document?.title || "Đã bị xóa"}`
-                            : `Bài viết: ${report.post?.content || "Đã bị xóa"}`}
+                          {post.content}
                         </div>
+                        {post.imageUrl && (
+                          <div className="mt-1" style={{ fontSize: "12px" }}>
+                            <i className="bi bi-image text-muted me-1"></i>
+                            <a
+                              href={post.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-decoration-none text-poly"
+                            >
+                              Xem ảnh
+                            </a>
+                          </div>
+                        )}
                       </td>
                       <td>
-                        {targetUser ? (
+                        {post.user ? (
                           <div className="d-flex align-items-center gap-2">
                             <img
                               src={
-                                targetUser.avatar &&
-                                targetUser.avatar !== "default.png"
-                                  ? targetUser.avatar
-                                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(targetUser.fullname)}`
+                                post.user.avatar &&
+                                post.user.avatar !== "default.png"
+                                  ? post.user.avatar
+                                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(post.user.fullname)}`
                               }
                               className="rounded-circle"
                               width="24"
                               height="24"
                               alt="avatar"
-                              style={{ objectFit: "cover" }}
                             />
                             <span className="fw-medium text-dark">
-                              {targetUser.fullname}
+                              {post.user.fullname}
                             </span>
                           </div>
                         ) : (
@@ -410,44 +599,21 @@ function AdminReportsContent() {
                           </span>
                         )}
                       </td>
-                      <td>
-                        {report.reporter ? (
-                          <span className="text-muted">
-                            {report.reporter.fullname}
-                          </span>
-                        ) : (
-                          <span className="text-muted">Ẩn danh</span>
-                        )}
-                      </td>
                       <td className="text-muted">
-                        {new Date(report.createdAt).toLocaleDateString("vi-VN")}
+                        {new Date(post.createdAt).toLocaleDateString("vi-VN")}
                       </td>
                       <td className="text-end pe-4">
                         <button
-                          onClick={() => {
-                            setSelectedReport(report);
-                            setShowDetailModal(true);
-                          }}
-                          className="btn btn-sm btn-outline-primary me-2"
-                          title="Xem chi tiết báo cáo"
+                          onClick={() => handleUnlock(post.id)}
+                          className="btn btn-sm btn-outline-success"
+                          title="Mở khóa bài viết"
                         >
-                          <i className="bi bi-eye"></i> Chi tiết
-                        </button>
-                        <button
-                          onClick={() =>
-                            isDocument
-                              ? handleDismissDocument(report.id)
-                              : handleReject(report.id)
-                          }
-                          className="btn btn-sm btn-outline-secondary"
-                          title="Từ chối (Báo cáo sai)"
-                        >
-                          <i className="bi bi-x-circle"></i> Từ chối
+                          <i className="bi bi-unlock"></i> Mở khóa
                         </button>
                       </td>
                     </tr>
-                  );
-                })
+                  ))
+                )
               )}
             </tbody>
           </table>
@@ -470,29 +636,17 @@ function AdminReportsContent() {
                     Trang trước
                   </button>
                 </li>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <li
-                      key={page}
-                      className={`page-item ${currentPage === page ? "active" : ""}`}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                    <button
+                      className="page-link shadow-none"
+                      style={currentPage === page ? { backgroundColor: '#4F46E5', borderColor: '#4F46E5' } : {}}
+                      onClick={() => handlePageChange(page)}
                     >
-                      <button
-                        className="page-link shadow-none"
-                        style={
-                          currentPage === page
-                            ? {
-                                backgroundColor: "#4F46E5",
-                                borderColor: "#4F46E5",
-                              }
-                            : {}
-                        }
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </button>
-                    </li>
-                  ),
-                )}
+                      {page}
+                    </button>
+                  </li>
+                ))}
                 <li
                   className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
                 >
@@ -826,7 +980,7 @@ function AdminReportsContent() {
                     <button
                       onClick={() => handleReject(selectedReport.id)}
                       className="btn btn-sm btn-outline-secondary"
-                      title="Từ chối báo cáo này (Báo cáo sai)"
+                      title="Từ chối khóa bài viết"
                     >
                       Từ chối
                     </button>
@@ -834,9 +988,9 @@ function AdminReportsContent() {
                       <button
                         onClick={() => handleApprove(selectedReport.id)}
                         className="btn btn-sm btn-danger"
-                        title="Xóa bài viết vi phạm ngay lập tức"
+                        title="Khóa bài viết vi phạm"
                       >
-                        Xóa bài
+                        Khóa bài
                       </button>
                     )}
                   </>
