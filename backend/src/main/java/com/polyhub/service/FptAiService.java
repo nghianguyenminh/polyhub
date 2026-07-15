@@ -81,31 +81,76 @@ public class FptAiService {
         }
     }
 
+    // Service Python local thay the cho FPT.AI Liveness V3 (InsightFace)
+    private static final String LOCAL_FACE_URL = "http://localhost:8002/verify-face";
+
     /**
-     * Xác thực Liveness + so khớp khuôn mặt.
-     * FPT.AI Liveness V3 đã ngừng hoạt động và CHƯA có bản thay thế local
-     * (đang để dành làm ở giai đoạn sau). Tạm thời luôn dùng mock để không
-     * chặn luồng đăng ký mentor.
+     * Xác thực Liveness (kiểm tra chuyển động qua nhiều frame) + so khớp
+     * khuôn mặt (InsightFace buffalo_l), gọi sang service Python local.
+     * Neu fpt.ai.api-key=mock -> tra ve du lieu gia de test UI khong can
+     * chay service Python.
      */
     public JsonNode verifyLivenessAndFaceMatch(MultipartFile videoFile, MultipartFile cccdFile) throws Exception {
-        System.out.println("Using MOCK Liveness verification (chua migrate khoi FPT.AI).");
-        ObjectNode mockResult = mapper.createObjectNode();
-        mockResult.put("code", "200");
-        mockResult.put("message", "Success");
 
-        ObjectNode mockData = mapper.createObjectNode();
+        if ("mock".equalsIgnoreCase(apiKey) || apiKey.trim().isEmpty()) {
+            System.out.println("Using MOCK Liveness verification. Skipping actual API call.");
+            ObjectNode mockResult = mapper.createObjectNode();
+            mockResult.put("code", "200");
+            mockResult.put("message", "Success");
 
-        ObjectNode mockLiveness = mapper.createObjectNode();
-        mockLiveness.put("is_live", true);
-        mockLiveness.put("deep_fake", false);
-        mockData.set("liveness", mockLiveness);
+            ObjectNode mockData = mapper.createObjectNode();
 
-        ObjectNode mockFaceMatch = mapper.createObjectNode();
-        mockFaceMatch.put("is_match", true);
-        mockFaceMatch.put("similarity", 98.5);
-        mockData.set("face_match", mockFaceMatch);
+            ObjectNode mockLiveness = mapper.createObjectNode();
+            mockLiveness.put("is_live", true);
+            mockLiveness.put("deep_fake", false);
+            mockData.set("liveness", mockLiveness);
 
-        mockResult.set("data", mockData);
-        return mockResult;
+            ObjectNode mockFaceMatch = mapper.createObjectNode();
+            mockFaceMatch.put("isMatch", true);
+            mockFaceMatch.put("similarity", 98.5);
+            mockData.set("face_match", mockFaceMatch);
+
+            mockResult.set("data", mockData);
+            return mockResult;
+        }
+
+        String videoFilename = videoFile.getOriginalFilename();
+        final String finalVideoFilename = (videoFilename != null && !videoFilename.isEmpty()) ? videoFilename : "video.webm";
+        ByteArrayResource videoResource = new ByteArrayResource(videoFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return finalVideoFilename;
+            }
+        };
+
+        String cccdFilename = cccdFile.getOriginalFilename();
+        final String finalCccdFilename = (cccdFilename != null && !cccdFilename.isEmpty()) ? cccdFilename : "cccd.jpg";
+        ByteArrayResource cccdResource = new ByteArrayResource(cccdFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return finalCccdFilename;
+            }
+        };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("video", videoResource);
+        body.add("cccd", cccdResource);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(LOCAL_FACE_URL, requestEntity, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return mapper.readTree(response.getBody());
+            } else {
+                throw new Exception("Lỗi kết nối service Face: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Quá trình xác thực gương mặt thất bại: " + e.getMessage()
+                    + " (kiểm tra xem service Python (uvicorn face_api:app --port 8002) đã chạy chưa)");
+        }
     }
 }
