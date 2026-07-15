@@ -6,6 +6,7 @@ Dự án là một hệ sinh thái đồng bộ bao gồm:
 *   **Backend (REST API):** Xây dựng trên nền tảng Spring Boot (Java 17).
 *   **Frontend (Web App):** Xây dựng bằng Next.js (TypeScript/React 19).
 *   **Mobile App (Ứng dụng di động):** Xây dựng bằng Expo (React Native & TypeScript).
+*   **OCR Service (Python Microservice):** Dịch vụ nhận dạng CCCD thay thế FPT.AI, chạy bằng Python 3.11.
 
 ---
 
@@ -16,8 +17,13 @@ polyhub/
 ├── backend/            # Mã nguồn Spring Boot (Java) - Cung cấp REST API & WebSocket Server
 ├── frontend/           # Mã nguồn Next.js (TypeScript) - Giao diện Web Client & Admin Dashboard
 ├── Mobile/             # Mã nguồn Expo (React Native) - Ứng dụng di động dành cho sinh viên
-├── scripts/            # Các kịch bản tiện ích (Java, Python, PowerShell) hỗ trợ tự động hóa chỉnh sửa HTML/Profile
-├── archives/           # Thư mục lưu trữ các tệp tin nén sao lưu (.zip, .rar)
+├── ocr-service/        # OCR Microservice (Python 3.11/FastAPI) - Đọc thông tin CCCD thay FPT.AI
+│   ├── cccd_ocr_api.py     # FastAPI app, expose endpoint POST /ocr-cccd
+│   ├── ocr_pipeline.py     # PaddleOCR khoanh vùng + VietOCR đọc chữ
+│   ├── cccd_extractor.py   # Tách kết quả OCR thành các field (id, name, dob...)
+│   ├── requirements.txt    # Danh sách thư viện Python cần cài
+│   └── test_face_match.py  # Script test nhận diện khuôn mặt
+├── scripts/            # Các kịch bản tiện ích (Java, Python, PowerShell) hỗ trợ tự động hóa
 ├── .env                # Biến môi trường dùng chung cho các khóa API bên thứ ba (Gemini, ZegoCloud)
 ├── .gitignore          # Cấu hình bỏ qua tệp tin rác của Git
 └── README.md           # Tài liệu hướng dẫn dự án (tệp tin này)
@@ -53,6 +59,14 @@ polyhub/
 *   **Kết nối mạng:** Axios (kết nối REST API) & `@stomp/stompjs` (chat thời gian thực).
 *   **Đàm thoại trực tuyến:** ZegoCloud React Native UIKit (`@zegocloud/zego-uikit-prebuilt-call-rn`).
 
+### 4. OCR Service (Python Microservice)
+*   **Ngôn ngữ:** Python **3.11** (bắt buộc — `paddlepaddle` chưa hỗ trợ 3.12+).
+*   **Framework API:** FastAPI + Uvicorn.
+*   **OCR Engine:** PaddleOCR 2.7.3 (khoanh vùng chữ) + VietOCR 0.3.13 (đọc tiếng Việt có dấu).
+*   **Nhận diện khuôn mặt:** InsightFace 0.7.3 + ONNXRuntime 1.18.0.
+*   **Deep Learning:** PyTorch 2.3.1 + TorchVision 0.18.1.
+*   **Chức năng:** Đọc thông tin CCCD (Căn cước công dân) thay thế cho FPT.AI eKYC, expose endpoint `POST /ocr-cccd`.
+
 ---
 
 ## 🚀 Các tính năng cốt lõi (Core Features)
@@ -84,7 +98,10 @@ polyhub/
     *   Lưu trữ tài liệu hữu ích (Saved Documents).
 8.  **Trợ lý học tập thông minh (AI Assistant):**
     *   Tích hợp Google Gemini AI hỗ trợ sinh viên giải đáp các thắc mắc học tập, ôn luyện kiến thức trực tiếp.
-9.  **Bảng quản trị toàn diện (Admin Dashboard):**
+9.  **Xác minh danh tính (eKYC — CCCD OCR):**
+    *   OCR Service nội bộ (Python/FastAPI) đọc thông tin từ ảnh CCCD thay thế FPT.AI.
+    *   Hỗ trợ nhận diện mặt trước/sau hoặc tự động phát hiện chiều (`side=auto`).
+10. **Bảng quản trị toàn diện (Admin Dashboard):**
     *   Thống kê số lượng truy cập (Visitor Logs), tổng số lượt đặt lịch (Bookings), báo cáo vi phạm (Reports).
     *   Kiểm duyệt và quản lý người dùng, phân quyền (User/Admin).
     *   Quản lý danh sách Mentor và phê duyệt yêu cầu làm Mentor.
@@ -162,6 +179,114 @@ NEXT_PUBLIC_ZEGOCLOUD_SERVER_SECRET=b4651... (Server Secret ZegoCloud test)
         ```
     5.  Sử dụng camera điện thoại quét mã QR hiển thị trên màn hình terminal (qua ứng dụng Expo Go trên Android hoặc Camera mặc định trên iOS) để trải nghiệm ứng dụng trực tiếp.
     *   *Lưu ý về ZegoCloud Voice & Video Call:* Do tính năng gọi thoại yêu cầu các thư viện Native và mã biên dịch chuyên sâu, tính năng này không chạy trực tiếp được trên ứng dụng Expo Go thông thường. Để chạy tính năng này trên di động, bạn cần build thành tệp APK (sử dụng lệnh `eas build`) hoặc thiết lập Development Build cục bộ.
+
+### 4. 🐍 Khởi chạy OCR Service (Python 3.11)
+
+Service Python độc lập thay thế FPT.AI eKYC, sử dụng PaddleOCR + VietOCR để đọc thông tin CCCD.
+Chạy song song với Backend và Frontend — không cần thiết cho mọi tính năng, chỉ cần khi dùng eKYC.
+
+> ⚠️ **Bắt buộc dùng Python 3.11** — `paddlepaddle` chưa hỗ trợ Python 3.12 trở lên.
+
+#### Bước 0 — Kiểm tra Python 3.11 đã cài chưa
+
+```powershell
+py -0
+```
+
+Nếu thấy `-3.11-64` (hoặc `-3.11-32`) trong danh sách → đã có, bỏ qua bước cài.
+
+Nếu **chưa có**, tải bản installer tại:
+```
+https://www.python.org/downloads/release/python-3119/
+```
+> Khi cài nhớ tick ✅ **"Add python.exe to PATH"**.
+
+#### Bước 1 — Di chuyển vào thư mục `ocr-service`
+
+```bash
+cd ocr-service
+```
+
+#### Bước 2 — Tạo Virtual Environment bằng Python 3.11
+
+```powershell
+# Windows
+py -3.11 -m venv venv
+```
+
+```bash
+# macOS / Linux
+python3.11 -m venv venv
+```
+
+> ⚠️ **Không commit thư mục `venv/`** lên Git (đã có `.gitignore` chặn sẵn).
+> Mỗi thành viên tự tạo `venv` riêng trên máy của mình — venv gắn chặt với đường dẫn và hệ điều hành, không share qua Git được.
+
+#### Bước 3 — Kích hoạt Virtual Environment
+
+```powershell
+# Windows (PowerShell)
+venv\Scripts\activate
+```
+
+```bash
+# macOS / Linux
+source venv/bin/activate
+```
+
+Sau khi kích hoạt thành công, dấu nhắc lệnh sẽ hiển thị `(venv)` ở đầu dòng.
+
+> 💡 **Lưu ý Windows PowerShell:** Nếu gặp lỗi quyền hạn, chạy lệnh sau trước:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+#### Bước 4 — Cài đặt thư viện
+
+```bash
+pip install -r requirements.txt
+```
+
+> ℹ️ Quá trình cài đặt có thể mất **5–15 phút** tùy tốc độ mạng vì cần tải PyTorch (~800MB) và PaddlePaddle.
+
+#### Bước 5 — Chạy OCR Service
+
+```bash
+uvicorn cccd_ocr_api:app --host 0.0.0.0 --port 8001
+```
+
+*   **Lần đầu chạy:** Service sẽ tự động tải model VietOCR (~180MB) — cần kết nối Internet, mất vài phút. Từ lần sau sẽ dùng bản cache, không cần mạng nữa.
+*   **Cổng mặc định:** `http://localhost:8001`
+*   Để cửa sổ terminal này **chạy song song** cùng với Backend (cổng `8080`) và Frontend (cổng `3000`).
+
+#### 🧪 Kiểm tra nhanh (không cần chạy cả hệ thống)
+
+```bash
+# Kiểm tra health check
+curl http://localhost:8001/health
+
+# OCR ảnh CCCD (thay đường dẫn ảnh thực tế của bạn)
+curl -X POST "http://localhost:8001/ocr-cccd?side=auto" -F "image=@duong_dan_anh_cccd.jpg"
+```
+
+Tham số `side` nhận các giá trị: `front` (mặt trước), `back` (mặt sau), `auto` (tự động phát hiện).
+
+#### 🔗 Kết nối với Spring Boot Backend
+
+`FptAiService.java` trong backend đã được cấu hình gọi sang `http://localhost:8001/ocr-cccd?side=auto`.
+Đảm bảo trong [application.properties](backend/src/main/resources/application.properties) giá trị `fpt.ai.api-key` **khác** chuỗi `mock` để kích hoạt nhánh gọi sang OCR Service thay vì dùng data giả.
+
+---
+
+#### ❗ Lỗi thường gặp khi cài OCR Service
+
+| Lỗi | Nguyên nhân | Cách xử lý |
+|---|---|---|
+| `ModuleNotFoundError: No module named 'gdown'` | Windows Defender xóa ngầm file vừa cài | Chạy: `pip uninstall gdown -y` → `pip install gdown==4.4.0 --no-cache-dir`. Nếu vẫn lỗi: thêm thư mục project vào **Windows Security → Virus & threat protection → Exclusions** rồi cài lại. |
+| `ValueError: The truth value of an array...` | Lỗi nội bộ của `paddleocr==2.7.3` | Kiểm tra `ocr_pipeline.py` — đảm bảo **không** truyền tham số `rec=False` vào PaddleOCR. |
+| `ERROR: Could not find a version that satisfies paddlepaddle` | Python version sai (3.12+) | Xóa `venv` cũ, tạo lại bằng `py -3.11 -m venv venv` và cài lại. |
+| `venv\Scripts\activate` không chạy được trên PowerShell | Execution Policy bị hạn chế | Chạy: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` |
+| Service khởi động nhưng timeout khi nhận ảnh | Model chưa tải xong | Chờ thêm, xem log terminal — lần đầu tải model VietOCR mất vài phút. |
 
 ---
 
