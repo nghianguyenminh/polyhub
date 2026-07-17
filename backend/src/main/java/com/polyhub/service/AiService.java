@@ -27,44 +27,101 @@ public class AiService {
     @Value("${gemini.api.url}")
     private String geminiApiUrl;
 
+    // ---- Groq (fallback provider khi Gemini hết quota free tier) ----
+    @Value("${groq.api.key:}")
+    private String groqApiKey;
+
+    @Value("${groq.api.url:https://api.groq.com/openai/v1/chat/completions}")
+    private String groqApiUrl;
+
+    @Value("${groq.model:llama-3.3-70b-versatile}")
+    private String groqModel;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String improveText(String originalText) {
         String prompt = "Hãy sửa lỗi chính tả, làm câu văn mượt mà hơn, chuyên nghiệp hơn và thêm một vài emoji phù hợp cho đoạn văn sau. Trả về trực tiếp nội dung đã sửa, không cần giải thích thêm:\n\n" + originalText;
-        return callGemini(createPayload(prompt));
+        return callAiWithFallback(prompt);
     }
 
     public String suggestCaption(MultipartFile image) {
+        // Lưu ý: Groq free tier chưa hỗ trợ tốt vision, nên tính năng có ảnh vẫn chỉ dùng Gemini,
+        // không fallback sang Groq (nếu Gemini quá tải thì báo lỗi thân thiện như cũ).
         try {
             String base64Image = Base64.getEncoder().encodeToString(image.getBytes());
             String mimeType = image.getContentType();
             String prompt = "Hãy đóng vai là một sinh viên/chuyên gia đầy sáng tạo. Dựa vào tấm ảnh này, hãy viết giúp tôi một dòng trạng thái (caption) thu hút, hài hước hoặc truyền cảm hứng để đăng lên mạng xã hội PolyHUB. Trả về trực tiếp câu caption, kèm theo vài emoji, không cần giải thích gì thêm.";
-            return callGemini(createPayloadWithImage(prompt, base64Image, mimeType));
+            return callGeminiRaw(createPayloadWithImage(prompt, base64Image, mimeType));
+        } catch (QuotaExceededException e) {
+            return "Hệ thống AI đang nhận quá nhiều yêu cầu cùng lúc (vượt quá giới hạn miễn phí). Bạn vui lòng đợi khoảng 1 phút rồi thử lại nhé! ⏳";
+        } catch (AiServiceException e) {
+            return e.getMessage();
         } catch (Exception e) {
             log.error("Lỗi khi trích xuất ảnh base64: {}", e.getMessage(), e);
             return "Xin lỗi, không thể trích xuất ảnh lúc này. Bạn vui lòng thử lại nhé.";
         }
     }
 
-    public String askAdminCopilot(String question, String contextData) {
-        String prompt = "Bạn là Trợ lý Ảo (Admin Copilot) dành riêng cho người quản trị (Admin) của nền tảng kết nối sinh viên và mentor PolyHUB.\n"
-                + "Bạn cần trả lời một cách lịch sự, chuyên nghiệp, ngắn gọn và chính xác, xưng hô là 'tôi' và 'sếp' hoặc 'bạn'.\n"
-                + "Dưới đây là DỮ LIỆU HỆ THỐNG THỰC TẾ TRONG THỜI GIAN THỰC (Real-time data):\n"
+    public String askClientCopilot(String question, String contextData) {
+        String prompt = "Bạn là Trợ lý Ảo (PolyHUB Copilot) thân thiện, được thiết kế để hỗ trợ sinh viên và người dùng trên nền tảng mạng xã hội học tập PolyHUB.\n"
+                + "Bạn cần trả lời một cách lịch sự, tự nhiên và chính xác. Xưng hô là 'mình' và 'bạn'.\n"
+                + "Dưới đây là DỮ LIỆU NGƯỜI DÙNG HIỆN TẠI VÀ THÔNG TIN HỆ THỐNG:\n"
                 + "---------------------\n"
                 + contextData + "\n"
                 + "---------------------\n"
-                + "Nếu câu hỏi liên quan đến số liệu, hãy lấy dữ liệu ở trên để trả lời. Nếu câu hỏi không liên quan đến dữ liệu, hãy cố gắng trả lời dựa trên kiến thức của bạn.\n"
-                + "Câu hỏi của Admin: " + question;
-        return callGemini(createPayload(prompt));
+                + "Hãy dựa vào các thông tin trên (nếu có) để cá nhân hóa câu trả lời. Nếu câu hỏi không liên quan đến dữ liệu, hãy cố gắng trả lời dựa trên kiến thức của bạn.\n"
+                + "Câu hỏi của người dùng: " + question;
+        return callAiWithFallback(prompt);
     }
 
-    private String callGemini(ObjectNode payload) {
-        String url = geminiApiUrl + "?key=" + geminiApiKey; 
-        
+    /**
+     * Gọi Gemini trước. Nếu Gemini báo hết quota / bị quá tải (429, 5xx) thì tự động
+     * chuyển sang Groq (Llama 3.3 70B) để chatbot vẫn trả lời được thay vì "chết".
+     * Chỉ dùng cho các tác vụ text-only (improveText, askClientCopilot).
+     */
+    private String callAiWithFallback(String prompt) {
+        boolean hasGemini = geminiApiKey != null && !geminiApiKey.isBlank() && !geminiApiKey.contains("your-gemini-api-key");
+        boolean hasGroq = groqApiKey != null && !groqApiKey.isBlank();
+
+        // Nếu người dùng đã xóa/không cấu hình Gemini Key nhưng có Groq Key -> Dùng luôn Groq
+        if (!hasGemini && hasGroq) {
+            log.info("Gemini API Key không hợp lệ hoặc chưa cấu hình. Chuyển sang sử dụng Groq trực tiếp.");
+            try {
+                return callGroq(prompt);
+            } catch (Exception groqEx) {
+                log.error("Groq lỗi: {}", groqEx.getMessage(), groqEx);
+                return "Hệ thống AI đang gặp sự cố. Bạn vui lòng thử lại sau ít phút nhé! ⏳";
+            }
+        }
+
+        try {
+            return callGeminiRaw(createPayload(prompt));
+        } catch (QuotaExceededException e) {
+            log.warn("Gemini không khả dụng (Lỗi/Quá tải), thử fallback sang Groq...", e.getMessage());
+            if (!hasGroq) {
+                return "Hệ thống AI đang quá tải và chưa cấu hình provider dự phòng (Groq). Bạn vui lòng đợi một lát rồi thử lại nhé! ⏳";
+            }
+            try {
+                return callGroq(prompt);
+            } catch (Exception groqEx) {
+                log.error("Groq fallback cũng lỗi: {}", groqEx.getMessage(), groqEx);
+                return "Cả Gemini và Groq đều đang gặp sự cố. Bạn vui lòng thử lại sau ít phút nhé! ⏳";
+            }
+        } catch (AiServiceException e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Gọi Gemini và ném exception (thay vì trả về chuỗi lỗi) để callAiWithFallback
+     * có thể phân biệt lỗi "hết quota -> nên fallback" và các lỗi khác.
+     */
+    private String callGeminiRaw(ObjectNode payload) {
+        String url = geminiApiUrl + "?key=" + geminiApiKey;
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        // headers.set("x-goog-api-key", geminiApiKey); // Dùng query param thay vì header
 
         HttpEntity<String> request = new HttpEntity<>(payload.toString(), headers);
 
@@ -76,28 +133,74 @@ public class AiService {
                 return candidates.get(0).path("content").path("parts").get(0).path("text").asText();
             }
             log.warn("Gemini API trả về thành công nhưng không có nội dung text.");
-            return "Không có dữ liệu trả về từ AI.";
-            
+            throw new AiServiceException("Không có dữ liệu trả về từ AI.");
+
         } catch (HttpStatusCodeException e) {
-            log.error("API Error Status: {}", e.getStatusCode());
-            log.error("API Error Response: {}", e.getResponseBodyAsString());
-            
-            if (e.getStatusCode().is5xxServerError()) {
-                return "AI đang được nhiều bạn sử dụng quá nên hơi quá tải một chút. Bạn đợi một lát rồi thử lại nha! ⏳";
-            } 
-            
+            log.error("Gemini API Error Status: {}", e.getStatusCode());
+            log.error("Gemini API Error Response: {}", e.getResponseBodyAsString());
+
             String responseBody = e.getResponseBodyAsString();
-            if (e.getStatusCode().value() == 429 || responseBody.contains("RESOURCE_EXHAUSTED") || responseBody.contains("quota")) {
-                return "Hệ thống AI đang nhận quá nhiều yêu cầu cùng lúc (vượt quá giới hạn miễn phí). Sếp vui lòng đợi khoảng 1 phút rồi thử lại nhé! ⏳";
-            } else if (e.getStatusCode().is4xxClientError()) {
-                return "Lỗi kết nối đến AI (Có thể do sai cấu hình hệ thống): " + responseBody;
+            boolean isQuotaError = e.getStatusCode().value() == 429
+                    || responseBody.contains("RESOURCE_EXHAUSTED")
+                    || responseBody.contains("quota");
+
+            if (isQuotaError) {
+                throw new QuotaExceededException("Gemini hết quota free tier (429).");
             }
-            return "Lỗi API AI: " + e.getMessage();
-            
+            if (e.getStatusCode().is5xxServerError()) {
+                // Coi lỗi 5xx (quá tải server Google) cũng là trường hợp nên thử fallback
+                throw new QuotaExceededException("Gemini quá tải (5xx).");
+            }
+            if (e.getStatusCode().is4xxClientError()) {
+                // Ném QuotaExceededException để kích hoạt fallback sang Groq nếu lỗi là do API Key
+                if (responseBody.contains("API key not valid")) {
+                    throw new QuotaExceededException("Gemini sai API Key, chuyển sang Groq.");
+                }
+                throw new AiServiceException("Lỗi kết nối đến AI (Có thể do sai cấu hình hệ thống): " + responseBody);
+            }
+            throw new AiServiceException("Lỗi API AI: " + e.getMessage());
+
+        } catch (AiServiceException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Lỗi hệ thống khi gọi Gemini: {}", e.getMessage(), e);
-            return "Đã có lỗi hệ thống xảy ra.";
+            throw new AiServiceException("Đã có lỗi hệ thống xảy ra.");
         }
+    }
+
+    /**
+     * Fallback provider: Groq (OpenAI-compatible endpoint), model mặc định Llama 3.3 70B.
+     * Free tier của Groq khá rộng rãi và tốc độ rất nhanh, phù hợp làm phương án dự phòng.
+     */
+    private String callGroq(String prompt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(groqApiKey);
+
+        ObjectNode payload = objectMapper.createObjectNode();
+        payload.put("model", groqModel);
+        payload.put("temperature", 0.7);
+        ArrayNode messages = payload.putArray("messages");
+        ObjectNode userMessage = messages.addObject();
+        userMessage.put("role", "user");
+        userMessage.put("content", prompt);
+
+        HttpEntity<String> request = new HttpEntity<>(payload.toString(), headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(groqApiUrl, request, String.class);
+        JsonNode root;
+        try {
+            root = objectMapper.readTree(response.getBody());
+        } catch (Exception e) {
+            throw new AiServiceException("Không đọc được phản hồi từ Groq.");
+        }
+
+        JsonNode choices = root.path("choices");
+        if (choices.isArray() && !choices.isEmpty()) {
+            return choices.get(0).path("message").path("content").asText();
+        }
+       
+        throw new AiServiceException("Groq không trả về nội dung.");
     }
 
     private ObjectNode createPayload(String prompt) {
@@ -117,15 +220,29 @@ public class AiService {
         ObjectNode content = contents.addObject();
         content.put("role", "user");
         ArrayNode parts = content.putArray("parts");
-        
+
         ObjectNode partText = parts.addObject();
         partText.put("text", prompt);
-        
+
         ObjectNode partImage = parts.addObject();
         ObjectNode inlineData = partImage.putObject("inlineData");
         inlineData.put("mimeType", mimeType != null ? mimeType : "image/jpeg");
         inlineData.put("data", base64Image);
-        
+
         return root;
+    }
+
+    // ---- Custom exceptions dùng nội bộ để quyết định có fallback sang Groq hay không ----
+
+    private static class AiServiceException extends RuntimeException {
+        public AiServiceException(String message) {
+            super(message);
+        }
+    }
+
+    private static class QuotaExceededException extends AiServiceException {
+        public QuotaExceededException(String message) {
+            super(message);
+        }
     }
 }
