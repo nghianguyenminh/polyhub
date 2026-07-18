@@ -17,7 +17,7 @@ export const SettingsScreen = () => {
   
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const { logout: storeLogout, setTransitioning } = useAuthStore();
+  const { user, logout: storeLogout, setTransitioning } = useAuthStore();
 
   const handleLogout = async () => {
     setTransitioning(true);
@@ -79,6 +79,7 @@ export const SettingsScreen = () => {
         {renderSectionHeader('Tài khoản')}
         <View style={styles.sectionBlock}>
           {renderSettingItem('user', 'Thông tin cá nhân', 'Chỉnh sửa tên, số điện thoại', () => navigation.navigate('EditProfile'))}
+          {user?.role === 'MENTOR' && renderSettingItem('calendar', 'Báo bận đột xuất (Vacation)', 'Đăng ký nghỉ phép, hủy lịch trùng', () => navigation.navigate('MentorBusy'))}
           {renderSettingItem('lock', 'Mật khẩu và bảo mật', 'Đổi mật khẩu, xác thực 2 yếu tố', () => { })}
           {renderSettingItem('shield', 'Quyền riêng tư', 'Kiểm soát ai có thể thấy bài đăng của bạn', () => { })}
         </View>

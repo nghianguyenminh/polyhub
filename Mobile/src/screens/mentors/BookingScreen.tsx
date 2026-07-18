@@ -57,6 +57,7 @@ export const BookingScreen = () => {
 
   // Validation feedback
   const [validationMsg, setValidationMsg] = useState({ text: '', isValid: false });
+  const [lockStatus, setLockStatus] = useState<{ locked: boolean; message: string; expiresAt?: string } | null>(null);
 
   useEffect(() => {
     if (mentor?.user?.username) {
@@ -212,6 +213,44 @@ export const BookingScreen = () => {
       setValidationMsg({ text: 'Thời gian nhập không hợp lệ.', isValid: false });
     }
   }, [selectedDay, startTime, duration]);
+
+  useEffect(() => {
+    if (!selectedDay || !startTime || !validationMsg.isValid) {
+      setLockStatus(null);
+      return;
+    }
+
+    const lockTimer = setTimeout(async () => {
+      try {
+        const response = await api.post('/api/bookings/lock-slot', {
+          mentorUsername: mentor.user?.username,
+          date: selectedDay.date,
+          startTime: startTime
+        });
+        const data = response.data;
+        if (data.locked) {
+          setLockStatus({
+            locked: true,
+            message: 'Khung giờ này đã được giữ chỗ riêng cho bạn trong 3 phút.',
+            expiresAt: data.expiresAt
+          });
+        } else {
+          setLockStatus({
+            locked: false,
+            message: data.message || 'Lưu ý: Bạn đang đặt lịch ngoài khung giờ ưu tiên, vị trí chọn không được khóa bảo vệ.'
+          });
+        }
+      } catch (err: any) {
+        setLockStatus({
+          locked: false,
+          message: err.response?.data?.error || err.message || 'Khung giờ này đã bị khóa giữ chỗ bởi một người dùng khác.'
+        });
+        setValidationMsg({ text: 'Khung giờ này đang bị người khác giữ chỗ.', isValid: false });
+      }
+    }, 600);
+
+    return () => clearTimeout(lockTimer);
+  }, [selectedDay?.date, startTime, validationMsg.isValid, mentor.user?.username]);
 
   const handleSubmit = async () => {
     if (!selectedDay || !validationMsg.isValid) return;
@@ -543,6 +582,26 @@ export const BookingScreen = () => {
                 {validationMsg.text}
               </PolyText>
             </View>
+
+            {lockStatus && (
+              <View style={[
+                styles.validationBanner,
+                { marginTop: 10, backgroundColor: lockStatus.locked ? 'rgba(25, 135, 84, 0.1)' : 'rgba(239, 68, 68, 0.1)', borderColor: lockStatus.locked ? theme.colors.success : theme.colors.danger, borderWidth: 1 }
+              ]}>
+                <Icon
+                  name={lockStatus.locked ? 'lock' : 'info'}
+                  size={16}
+                  color={lockStatus.locked ? theme.colors.success : theme.colors.danger}
+                />
+                <PolyText
+                  variant="caption"
+                  color={lockStatus.locked ? theme.colors.success : theme.colors.danger}
+                  style={{ marginLeft: 8, flex: 1 }}
+                >
+                  {lockStatus.message}
+                </PolyText>
+              </View>
+            )}
 
             {/* Step 5: Notes */}
             <View style={styles.section}>

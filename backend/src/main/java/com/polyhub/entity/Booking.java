@@ -68,7 +68,7 @@ public class Booking implements Serializable {
     private Integer extensionCount = 0; // Số lần đã gia hạn
 
     @Column(name = "max_extensions")
-    private Integer maxExtensions = 3; // Tối đa 3 lần gia hạn mỗi session
+    private Integer maxExtensions = 2; // Tối đa 2 lần gia hạn mỗi session
 
     @Column(name = "extended_minutes")
     private Integer extendedMinutes = 0; // Tổng số phút đã được gia hạn thêm
@@ -88,7 +88,7 @@ public class Booking implements Serializable {
         if (mentorJoined == null) mentorJoined = false;
         if (studentJoined == null) studentJoined = false;
         if (extensionCount == null) extensionCount = 0;
-        if (maxExtensions == null) maxExtensions = 3;
+        if (maxExtensions == null) maxExtensions = 2;
         if (extendedMinutes == null) extendedMinutes = 0;
     }
 

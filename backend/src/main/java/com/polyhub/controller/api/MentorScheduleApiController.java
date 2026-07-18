@@ -54,9 +54,24 @@ public class MentorScheduleApiController {
 
         try {
             for (Map<String, Object> slot : slots) {
-                Integer dayOfWeek = Integer.parseInt(slot.get("dayOfWeek").toString());
-                if (dayOfWeek < 2 || dayOfWeek > 8) {
-                    return ResponseEntity.badRequest().body(Map.of("error", "Ngày trong tuần phải từ 2 (Thứ 2) đến 8 (Chủ nhật)"));
+                java.time.LocalDate specificDate = null;
+                if (slot.get("specificDate") != null && !slot.get("specificDate").toString().trim().isEmpty()) {
+                    specificDate = java.time.LocalDate.parse(slot.get("specificDate").toString());
+                }
+
+                java.time.LocalDate expireDate = null;
+                if (slot.get("expireDate") != null && !slot.get("expireDate").toString().trim().isEmpty()) {
+                    expireDate = java.time.LocalDate.parse(slot.get("expireDate").toString());
+                }
+
+                Integer dayOfWeek = null;
+                if (specificDate != null) {
+                    dayOfWeek = specificDate.getDayOfWeek().getValue() + 1;
+                } else {
+                    dayOfWeek = Integer.parseInt(slot.get("dayOfWeek").toString());
+                    if (dayOfWeek < 2 || dayOfWeek > 8) {
+                        return ResponseEntity.badRequest().body(Map.of("error", "Ngày trong tuần phải từ 2 (Thứ 2) đến 8 (Chủ nhật)"));
+                    }
                 }
 
                 LocalTime startTime = LocalTime.parse(slot.get("startTime").toString());
@@ -71,21 +86,42 @@ public class MentorScheduleApiController {
                 schedule.setDayOfWeek(dayOfWeek);
                 schedule.setStartTime(startTime);
                 schedule.setEndTime(endTime);
+                schedule.setSpecificDate(specificDate);
+                schedule.setExpireDate(expireDate);
                 newSchedules.add(schedule);
             }
 
-            // Kiểm tra trùng lặp đè lên nhau giữa các khung giờ rảnh trong cùng 1 ngày của cấu hình gửi lên
+            // Kiểm tra trùng lặp đè lên nhau giữa các khung giờ rảnh
             for (int i = 0; i < newSchedules.size(); i++) {
                 MentorSchedule s1 = newSchedules.get(i);
                 for (int j = i + 1; j < newSchedules.size(); j++) {
                     MentorSchedule s2 = newSchedules.get(j);
-                    if (s1.getDayOfWeek().equals(s2.getDayOfWeek())) {
+                    
+                    // Kiểm tra xem có giao nhau về mặt ngày/lịch không
+                    boolean dateOverlap = false;
+                    if (s1.getSpecificDate() != null && s2.getSpecificDate() != null) {
+                        dateOverlap = s1.getSpecificDate().equals(s2.getSpecificDate());
+                    } else if (s1.getSpecificDate() == null && s2.getSpecificDate() == null) {
+                        dateOverlap = s1.getDayOfWeek().equals(s2.getDayOfWeek());
+                    } else {
+                        // Một bên cụ thể, một bên lặp lại
+                        MentorSchedule spec = s1.getSpecificDate() != null ? s1 : s2;
+                        MentorSchedule rec = s1.getSpecificDate() == null ? s1 : s2;
+                        if (spec.getDayOfWeek().equals(rec.getDayOfWeek())) {
+                            if (rec.getExpireDate() == null || !spec.getSpecificDate().isAfter(rec.getExpireDate())) {
+                                dateOverlap = true;
+                            }
+                        }
+                    }
+
+                    if (dateOverlap) {
                         if (s1.getStartTime().isBefore(s2.getEndTime()) && s1.getEndTime().isAfter(s2.getStartTime())) {
+                            String dateDesc1 = s1.getSpecificDate() != null ? s1.getSpecificDate().toString() : "Thứ " + (s1.getDayOfWeek() == 8 ? "nhật" : s1.getDayOfWeek());
+                            String dateDesc2 = s2.getSpecificDate() != null ? s2.getSpecificDate().toString() : "Thứ " + (s2.getDayOfWeek() == 8 ? "nhật" : s2.getDayOfWeek());
                             return ResponseEntity.badRequest().body(Map.of("error", 
-                                    "Khung giờ cấu hình của bạn bị trùng lặp: Thứ " + 
-                                    (s1.getDayOfWeek() == 8 ? "nhật" : s1.getDayOfWeek()) + " " + 
-                                    s1.getStartTime() + "-" + s1.getEndTime() + " đè lên " + 
-                                    s2.getStartTime() + "-" + s2.getEndTime()));
+                                    "Khung giờ cấu hình của bạn bị trùng lặp: " + 
+                                    dateDesc1 + " " + s1.getStartTime() + "-" + s1.getEndTime() + 
+                                    " đè lên " + dateDesc2 + " " + s2.getStartTime() + "-" + s2.getEndTime()));
                         }
                     }
                 }
