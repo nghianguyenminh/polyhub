@@ -13,35 +13,31 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-    /**
-     * Lấy danh sách bài viết cho trang chủ:
-     * - Ưu tiên 1: Bài viết của chính user đang xem HOẶC bài viết của những người mà user đang follow.
-     * - Ưu tiên 2: Các bài viết Public khác.
-     * - Ở mỗi nhóm ưu tiên, sắp xếp giảm dần theo thời gian tạo (bài mới nhất lên đầu).
-     */
+
     @Query("SELECT p FROM Post p " +
-           "WHERE ((p.isPrivate = false OR p.isPrivate IS NULL) OR p.user.username = :viewerUsername) " +
-           "AND (p.isLocked = false OR p.isLocked IS NULL) " +
-           "ORDER BY " +
-           "  CASE " +
-           // Trọng số 1: Nếu bài viết là của chính user đang xem
-           "    WHEN p.user.username = :viewerUsername THEN 1 " +
-           // Trọng số 1: Nếu tác giả bài viết nằm trong danh sách "following" của user đang xem
-           "    WHEN p.user.username IN (SELECT f.username FROM User u JOIN u.following f WHERE u.username = :viewerUsername) THEN 1 " +
-           // Trọng số 0: Các bài viết public của người lạ
-           "    ELSE 0 " +
-           "  END DESC, " +
-           // Tiêu chí sắp xếp thứ 2: Điểm Hot Score giảm dần
-           "  p.hotScore DESC, " +
-           // Tiêu chí sắp xếp thứ 3: Thời gian đăng bài
-           "  p.createdAt DESC")
+            "WHERE ((p.isPrivate = false OR p.isPrivate IS NULL) OR p.user.username = :viewerUsername) " +
+            "AND (p.isLocked = false OR p.isLocked IS NULL) " +
+            "AND (p.isDeleted = false OR p.isDeleted IS NULL) " +
+            "ORDER BY " +
+            "  CASE " +
+            "    WHEN p.user.username = :viewerUsername THEN 1 " +
+            "    WHEN p.user.username IN (SELECT f.username FROM User u JOIN u.following f WHERE u.username = :viewerUsername) THEN 1 "
+            +
+            "    ELSE 0 " +
+            "  END DESC, " +
+            "  p.hotScore DESC, " +
+            "  p.createdAt DESC")
     Page<Post> findVisiblePostsForFeed(@Param("viewerUsername") String viewerUsername, Pageable pageable);
 
     // Lấy bài ở profile giữ nguyên
     @Query("SELECT p FROM Post p WHERE p.user.username = :username AND (p.isLocked = false OR p.isLocked IS NULL) ORDER BY p.createdAt DESC")
-    Page<Post> findByUsernameOrderByCreatedAtDesc(String username, Pageable pageable);
 
     Page<Post> findByIsLockedTrue(Pageable pageable);
 
     List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
+
+    Page<Post> findByUsernameOrderByCreatedAtDesc(@Param("username") String username, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.user IN :users AND (p.isDeleted = false OR p.isDeleted IS NULL) ORDER BY p.createdAt DESC")
+    List<Post> findByUserInOrderByCreatedAtDesc(@Param("users") List<User> users);
 }

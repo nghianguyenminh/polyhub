@@ -22,10 +22,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * REST API V2 cho Feed & Posts — dùng bởi Next.js frontend.
- * Bổ sung cho PostApiController hiện có (tạo/sửa/xóa/share/report bài viết).
- */
 @RestController
 @RequestMapping("/api/v2/posts")
 public class PostApiV2Controller {
@@ -76,10 +72,6 @@ public class PostApiV2Controller {
         }
     }
 
-    /**
-     * GET /api/v2/posts/feed?page=0&size=10
-     * Lấy feed (ưu tiên bài của following nếu đã đăng nhập).
-     */
     @GetMapping("/feed")
     public ResponseEntity<?> getFeed(
             @RequestParam(defaultValue = "0") int page,
@@ -89,7 +81,6 @@ public class PostApiV2Controller {
         String viewerUsername = (principal != null) ? principal.getName() : "";
         Page<Post> postPage = postRepository.findVisiblePostsForFeed(viewerUsername, PageRequest.of(page, size));
 
-        // Lấy danh sách ID bài đã lưu (nếu đã đăng nhập)
         Set<Long> savedPostIds = new HashSet<>();
         if (principal != null) {
             User user = userRepository.findById(principal.getName()).orElse(null);
@@ -117,10 +108,6 @@ public class PostApiV2Controller {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * GET /api/v2/posts/user/{username}?page=0&size=10
-     * Lấy bài viết của một user cụ thể (profile).
-     */
     @GetMapping("/user/{username}")
     public ResponseEntity<?> getUserPosts(
             @PathVariable String username,
@@ -156,10 +143,6 @@ public class PostApiV2Controller {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * POST /api/v2/posts/{postId}/like
-     * Toggle like vào MongoDB để trạng thái còn sau khi reload.
-     */
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long postId, Principal principal) {
         if (principal == null) {
@@ -184,17 +167,16 @@ public class PostApiV2Controller {
         }
 
         long likesCount = likeRepository.countByPostId(postId);
-        
+
         if (isLiked) {
             Post post = postRepository.findById(postId).orElse(null);
             if (post != null && post.getUser() != null) {
                 notificationService.createNotification(
-                    post.getUser().getUsername(),
-                    username,
-                    "đã thích bài viết của bạn.",
-                    "LIKE",
-                    postId
-                );
+                        post.getUser().getUsername(),
+                        username,
+                        "đã thích bài viết của bạn.",
+                        "LIKE",
+                        postId);
             }
         }
 
@@ -204,10 +186,6 @@ public class PostApiV2Controller {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * GET /api/v2/posts/{postId}/like
-     * Lấy trạng thái like hiện tại từ MongoDB.
-     */
     @GetMapping("/{postId}/like")
     public ResponseEntity<?> getLikeStatus(@PathVariable Long postId, Principal principal) {
         long likesCount = likeRepository.countByPostId(postId);
@@ -220,14 +198,10 @@ public class PostApiV2Controller {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * POST /api/v2/posts/{postId}/share
-     * Chia sẻ bài viết lên trang cá nhân.
-     */
     @PostMapping("/{postId}/share")
     public ResponseEntity<?> sharePost(@PathVariable Long postId,
-                                       @RequestBody Map<String, String> requestBody,
-                                       Principal principal) {
+            @RequestBody Map<String, String> requestBody,
+            Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để chia sẻ bài viết."));
         }
@@ -249,8 +223,6 @@ public class PostApiV2Controller {
         }
     }
 
-    // ===== Helper =====
-
     private Map<String, Object> buildPostResponse(Post post, Set<Long> savedPostIds) {
         return buildPostResponse(post, savedPostIds, "");
     }
@@ -258,8 +230,16 @@ public class PostApiV2Controller {
     private Map<String, Object> buildPostResponse(Post post, Set<Long> savedPostIds, String viewerUsername) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", post.getId());
-        map.put("content", post.getContent());
-        map.put("imageUrl", post.getImageUrl());
+
+        if (Boolean.TRUE.equals(post.getIsDeleted())) {
+            map.put("content", "Bài viết đã bị xóa");
+            map.put("imageUrl", null);
+        } else {
+            map.put("content", post.getContent());
+            map.put("imageUrl", post.getImageUrl());
+        }
+
+        map.put("isDeleted", post.getIsDeleted());
         map.put("isPrivate", post.getIsPrivate());
         map.put("createdAt", post.getCreatedAt());
         map.put("isSaved", savedPostIds.contains(post.getId()));
@@ -284,7 +264,6 @@ public class PostApiV2Controller {
                 && likeRepository.findByPostIdAndUsername(post.getId(), viewerUsername).isPresent();
         map.put("isLiked", isLiked);
 
-        // User info
         if (post.getUser() != null) {
             Map<String, Object> userMap = new HashMap<>();
             userMap.put("username", post.getUser().getUsername());
@@ -292,26 +271,19 @@ public class PostApiV2Controller {
             userMap.put("avatar", post.getUser().getAvatar());
             if (post.getUser().getRole() != null) {
                 userMap.put("role", Map.of(
-                    "id", post.getUser().getRole().getId(),
-                    "name", post.getUser().getRole().getName()
-                ));
+                        "id", post.getUser().getRole().getId(),
+                        "name", post.getUser().getRole().getName()));
             }
             map.put("user", userMap);
         }
 
-        // Comments count
         map.put("commentsCount", post.getComments() != null ? post.getComments().size() : 0);
-
-        // Shares count
         map.put("sharesCount", post.getShares() != null ? post.getShares().size() : 0);
 
-        // Shared post (nếu đây là bài share)
         if (post.getSharedPost() != null) {
             Post shared = post.getSharedPost();
             Map<String, Object> sharedMap = new HashMap<>();
             sharedMap.put("id", shared.getId());
-            sharedMap.put("content", shared.getContent());
-            sharedMap.put("imageUrl", shared.getImageUrl());
             sharedMap.put("createdAt", shared.getCreatedAt());
 
             // Multi-image cho shared post
@@ -325,6 +297,15 @@ public class PostApiV2Controller {
                 sharedImageUrls = List.of(shared.getImageUrl());
             }
             sharedMap.put("imageUrls", sharedImageUrls);
+            if (Boolean.TRUE.equals(shared.getIsDeleted())) {
+                sharedMap.put("content", "Bài viết đã bị xóa");
+                sharedMap.put("imageUrl", null);
+            } else {
+                sharedMap.put("content", shared.getContent());
+                sharedMap.put("imageUrl", shared.getImageUrl());
+            }
+
+            sharedMap.put("isDeleted", shared.getIsDeleted());
 
             if (shared.getUser() != null) {
                 Map<String, Object> sharedUserMap = new HashMap<>();
@@ -333,9 +314,8 @@ public class PostApiV2Controller {
                 sharedUserMap.put("avatar", shared.getUser().getAvatar());
                 if (shared.getUser().getRole() != null) {
                     sharedUserMap.put("role", Map.of(
-                        "id", shared.getUser().getRole().getId(),
-                        "name", shared.getUser().getRole().getName()
-                    ));
+                            "id", shared.getUser().getRole().getId(),
+                            "name", shared.getUser().getRole().getName()));
                 }
                 sharedMap.put("user", sharedUserMap);
             }
@@ -351,8 +331,8 @@ public class PostApiV2Controller {
      */
     @PutMapping("/{postId}")
     public ResponseEntity<?> updatePost(@PathVariable Long postId,
-                                        @RequestBody Map<String, String> requestBody,
-                                        Principal principal) {
+            @RequestBody Map<String, String> requestBody,
+            Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để sửa bài viết."));
         }
@@ -378,17 +358,13 @@ public class PostApiV2Controller {
             return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để xóa bài viết."));
         }
         try {
-            postService.deletePost(postId, principal.getName());
+            postService.softDeletePost(postId, principal.getName());
             return ResponseEntity.ok(Map.of("message", "Đã xóa bài viết thành công."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    /**
-     * PATCH /api/v2/posts/{postId}/privacy
-     * Đổi chế độ công khai / chỉ mình tôi.
-     */
     @PatchMapping("/{postId}/privacy")
     public ResponseEntity<?> togglePrivacy(@PathVariable Long postId, Principal principal) {
         if (principal == null) {
@@ -404,12 +380,9 @@ public class PostApiV2Controller {
         }
     }
 
-    /**
-     * POST /api/v2/posts/{postId}/report
-     * Gửi báo cáo vi phạm bài viết tới admin.
-     */
     @PostMapping("/{postId}/report")
-    public ResponseEntity<?> reportPost(@PathVariable Long postId, @RequestBody Map<String, String> body, Principal principal) {
+    public ResponseEntity<?> reportPost(@PathVariable Long postId, @RequestBody Map<String, String> body,
+            Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để báo cáo bài viết."));
         }

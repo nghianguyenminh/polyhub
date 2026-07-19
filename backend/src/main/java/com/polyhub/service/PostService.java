@@ -41,7 +41,7 @@ public class PostService {
         Post post = new Post();
         post.setContent(content);
         post.setUser(user);
-        post.setHotScore(1.7677); // Khởi tạo điểm Recency Boost cho bài đăng mới
+        post.setHotScore(1.7677);
 
         if (images != null && images.length > 0) {
             int order = 0;
@@ -75,8 +75,6 @@ public class PostService {
         return postRepository.save(post);
     }
 
-
-    // --- Tính năng Share bài viết ---
     public Post sharePost(Long originalPostId, String content, String username) {
         User user = userRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -84,31 +82,28 @@ public class PostService {
         Post originalPost = postRepository.findById(originalPostId)
                 .orElseThrow(() -> new RuntimeException("Bài viết gốc không tồn tại"));
 
-        // Chống lồng quá sâu: Nếu bài gốc đã là 1 bài share, thì móc thẳng tới bài rễ (root post)
         Post rootPost = originalPost.getSharedPost() != null ? originalPost.getSharedPost() : originalPost;
 
         Post sharedPost = new Post();
-        sharedPost.setContent(content); // Lời tựa người dùng thêm vào
+        sharedPost.setContent(content);
         sharedPost.setUser(user);
         sharedPost.setSharedPost(rootPost);
-        sharedPost.setHotScore(1.7677); // Khởi tạo điểm Recency Boost cho bài đăng mới
+        sharedPost.setHotScore(1.7677);
 
         Post savedPost = postRepository.save(sharedPost);
 
         if (rootPost.getUser() != null) {
             notificationService.createNotification(
-                rootPost.getUser().getUsername(),
-                username,
-                "đã chia sẻ bài viết của bạn.",
-                "SHARE",
-                savedPost.getId()
-            );
+                    rootPost.getUser().getUsername(),
+                    username,
+                    "đã chia sẻ bài viết của bạn.",
+                    "SHARE",
+                    savedPost.getId());
         }
 
         return savedPost;
     }
 
-    // --- Tính năng Sửa bài viết ---
     public Post updatePost(Long postId, String newContent, String username) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
@@ -121,8 +116,7 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    // --- Tính năng Xóa bài viết ---
-    public void deletePost(Long postId, String username) {
+    public void softDeletePost(Long postId, String username) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
 
@@ -130,10 +124,10 @@ public class PostService {
             throw new AccessDeniedException("Bạn không có quyền xóa bài viết này");
         }
 
-        postRepository.delete(post);
+        post.setIsDeleted(true);
+        postRepository.save(post);
     }
 
-    // --- Tính năng Chỉnh quyền riêng tư (Public/Private) ---
     public Post togglePrivacy(Long postId, String username) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
@@ -142,27 +136,23 @@ public class PostService {
             throw new AccessDeniedException("Bạn không có quyền đổi trạng thái bài viết này");
         }
 
-        // Đảo ngược trạng thái hiện tại (nếu null thì coi như cũ là false -> đảo thành true)
         boolean currentStatus = (post.getIsPrivate() != null) ? post.getIsPrivate() : false;
         post.setIsPrivate(!currentStatus);
-        
+
         return postRepository.save(post);
     }
 
-    // --- Tính năng Báo cáo (Report) bài viết ---
     public void reportPost(Long postId, String reason, String username) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
-        
+
         User reporter = userRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
-        // Nếu users report chính bài mình thì chặn (Vô lý)
         if (post.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Bạn không thể báo cáo bài viết của chính mình");
         }
 
-        // Chống Spam Report (1 người chỉ report 1 bài 1 lần)
         if (postReportRepository.existsByPostIdAndReporterUsername(postId, username)) {
             throw new RuntimeException("Bạn đã gửi báo cáo cho bài viết này rồi, hệ thống đang xem xét.");
         }
