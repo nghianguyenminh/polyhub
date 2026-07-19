@@ -281,46 +281,47 @@ public class PostApiV2Controller {
         map.put("sharesCount", post.getShares() != null ? post.getShares().size() : 0);
 
         if (post.getSharedPost() != null) {
-            Post shared = post.getSharedPost();
-            Map<String, Object> sharedMap = new HashMap<>();
-            sharedMap.put("id", shared.getId());
-            sharedMap.put("createdAt", shared.getCreatedAt());
+    Post shared = post.getSharedPost();
+    Map<String, Object> sharedMap = new HashMap<>();
+    sharedMap.put("id", shared.getId());
+    sharedMap.put("createdAt", shared.getCreatedAt());
 
-            // Multi-image cho shared post
-            List<String> sharedImageUrls = new ArrayList<>();
-            if (shared.getImages() != null && !shared.getImages().isEmpty()) {
-                sharedImageUrls = shared.getImages().stream()
-                        .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
-                        .map(PostImage::getImageUrl)
-                        .collect(Collectors.toList());
-            } else if (shared.getImageUrl() != null && !shared.getImageUrl().isEmpty()) {
-                sharedImageUrls = List.of(shared.getImageUrl());
-            }
-            sharedMap.put("imageUrls", sharedImageUrls);
-            if (Boolean.TRUE.equals(shared.getIsDeleted())) {
-                sharedMap.put("content", "Bài viết đã bị xóa");
-                sharedMap.put("imageUrl", null);
-            } else {
-                sharedMap.put("content", shared.getContent());
-                sharedMap.put("imageUrl", shared.getImageUrl());
-            }
+    List<String> sharedImageUrls = new ArrayList<>();
+    if (shared.getImages() != null && !shared.getImages().isEmpty()) {
+        sharedImageUrls = shared.getImages().stream()
+                .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
+                .map(PostImage::getImageUrl)
+                .collect(Collectors.toList());
+    } else if (shared.getImageUrl() != null && !shared.getImageUrl().isEmpty()) {
+        sharedImageUrls = List.of(shared.getImageUrl());
+    }
 
-            sharedMap.put("isDeleted", shared.getIsDeleted());
+    if (Boolean.TRUE.equals(shared.getIsDeleted())) {
+        sharedMap.put("content", "Bài viết đã bị xóa");
+        sharedMap.put("imageUrl", null);
+        sharedMap.put("imageUrls", new ArrayList<>());
+    } else {
+        sharedMap.put("content", shared.getContent());
+        sharedMap.put("imageUrl", shared.getImageUrl());
+        sharedMap.put("imageUrls", sharedImageUrls);
+    }
 
-            if (shared.getUser() != null) {
-                Map<String, Object> sharedUserMap = new HashMap<>();
-                sharedUserMap.put("username", shared.getUser().getUsername());
-                sharedUserMap.put("fullname", shared.getUser().getFullname());
-                sharedUserMap.put("avatar", shared.getUser().getAvatar());
-                if (shared.getUser().getRole() != null) {
-                    sharedUserMap.put("role", Map.of(
-                            "id", shared.getUser().getRole().getId(),
-                            "name", shared.getUser().getRole().getName()));
-                }
-                sharedMap.put("user", sharedUserMap);
-            }
-            map.put("sharedPost", sharedMap);
+    sharedMap.put("isDeleted", shared.getIsDeleted());
+
+    if (shared.getUser() != null) {
+        Map<String, Object> sharedUserMap = new HashMap<>();
+        sharedUserMap.put("username", shared.getUser().getUsername());
+        sharedUserMap.put("fullname", shared.getUser().getFullname());
+        sharedUserMap.put("avatar", shared.getUser().getAvatar());
+        if (shared.getUser().getRole() != null) {
+            sharedUserMap.put("role", Map.of(
+                    "id", shared.getUser().getRole().getId(),
+                    "name", shared.getUser().getRole().getName()));
         }
+        sharedMap.put("user", sharedUserMap);
+    }
+    map.put("sharedPost", sharedMap);
+}
 
         return map;
     }
