@@ -1,20 +1,23 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { fetchAPI } from '@/lib/api';
 
 interface Message {
-  role: 'admin' | 'ai';
+  role: 'user' | 'ai';
   text: string;
 }
 
-export default function AdminCopilot() {
+export default function ClientCopilot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'ai', text: 'Chào sếp! Tôi là PolyHUB Copilot. Sếp cần tra cứu số liệu gì hôm nay?' }
+    { role: 'ai', text: 'Chào bạn! Mình là PolyHUB Copilot. Mình có thể giúp gì cho bạn hôm nay?' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -28,19 +31,19 @@ export default function AdminCopilot() {
     if (!inputValue.trim() || loading) return;
 
     const userText = inputValue.trim();
-    setMessages(prev => [...prev, { role: 'admin', text: userText }]);
+    setMessages(prev => [...prev, { role: 'user', text: userText }]);
     setInputValue('');
     setLoading(true);
 
     try {
-      const response = await fetchAPI('/api/admin/chatbot', {
+      const response = await fetchAPI('/api/chatbot', {
         method: 'POST',
         body: JSON.stringify({ message: userText })
       });
 
       setMessages(prev => [...prev, { role: 'ai', text: response.reply }]);
     } catch (error: any) {
-      setMessages(prev => [...prev, { role: 'ai', text: 'Xin lỗi sếp, hệ thống AI đang gặp sự cố: ' + (error.message || 'Lỗi không xác định') }]);
+      setMessages(prev => [...prev, { role: 'ai', text: 'Xin lỗi bạn, hệ thống AI đang gặp sự cố: ' + (error.message || 'Lỗi không xác định') }]);
     } finally {
       setLoading(false);
     }
@@ -52,6 +55,11 @@ export default function AdminCopilot() {
       handleSend();
     }
   };
+
+  // Hide on auth and admin pages
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/register') || pathname?.startsWith('/forgot-password')) {
+    return null;
+  }
 
   return (
     <div style={{
@@ -112,12 +120,12 @@ export default function AdminCopilot() {
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#f9f9f9' }}>
             {messages.map((msg, idx) => (
               <div key={idx} style={{
-                alignSelf: msg.role === 'admin' ? 'flex-end' : 'flex-start',
+                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                 maxWidth: '85%',
-                backgroundColor: msg.role === 'admin' ? '#4f46e5  ' : '#fff',
-                color: msg.role === 'admin' ? '#fff' : '#1C1E21',
+                backgroundColor: msg.role === 'user' ? '#4f46e5' : '#fff',
+                color: msg.role === 'user' ? '#fff' : '#1C1E21',
                 padding: '10px 14px',
-                borderRadius: msg.role === 'admin' ? '16px 16px 0 16px' : '16px 16px 16px 0',
+                borderRadius: msg.role === 'user' ? '16px 16px 0 16px' : '16px 16px 16px 0',
                 boxShadow: msg.role === 'ai' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
                 fontSize: '14.5px',
                 lineHeight: '1.5'

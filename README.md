@@ -295,3 +295,7 @@ Thư mục `scripts/` chứa các kịch bản giúp đồng bộ hóa dữ li�
 *   `UpdateHtml.java` / `FixHtml.java`: Định dạng các bảng và dropdown trong phần quản trị.
 *   `update_profile.py` / `UpdateProfile.java`: Đồng bộ hóa cấu trúc bài viết từ trang chủ (`home.html`) sang trang hồ sơ cá nhân (`profile.html`).
 *   `update.ps1`: Tự động chạy toàn bộ quy trình đồng bộ hóa bằng PowerShell.
+
+## Lấy API KEY ChatBot Client
+Truy cập "console.groq.com" đăng nhập bằng tài khoản google sau đó tạo API key và chép key vào Application Properties local
+[https://console.groq.com/keys](https://console.groq.com/keys)

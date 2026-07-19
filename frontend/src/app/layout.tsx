@@ -6,6 +6,7 @@ import "./globals.css";
 import "../styles/style.css";
 import "../styles/sidebar.css";
 import GlobalBookingCall from "@/components/common/GlobalBookingCall";
+import ClientCopilot from "@/components/common/ClientCopilot";
 
 export const metadata: Metadata = {
   title: "PolyHUB - FPT Polytechnic",
@@ -41,6 +42,7 @@ export default function RootLayout({
           <ToastProvider>
             {children}
             <GlobalBookingCall />
+            <ClientCopilot />
           </ToastProvider>
         </AuthProvider>
         <Script 
