@@ -192,7 +192,7 @@ public class AiService {
                 + "  \"proposedPenalty\": 2.0,\n"
                 + "  \"reasoning\": \"[giải thích lý do]\"\n"
                 + "}";
-        return callGemini(createPayload(prompt));
+        return callGeminiRaw(createPayload(prompt));
     }
 
     /**

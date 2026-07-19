@@ -43,9 +43,11 @@ public class PostService {
         post.setUser(user);
         post.setHotScore(1.7677); // Khởi tạo điểm Recency Boost cho bài đăng mới
 
-        // Upload nhiều ảnh lên Cloudinary
         if (images != null && images.length > 0) {
             int order = 0;
+            if (post.getImages() == null) {
+                post.setImages(new java.util.ArrayList<>());
+            }
             for (MultipartFile image : images) {
                 if (image != null && !image.isEmpty()) {
                     Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");

@@ -74,10 +74,10 @@ export default function ClientCopilot() {
           onClick={() => setIsOpen(true)}
           style={{
             width: '60px', height: '60px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, #4f46e5, #9370DB)',
+            background: 'linear-gradient(135deg, var(--poly-orange, #F27125), #ff8a47) ',
             border: 'none',
             color: '#fff', fontSize: '28px', cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(46, 0, 62, 0.5)',
+            boxShadow: '0 8px 24px rgba(242, 113, 37, 0.45)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'transform 0.3s'
           }}
@@ -98,7 +98,7 @@ export default function ClientCopilot() {
         }}>
           {/* Header */}
           <div style={{
-            background: 'linear-gradient(135deg, #4f46e5, #A78BFA)',
+            background: 'linear-gradient(135deg, var(--poly-orange, #F27125), #ff8a47)',
             color: '#fff',
             padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
           }}>
@@ -122,7 +122,7 @@ export default function ClientCopilot() {
               <div key={idx} style={{
                 alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                 maxWidth: '85%',
-                backgroundColor: msg.role === 'user' ? '#4f46e5' : '#fff',
+                backgroundColor: msg.role === 'user' ? 'var(--poly-orange, #F27125)' : '#fff',
                 color: msg.role === 'user' ? '#fff' : '#1C1E21',
                 padding: '10px 14px',
                 borderRadius: msg.role === 'user' ? '16px 16px 0 16px' : '16px 16px 16px 0',
@@ -160,7 +160,7 @@ export default function ClientCopilot() {
               onClick={handleSend}
               disabled={loading || !inputValue.trim()}
               style={{
-                background: inputValue.trim() ? '#4f46e5' : '#e4e6eb',
+                background: inputValue.trim() ? 'var(--poly-orange, #F27125 --poly-orange-hover)' : '#e4e6eb',
                 color: inputValue.trim() ? '#fff' : '#bcc0c4',
                 border: 'none', borderRadius: '50%', width: '42px', height: '42px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',

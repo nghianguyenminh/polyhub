@@ -368,7 +368,7 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
         </div>
       )}
 
-      <div className="poly-card bg-white" style={{ overflow: 'hidden' }}>
+      <div className="poly-card bg-white">
         {/* ─── Header ─── */}
         <div className="d-flex justify-content-between align-items-center px-3 pt-3 pb-2">
           <div className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>

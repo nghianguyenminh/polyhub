@@ -40,7 +40,16 @@ public class NotificationApiController {
         for (Notification noti : notiPage.getContent()) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", noti.getId());
-            map.put("message", noti.getMessage());
+            
+            String msg = noti.getMessage();
+            if (msg == null || msg.trim().isEmpty()) {
+                msg = noti.getContent();
+                if (noti.getTitle() != null && !noti.getTitle().isEmpty()) {
+                    msg = "【" + noti.getTitle() + "】 " + (msg != null ? msg : "");
+                }
+            }
+            map.put("message", msg);
+            
             map.put("isRead", noti.getIsRead());
             map.put("type", noti.getType());
             map.put("targetId", noti.getTargetId());

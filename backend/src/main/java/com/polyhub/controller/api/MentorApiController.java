@@ -44,7 +44,7 @@ public class MentorApiController {
 
     @Autowired
     private FptAiService fptAiService;
-    
+
     @Autowired
     private ReviewRepository reviewRepository;
 
@@ -56,25 +56,26 @@ public class MentorApiController {
 
     @GetMapping
     public ResponseEntity<?> getMentors(
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "newest") String sort,
-        @RequestParam(required = false) String keyword,
-        Principal principal) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "newest") String sort,
+            @RequestParam(required = false) String keyword,
+            Principal principal) {
 
-    Sort.Direction direction = "oldest".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
-    Pageable pageable = PageRequest.of(page - 1, 4, Sort.by(direction, "createdAt"));
+        Sort.Direction direction = "oldest".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page - 1, 4, Sort.by(direction, "createdAt"));
 
-    // Nếu người dùng đang đăng nhập, loại chính họ ra khỏi danh sách mentor hiển thị
-    String currentUsername = principal != null ? principal.getName() : null;
+        // Nếu người dùng đang đăng nhập, loại chính họ ra khỏi danh sách mentor hiển
+        // thị
+        String currentUsername = principal != null ? principal.getName() : null;
 
-    Page<MentorRequest> mentorPage;
-    if (keyword != null && !keyword.trim().isEmpty()) {
-        mentorPage = mentorRequestRepository.findByStatusAndKeywordExcludingUser(
-                RequestStatus.APPROVED, keyword.trim(), currentUsername, pageable);
-    } else {
-        mentorPage = mentorRequestRepository.findByStatusExcludingUser(
-                RequestStatus.APPROVED, currentUsername, pageable);
-    }
+        Page<MentorRequest> mentorPage;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            mentorPage = mentorRequestRepository.findByStatusAndKeywordExcludingUser(
+                    RequestStatus.APPROVED, keyword.trim(), currentUsername, pageable);
+        } else {
+            mentorPage = mentorRequestRepository.findByStatusExcludingUser(
+                    RequestStatus.APPROVED, currentUsername, pageable);
+        }
 
         List<Map<String, Object>> mentorsList = mentorPage.getContent().stream()
                 .map(m -> buildMentorMap(m))
@@ -124,7 +125,8 @@ public class MentorApiController {
             response.put("hasRequest", true);
             response.put("requestId", existingRequest.getId());
             response.put("requestStatus", existingRequest.getStatus().toString());
-            response.put("rejectionReason", existingRequest.getRejectionReason() != null ? existingRequest.getRejectionReason() : "");
+            response.put("rejectionReason",
+                    existingRequest.getRejectionReason() != null ? existingRequest.getRejectionReason() : "");
         } else {
             response.put("hasRequest", false);
         }
@@ -164,8 +166,10 @@ public class MentorApiController {
         }
 
         MentorRequest request = mentorRequestRepository.findByUser(currentUser).orElse(new MentorRequest());
-        if (request.getId() != null && (request.getStatus() == RequestStatus.PENDING || request.getStatus() == RequestStatus.APPROVED)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Bạn đã có yêu cầu đăng ký đang xử lý hoặc đã được duyệt."));
+        if (request.getId() != null
+                && (request.getStatus() == RequestStatus.PENDING || request.getStatus() == RequestStatus.APPROVED)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Bạn đã có yêu cầu đăng ký đang xử lý hoặc đã được duyệt."));
         }
 
         try {
@@ -211,7 +215,8 @@ public class MentorApiController {
 
             com.fasterxml.jackson.databind.JsonNode dataArray = ocrResult.path("data");
             if (!dataArray.isArray() || dataArray.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Không thể trích xuất thông tin trên thẻ CCCD"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Không thể trích xuất thông tin trên thẻ CCCD"));
             }
 
             com.fasterxml.jackson.databind.JsonNode ocrData = dataArray.get(0);
@@ -225,19 +230,23 @@ public class MentorApiController {
             String recapturedCheck = ocrData.path("recaptured_check").asText("real");
 
             if ("photo".equalsIgnoreCase(copyCheck)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Đăng ký thất bại: Phát hiện ảnh CCCD là ảnh photocopy. Vui lòng chụp ảnh gốc."));
+                return ResponseEntity.badRequest().body(Map.of("error",
+                        "Đăng ký thất bại: Phát hiện ảnh CCCD là ảnh photocopy. Vui lòng chụp ảnh gốc."));
             }
             if ("fake".equalsIgnoreCase(fakeCheck)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Đăng ký thất bại: Phát hiện cấu trúc thẻ CCCD giả mạo."));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Đăng ký thất bại: Phát hiện cấu trúc thẻ CCCD giả mạo."));
             }
             if ("screen_recaptured".equalsIgnoreCase(recapturedCheck)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Đăng ký thất bại: Phát hiện ảnh CCCD được chụp lại từ màn hình khác."));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Đăng ký thất bại: Phát hiện ảnh CCCD được chụp lại từ màn hình khác."));
             }
 
             // Đối chiếu chéo thông tin nhập vào với kết quả OCR
             // Đối chiếu số CCCD
             if (!extractedCccd.trim().equalsIgnoreCase(cccdNumber.replace(" ", ""))) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Số CCCD nhập vào không khớp với thông tin trên ảnh thẻ."));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Số CCCD nhập vào không khớp với thông tin trên ảnh thẻ."));
             }
 
             // Đối chiếu Họ tên
@@ -247,7 +256,8 @@ public class MentorApiController {
                 String cleanInputName = removeAccent(normInputName);
                 String cleanExtractedName = removeAccent(normExtractedName);
                 if (!cleanInputName.equalsIgnoreCase(cleanExtractedName)) {
-                    return ResponseEntity.badRequest().body(Map.of("error", "Họ tên nhập vào không khớp với tên trên thẻ CCCD."));
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("error", "Họ tên nhập vào không khớp với tên trên thẻ CCCD."));
                 }
             }
 
@@ -261,7 +271,8 @@ public class MentorApiController {
                     int year = Integer.parseInt(dobParts[2]);
                     LocalDate extractedBirthday = LocalDate.of(year, month, day);
                     if (!inputBirthday.equals(extractedBirthday)) {
-                        return ResponseEntity.badRequest().body(Map.of("error", "Ngày sinh nhập vào không khớp với ngày sinh trên thẻ CCCD."));
+                        return ResponseEntity.badRequest()
+                                .body(Map.of("error", "Ngày sinh nhập vào không khớp với ngày sinh trên thẻ CCCD."));
                     }
                 } catch (Exception e) {
                     // Dùng dữ liệu đầu vào làm mặc định nếu OCR bị lỗi định dạng ngày sinh
@@ -279,39 +290,92 @@ public class MentorApiController {
             request.setStatus(RequestStatus.PENDING);
             request.setRejectionReason(null);
 
-            // Upload CCCD images
-            if (cccdFrontFile != null && !cccdFrontFile.isEmpty()) {
-                Map<String, Object> frontResult = fileStorageService.uploadFile(cccdFrontFile);
-                request.setCccdFrontFile(frontResult.get("url").toString());
-            }
-            if (cccdBackFile != null && !cccdBackFile.isEmpty()) {
-                Map<String, Object> backResult = fileStorageService.uploadFile(cccdBackFile);
-                request.setCccdBackFile(backResult.get("url").toString());
-            }
-            if (faceFile != null && !faceFile.isEmpty()) {
-                Map<String, Object> faceResult = fileStorageService.uploadFile(faceFile);
-                request.setFaceFile(faceResult.get("url").toString());
-            }
+            // Upload files concurrently to speed up the process
+            java.util.concurrent.CompletableFuture<String> frontUpload = (cccdFrontFile != null
+                    && !cccdFrontFile.isEmpty())
+                            ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                                try {
+                                    return fileStorageService.uploadFile(cccdFrontFile).get("url").toString();
+                                } catch (Exception e) {
+                                    return null;
+                                }
+                            })
+                            : java.util.concurrent.CompletableFuture.completedFuture(null);
 
-            // Upload CV (Required)
-            if (cvFile != null && !cvFile.isEmpty()) {
-                Map<String, Object> uploadResult = fileStorageService.uploadFile(cvFile);
-                request.setCvFile(uploadResult.get("url").toString());
-            } else if (request.getCvFile() == null || request.getCvFile().isEmpty()) {
+            java.util.concurrent.CompletableFuture<String> backUpload = (cccdBackFile != null
+                    && !cccdBackFile.isEmpty())
+                            ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                                try {
+                                    return fileStorageService.uploadFile(cccdBackFile).get("url").toString();
+                                } catch (Exception e) {
+                                    return null;
+                                }
+                            })
+                            : java.util.concurrent.CompletableFuture.completedFuture(null);
+
+            java.util.concurrent.CompletableFuture<String> faceUpload = (faceFile != null && !faceFile.isEmpty())
+                    ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return fileStorageService.uploadFile(faceFile).get("url").toString();
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    })
+                    : java.util.concurrent.CompletableFuture.completedFuture(null);
+
+            java.util.concurrent.CompletableFuture<String> cvUpload = (cvFile != null && !cvFile.isEmpty())
+                    ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return fileStorageService.uploadFile(cvFile).get("url").toString();
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    })
+                    : java.util.concurrent.CompletableFuture.completedFuture(request.getCvFile());
+
+            java.util.concurrent.CompletableFuture<String> certUpload = (certificateFile != null
+                    && !certificateFile.isEmpty())
+                            ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                                try {
+                                    return fileStorageService.uploadFile(certificateFile).get("url").toString();
+                                } catch (Exception e) {
+                                    return null;
+                                }
+                            })
+                            : java.util.concurrent.CompletableFuture.completedFuture(null);
+
+            java.util.concurrent.CompletableFuture<String> degreeUpload = (degreeFile != null && !degreeFile.isEmpty())
+                    ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return fileStorageService.uploadFile(degreeFile).get("url").toString();
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    })
+                    : java.util.concurrent.CompletableFuture.completedFuture(null);
+
+            // Wait for all uploads to complete
+            java.util.concurrent.CompletableFuture
+                    .allOf(frontUpload, backUpload, faceUpload, cvUpload, certUpload, degreeUpload).join();
+
+            if (frontUpload.join() != null)
+                request.setCccdFrontFile(frontUpload.join());
+            if (backUpload.join() != null)
+                request.setCccdBackFile(backUpload.join());
+            if (faceUpload.join() != null)
+                request.setFaceFile(faceUpload.join());
+
+            String cvUrl = cvUpload.join();
+            if (cvUrl != null && !cvUrl.isEmpty()) {
+                request.setCvFile(cvUrl);
+            } else {
                 return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng đính kèm CV nộp hồ sơ."));
             }
 
-            // Upload Certificate (Optional)
-            if (certificateFile != null && !certificateFile.isEmpty()) {
-                Map<String, Object> certResult = fileStorageService.uploadFile(certificateFile);
-                request.setCertificateFile(certResult.get("url").toString());
-            }
-
-            // Upload Degree (Optional)
-            if (degreeFile != null && !degreeFile.isEmpty()) {
-                Map<String, Object> degreeResult = fileStorageService.uploadFile(degreeFile);
-                request.setDegreeFile(degreeResult.get("url").toString());
-            }
+            if (certUpload.join() != null)
+                request.setCertificateFile(certUpload.join());
+            if (degreeUpload.join() != null)
+                request.setDegreeFile(degreeUpload.join());
             mentorRequestRepository.save(request);
             return ResponseEntity.ok(Map.of("message", "Gửi yêu cầu thành công! Vui lòng chờ BQT phê duyệt."));
 
@@ -345,7 +409,7 @@ public class MentorApiController {
         map.put("degreeFile", m.getDegreeFile());
         map.put("faceFile", m.getFaceFile());
         map.put("createdAt", m.getCreatedAt());
-        
+
         Double avgRating = 0.0;
         Long revCount = 0L;
 
@@ -356,13 +420,12 @@ public class MentorApiController {
             map.put("user", Map.of(
                     "username", m.getUser().getUsername(),
                     "avatar", m.getUser().getAvatar() != null ? m.getUser().getAvatar() : "",
-                    "major", m.getUser().getMajor() != null ? m.getUser().getMajor() : ""
-            ));
+                    "major", m.getUser().getMajor() != null ? m.getUser().getMajor() : ""));
         }
-        
+
         map.put("averageRating", avgRating != null ? Math.round(avgRating * 10.0) / 10.0 : 0.0);
         map.put("reviewCount", revCount != null ? revCount : 0);
-        
+
         return map;
     }
 
