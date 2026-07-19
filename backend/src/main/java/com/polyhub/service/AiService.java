@@ -41,12 +41,14 @@ public class AiService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String improveText(String originalText) {
-        String prompt = "Hãy sửa lỗi chính tả, làm câu văn mượt mà hơn, chuyên nghiệp hơn và thêm một vài emoji phù hợp cho đoạn văn sau. Trả về trực tiếp nội dung đã sửa, không cần giải thích thêm:\n\n" + originalText;
+        String prompt = "Hãy sửa lỗi chính tả, làm câu văn mượt mà hơn, chuyên nghiệp hơn và thêm một vài emoji phù hợp cho đoạn văn sau. Trả về trực tiếp nội dung đã sửa, không cần giải thích thêm:\n\n"
+                + originalText;
         return callAiWithFallback(prompt);
     }
 
     public String suggestCaption(MultipartFile image) {
-        // Lưu ý: Groq free tier chưa hỗ trợ tốt vision, nên tính năng có ảnh vẫn chỉ dùng Gemini,
+        // Lưu ý: Groq free tier chưa hỗ trợ tốt vision, nên tính năng có ảnh vẫn chỉ
+        // dùng Gemini,
         // không fallback sang Groq (nếu Gemini quá tải thì báo lỗi thân thiện như cũ).
         try {
             String base64Image = Base64.getEncoder().encodeToString(image.getBytes());
@@ -76,15 +78,18 @@ public class AiService {
     }
 
     /**
-     * Gọi Gemini trước. Nếu Gemini báo hết quota / bị quá tải (429, 5xx) thì tự động
+     * Gọi Gemini trước. Nếu Gemini báo hết quota / bị quá tải (429, 5xx) thì tự
+     * động
      * chuyển sang Groq (Llama 3.3 70B) để chatbot vẫn trả lời được thay vì "chết".
      * Chỉ dùng cho các tác vụ text-only (improveText, askClientCopilot).
      */
     private String callAiWithFallback(String prompt) {
-        boolean hasGemini = geminiApiKey != null && !geminiApiKey.isBlank() && !geminiApiKey.contains("your-gemini-api-key");
+        boolean hasGemini = geminiApiKey != null && !geminiApiKey.isBlank()
+                && !geminiApiKey.contains("your-gemini-api-key");
         boolean hasGroq = groqApiKey != null && !groqApiKey.isBlank();
 
-        // Nếu người dùng đã xóa/không cấu hình Gemini Key nhưng có Groq Key -> Dùng luôn Groq
+        // Nếu người dùng đã xóa/không cấu hình Gemini Key nhưng có Groq Key -> Dùng
+        // luôn Groq
         if (!hasGemini && hasGroq) {
             log.info("Gemini API Key không hợp lệ hoặc chưa cấu hình. Chuyển sang sử dụng Groq trực tiếp.");
             try {
@@ -152,7 +157,8 @@ public class AiService {
                 throw new QuotaExceededException("Gemini quá tải (5xx).");
             }
             if (e.getStatusCode().is4xxClientError()) {
-                // Ném QuotaExceededException để kích hoạt fallback sang Groq nếu lỗi là do API Key
+                // Ném QuotaExceededException để kích hoạt fallback sang Groq nếu lỗi là do API
+                // Key
                 if (responseBody.contains("API key not valid")) {
                     throw new QuotaExceededException("Gemini sai API Key, chuyển sang Groq.");
                 }
@@ -168,9 +174,32 @@ public class AiService {
         }
     }
 
+    public String evaluateMentorBusyReason(String reason, int leadTimeHours, String fewShotExamples) {
+        String prompt = "Hãy phân tích lý do báo bận đột xuất của Mentor sau và đề xuất mức phạt điểm uy tín (từ 0% đến 10%).\n"
+                + "- Lý do báo bận: " + reason + "\n"
+                + "- Thời gian báo trước (Lead Time): " + leadTimeHours + " giờ.\n\n"
+                + "Quy tắc đánh giá:\n"
+                + "1. Nếu Mentor báo trước từ 24 - 48 giờ trở lên (ví dụ: xin nghỉ đi du lịch, có kế hoạch trước): Đây là hành vi hợp lệ, phạt 0%.\n"
+                + "2. Nếu Mentor báo bận sát giờ (Lead Time < 24 giờ) nhưng có lý do khẩn cấp chính đáng bất khả kháng (ốm đau đột xuất có minh chứng, tai nạn, việc gia đình khẩn cấp): Châm chước phạt rất nhẹ (từ 0% đến 2%).\n"
+                + "3. Nếu báo bận sát giờ với lý do không chính đáng (quên lịch, bận việc riêng thông thường, trùng lịch cá nhân không khẩn cấp): Phạt nặng (từ 5% đến 10%).\n\n"
+                + "Dưới đây là một số ví dụ thực tế mà người quản trị (Admin) đã từng phê duyệt/điều chỉnh để tham khảo:\n"
+                + "---------------------\n"
+                + (fewShotExamples.isEmpty() ? "(Không có ví dụ cũ)" : fewShotExamples) + "\n"
+                + "---------------------\n\n"
+                + "Yêu cầu trả về định dạng JSON nguyên bản chứa chính xác các trường sau, không trả thêm bất kỳ câu giải thích nào:\n"
+                + "{\n"
+                + "  \"validScore\": 80,\n"
+                + "  \"proposedPenalty\": 2.0,\n"
+                + "  \"reasoning\": \"[giải thích lý do]\"\n"
+                + "}";
+        return callGemini(createPayload(prompt));
+    }
+
     /**
-     * Fallback provider: Groq (OpenAI-compatible endpoint), model mặc định Llama 3.3 70B.
-     * Free tier của Groq khá rộng rãi và tốc độ rất nhanh, phù hợp làm phương án dự phòng.
+     * Fallback provider: Groq (OpenAI-compatible endpoint), model mặc định Llama
+     * 3.3 70B.
+     * Free tier của Groq khá rộng rãi và tốc độ rất nhanh, phù hợp làm phương án dự
+     * phòng.
      */
     private String callGroq(String prompt) {
         HttpHeaders headers = new HttpHeaders();
@@ -199,7 +228,7 @@ public class AiService {
         if (choices.isArray() && !choices.isEmpty()) {
             return choices.get(0).path("message").path("content").asText();
         }
-       
+
         throw new AiServiceException("Groq không trả về nội dung.");
     }
 
@@ -232,7 +261,8 @@ public class AiService {
         return root;
     }
 
-    // ---- Custom exceptions dùng nội bộ để quyết định có fallback sang Groq hay không ----
+    // ---- Custom exceptions dùng nội bộ để quyết định có fallback sang Groq hay
+    // không ----
 
     private static class AiServiceException extends RuntimeException {
         public AiServiceException(String message) {

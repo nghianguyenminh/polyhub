@@ -41,8 +41,8 @@ export default function HomePage() {
 
   // Create post form states
   const [postContent, setPostContent] = useState('');
-  const [postImage, setPostImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [postImages, setPostImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
@@ -121,16 +121,24 @@ export default function HomePage() {
   }, [hasNext, feedPage, loadFeed]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPostImage(file);
-      setImagePreview(URL.createObjectURL(file));
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setPostImages((prev) => {
+        const combined = [...prev, ...newFiles].slice(0, 10); // max 10 ảnh
+        return combined;
+      });
+      setImagePreviews((prev) => {
+        const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
+        return [...prev, ...newPreviews].slice(0, 10);
+      });
+      // Reset input để có thể chọn lại file giống cũ
+      e.target.value = '';
     }
   };
 
-  const handleRemoveImage = () => {
-    setPostImage(null);
-    setImagePreview(null);
+  const handleRemoveImage = (index: number) => {
+    setPostImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleImproveText = async () => {
@@ -156,11 +164,11 @@ export default function HomePage() {
   };
 
   const handleSuggestCaption = async () => {
-    if (!postImage) return;
+    if (postImages.length === 0) return;
     setAiLoading(true);
     try {
       const formData = new FormData();
-      formData.append('image', postImage);
+      formData.append('image', postImages[0]); // AI gợi ý từ ảnh đầu tiên
 
       const res = await fetch(`${API_BASE_URL}/api/ai/suggest-caption`, {
         method: 'POST',
@@ -179,15 +187,15 @@ export default function HomePage() {
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!postContent.trim() && !postImage) return;
+    if (!postContent.trim() && postImages.length === 0) return;
 
     setSubmitLoading(true);
     try {
       const formData = new FormData();
       formData.append('content', postContent);
-      if (postImage) {
-        formData.append('image', postImage);
-      }
+      postImages.forEach((img) => {
+        formData.append('images', img);
+      });
 
       await fetchAPI('/api/v2/posts/create', {
         method: 'POST',
@@ -197,10 +205,10 @@ export default function HomePage() {
 
       // Clear form
       setPostContent('');
-      setPostImage(null);
-      setImagePreview(null);
+      setPostImages([]);
+      setImagePreviews([]);
 
-      // Close modal using bootstrap programmatic trigger or standard selectors
+      // Close modal
       const closeBtn = document.getElementById('closeCreatePostModal');
       if (closeBtn) closeBtn.click();
 
@@ -364,17 +372,42 @@ export default function HomePage() {
                   <span className="badge rounded-pill topic-pill">Chia sẻ</span>
                 </div>
 
-                {imagePreview && (
-                  <div className="mt-2 position-relative rounded overflow-hidden border">
-                    <img src={imagePreview} className="img-fluid w-100" style={{ maxHeight: '350px', objectFit: 'cover' }} alt="preview" />
-                    <button
-                      type="button"
-                      className="btn btn-light rounded-circle position-absolute shadow flex-center"
-                      style={{ top: '10px', right: '10px', width: '34px', height: '34px', border: '1px solid #ced0d4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      onClick={handleRemoveImage}
+                {/* Preview grid nhiều ảnh */}
+                {imagePreviews.length > 0 && (
+                  <div className="mt-2">
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: imagePreviews.length === 1 ? '1fr' : 'repeat(3, 1fr)',
+                        gap: '6px',
+                      }}
                     >
-                      <i className="bi bi-x-lg"></i>
-                    </button>
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="position-relative rounded overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                          <img
+                            src={preview}
+                            alt={`preview-${index}`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-light rounded-circle position-absolute"
+                            style={{
+                              top: '4px', right: '4px', width: '26px', height: '26px',
+                              padding: 0, border: '1px solid #ced0d4',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '12px', lineHeight: 1,
+                            }}
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <i className="bi bi-x"></i>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-muted mt-1 mb-0" style={{ fontSize: '12px' }}>
+                      {imagePreviews.length}/10 ảnh
+                    </p>
                   </div>
                 )}
 
@@ -389,13 +422,13 @@ export default function HomePage() {
                   >
                     <i className="bi bi-magic me-1"></i>Cải thiện văn bản
                   </button>
-                  {postImage && (
+                  {postImages.length > 0 && (
                     <button
                       type="button"
                       className="btn btn-outline-success btn-sm rounded-pill fw-medium"
                       onClick={handleSuggestCaption}
                       disabled={aiLoading}
-                      title="AI sẽ gợi ý nội dung phù hợp với bức ảnh"
+                      title="AI sẽ gợi ý nội dung phù hợp với bức ảnh đầu tiên"
                     >
                       <i className="bi bi-stars me-1"></i>Gợi ý từ ảnh
                     </button>
@@ -410,10 +443,30 @@ export default function HomePage() {
                 <div className="add-to-post-box p-2 d-flex align-items-center justify-content-between mt-3 border">
                   <span className="fw-semibold px-2" style={{ fontSize: '15px', color: '#050505' }}>Thêm vào bài viết</span>
                   <div className="d-flex gap-1 me-1">
-                    <label htmlFor="post-image" className="modal-tool-icon cursor-pointer mb-0" title="Ảnh/Video">
-                      <i className="bi bi-image text-success fs-5"></i>
+                    <label htmlFor="post-image" className="modal-tool-icon cursor-pointer mb-0" title="Thêm ảnh (tối đa 10)">
+                      <i className="bi bi-images text-success fs-5"></i>
+                      {postImages.length > 0 && (
+                        <span
+                          style={{
+                            position: 'absolute', top: '-4px', right: '-4px',
+                            background: '#F27125', color: '#fff', borderRadius: '50%',
+                            width: '16px', height: '16px', fontSize: '10px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700,
+                          }}
+                        >
+                          {postImages.length}
+                        </span>
+                      )}
                     </label>
-                    <input type="file" id="post-image" accept="image/*" className="d-none" onChange={handleImageChange} />
+                    <input
+                      type="file"
+                      id="post-image"
+                      accept="image/*"
+                      multiple
+                      className="d-none"
+                      onChange={handleImageChange}
+                      disabled={postImages.length >= 10}
+                    />
                     <div className="modal-tool-icon cursor-pointer text-primary" title="Tag bạn bè">
                       <i className="bi bi-person-plus-fill fs-5"></i>
                     </div>

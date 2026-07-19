@@ -31,4 +31,10 @@ public class MentorSchedule implements Serializable {
 
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
+
+    @Column(name = "specific_date", nullable = true)
+    private java.time.LocalDate specificDate;
+
+    @Column(name = "expire_date", nullable = true)
+    private java.time.LocalDate expireDate;
 }

@@ -11,6 +11,7 @@ import {
   ScrollView,
   TextInput,
   Platform,
+  Modal,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Feather from '@expo/vector-icons/Feather';
@@ -38,11 +39,42 @@ export const BookingListScreen = () => {
   const [scheduleSlots, setScheduleSlots] = useState<any[]>([]);
   const [newSlotStart, setNewSlotStart] = useState('09:00');
   const [newSlotEnd, setNewSlotEnd] = useState('11:00');
-  const [activeScheduleDay, setActiveScheduleDay] = useState<number>(2);
+  const [activeScheduleDay, setActiveScheduleDay] = useState<number>(0); // 0 = Tất cả
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Enhanced schedule type/recurrence states
+  const [scheduleType, setScheduleType] = useState<'weekly' | 'specific'>('weekly');
+  const [specificDate, setSpecificDate] = useState<string | null>(null);
+  const [recurrenceType, setRecurrenceType] = useState<'forever' | '1week' | '2week' | 'custom'>('forever');
+  const [expireDate, setExpireDate] = useState<string | null>(null);
+
+  // Picker modals states
+  const [timePickerVisible, setTimePickerVisible] = useState(false);
+  const [timePickerTarget, setTimePickerTarget] = useState<'start' | 'end' | null>(null);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [datePickerTarget, setDatePickerTarget] = useState<'specific' | 'expire' | null>(null);
+
+  const [tempHour, setTempHour] = useState('09');
+  const [tempMin, setTempMin] = useState('00');
+  const [tempDay, setTempDay] = useState('17');
+  const [tempMonth, setTempMonth] = useState('07');
+  const [tempYear, setTempYear] = useState('2026');
+
   const isMentor = user?.role === 'MENTOR';
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+  };
+
+  const getDayOfWeekLabel = (day: number) => {
+    return day === 8 ? 'Chủ Nhật' : `Thứ ${day}`;
+  };
 
   useEffect(() => {
     setCurrentRoleTab('bookings');
@@ -98,15 +130,17 @@ export const BookingListScreen = () => {
       const slots = response.data || [];
       
       const formattedSlots = slots.map((s: any) => ({
+        id: s.id,
         dayOfWeek: s.dayOfWeek,
         startTime: s.startTime.substring(0, 5),
-        endTime: s.endTime.substring(0, 5)
+        endTime: s.endTime.substring(0, 5),
+        specificDate: s.specificDate,
+        expireDate: s.expireDate
       }));
       setScheduleSlots(formattedSlots);
       
       const days = Array.from(new Set(formattedSlots.map((s: any) => s.dayOfWeek))) as number[];
       setSelectedDays(days);
-      setActiveScheduleDay(days.length > 0 ? days[0] : 2);
       setIsDirty(false);
     } catch (error) {
       console.error('Failed to load mentor schedule:', error);
@@ -242,15 +276,70 @@ export const BookingListScreen = () => {
     if (selectedDays.includes(day)) {
       const updatedDays = selectedDays.filter(d => d !== day);
       setSelectedDays(updatedDays);
-      setScheduleSlots(scheduleSlots.filter(s => s.dayOfWeek !== day));
+      setScheduleSlots(scheduleSlots.filter(s => s.dayOfWeek !== day || s.specificDate));
       if (activeScheduleDay === day) {
-        setActiveScheduleDay(updatedDays.length > 0 ? updatedDays[0] : 2);
+        setActiveScheduleDay(0);
       }
     } else {
       const updatedDays = [...selectedDays, day];
       setSelectedDays(updatedDays);
       setActiveScheduleDay(day);
     }
+  };
+
+  const openTimePicker = (target: 'start' | 'end') => {
+    setTimePickerTarget(target);
+    const currentVal = target === 'start' ? newSlotStart : newSlotEnd;
+    const [h, m] = currentVal.split(':');
+    setTempHour(h);
+    setTempMin(m);
+    setTimePickerVisible(true);
+  };
+
+  const confirmTimePicker = () => {
+    const formatted = `${tempHour}:${tempMin}`;
+    if (timePickerTarget === 'start') {
+      setNewSlotStart(formatted);
+    } else if (timePickerTarget === 'end') {
+      setNewSlotEnd(formatted);
+    }
+    setTimePickerVisible(false);
+  };
+
+  const openDatePicker = (target: 'specific' | 'expire') => {
+    setDatePickerTarget(target);
+    const today = new Date();
+    const currentVal = target === 'specific' ? specificDate : expireDate;
+    if (currentVal) {
+      const parts = currentVal.split('-');
+      setTempYear(parts[0]);
+      setTempMonth(parts[1]);
+      setTempDay(parts[2]);
+    } else {
+      setTempYear(String(today.getFullYear()));
+      setTempMonth(String(today.getMonth() + 1).padStart(2, '0'));
+      setTempDay(String(today.getDate()).padStart(2, '0'));
+    }
+    setDatePickerVisible(true);
+  };
+
+  const confirmDatePicker = () => {
+    const y = Number(tempYear);
+    const m = Number(tempMonth) - 1;
+    const d = Number(tempDay);
+    const dateObj = new Date(y, m, d);
+    if (dateObj.getFullYear() !== y || dateObj.getMonth() !== m || dateObj.getDate() !== d) {
+      Alert.alert('Lỗi', 'Ngày đã chọn không hợp lệ.');
+      return;
+    }
+
+    const formatted = `${tempYear}-${tempMonth}-${tempDay}`;
+    if (datePickerTarget === 'specific') {
+      setSpecificDate(formatted);
+    } else if (datePickerTarget === 'expire') {
+      setExpireDate(formatted);
+    }
+    setDatePickerVisible(false);
   };
 
   const handleAddSlot = () => {
@@ -270,7 +359,60 @@ export const BookingListScreen = () => {
       return;
     }
 
-    const daySlots = scheduleSlots.filter(s => s.dayOfWeek === activeScheduleDay);
+    let calculatedDayOfWeek = activeScheduleDay === 0 ? 2 : activeScheduleDay;
+    let slotSpecificDate = null;
+    let slotExpireDate = null;
+
+    if (scheduleType === 'specific') {
+      if (!specificDate) {
+        Alert.alert('Lỗi', 'Vui lòng chọn ngày rảnh cụ thể.');
+        return;
+      }
+      slotSpecificDate = specificDate;
+      const d = new Date(specificDate);
+      let dayVal = d.getDay(); // 0 = Sun, 1 = Mon ...
+      calculatedDayOfWeek = dayVal === 0 ? 8 : dayVal + 1; // 2 = Mon, 8 = Sun
+    } else {
+      if (recurrenceType === '1week') {
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        slotExpireDate = d.toISOString().split('T')[0];
+      } else if (recurrenceType === '2week') {
+        const d = new Date();
+        d.setDate(d.getDate() + 14);
+        slotExpireDate = d.toISOString().split('T')[0];
+      } else if (recurrenceType === 'custom') {
+        if (!expireDate) {
+          Alert.alert('Lỗi', 'Vui lòng chọn ngày hết hạn.');
+          return;
+        }
+        slotExpireDate = expireDate;
+      }
+    }
+
+    // Check overlap
+    const daySlots = scheduleSlots.filter(s => {
+      if (slotSpecificDate && s.specificDate) {
+        return s.specificDate === slotSpecificDate;
+      } else if (!slotSpecificDate && !s.specificDate) {
+        return s.dayOfWeek === calculatedDayOfWeek;
+      } else {
+        const spec = slotSpecificDate ? slotSpecificDate : s.specificDate;
+        const rec = slotSpecificDate ? s : { dayOfWeek: calculatedDayOfWeek, expireDate: slotExpireDate };
+        
+        const specDateObj = new Date(spec);
+        let specDayVal = specDateObj.getDay();
+        const specDayOfWeek = specDayVal === 0 ? 8 : specDayVal + 1;
+
+        if (specDayOfWeek === rec.dayOfWeek) {
+          if (!rec.expireDate || !(new Date(spec).getTime() > new Date(rec.expireDate).getTime())) {
+            return true;
+          }
+        }
+        return false;
+      }
+    });
+
     const newStartMin = sh * 60 + sm;
     const newEndMin = eh * 60 + em;
 
@@ -280,12 +422,19 @@ export const BookingListScreen = () => {
       const startMin = slotSh * 60 + slotSm;
       const endMin = slotEh * 60 + slotEm;
       if (newStartMin < endMin && newEndMin > startMin) {
-        Alert.alert('Lỗi', 'Khung giờ rảnh bị đè lên khung giờ rảnh khác của ngày hôm nay.');
+        Alert.alert('Lỗi', 'Khung giờ rảnh bị trùng lặp với một khung giờ đã cài đặt.');
         return;
       }
     }
 
-    const newSlot = { dayOfWeek: activeScheduleDay, startTime: newSlotStart, endTime: newSlotEnd };
+    const newSlot = {
+      dayOfWeek: calculatedDayOfWeek,
+      startTime: newSlotStart,
+      endTime: newSlotEnd,
+      specificDate: slotSpecificDate,
+      expireDate: slotExpireDate
+    };
+
     setScheduleSlots([...scheduleSlots, newSlot].sort((a, b) => a.startTime.localeCompare(b.startTime)));
     setIsDirty(true);
   };
@@ -298,14 +447,13 @@ export const BookingListScreen = () => {
   const handleSaveSchedule = async () => {
     setIsSavingSchedule(true);
     try {
-      const filteredSlots = scheduleSlots.filter(s => selectedDays.includes(s.dayOfWeek));
-      await api.post('/api/mentor/schedule', filteredSlots);
+      await api.post('/api/mentor/schedule', scheduleSlots);
       Alert.alert('Thành công', 'Lưu cấu hình lịch rảnh thành công!');
       setIsDirty(false);
       loadMentorSchedule();
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Lỗi', error.message || 'Lưu cấu hình thất bại');
+      Alert.alert('Lỗi', error.response?.data?.error || error.message || 'Lưu cấu hình thất bại');
     } finally {
       setIsSavingSchedule(false);
     }
@@ -449,177 +597,399 @@ export const BookingListScreen = () => {
     );
   };
 
-  const renderScheduleConfig = () => {
-    return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.schScrollContent}>
-        <View style={styles.schCard}>
-          <PolyText variant="h3" weight="bold" style={styles.schTitle}>
-            Thiết lập Lịch rảnh hàng tuần
-          </PolyText>
-          <PolyText variant="caption" color={theme.colors.textMuted} style={styles.schSub}>
-            Chọn các ngày bạn rảnh trong tuần và cấu hình khung giờ để sinh viên có thể đặt lịch hẹn. Bạn có thể thiết lập nhiều khung giờ khác nhau trong cùng một ngày.
-          </PolyText>
+  const renderScheduleSlot = (slot: any, index: number) => {
+    let typeLabel = '';
+    let typeColor = theme.colors.textMuted;
+    
+    if (slot.specificDate) {
+      typeLabel = `Ngày cụ thể: ${formatDate(slot.specificDate)} (Một lần duy nhất)`;
+      typeColor = theme.colors.primary;
+    } else {
+      const dayLabel = getDayOfWeekLabel(slot.dayOfWeek);
+      if (slot.expireDate) {
+        typeLabel = `${dayLabel} hàng tuần (Đến ngày ${formatDate(slot.expireDate)})`;
+        typeColor = theme.colors.warning;
+      } else {
+        typeLabel = `${dayLabel} hàng tuần (Lặp vô hạn)`;
+        typeColor = theme.colors.success || '#22c55e';
+      }
+    }
 
-          {/* Bước 1: Chọn ngày */}
-          <PolyText variant="body" weight="bold" style={styles.schStepLabel}>
-            1. Chọn ngày bạn rảnh trong tuần
+    return (
+      <View key={index} style={styles.schSlotItem}>
+        <View style={{ flex: 1 }}>
+          <View style={styles.schSlotTime}>
+            <Icon name="clock" size={14} color={theme.colors.primary} />
+            <PolyText variant="body" style={styles.schSlotTimeText}>
+              {slot.startTime} – {slot.endTime}
+            </PolyText>
+          </View>
+          <PolyText variant="caption" style={{ marginTop: 4, color: typeColor, fontSize: 11.5 }}>
+            {typeLabel}
           </PolyText>
-          <View style={styles.schDayGrid}>
-            {[2, 3, 4, 5, 6, 7, 8].map((day) => {
-              const isActive = selectedDays.includes(day);
-              return (
+        </View>
+        <TouchableOpacity
+          onPress={() => handleRemoveSlot(scheduleSlots.indexOf(slot))}
+          style={styles.schSlotDel}
+        >
+          <Icon name="trash-2" size={16} color={theme.colors.danger} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const renderScheduleConfig = () => {
+    const displayedSlots = scheduleSlots.filter(s => {
+      if (activeScheduleDay === 0) return true;
+      return s.dayOfWeek === activeScheduleDay;
+    });
+
+    return (
+      <View style={{ flex: 1 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.schScrollContent}>
+          <View style={styles.schCard}>
+            <PolyText variant="h3" weight="bold" style={styles.schTitle}>
+              Cấu hình Lịch rảnh
+            </PolyText>
+            <PolyText variant="caption" color={theme.colors.textMuted} style={styles.schSub}>
+              Cài đặt lịch rảnh của bạn trong tuần hoặc ngày cụ thể trên lịch. Sinh viên sẽ dựa vào lịch này để đặt giờ hẹn call video.
+            </PolyText>
+
+            {/* Form thêm slot */}
+            <View style={styles.schAddForm}>
+              <PolyText variant="body" weight="bold" color={theme.colors.textMain} style={{ marginBottom: 12 }}>
+                Tạo khung giờ rảnh mới
+              </PolyText>
+
+              {/* Segmented control for Schedule Type */}
+              <View style={styles.segmentedContainer}>
                 <TouchableOpacity
-                  key={day}
-                  onPress={() => handleToggleDay(day)}
-                  style={[styles.schDayToggle, isActive && styles.schDayToggleActive]}
-                  activeOpacity={0.7}
+                  style={[styles.segmentedBtn, scheduleType === 'weekly' && styles.segmentedBtnActive]}
+                  onPress={() => setScheduleType('weekly')}
                 >
-                  <Icon
-                    name={isActive ? 'check-circle' : 'circle'}
-                    size={16}
-                    color={isActive ? theme.colors.primary : theme.colors.textMuted}
-                  />
-                  <PolyText
-                    variant="caption"
-                    weight={isActive ? 'bold' : 'medium'}
-                    style={[styles.schDayToggleText, isActive && styles.schDayToggleTextActive]}
-                  >
-                    {day === 8 ? 'Chủ Nhật' : `Thứ ${day}`}
+                  <PolyText weight={scheduleType === 'weekly' ? 'bold' : 'medium'} color={scheduleType === 'weekly' ? theme.colors.primary : theme.colors.textMuted}>
+                    Lặp hàng tuần
                   </PolyText>
                 </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Bước 2: Cấu hình giờ */}
-          <PolyText variant="body" weight="bold" style={styles.schStepLabel}>
-            2. Cài đặt khung giờ rảnh cho từng ngày
-          </PolyText>
-
-          {selectedDays.length > 0 ? (
-            <View>
-              {/* Tabs ngày */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.schDayTabsScroll}>
-                <View style={styles.schDayTabs}>
-                  {[...selectedDays].sort((a, b) => a - b).map((day) => (
-                    <TouchableOpacity
-                      key={day}
-                      onPress={() => setActiveScheduleDay(day)}
-                      style={[styles.schDayTab, activeScheduleDay === day && styles.schDayTabActive]}
-                    >
-                      <PolyText
-                        variant="caption"
-                        weight={activeScheduleDay === day ? 'bold' : 'medium'}
-                        color={activeScheduleDay === day ? theme.colors.primary : theme.colors.textMuted}
-                      >
-                        {day === 8 ? 'Chủ Nhật' : `Thứ ${day}`}
-                      </PolyText>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-
-              {/* Danh sách slot */}
-              <View style={styles.schSlotList}>
-                {scheduleSlots.filter((s) => s.dayOfWeek === activeScheduleDay).length === 0 ? (
-                  <View style={styles.schEmptySlots}>
-                    <Icon name="clock" size={24} color={theme.colors.textLight} />
-                    <PolyText variant="caption" color={theme.colors.textMuted} style={{ marginTop: 4 }}>
-                      Chưa có khung giờ. Hãy thêm ở bên dưới.
-                    </PolyText>
-                  </View>
-                ) : (
-                  scheduleSlots
-                    .filter((s) => s.dayOfWeek === activeScheduleDay)
-                    .map((slot, idx) => (
-                      <View key={idx} style={styles.schSlotItem}>
-                        <View style={styles.schSlotTime}>
-                          <Icon name="clock" size={14} color={theme.colors.primary} />
-                          <PolyText variant="body" style={styles.schSlotTimeText}>
-                            {slot.startTime} – {slot.endTime}
-                          </PolyText>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => handleRemoveSlot(scheduleSlots.indexOf(slot))}
-                          style={styles.schSlotDel}
-                        >
-                          <Icon name="trash-2" size={16} color={theme.colors.danger} />
-                        </TouchableOpacity>
-                      </View>
-                    ))
-                )}
+                <TouchableOpacity
+                  style={[styles.segmentedBtn, scheduleType === 'specific' && styles.segmentedBtnActive]}
+                  onPress={() => setScheduleType('specific')}
+                >
+                  <PolyText weight={scheduleType === 'specific' ? 'bold' : 'medium'} color={scheduleType === 'specific' ? theme.colors.primary : theme.colors.textMuted}>
+                    Ngày cụ thể
+                  </PolyText>
+                </TouchableOpacity>
               </View>
 
-              {/* Form thêm slot */}
-              <View style={styles.schAddForm}>
-                <PolyText variant="caption" weight="bold" color={theme.colors.textMain} style={{ marginBottom: theme.spacing.sm }}>
-                  Thêm khung giờ rảnh mới
-                </PolyText>
-                
-                <View style={styles.schTimeRow}>
-                  <View style={styles.schTimeField}>
-                    <PolyText variant="small" color={theme.colors.textMuted} style={{ marginBottom: 4 }}>Bắt đầu</PolyText>
-                    <TextInput
-                      style={styles.schTimeInput}
-                      value={newSlotStart}
-                      onChangeText={setNewSlotStart}
-                      placeholder="09:00"
-                      placeholderTextColor={theme.colors.textLight}
-                      maxLength={5}
-                      autoCapitalize="none"
-                    />
-                  </View>
-                  
-                  <PolyText style={styles.schTimeSeparator}>–</PolyText>
-
-                  <View style={styles.schTimeField}>
-                    <PolyText variant="small" color={theme.colors.textMuted} style={{ marginBottom: 4 }}>Kết thúc</PolyText>
-                    <TextInput
-                      style={styles.schTimeInput}
-                      value={newSlotEnd}
-                      onChangeText={setNewSlotEnd}
-                      placeholder="11:00"
-                      placeholderTextColor={theme.colors.textLight}
-                      maxLength={5}
-                      autoCapitalize="none"
-                    />
+              {scheduleType === 'weekly' ? (
+                <View style={{ marginBottom: 12 }}>
+                  {/* Day of Week Selection */}
+                  <PolyText variant="small" color={theme.colors.textMuted} style={{ marginBottom: 6 }}>
+                    Chọn thứ trong tuần
+                  </PolyText>
+                  <View style={styles.daySelectionRow}>
+                    {[2, 3, 4, 5, 6, 7, 8].map((day) => {
+                      const isDayActive = activeScheduleDay === day;
+                      return (
+                        <TouchableOpacity
+                          key={day}
+                          onPress={() => setActiveScheduleDay(day)}
+                          style={[styles.daySelectCircle, isDayActive && styles.daySelectCircleActive]}
+                        >
+                          <PolyText weight="bold" color={isDayActive ? '#FFF' : theme.colors.textMain} style={{ fontSize: 12 }}>
+                            {day === 8 ? 'CN' : `T${day}`}
+                          </PolyText>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
 
-                  <TouchableOpacity onPress={handleAddSlot} style={styles.schAddBtn} activeOpacity={0.8}>
-                    <Icon name="plus" size={16} color="#FFF" />
-                    <PolyText variant="small" weight="bold" color="#FFF" style={{ marginLeft: 2 }}>Thêm</PolyText>
+                  {/* Recurrence selection */}
+                  <PolyText variant="small" color={theme.colors.textMuted} style={{ marginBottom: 6, marginTop: 12 }}>
+                    Thời hạn hiệu lực
+                  </PolyText>
+                  <View style={styles.recurrenceRow}>
+                    {(['forever', '1week', '2week', 'custom'] as const).map((rType) => {
+                      const isRTypeActive = recurrenceType === rType;
+                      let label = '';
+                      if (rType === 'forever') label = 'Vô hạn';
+                      else if (rType === '1week') label = '1 tuần';
+                      else if (rType === '2week') label = '2 tuần';
+                      else label = 'Tùy chọn';
+
+                      return (
+                        <TouchableOpacity
+                          key={rType}
+                          onPress={() => setRecurrenceType(rType)}
+                          style={[styles.recurrenceBtn, isRTypeActive && styles.recurrenceBtnActive]}
+                        >
+                          <PolyText variant="small" weight="bold" color={isRTypeActive ? '#FFF' : theme.colors.textMuted}>
+                            {label}
+                          </PolyText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {recurrenceType === 'custom' && (
+                    <View style={{ marginTop: 12 }}>
+                      <PolyText variant="small" color={theme.colors.textMuted} style={{ marginBottom: 6 }}>
+                        Hết hạn sau ngày *
+                      </PolyText>
+                      <TouchableOpacity style={styles.dateSelectorBtn} onPress={() => openDatePicker('expire')}>
+                        <Icon name="calendar" size={16} color={theme.colors.primary} />
+                        <PolyText weight="semibold" style={{ marginLeft: 8 }}>
+                          {expireDate ? formatDate(expireDate) : 'Chọn ngày hết hạn'}
+                        </PolyText>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View style={{ marginBottom: 12 }}>
+                  {/* Specific Date selection */}
+                  <PolyText variant="small" color={theme.colors.textMuted} style={{ marginBottom: 6 }}>
+                    Chọn ngày rảnh cụ thể *
+                  </PolyText>
+                  <TouchableOpacity style={styles.dateSelectorBtn} onPress={() => openDatePicker('specific')}>
+                    <Icon name="calendar" size={16} color={theme.colors.primary} />
+                    <PolyText weight="semibold" style={{ marginLeft: 8 }}>
+                      {specificDate ? formatDate(specificDate) : 'Chọn ngày trên lịch'}
+                    </PolyText>
                   </TouchableOpacity>
                 </View>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.schAlert}>
-              <Icon name="info" size={16} color={theme.colors.primary} />
-              <PolyText variant="caption" color={theme.colors.primary} style={{ marginLeft: 8, flex: 1 }}>
-                Vui lòng chọn ít nhất 1 ngày rảnh ở Bước 1 để bắt đầu cấu hình khung giờ.
-              </PolyText>
-            </View>
-          )}
+              )}
 
-          {/* Nút lưu */}
-          <View style={styles.schSaveWrap}>
-            {isDirty && (
-              <View style={styles.schDirtyWarning}>
-                <Icon name="alert-triangle" size={14} color={theme.colors.warning} />
-                <PolyText variant="caption" color={theme.colors.warning} style={{ marginLeft: 6 }}>
-                  Bạn có thay đổi chưa lưu. Hãy nhấn "Lưu cấu hình" bên dưới.
-                </PolyText>
+              {/* Start Time & End Time */}
+              <PolyText variant="small" color={theme.colors.textMuted} style={{ marginBottom: 6, marginTop: 4 }}>
+                Chọn khung giờ rảnh (Giờ bắt đầu - Giờ kết thúc)
+              </PolyText>
+              <View style={styles.timePickerRow}>
+                <TouchableOpacity style={styles.timeFieldBtn} onPress={() => openTimePicker('start')}>
+                  <Icon name="clock" size={16} color={theme.colors.primary} />
+                  <PolyText weight="semibold" style={{ marginLeft: 8 }}>
+                    {newSlotStart}
+                  </PolyText>
+                </TouchableOpacity>
+                
+                <PolyText style={{ alignSelf: 'center', marginHorizontal: 6, color: theme.colors.textLight }}>–</PolyText>
+                
+                <TouchableOpacity style={styles.timeFieldBtn} onPress={() => openTimePicker('end')}>
+                  <Icon name="clock" size={16} color={theme.colors.primary} />
+                  <PolyText weight="semibold" style={{ marginLeft: 8 }}>
+                    {newSlotEnd}
+                  </PolyText>
+                </TouchableOpacity>
               </View>
-            )}
-            <PolyButton
-              title={isSavingSchedule ? "Đang lưu..." : "Lưu cấu hình lịch rảnh"}
-              isLoading={isSavingSchedule}
-              onPress={handleSaveSchedule}
-              style={styles.schSaveBtn}
-            />
+
+              <PolyButton
+                title="Thêm khung giờ rảnh"
+                icon={<Icon name="plus" size={16} color="#FFF" />}
+                onPress={handleAddSlot}
+                style={{ marginTop: 14 }}
+              />
+            </View>
+
+            {/* Danh sách khung giờ đã cài đặt */}
+            <PolyText variant="body" weight="bold" style={[styles.schStepLabel, { marginTop: 24 }]}>
+              Khung giờ rảnh đã cấu hình
+            </PolyText>
+
+            {/* Tabs lọc theo ngày */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.schDayTabsScroll}>
+              <View style={styles.schDayTabs}>
+                {[0, 2, 3, 4, 5, 6, 7, 8].map((day) => (
+                  <TouchableOpacity
+                    key={day}
+                    onPress={() => setActiveScheduleDay(day)}
+                    style={[styles.schDayTab, activeScheduleDay === day && styles.schDayTabActive]}
+                  >
+                    <PolyText
+                      variant="caption"
+                      weight={activeScheduleDay === day ? 'bold' : 'medium'}
+                      color={activeScheduleDay === day ? theme.colors.primary : theme.colors.textMuted}
+                    >
+                      {day === 0 ? 'Tất cả' : day === 8 ? 'CN' : `Thứ ${day}`}
+                    </PolyText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            {/* List of slots */}
+            <View style={styles.schSlotList}>
+              {displayedSlots.length === 0 ? (
+                <View style={styles.schEmptySlots}>
+                  <Icon name="clock" size={24} color={theme.colors.textLight} />
+                  <PolyText variant="caption" color={theme.colors.textMuted} style={{ marginTop: 4 }}>
+                    Chưa có khung giờ rảnh nào được cài đặt.
+                  </PolyText>
+                </View>
+              ) : (
+                displayedSlots.map((slot, idx) => renderScheduleSlot(slot, idx))
+              )}
+            </View>
+
+            {/* Nút lưu cấu hình */}
+            <View style={styles.schSaveWrap}>
+              {isDirty && (
+                <View style={styles.schDirtyWarning}>
+                  <Icon name="alert-triangle" size={14} color={theme.colors.warning} />
+                  <PolyText variant="caption" color={theme.colors.warning} style={{ marginLeft: 6 }}>
+                    Bạn có thay đổi chưa lưu. Hãy nhấn "Lưu cấu hình" bên dưới.
+                  </PolyText>
+                </View>
+              )}
+              <PolyButton
+                title={isSavingSchedule ? "Đang lưu..." : "Lưu cấu hình lịch rảnh"}
+                isLoading={isSavingSchedule}
+                onPress={handleSaveSchedule}
+                style={styles.schSaveBtn}
+              />
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+
+        {/* Modal chọn Giờ */}
+        <Modal visible={timePickerVisible} transparent animationType="fade">
+          <View style={styles.pickerOverlay}>
+            <PolyCard style={styles.pickerBox}>
+              <PolyText variant="h2" weight="bold" align="center" style={{ marginBottom: 20 }}>
+                Chọn giờ
+              </PolyText>
+              <View style={styles.pickerRow}>
+                {/* Hour */}
+                <View style={styles.pickerCol}>
+                  <PolyText weight="bold" color={theme.colors.primary} style={{ marginBottom: 6 }}>Giờ</PolyText>
+                  <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const h = String(i).padStart(2, '0');
+                      const isSelected = tempHour === h;
+                      return (
+                        <TouchableOpacity
+                          key={h}
+                          style={[styles.pickerItem, isSelected && styles.pickerItemSelected]}
+                          onPress={() => setTempHour(h)}
+                        >
+                          <PolyText weight={isSelected ? 'bold' : 'regular'} color={isSelected ? theme.colors.primary : theme.colors.textMain}>
+                            {h}
+                          </PolyText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+                <PolyText variant="h2" style={{ alignSelf: 'center', marginHorizontal: 12 }}>:</PolyText>
+                {/* Minute */}
+                <View style={styles.pickerCol}>
+                  <PolyText weight="bold" color={theme.colors.primary} style={{ marginBottom: 6 }}>Phút</PolyText>
+                  <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+                    {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => {
+                      const isSelected = tempMin === m;
+                      return (
+                        <TouchableOpacity
+                          key={m}
+                          style={[styles.pickerItem, isSelected && styles.pickerItemSelected]}
+                          onPress={() => setTempMin(m)}
+                        >
+                          <PolyText weight={isSelected ? 'bold' : 'regular'} color={isSelected ? theme.colors.primary : theme.colors.textMain}>
+                            {m}
+                          </PolyText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </View>
+              <View style={styles.pickerActions}>
+                <PolyButton variant="ghost" title="Hủy" style={{ flex: 1 }} onPress={() => setTimePickerVisible(false)} />
+                <PolyButton variant="primary" title="Xác nhận" style={{ flex: 1, marginLeft: 12 }} onPress={confirmTimePicker} />
+              </View>
+            </PolyCard>
+          </View>
+        </Modal>
+
+        {/* Modal chọn Ngày */}
+        <Modal visible={datePickerVisible} transparent animationType="fade">
+          <View style={styles.pickerOverlay}>
+            <PolyCard style={styles.pickerBox}>
+              <PolyText variant="h2" weight="bold" align="center" style={{ marginBottom: 20 }}>
+                Chọn ngày
+              </PolyText>
+              <View style={styles.pickerRow}>
+                {/* Day */}
+                <View style={styles.pickerCol}>
+                  <PolyText weight="bold" color={theme.colors.primary} style={{ marginBottom: 6 }}>Ngày</PolyText>
+                  <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+                    {Array.from({ length: 31 }).map((_, i) => {
+                      const d = String(i + 1).padStart(2, '0');
+                      const isSelected = tempDay === d;
+                      return (
+                        <TouchableOpacity
+                          key={d}
+                          style={[styles.pickerItem, isSelected && styles.pickerItemSelected]}
+                          onPress={() => setTempDay(d)}
+                        >
+                          <PolyText weight={isSelected ? 'bold' : 'regular'} color={isSelected ? theme.colors.primary : theme.colors.textMain}>
+                            {d}
+                          </PolyText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+                <PolyText variant="h2" style={{ alignSelf: 'center', marginHorizontal: 6 }}>/</PolyText>
+                {/* Month */}
+                <View style={styles.pickerCol}>
+                  <PolyText weight="bold" color={theme.colors.primary} style={{ marginBottom: 6 }}>Tháng</PolyText>
+                  <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+                    {Array.from({ length: 12 }).map((_, i) => {
+                      const m = String(i + 1).padStart(2, '0');
+                      const isSelected = tempMonth === m;
+                      return (
+                        <TouchableOpacity
+                          key={m}
+                          style={[styles.pickerItem, isSelected && styles.pickerItemSelected]}
+                          onPress={() => setTempMonth(m)}
+                        >
+                          <PolyText weight={isSelected ? 'bold' : 'regular'} color={isSelected ? theme.colors.primary : theme.colors.textMain}>
+                            {m}
+                          </PolyText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+                <PolyText variant="h2" style={{ alignSelf: 'center', marginHorizontal: 6 }}>/</PolyText>
+                {/* Year */}
+                <View style={[styles.pickerCol, { width: 90 }]}>
+                  <PolyText weight="bold" color={theme.colors.primary} style={{ marginBottom: 6 }}>Năm</PolyText>
+                  <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+                    {['2026', '2027', '2028', '2029', '2030'].map((y) => {
+                      const isSelected = tempYear === y;
+                      return (
+                        <TouchableOpacity
+                          key={y}
+                          style={[styles.pickerItem, isSelected && styles.pickerItemSelected]}
+                          onPress={() => setTempYear(y)}
+                        >
+                          <PolyText weight={isSelected ? 'bold' : 'regular'} color={isSelected ? theme.colors.primary : theme.colors.textMain}>
+                            {y}
+                          </PolyText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </View>
+              <View style={styles.pickerActions}>
+                <PolyButton variant="ghost" title="Hủy" style={{ flex: 1 }} onPress={() => setDatePickerVisible(false)} />
+                <PolyButton variant="primary" title="Xác nhận" style={{ flex: 1, marginLeft: 12 }} onPress={confirmDatePicker} />
+              </View>
+            </PolyCard>
+          </View>
+        </Modal>
+      </View>
     );
   };
 
@@ -949,40 +1319,133 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  schTimeRow: {
+  segmentedContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: 2,
+    marginBottom: 14,
   },
-  schTimeField: {
+  segmentedBtn: {
     flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: theme.borderRadius.md - 2,
   },
-  schTimeInput: {
-    height: 40,
+  segmentedBtnActive: {
+    backgroundColor: theme.colors.card,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 1,
+    elevation: 1,
+  },
+  daySelectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  daySelectCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  daySelectCircleActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  recurrenceRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginVertical: 4,
+  },
+  recurrenceBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+  },
+  recurrenceBtnActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  dateSelectorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
     borderWidth: 1,
     borderRadius: theme.borderRadius.md,
-    paddingHorizontal: theme.spacing.md,
-    color: theme.colors.textMain,
-    fontSize: theme.typography.sizes.caption,
-    backgroundColor: theme.colors.card,
-    marginTop: 6,
-  },
-  schTimeSeparator: {
-    alignSelf: 'center',
-    color: theme.colors.textLight,
-    fontWeight: 'bold',
-    fontSize: 16,
-    paddingBottom: 8,
-  },
-  schAddBtn: {
     height: 40,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: 12,
+  },
+  timePickerRow: {
     flexDirection: 'row',
+    gap: 8,
+  },
+  timeFieldBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    borderRadius: theme.borderRadius.md,
+    height: 40,
+    paddingHorizontal: 12,
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
+    padding: 24,
+  },
+  pickerBox: {
+    width: '100%',
+    maxWidth: 320,
+    padding: 20,
+    borderRadius: theme.borderRadius.xl,
+    backgroundColor: theme.colors.card,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    height: 180,
+    marginBottom: 20,
+  },
+  pickerCol: {
+    width: 70,
+    alignItems: 'center',
+  },
+  pickerScroll: {
+    flex: 1,
+    width: '100%',
+  },
+  pickerItem: {
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  pickerItemSelected: {
+    backgroundColor: theme.colors.primarySoft,
+  },
+  pickerActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: 12,
   },
   schAlert: {
     flexDirection: 'row',

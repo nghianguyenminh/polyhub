@@ -8,6 +8,7 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
 import dynamic from 'next/dynamic';
 import ClockPicker from '@/components/common/ClockPicker';
+import CustomDatePicker from '@/components/common/CustomDatePicker';
 import RatingModal from '@/components/common/RatingModal';
 import '@/styles/bookings.css';
 
@@ -37,6 +38,8 @@ interface ScheduleSlot {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+  specificDate?: string;
+  expireDate?: string;
 }
 
 export default function BookingsPage() {
@@ -62,14 +65,30 @@ export default function BookingsPage() {
   // Rating Modal state
   const [ratingBooking, setRatingBooking] = useState<Booking | null>(null);
 
-  // Mentor availability config states
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  // Mentor availability config states (Google Calendar Style)
   const [scheduleSlots, setScheduleSlots] = useState<ScheduleSlot[]>([]);
-  const [newSlotStart, setNewSlotStart] = useState('09:00');
-  const [newSlotEnd, setNewSlotEnd] = useState('11:00');
-  const [activeScheduleDay, setActiveScheduleDay] = useState<number>(2);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+
+  // Form states for adding new event/slot
+  const [slotType, setSlotType] = useState<'ONCE' | 'WEEKLY'>('ONCE');
+  const [slotDate, setSlotDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [slotDayOfWeek, setSlotDayOfWeek] = useState<number>(2);
+  const [newSlotStart, setNewSlotStart] = useState('09:00');
+  const [newSlotEnd, setNewSlotEnd] = useState('11:00');
+  const [expiryPreset, setExpiryPreset] = useState<'FOREVER' | '1_WEEK' | '2_WEEKS' | 'CUSTOM'>('FOREVER');
+  const [slotExpiryDate, setSlotExpiryDate] = useState('');
+
+  // Mentor vacation/busy states
+  const [busyType, setBusyType] = useState<'EMERGENCY' | 'PLANNED'>('EMERGENCY');
+  const [busyStartDate, setBusyStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [busyEndDate, setBusyEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [busyStartTime, setBusyStartTime] = useState('09:00');
+  const [busyEndTime, setBusyEndTime] = useState('17:00');
+  const [busyReason, setBusyReason] = useState('');
+  const [busyError, setBusyError] = useState('');
+  const [busySuccess, setBusySuccess] = useState('');
+  const [submittingBusy, setSubmittingBusy] = useState(false);
 
   // Rejection modal states
   const [rejectingBooking, setRejectingBooking] = useState<Booking | null>(null);
@@ -134,9 +153,6 @@ export default function BookingsPage() {
       const data = await fetchAPI('/api/mentor/schedule');
       const slots: ScheduleSlot[] = data || [];
       setScheduleSlots(slots);
-      const days = Array.from(new Set(slots.map(s => s.dayOfWeek)));
-      setSelectedDays(days);
-      setActiveScheduleDay(days.length > 0 ? days[0] : 2);
       setIsDirty(false);
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi tải cấu hình lịch rảnh');
@@ -228,18 +244,8 @@ export default function BookingsPage() {
     }
   };
 
-  const handleToggleDay = (day: number) => {
-    setIsDirty(true);
-    if (selectedDays.includes(day)) {
-      setSelectedDays(selectedDays.filter(d => d !== day));
-      setScheduleSlots(scheduleSlots.filter(s => s.dayOfWeek !== day));
-    } else {
-      setSelectedDays([...selectedDays, day]);
-      setActiveScheduleDay(day);
-    }
-  };
-
   const handleAddSlot = () => {
+    setErrorMsg('');
     if (!newSlotStart || !newSlotEnd) return;
     const [sh, sm] = newSlotStart.split(':').map(Number);
     const [eh, em] = newSlotEnd.split(':').map(Number);
@@ -247,20 +253,72 @@ export default function BookingsPage() {
       alert('Thời gian bắt đầu phải trước thời gian kết thúc.');
       return;
     }
-    const daySlots = scheduleSlots.filter(s => s.dayOfWeek === activeScheduleDay);
-    const newStartMin = sh * 60 + sm;
-    const newEndMin = eh * 60 + em;
-    for (const slot of daySlots) {
-      const [slotSh, slotSm] = slot.startTime.split(':').map(Number);
-      const [slotEh, slotEm] = slot.endTime.split(':').map(Number);
-      const startMin = slotSh * 60 + slotSm;
-      const endMin = slotEh * 60 + slotEm;
-      if (newStartMin < endMin && newEndMin > startMin) {
-        alert('Khung giờ rảnh bị đè lên khung giờ rảnh khác của ngày hôm nay.');
-        return;
+
+    const specificDate = slotType === 'ONCE' ? slotDate : undefined;
+    const dayOfWeek = slotType === 'ONCE'
+      ? (new Date(slotDate).getDay() === 0 ? 8 : new Date(slotDate).getDay() + 1)
+      : slotDayOfWeek;
+    let expireDate: string | undefined = undefined;
+    if (slotType === 'WEEKLY') {
+      if (expiryPreset === '1_WEEK') {
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        expireDate = d.toISOString().split('T')[0];
+      } else if (expiryPreset === '2_WEEKS') {
+        const d = new Date();
+        d.setDate(d.getDate() + 14);
+        expireDate = d.toISOString().split('T')[0];
+      } else if (expiryPreset === 'CUSTOM') {
+        expireDate = slotExpiryDate;
       }
     }
-    const newSlot: ScheduleSlot = { dayOfWeek: activeScheduleDay, startTime: newSlotStart, endTime: newSlotEnd };
+
+    const startMin = sh * 60 + sm;
+    const endMin = eh * 60 + em;
+
+    // Check for overlap locally
+    for (const s of scheduleSlots) {
+      let dateOverlap = false;
+      if (specificDate && s.specificDate) {
+        dateOverlap = specificDate === s.specificDate;
+      } else if (!specificDate && !s.specificDate) {
+        dateOverlap = dayOfWeek === s.dayOfWeek;
+      } else {
+        const spec = specificDate || s.specificDate;
+        const weekDay = specificDate ? dayOfWeek : s.dayOfWeek;
+        const exp = specificDate ? s.expireDate : expireDate;
+
+        if (spec) {
+          const specDayOfWeek = new Date(spec).getDay() === 0 ? 8 : new Date(spec).getDay() + 1;
+          if (specDayOfWeek === weekDay) {
+            if (!exp || new Date(spec).getTime() <= new Date(exp).getTime()) {
+              dateOverlap = true;
+            }
+          }
+        }
+      }
+
+      if (dateOverlap) {
+        const [slotSh, slotSm] = s.startTime.split(':').map(Number);
+        const [slotEh, slotEm] = s.endTime.split(':').map(Number);
+        const slotStartMin = slotSh * 60 + slotSm;
+        const slotEndMin = slotEh * 60 + slotEm;
+
+        if (startMin < slotEndMin && endMin > slotStartMin) {
+          alert('Khung giờ này bị trùng lặp với một lịch rảnh khác đã cấu hình.');
+          return;
+        }
+      }
+    }
+
+    const newSlot: ScheduleSlot = {
+      dayOfWeek,
+      startTime: newSlotStart,
+      endTime: newSlotEnd,
+      specificDate,
+      expireDate
+    };
+
     setScheduleSlots([...scheduleSlots, newSlot].sort((a, b) => a.startTime.localeCompare(b.startTime)));
     setIsDirty(true);
   };
@@ -275,10 +333,9 @@ export default function BookingsPage() {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-      const filteredSlots = scheduleSlots.filter(s => selectedDays.includes(s.dayOfWeek));
       await fetchAPI('/api/mentor/schedule', {
         method: 'POST',
-        body: JSON.stringify(filteredSlots),
+        body: JSON.stringify(scheduleSlots),
       });
       setSuccessMsg('Lưu cấu hình lịch rảnh thành công!');
       setIsDirty(false);
@@ -288,6 +345,62 @@ export default function BookingsPage() {
       setErrorMsg(err.message || 'Lưu cấu hình thất bại');
     } finally {
       setSavingSchedule(false);
+    }
+  };
+
+  const handleRegisterBusy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusyError('');
+    setBusySuccess('');
+    if (!busyStartDate || !busyStartTime || !busyEndDate || !busyEndTime || !busyReason) {
+      setBusyError('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+    const start = new Date(`${busyStartDate}T${busyStartTime}`);
+    const end = new Date(`${busyEndDate}T${busyEndTime}`);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setBusyError('Định dạng thời gian không hợp lệ');
+      return;
+    }
+    if (start >= end) {
+      setBusyError('Thời gian bắt đầu phải trước thời gian kết thúc');
+      return;
+    }
+    if (start < new Date()) {
+      setBusyError('Thời gian báo bận không thể ở quá khứ');
+      return;
+    }
+
+    if (busyType === 'PLANNED') {
+      const minStart = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      if (start < minStart) {
+        setBusyError('Bận báo trước phải đăng ký trước ít nhất 24 giờ (1 ngày)');
+        return;
+      }
+    }
+    
+    const confirmCancel = window.confirm(
+      'Hệ thống sẽ tự động Hủy hàng loạt các lịch đặt trùng trong khoảng này. Bạn có chắc chắn muốn báo bận?'
+    );
+    if (!confirmCancel) return;
+
+    setSubmittingBusy(true);
+    try {
+      const res = await fetchAPI('/api/bookings/mentor/busy', {
+        method: 'POST',
+        body: JSON.stringify({
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+          reason: `[${busyType === 'EMERGENCY' ? 'Bận đột xuất' : 'Bận báo trước'}] ${busyReason}`,
+        }),
+      });
+      setBusySuccess(res.message || 'Đăng ký báo bận và hủy lịch trùng thành công!');
+      setBusyReason('');
+      setTimeout(() => setBusySuccess(''), 5000);
+    } catch (err: any) {
+      setBusyError(err.message || 'Có lỗi xảy ra khi báo bận');
+    } finally {
+      setSubmittingBusy(false);
     }
   };
 
@@ -657,96 +770,293 @@ export default function BookingsPage() {
                 })()}
               </div>
             ) : (
-              /* ═══════════════════════════════════════
-                 MENTOR SCHEDULE TAB
-              ═══════════════════════════════════════ */
-              <div className="sch-card" style={{ marginBottom: 40 }}>
+              <>
+                <div className="sch-card" style={{ marginBottom: 40 }}>
                 <h5 className="sch-title">
                   <span className="bkp-header-icon" style={{ width: 32, height: 32, fontSize: 14 }}>
-                    <i className="bi bi-calendar3" />
+                    <i className="bi bi-calendar-plus-fill" />
                   </span>
-                  Thiết lập Lịch rảnh hàng tuần
+                  Thiết lập Khung giờ Rảnh (Google Calendar Style)
                 </h5>
                 <p className="sch-sub">
-                  Chọn các ngày bạn rảnh trong tuần và cấu hình khung giờ rảnh để sinh viên có thể đặt lịch hẹn. Bạn có thể thiết lập nhiều khung giờ khác nhau trong cùng một ngày.
+                  Tạo các sự kiện giờ rảnh tương tự như trên Google Calendar. Bạn có thể chọn lặp lại hàng tuần hoặc một ngày cụ thể trên lịch, cài đặt hạn sử dụng và khung giờ rảnh linh hoạt.
                 </p>
 
-                {/* Step 1: Chọn ngày */}
-                <div className="sch-step-label">
-                  <span className="sch-step-badge">1</span>
-                  Chọn ngày bạn rảnh trong tuần
-                </div>
-                <div className="sch-day-grid">
-                  {[2, 3, 4, 5, 6, 7, 8].map((day) => {
-                    const isActive = selectedDays.includes(day);
-                    return (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => handleToggleDay(day)}
-                        className={`sch-day-toggle ${isActive ? 'active' : ''}`}
-                      >
-                        {isActive
-                          ? <i className="bi bi-check-circle-fill" />
-                          : <i className="bi bi-circle" />
-                        }
-                        {day === 8 ? 'Chủ Nhật' : `Thứ ${day}`}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Step 2: Cài đặt khung giờ */}
-                <div className="sch-step-label">
-                  <span className="sch-step-badge">2</span>
-                  Cài đặt khung giờ rảnh cho từng ngày
-                </div>
-
-                {selectedDays.length > 0 ? (
-                  <div>
-                    {/* Day Tabs */}
-                    <div className="sch-day-tabs">
-                      {selectedDays.sort((a,b) => a - b).map((day) => (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => setActiveScheduleDay(day)}
-                          className={`sch-day-tab ${activeScheduleDay === day ? 'active' : ''}`}
-                        >
-                          {getDayLabel(day)}
-                        </button>
-                      ))}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 32, marginTop: 20 }}>
+                  {/* Cột 1: Biểu mẫu tạo Sự kiện Giờ rảnh */}
+                  <div style={{ background: '#f8fafc', padding: 24, borderRadius: 20, border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a2e', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <i className="bi bi-plus-circle-fill" style={{ color: '#f27125' }} />
+                      Tạo khung giờ rảnh mới
                     </div>
 
-                    {/* Slots for active day */}
-                    <div className="sch-slot-list">
-                      {scheduleSlots.filter(s => s.dayOfWeek === activeScheduleDay).length === 0 ? (
-                        <div className="sch-empty-slots">
-                          <i className="bi bi-clock" />
-                          Chưa có khung giờ. Hãy thêm ở bên dưới.
+                    {/* Chọn Loại Lịch (Lặp tuần vs Ngày cụ thể) */}
+                    <div style={{ marginBottom: 20 }}>
+                      <label className="sch-time-label" style={{ marginBottom: 8, display: 'block' }}>Chế độ lặp</label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => setSlotType('ONCE')}
+                          style={{
+                            flex: 1,
+                            padding: '10px 12px',
+                            borderRadius: 10,
+                            border: '1.5px solid',
+                            borderColor: slotType === 'ONCE' ? '#f27125' : '#e2e8f0',
+                            background: slotType === 'ONCE' ? 'rgba(242,113,37,0.06)' : '#ffffff',
+                            color: slotType === 'ONCE' ? '#f27125' : '#4b5563',
+                            fontWeight: '600',
+                            fontSize: 13,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 6
+                          }}
+                        >
+                          <i className="bi bi-calendar-event" /> Một lần duy nhất
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSlotType('WEEKLY')}
+                          style={{
+                            flex: 1,
+                            padding: '10px 12px',
+                            borderRadius: 10,
+                            border: '1.5px solid',
+                            borderColor: slotType === 'WEEKLY' ? '#f27125' : '#e2e8f0',
+                            background: slotType === 'WEEKLY' ? 'rgba(242,113,37,0.06)' : '#ffffff',
+                            color: slotType === 'WEEKLY' ? '#f27125' : '#4b5563',
+                            fontWeight: '600',
+                            fontSize: 13,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 6
+                          }}
+                        >
+                          <i className="bi bi-arrow-repeat" /> Lặp hàng tuần
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Date/Day selection */}
+                    <div style={{ marginBottom: 20 }}>
+                      {slotType === 'ONCE' ? (
+                        <div>
+                          <label className="sch-time-label" style={{ marginBottom: 6, display: 'block' }}>Chọn ngày cụ thể</label>
+                          <CustomDatePicker
+                            value={slotDate}
+                            onChange={setSlotDate}
+                            minDate={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="sch-time-label" style={{ marginBottom: 6, display: 'block' }}>Chọn ngày trong tuần</label>
+                          <select
+                            value={slotDayOfWeek}
+                            onChange={(e) => setSlotDayOfWeek(parseInt(e.target.value))}
+                            style={{
+                              width: '100%',
+                              padding: '12px 14px',
+                              borderRadius: 10,
+                              border: '1.5px solid #e2e8f0',
+                              background: '#ffffff',
+                              color: '#1a1a2e',
+                              fontSize: 14,
+                              fontWeight: '600',
+                              outline: 'none',
+                            }}
+                          >
+                            <option value={2}>Thứ Hai</option>
+                            <option value={3}>Thứ Ba</option>
+                            <option value={4}>Thứ Tư</option>
+                            <option value={5}>Thứ Năm</option>
+                            <option value={6}>Thứ Sáu</option>
+                            <option value={7}>Thứ Bảy</option>
+                            <option value={8}>Chủ Nhật</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Khung giờ rảnh (Start - End) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                      <div className="sch-time-field">
+                        <label className="sch-time-label" style={{ marginBottom: 6, display: 'block' }}>Giờ bắt đầu</label>
+                        <ClockPicker
+                          value={newSlotStart}
+                          onChange={setNewSlotStart}
+                        />
+                      </div>
+                      <div className="sch-time-field">
+                        <label className="sch-time-label" style={{ marginBottom: 6, display: 'block' }}>Giờ kết thúc</label>
+                        <ClockPicker
+                          value={newSlotEnd}
+                          onChange={setNewSlotEnd}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Expiry Date (Only for Weekly repeat) */}
+                    {slotType === 'WEEKLY' && (
+                      <div style={{ marginBottom: 24, padding: 12, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                        <label className="sch-time-label" style={{ marginBottom: 6, display: 'block' }}>Thời hạn lặp lại</label>
+                        <select
+                          value={expiryPreset}
+                          onChange={(e) => setExpiryPreset(e.target.value as any)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            borderRadius: 10,
+                            border: '1.5px solid #e2e8f0',
+                            background: '#ffffff',
+                            color: '#1a1a2e',
+                            fontSize: 13.5,
+                            fontWeight: '600',
+                            outline: 'none',
+                          }}
+                        >
+                          <option value="FOREVER">Lặp vô thời hạn (Mãi mãi)</option>
+                          <option value="1_WEEK">Chỉ rảnh trong 1 tuần thôi (7 ngày)</option>
+                          <option value="2_WEEKS">Chỉ rảnh trong 2 tuần (14 ngày)</option>
+                          <option value="CUSTOM">Tùy chọn ngày hết hạn cụ thể...</option>
+                        </select>
+
+                        {expiryPreset === 'CUSTOM' && (
+                          <div style={{ marginTop: 10 }}>
+                            <label className="sch-time-label" style={{ marginBottom: 4, fontSize: 11, display: 'block' }}>Hiệu lực đến hết ngày</label>
+                            <CustomDatePicker
+                              value={slotExpiryDate}
+                              onChange={setSlotExpiryDate}
+                              placeholder="Chọn ngày hết hạn"
+                              minDate={new Date().toISOString().split('T')[0]}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Add Event Button */}
+                    <button
+                      type="button"
+                      onClick={handleAddSlot}
+                      style={{
+                        width: '100%',
+                        padding: '12px 20px',
+                        background: '#f27125',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 12,
+                        fontWeight: '700',
+                        fontSize: 14.5,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        boxShadow: '0 4px 12px rgba(242,113,37,0.2)'
+                      }}
+                    >
+                      <i className="bi bi-calendar-plus" /> Thêm vào Lịch rảnh
+                    </button>
+                  </div>
+
+                  {/* Cột 2: Danh sách Lịch rảnh hiện có */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a2e', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <i className="bi bi-list-check" style={{ color: '#f27125' }} />
+                      Danh sách lịch rảnh đã thiết lập ({scheduleSlots.length})
+                    </div>
+
+                    <div style={{ flex: 1, maxHeight: 420, overflowY: 'auto', paddingRight: 6, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {scheduleSlots.length === 0 ? (
+                        <div className="sch-empty-slots" style={{ height: 260, justifyContent: 'center' }}>
+                          <i className="bi bi-calendar-x" style={{ fontSize: 40, color: '#cbd5e1', marginBottom: 12 }} />
+                          Chưa có lịch rảnh nào được cấu hình.
                         </div>
                       ) : (
                         scheduleSlots.map((slot, idx) => {
-                          if (slot.dayOfWeek !== activeScheduleDay) return null;
+                          const isOnce = !!slot.specificDate;
                           return (
-                            <div key={idx} className="sch-slot-item">
-                              <div className="sch-slot-time">
-                                <i className="bi bi-clock-fill" />
-                                {slot.startTime} – {slot.endTime}
-                                <span style={{ fontSize: 12, color: '#6c757d', fontWeight: 400, marginLeft: 4 }}>
-                                  ({Math.round(
-                                    (parseInt(slot.endTime.split(':')[0]) * 60 + parseInt(slot.endTime.split(':')[1])) -
-                                    (parseInt(slot.startTime.split(':')[0]) * 60 + parseInt(slot.startTime.split(':')[1]))
-                                  )} phút)
-                                </span>
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                background: '#ffffff',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 14,
+                                padding: '14px 18px',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                              }}
+                            >
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                  {isOnce ? (
+                                    <span style={{ fontSize: 11, background: 'rgba(242,113,37,0.1)', color: '#f27125', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
+                                      📅 Một lần
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: 11, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
+                                      🔁 Hàng tuần
+                                    </span>
+                                  )}
+
+                                  <span style={{ fontWeight: 700, fontSize: 14, color: '#1e293b' }}>
+                                    {isOnce 
+                                      ? `${slot.specificDate?.split('-')[2]}/${slot.specificDate?.split('-')[1]}/${slot.specificDate?.split('-')[0]} (${getDayLabel(slot.dayOfWeek)})`
+                                      : getDayLabel(slot.dayOfWeek)
+                                    }
+                                  </span>
+                                </div>
+
+                                <div style={{ fontSize: 13.5, color: '#475569', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <i className="bi bi-clock" style={{ color: '#64748b' }} />
+                                  {slot.startTime} – {slot.endTime}
+                                  <span style={{ fontSize: 11.5, color: '#94a3b8', fontWeight: 400 }}>
+                                    ({Math.round(
+                                      (parseInt(slot.endTime.split(':')[0]) * 60 + parseInt(slot.endTime.split(':')[1])) -
+                                      (parseInt(slot.startTime.split(':')[0]) * 60 + parseInt(slot.startTime.split(':')[1]))
+                                    )} phút)
+                                  </span>
+                                </div>
+
+                                {!isOnce && (
+                                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <i className="bi bi-info-circle" />
+                                    Hạn dùng: {slot.expireDate 
+                                      ? `${slot.expireDate.split('-')[2]}/${slot.expireDate.split('-')[1]}/${slot.expireDate.split('-')[0]}`
+                                      : 'Lặp vô thời hạn'
+                                    }
+                                  </div>
+                                )}
                               </div>
+
                               <button
                                 type="button"
-                                onClick={() => handleRemoveSlot(scheduleSlots.indexOf(slot))}
-                                className="sch-slot-del"
-                                title="Xóa khung giờ này"
+                                onClick={() => handleRemoveSlot(idx)}
+                                style={{
+                                  background: 'rgba(239,68,68,0.06)',
+                                  color: '#ef4444',
+                                  border: 'none',
+                                  width: 34,
+                                  height: 34,
+                                  borderRadius: 10,
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background 0.2s',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; }}
+                                title="Xóa lịch rảnh này"
                               >
-                                <i className="bi bi-trash3-fill" />
+                                <i className="bi bi-trash-fill" style={{ fontSize: 13.5 }} />
                               </button>
                             </div>
                           );
@@ -754,76 +1064,205 @@ export default function BookingsPage() {
                       )}
                     </div>
 
-                    {/* Add slot form */}
-                    <div className="sch-add-form">
-                      <div className="sch-add-title">
-                        <i className="bi bi-plus-circle-fill" style={{ color: '#F27125' }} />
-                        Thêm khung giờ rảnh mới
-                      </div>
-                      <div className="sch-time-row">
-                        <div className="sch-time-field">
-                          <label className="sch-time-label">Bắt đầu</label>
-                          <ClockPicker
-                            value={newSlotStart}
-                            onChange={setNewSlotStart}
-                          />
+                    {/* Nút lưu cấu hình */}
+                    <div style={{ marginTop: 20 }}>
+                      {isDirty && (
+                        <div className="sch-dirty-warning" style={{ margin: '0 0 10px' }}>
+                          <i className="bi bi-exclamation-triangle-fill" />
+                          Bạn có thay đổi chưa lưu. Hãy nhấn "Lưu cấu hình" để cập nhật.
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', color: '#9ca3af', fontWeight: 700, fontSize: 18, paddingBottom: 2 }}>–</div>
-                        <div className="sch-time-field">
-                          <label className="sch-time-label">Kết thúc</label>
-                          <ClockPicker
-                            value={newSlotEnd}
-                            onChange={setNewSlotEnd}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleAddSlot}
-                          className="sch-add-btn"
-                        >
-                          <i className="bi bi-plus-lg" />
-                          Thêm
-                        </button>
-                      </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleSaveSchedule}
+                        disabled={savingSchedule}
+                        className="sch-save-btn"
+                        style={{ width: '100%', margin: 0, padding: 12 }}
+                      >
+                        {savingSchedule ? (
+                          <>
+                            <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'bk-spin 0.7s linear infinite' }} />
+                            Đang lưu...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-floppy-fill" />
+                            Lưu cấu hình lịch rảnh
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
-                ) : (
-                  <div className="sch-alert">
-                    <i className="bi bi-info-circle-fill" />
-                    Vui lòng chọn ít nhất 1 ngày rảnh ở Bước 1 để bắt đầu cấu hình khung giờ.
-                  </div>
-                )}
-
-                {/* Save Button */}
-                <div className="sch-save-wrap">
-                  {isDirty && (
-                    <div className="sch-dirty-warning">
-                      <i className="bi bi-exclamation-triangle-fill" />
-                      Bạn có thay đổi chưa lưu. Hãy nhấn "Lưu cấu hình" để cập nhật vào hệ thống.
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleSaveSchedule}
-                    disabled={savingSchedule}
-                    className="sch-save-btn"
-                  >
-                    {savingSchedule ? (
-                      <>
-                        <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'bk-spin 0.7s linear infinite' }} />
-                        Đang lưu...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-floppy-fill" />
-                        Lưu cấu hình
-                      </>
-                    )}
-                  </button>
                 </div>
               </div>
+
+                {/* Vacation/Busy Mode */}
+                <div className="sch-card" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 30 }}>
+                  <h5 className="sch-title" style={{ color: '#ef4444' }}>
+                    <span className="bkp-header-icon" style={{ width: 32, height: 32, fontSize: 14, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }}>
+                      <i className="bi bi-calendar-x" />
+                    </span>
+                    Báo bận &amp; Nghỉ phép (Vacation Mode)
+                  </h5>
+                  <p className="sch-sub">
+                    Chọn loại báo bận và khoảng thời gian bạn bận. Hệ thống sẽ tự động hủy hàng loạt các lịch hẹn trùng và gửi thông báo tới sinh viên.
+                  </p>
+
+                  {/* Mode Selector */}
+                  <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+                    <button
+                      type="button"
+                      onClick={() => setBusyType('EMERGENCY')}
+                      style={{
+                        flex: 1,
+                        padding: '12px 16px',
+                        borderRadius: 12,
+                        border: '1.5px solid',
+                        borderColor: busyType === 'EMERGENCY' ? '#ef4444' : '#e5e7eb',
+                        background: busyType === 'EMERGENCY' ? 'rgba(239, 68, 68, 0.06)' : '#ffffff',
+                        color: busyType === 'EMERGENCY' ? '#dc2626' : '#4b5563',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                    >
+                      <span style={{ fontSize: 14.5 }}>🚨 Bận đột xuất</span>
+                      <span style={{ fontSize: 11, fontWeight: 'normal', opacity: 0.8 }}>Báo việc gấp, nghỉ liền</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setBusyType('PLANNED')}
+                      style={{
+                        flex: 1,
+                        padding: '12px 16px',
+                        borderRadius: 12,
+                        border: '1.5px solid',
+                        borderColor: busyType === 'PLANNED' ? '#ef4444' : '#e5e7eb',
+                        background: busyType === 'PLANNED' ? 'rgba(239, 68, 68, 0.06)' : '#ffffff',
+                        color: busyType === 'PLANNED' ? '#dc2626' : '#4b5563',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                    >
+                      <span style={{ fontSize: 14.5 }}>📅 Bận báo trước</span>
+                      <span style={{ fontSize: 11, fontWeight: 'normal', opacity: 0.8 }}>Du lịch / Kế hoạch trước 1-2 ngày</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleRegisterBusy} style={{ marginTop: 20 }}>
+                    {/* Date selection & Time selection separate */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 20 }}>
+                      {/* Bắt đầu bận */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <label className="sch-time-label">Bắt đầu bận</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <CustomDatePicker
+                            value={busyStartDate}
+                            onChange={setBusyStartDate}
+                            minDate={new Date().toISOString().split('T')[0]}
+                            placeholder="Chọn ngày bắt đầu"
+                          />
+                          <div>
+                            <label style={{ fontSize: '11px', color: '#6c757d', display: 'block', marginBottom: '4px' }}>Giờ bắt đầu (Đồng hồ)</label>
+                            <ClockPicker
+                              value={busyStartTime}
+                              onChange={setBusyStartTime}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Kết thúc bận */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <label className="sch-time-label">Kết thúc bận</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <CustomDatePicker
+                            value={busyEndDate}
+                            onChange={setBusyEndDate}
+                            minDate={busyStartDate}
+                            placeholder="Chọn ngày kết thúc"
+                          />
+                          <div>
+                            <label style={{ fontSize: '11px', color: '#6c757d', display: 'block', marginBottom: '4px' }}>Giờ kết thúc (Đồng hồ)</label>
+                            <ClockPicker
+                              value={busyEndTime}
+                              onChange={setBusyEndTime}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="sch-time-field" style={{ marginBottom: 20 }}>
+                      <label className="sch-time-label" style={{ marginBottom: 6 }}>Lý do xin nghỉ / báo bận</label>
+                      <textarea
+                        value={busyReason}
+                        onChange={(e) => setBusyReason(e.target.value)}
+                        placeholder="Nhập lý do báo bận đột xuất để AI đánh giá uy tín..."
+                        style={{
+                          background: '#ffffff',
+                          color: '#1a1a2e',
+                          border: '1.5px solid #e5e7eb',
+                          borderRadius: 12,
+                          padding: '12px 16px',
+                          width: '100%',
+                          height: 80,
+                          resize: 'none',
+                          outline: 'none',
+                        }}
+                        required
+                      />
+                    </div>
+
+                    {busyError && (
+                      <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <i className="bi bi-exclamation-circle-fill" /> {busyError}
+                      </div>
+                    )}
+                    {busySuccess && (
+                      <div style={{ color: '#10b981', fontSize: 13, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <i className="bi bi-check-circle-fill" /> {busySuccess}
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={submittingBusy}
+                      style={{
+                        background: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 12,
+                        padding: '12px 24px',
+                        fontWeight: '700',
+                        cursor: submittingBusy ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={(e) => { if (!submittingBusy) e.currentTarget.style.background = '#dc2626'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#ef4444'; }}
+                    >
+                      {submittingBusy ? 'Đang đăng ký...' : (
+                        <>
+                          <i className="bi bi-calendar-x-fill" /> Đăng ký báo bận
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </div>
+              </>
             )}
-          </div>
+        </div>
           <RightSidebar />
         </main>
       </div>

@@ -16,6 +16,7 @@ import { ChatDetailScreen } from '../screens/chat/ChatDetailScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { SettingsScreen } from '../screens/settings/SettingsScreen';
 import { EditProfileScreen } from '../screens/settings/EditProfileScreen';
+import { MentorBusyScreen } from '../screens/settings/MentorBusyScreen';
 import { MentorDetailScreen } from '../screens/mentors/MentorDetailScreen';
 import { BookingScreen } from '../screens/mentors/BookingScreen';
 import { VideoCallScreen } from '../screens/chat/VideoCallScreen';
@@ -101,6 +102,10 @@ export const RootNavigator = () => {
               <Stack.Screen 
                 name="EditProfile" 
                 component={EditProfileScreen} 
+              />
+              <Stack.Screen 
+                name="MentorBusy" 
+                component={MentorBusyScreen} 
               />
               <Stack.Screen 
                 name="MentorDetail" 

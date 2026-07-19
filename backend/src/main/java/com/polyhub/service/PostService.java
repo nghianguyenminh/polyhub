@@ -1,7 +1,9 @@
 package com.polyhub.service;
 
 import com.polyhub.entity.Post;
+import com.polyhub.entity.PostImage;
 import com.polyhub.entity.User;
+import com.polyhub.repository.PostImageRepository;
 import com.polyhub.repository.PostRepository;
 import com.polyhub.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +25,9 @@ public class PostService {
     private final FileStorageService fileStorageService;
     private final PostReportRepository postReportRepository;
     private final NotificationService notificationService;
+    private final PostImageRepository postImageRepository;
 
-    public Post createPost(String content, MultipartFile image, String username) throws IOException {
+    public Post createPost(String content, MultipartFile[] images, String username) throws IOException {
         // Tìm User trong DB, nếu không có thì lấy một tài khoản mặc định để demo
         User user = userRepository.findById(username).orElseGet(() -> {
             User newUser = new User();
@@ -40,11 +43,31 @@ public class PostService {
         post.setUser(user);
         post.setHotScore(1.7677); // Khởi tạo điểm Recency Boost cho bài đăng mới
 
-        // Nêú có ảnh đính kèm thì upload lên Cloudinary
-        if (image != null && !image.isEmpty()) {
-            Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");
-            post.setImageUrl((String) uploadResult.get("url"));
-            post.setImagePublicId((String) uploadResult.get("public_id"));
+        // Upload nhiều ảnh lên Cloudinary
+        if (images != null && images.length > 0) {
+            int order = 0;
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");
+                    String url = (String) uploadResult.get("url");
+                    String publicId = (String) uploadResult.get("public_id");
+
+                    // Ảnh đầu tiên gán vào field cũ (backward compatibility)
+                    if (order == 0) {
+                        post.setImageUrl(url);
+                        post.setImagePublicId(publicId);
+                    }
+
+                    PostImage postImage = PostImage.builder()
+                            .post(post)
+                            .imageUrl(url)
+                            .publicId(publicId)
+                            .displayOrder(order)
+                            .build();
+                    post.getImages().add(postImage);
+                    order++;
+                }
+            }
         }
 
         return postRepository.save(post);

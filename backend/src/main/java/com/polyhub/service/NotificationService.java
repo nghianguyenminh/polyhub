@@ -16,7 +16,8 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    public void createNotification(String recipientUsername, String senderUsername, String message, String type, Long targetId) {
+    public void createNotification(String recipientUsername, String senderUsername, String message, String type,
+            Long targetId) {
         if (recipientUsername != null && recipientUsername.equals(senderUsername)) {
             // Don't send notification to self (e.g. self-liking, self-commenting)
             return;
@@ -26,16 +27,21 @@ public class NotificationService {
         User sender = senderUsername != null ? userRepository.findById(senderUsername).orElse(null) : null;
 
         if (recipient != null) {
-            Notification notification = Notification.builder()
-                    .user(recipient)
-                    .sender(sender)
-                    .message(message)
-                    .type(type)
-                    .targetId(targetId)
-                    .isRead(false)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            notificationRepository.save(notification);
+            try {
+                Notification notification = Notification.builder()
+                        .user(recipient)
+                        .sender(sender)
+                        .message(message)
+                        .type(type)
+                        .targetId(targetId)
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                notificationRepository.save(notification);
+            } catch (Exception e) {
+                System.err.println("Lỗi khi tạo thông báo cho " + recipientUsername + ": " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 }
