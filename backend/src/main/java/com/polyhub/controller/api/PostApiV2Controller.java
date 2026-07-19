@@ -1,6 +1,7 @@
 package com.polyhub.controller.api;
 
 import com.polyhub.entity.Post;
+import com.polyhub.entity.PostImage;
 import com.polyhub.entity.User;
 import com.polyhub.entity.Like;
 import com.polyhub.repository.LikeRepository;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -53,7 +55,7 @@ public class PostApiV2Controller {
     @PostMapping("/create")
     public ResponseEntity<?> createPost(
             @RequestParam("content") String content,
-            @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
+            @RequestParam(value = "images", required = false) MultipartFile[] images,
             Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để đăng bài."));
@@ -61,7 +63,7 @@ public class PostApiV2Controller {
 
         try {
             String username = principal.getName();
-            Post newPost = postService.createPost(content, image, username);
+            Post newPost = postService.createPost(content, images, username);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -262,6 +264,19 @@ public class PostApiV2Controller {
         map.put("createdAt", post.getCreatedAt());
         map.put("isSaved", savedPostIds.contains(post.getId()));
 
+        // Multi-image: trả về danh sách URL ảnh
+        List<String> imageUrls = new ArrayList<>();
+        if (post.getImages() != null && !post.getImages().isEmpty()) {
+            imageUrls = post.getImages().stream()
+                    .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
+                    .map(PostImage::getImageUrl)
+                    .collect(Collectors.toList());
+        } else if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
+            // Backward compatibility: bài cũ chỉ có 1 ảnh
+            imageUrls = List.of(post.getImageUrl());
+        }
+        map.put("imageUrls", imageUrls);
+
         // Like info
         long likesCount = likeRepository.countByPostId(post.getId());
         map.put("likesCount", likesCount);
@@ -298,6 +313,19 @@ public class PostApiV2Controller {
             sharedMap.put("content", shared.getContent());
             sharedMap.put("imageUrl", shared.getImageUrl());
             sharedMap.put("createdAt", shared.getCreatedAt());
+
+            // Multi-image cho shared post
+            List<String> sharedImageUrls = new ArrayList<>();
+            if (shared.getImages() != null && !shared.getImages().isEmpty()) {
+                sharedImageUrls = shared.getImages().stream()
+                        .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
+                        .map(PostImage::getImageUrl)
+                        .collect(Collectors.toList());
+            } else if (shared.getImageUrl() != null && !shared.getImageUrl().isEmpty()) {
+                sharedImageUrls = List.of(shared.getImageUrl());
+            }
+            sharedMap.put("imageUrls", sharedImageUrls);
+
             if (shared.getUser() != null) {
                 Map<String, Object> sharedUserMap = new HashMap<>();
                 sharedUserMap.put("username", shared.getUser().getUsername());
@@ -315,6 +343,29 @@ public class PostApiV2Controller {
         }
 
         return map;
+    }
+
+    /**
+     * PUT /api/v2/posts/{postId}
+     * Sửa nội dung bài viết.
+     */
+    @PutMapping("/{postId}")
+    public ResponseEntity<?> updatePost(@PathVariable Long postId,
+                                        @RequestBody Map<String, String> requestBody,
+                                        Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để sửa bài viết."));
+        }
+        try {
+            String newContent = requestBody.get("content");
+            if (newContent == null || newContent.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Nội dung bài viết không được để trống."));
+            }
+            Post updatedPost = postService.updatePost(postId, newContent, principal.getName());
+            return ResponseEntity.ok(Map.of("message", "Đã cập nhật bài viết thành công."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     /**

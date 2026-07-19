@@ -18,5 +18,6 @@ public class CommentDTO {
     private String avatar;
     private Long parentId;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private List<CommentDTO> replies; // Dành cho danh sách các lượt trả lời
 }

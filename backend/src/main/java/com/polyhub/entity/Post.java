@@ -33,6 +33,11 @@ public class Post {
     @Column(length = 255)
     private String imagePublicId;
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<PostImage> images = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "username", nullable = false)
     private User user;

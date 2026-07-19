@@ -29,6 +29,7 @@ export interface Post {
   id: number;
   content: string;
   imageUrl?: string;
+  imageUrls?: string[];
   isPrivate: boolean;
   createdAt: string;
   isSaved?: boolean;
@@ -49,6 +50,7 @@ export interface Comment {
   avatar?: string;
   parentId?: number;
   createdAt: string;
+  updatedAt?: string;
   replies?: Comment[];
 }
 

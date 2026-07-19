@@ -26,7 +26,8 @@ public class CommentRestController {
             List<CommentDTO> comments = commentService.getCommentsByPostId(postId);
             return ResponseEntity.ok(comments);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"message\": \"Đã xảy ra lỗi hệ thống: " + e.getMessage() + "\"}");
         }
     }
 
@@ -46,7 +47,44 @@ public class CommentRestController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi hệ thống");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"message\": \"Đã xảy ra lỗi hệ thống: " + e.getMessage() + "\"}");
+        }
+    }
+
+    // API chỉnh sửa bình luận
+    @PutMapping("/{commentId}")
+    public ResponseEntity<?> editComment(@PathVariable Long commentId, @RequestBody CommentRequestDTO request, java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập");
+        }
+        try {
+            String username = principal.getName();
+            CommentDTO updatedComment = commentService.editComment(commentId, request.getContent(), username);
+            return ResponseEntity.ok(updatedComment);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"message\": \"Đã xảy ra lỗi hệ thống: " + e.getMessage() + "\"}");
+        }
+    }
+
+    // API xóa bình luận
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long commentId, java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập");
+        }
+        try {
+            String username = principal.getName();
+            commentService.deleteComment(commentId, username);
+            return ResponseEntity.ok().body("{\"message\": \"Đã xóa bình luận thành công\"}");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"message\": \"Đã xảy ra lỗi hệ thống: " + e.getMessage() + "\"}");
         }
     }
 }

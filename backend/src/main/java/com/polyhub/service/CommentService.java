@@ -95,6 +95,7 @@ public class CommentService {
                 .fullname(comment.getUser().getFullname())
                 .avatar(comment.getUser().getAvatar())
                 .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .build();
 
         if (comment.getParentComment() != null) {
@@ -109,5 +110,33 @@ public class CommentService {
         }
 
         return dto;
+    }
+
+    @Transactional
+    public CommentDTO editComment(Long commentId, String content, String username) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Bình luận không tồn tại"));
+
+        if (!comment.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa bình luận này");
+        }
+
+        comment.setContent(content);
+        Comment updatedComment = commentRepository.save(comment);
+        return mapToDTO(updatedComment);
+    }
+
+    @Transactional
+    public void deleteComment(Long commentId, String username) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Bình luận không tồn tại"));
+
+        // Optionally, check if user is the post owner to allow them to delete any comment.
+        // For now, only the comment owner can delete it.
+        if (!comment.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bạn không có quyền xóa bình luận này");
+        }
+
+        commentRepository.delete(comment);
     }
 }
