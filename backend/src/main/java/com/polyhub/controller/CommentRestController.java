@@ -21,7 +21,7 @@ public class CommentRestController {
 
     // API trả về List bình luận cho 1 Post cụ thể
     @GetMapping("/{postId}")
-    public ResponseEntity<List<CommentDTO>> getCommentsByPost(@PathVariable Long postId) {
+    public ResponseEntity<?> getCommentsByPost(@PathVariable Long postId) {
         try {
             List<CommentDTO> comments = commentService.getCommentsByPostId(postId);
             return ResponseEntity.ok(comments);

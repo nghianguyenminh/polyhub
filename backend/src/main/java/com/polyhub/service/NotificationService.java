@@ -16,7 +16,8 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    public void createNotification(String recipientUsername, String senderUsername, String message, String type, Long targetId) {
+    public void createNotification(String recipientUsername, String senderUsername, String message, String type,
+            Long targetId) {
         if (recipientUsername != null && recipientUsername.equals(senderUsername)) {
             // Don't send notification to self (e.g. self-liking, self-commenting)
             return;
