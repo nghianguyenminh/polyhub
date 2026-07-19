@@ -124,61 +124,93 @@ export default function Header() {
                 )}
               </button>
 
-              <div className="dropdown-menu dropdown-menu-end poly-noti-dropdown p-0 shadow-lg border-0 mt-2" aria-labelledby="notificationDropdown">
-                <div className="p-3 d-flex justify-content-between align-items-center border-bottom">
-                  <h5 className="fw-bold mb-0" style={{ fontSize: '18px' }}>Thông Báo</h5>
+              <div className="dropdown-menu dropdown-menu-end poly-noti-dropdown p-0 shadow-lg border-0 mt-2" aria-labelledby="notificationDropdown" style={{ width: '380px', borderRadius: '16px', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}>
+                <div className="p-3 d-flex justify-content-between align-items-center border-bottom bg-white">
+                  <h5 className="fw-bold mb-0" style={{ fontSize: '18px', color: '#1c1e21' }}>Thông Báo</h5>
                   {unreadCount > 0 && (
                     <button 
-                      className="text-decoration-none fw-medium btn btn-link p-0 shadow-none border-0" 
-                      style={{ color: 'var(--poly-primary)', fontSize: '13.5px' }} 
+                      className="text-decoration-none fw-semibold btn btn-link p-0 shadow-none border-0" 
+                      style={{ color: 'var(--poly-orange, #F27125)', fontSize: '13.5px' }} 
                       onClick={handleMarkAllAsRead}
                     >
                       Đánh dấu đã đọc
                     </button>
                   )}
                 </div>
-                <div className="noti-list" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                <div className="noti-list custom-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto', backgroundColor: '#f8f9fa' }}>
                   {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-muted" style={{ fontSize: '13.5px' }}>Không có thông báo nào.</div>
-                  ) : (
-                    notifications.map(noti => (
-                      <div 
-                        key={noti.id} 
-                        className={`noti-item d-flex gap-2 p-3 border-bottom transition-all ${!noti.isRead ? 'bg-light bg-opacity-50' : ''}`}
-                        onClick={() => handleNotificationClick(noti)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <img 
-                          src={noti.sender && noti.sender.avatar && noti.sender.avatar !== 'default.png' ? noti.sender.avatar : `https://ui-avatars.com/api/?name=${noti.sender ? noti.sender.fullname : 'System'}`} 
-                          className="rounded-circle" width="40" height="40" alt="avatar" 
-                          style={{ objectFit: 'cover' }}
-                        />
-                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                          <p className="mb-1 text-wrap text-dark" style={{ fontSize: '13px' }}>
-                            {noti.sender ? (
-                              <strong>{noti.sender.fullname}</strong>
-                            ) : (
-                              <strong>Hệ thống</strong>
-                            )}{' '}
-                            {noti.message}
-                          </p>
-                          <p className="text-muted mb-0" style={{ fontSize: '11px' }}>
-                            <i className="bi bi-clock me-1"></i>
-                            {formatTimeAgo(noti.createdAt)}
-                          </p>
-                        </div>
-                        {!noti.isRead && (
-                          <div className="d-flex align-items-center justify-content-center ps-1">
-                            <div className="bg-primary rounded-circle" style={{ width: '8px', height: '8px' }}></div>
-                          </div>
-                        )}
+                    <div className="p-5 text-center text-muted d-flex flex-column align-items-center">
+                      <div className="mb-3 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: '#f0f2f5' }}>
+                        <i className="bi bi-bell-slash fs-3 text-secondary"></i>
                       </div>
-                    ))
+                      <span className="fw-medium" style={{ fontSize: '14px' }}>Bạn chưa có thông báo nào.</span>
+                    </div>
+                  ) : (
+                    notifications.map(noti => {
+                      const isSystem = !noti.sender;
+                      let displayTitle = isSystem ? 'Hệ thống' : noti.sender.fullname;
+                      let displayBody = noti.message || '';
+                      
+                      // Extract title in brackets if exists
+                      const match = displayBody.match(/^【(.*?)】\s*(.*)$/);
+                      if (match) {
+                        displayTitle = match[1];
+                        displayBody = match[2];
+                      }
+
+                      return (
+                        <div 
+                          key={noti.id} 
+                          className={`noti-item d-flex gap-3 p-3 border-bottom transition-all position-relative`}
+                          onClick={() => handleNotificationClick(noti)}
+                          style={{ 
+                            cursor: 'pointer', 
+                            backgroundColor: !noti.isRead ? '#fff0e6' : '#ffffff',
+                            transition: 'background-color 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = !noti.isRead ? '#ffe5d3' : '#f0f2f5')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = !noti.isRead ? '#fff0e6' : '#ffffff')}
+                        >
+                          {isSystem ? (
+                            <div 
+                              className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0 shadow-sm" 
+                              style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, var(--poly-orange, #F27125), #ff8a47)' }}
+                            >
+                              <i className="bi bi-robot fs-5"></i>
+                            </div>
+                          ) : (
+                            <img 
+                              src={noti.sender.avatar && noti.sender.avatar !== 'default.png' ? noti.sender.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(noti.sender.fullname)}&background=random`} 
+                              className="rounded-circle flex-shrink-0 shadow-sm" width="48" height="48" alt="avatar" 
+                              style={{ objectFit: 'cover' }}
+                            />
+                          )}
+                          <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                            <div className="d-flex justify-content-between align-items-start mb-1">
+                              <strong className="text-truncate d-block" style={{ fontSize: '14px', color: '#050505', maxWidth: '85%' }}>
+                                {displayTitle}
+                              </strong>
+                              {!noti.isRead && (
+                                <span className="rounded-circle bg-danger flex-shrink-0 mt-1" style={{ width: '10px', height: '10px', boxShadow: '0 0 6px rgba(220,53,69,0.5)' }}></span>
+                              )}
+                            </div>
+                            <p className="mb-1 text-wrap" style={{ fontSize: '13.5px', color: '#65676b', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {displayBody}
+                            </p>
+                            <span className="fw-medium" style={{ fontSize: '11.5px', color: !noti.isRead ? 'var(--poly-orange, #F27125)' : '#8a8d91' }}>
+                              {formatTimeAgo(noti.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
-                <div className="p-2 border-top d-flex justify-content-center align-items-center">
-                  <Link href="/bookings" className="text-decoration-none fw-bold text-center w-100 py-1 fs-7" style={{ color: '#F27125', transition: '0.2s' }}>
-                    Xem lịch hẹn call video
+                <div className="p-3 border-top bg-white d-flex justify-content-center align-items-center">
+                  <Link href="/bookings" className="btn w-100 rounded-pill fw-bold fs-7 shadow-sm" style={{ backgroundColor: '#fff0e6', color: 'var(--poly-orange, #F27125)', transition: '0.2s', border: '1px solid #ffe5d3' }}
+                    onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = 'var(--poly-orange, #F27125)'; e.currentTarget.style.color = '#fff';}}
+                    onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#fff0e6'; e.currentTarget.style.color = 'var(--poly-orange, #F27125)';}}>
+                    <i className="bi bi-camera-video-fill me-2"></i>Xem lịch hẹn call video
                   </Link>
                 </div>
               </div>
