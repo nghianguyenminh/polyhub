@@ -70,7 +70,6 @@ public class Post {
     @Builder.Default
     private Boolean isPrivate = false;
 
-    @Column(name = "hot_score", nullable = false, columnDefinition = "double default 0.0")
     @Column(name = "is_deleted")
     @Builder.Default
     private Boolean isDeleted = false;

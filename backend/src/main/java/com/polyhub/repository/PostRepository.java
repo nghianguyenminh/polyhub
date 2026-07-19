@@ -29,13 +29,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "  p.createdAt DESC")
     Page<Post> findVisiblePostsForFeed(@Param("viewerUsername") String viewerUsername, Pageable pageable);
 
-    // Lấy bài ở profile giữ nguyên
-    @Query("SELECT p FROM Post p WHERE p.user.username = :username AND (p.isLocked = false OR p.isLocked IS NULL) ORDER BY p.createdAt DESC")
-
     Page<Post> findByIsLockedTrue(Pageable pageable);
 
-    List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
-
+    @Query("SELECT p FROM Post p WHERE p.user.username = :username AND (p.isLocked = false OR p.isLocked IS NULL) AND (p.isDeleted = false OR p.isDeleted IS NULL) ORDER BY p.createdAt DESC")
     Page<Post> findByUsernameOrderByCreatedAtDesc(@Param("username") String username, Pageable pageable);
 
     @Query("SELECT p FROM Post p WHERE p.user IN :users AND (p.isDeleted = false OR p.isDeleted IS NULL) ORDER BY p.createdAt DESC")
