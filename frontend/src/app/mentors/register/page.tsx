@@ -912,6 +912,7 @@ export default function MentorRegisterPage() {
 
     const formData = new FormData();
     formData.append('fullname', finalFullname);
+    formData.append('cccdNumber', frontIdData?.id || '');
     formData.append('cccdFrontFile', cccdFrontFile!);
     formData.append('cccdBackFile', cccdBackFile!);
     formData.append('faceFile', faceFile!);
