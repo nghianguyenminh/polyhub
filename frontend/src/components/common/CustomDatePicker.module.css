@@ -211,6 +211,12 @@
   font-weight: 700;
 }
 
+.disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -353,3 +359,108 @@
   color: #ffffff !important;
   font-weight: 700;
 }
+
+/* --- DARK THEME OVERRIDES --- */
+.darkTheme .inputField {
+  background: #1f2937;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.darkTheme .inputField:focus, .darkTheme .inputField.active {
+  background: #1f2937;
+  border-color: #f27125;
+  box-shadow: 0 0 0 4px rgba(242, 113, 37, 0.15);
+}
+
+.darkTheme .dateText {
+  color: #fff;
+}
+
+.darkTheme .placeholderText {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.darkTheme .iconWrapper {
+  color: #f27125;
+}
+
+.darkTheme .dropdownContainer {
+  background: #191c2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.darkTheme .navButton {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.darkTheme .navButton:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.darkTheme .customSelectValue {
+  background-color: #1f2937;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.darkTheme .customSelectOptions {
+  background-color: #1f2937;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.darkTheme .customSelectOption {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.darkTheme .customSelectOption:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.darkTheme .dayCell {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.darkTheme .dayCell:hover:not(.empty):not(.selected) {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.darkTheme .otherMonth {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.darkTheme .selected {
+  background: linear-gradient(135deg, #f27125, #ff8a47);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(242, 113, 37, 0.3);
+}
+
+.darkTheme .today {
+  border-color: #f27125;
+  color: #f27125;
+}
+
+.darkTheme .footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.darkTheme .clearBtn {
+  color: #ef4444;
+}
+
+.darkTheme .clearBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.darkTheme .todayBtn {
+  color: #f27125;
+}
+
+.darkTheme .todayBtn:hover {
+  background-color: rgba(242, 113, 37, 0.08);
+}
+

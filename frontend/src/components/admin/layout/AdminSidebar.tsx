@@ -10,7 +10,8 @@ import {
   GraduationCap,
   Flag,
   Settings,
-  LogOut
+  LogOut,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import styles from './AdminSidebar.module.css';
@@ -21,6 +22,7 @@ const navItems = [
   { name: 'Người dùng', path: '/admin/users', icon: Users },
   { name: 'Tài liệu', path: '/admin/documents', icon: FileText },
   { name: 'Mentors', path: '/admin/mentors', icon: GraduationCap },
+  { name: 'Nghỉ phép', path: '/admin/vacations', icon: Calendar },
   { name: 'Báo cáo', path: '/admin/reports', icon: Flag },
   { name: 'Cài đặt', path: '/admin/settings', icon: Settings },
 ];

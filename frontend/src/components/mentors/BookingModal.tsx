@@ -42,6 +42,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
   // Validation feedback
   const [validationMsg, setValidationMsg] = useState({ text: '', isValid: false });
+  const [lockStatus, setLockStatus] = useState<{ locked: boolean; message: string; expiresAt?: string } | null>(null);
 
   // Native wheel event binding to allow preventDefault (React passive listener bypass)
   useEffect(() => {
@@ -243,6 +244,46 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       setValidationMsg({ text: 'Thời gian nhập không hợp lệ.', isValid: false });
     }
   }, [selectedDay, startTime, duration]);
+
+  useEffect(() => {
+    if (!selectedDay || !startTime || !validationMsg.isValid) {
+      setLockStatus(null);
+      return;
+    }
+
+    const lockTimer = setTimeout(async () => {
+      try {
+        const data = await fetchAPI('/api/bookings/lock-slot', {
+          method: 'POST',
+          body: JSON.stringify({
+            mentorUsername: mentor.user?.username,
+            date: selectedDay.date,
+            startTime: startTime
+          })
+        });
+        if (data.locked) {
+          setLockStatus({
+            locked: true,
+            message: 'Khung giờ này đã được giữ chỗ riêng cho bạn trong 3 phút.',
+            expiresAt: data.expiresAt
+          });
+        } else {
+          setLockStatus({
+            locked: false,
+            message: data.message || 'Lưu ý: Bạn đang đặt lịch ngoài khung giờ ưu tiên, vị trí chọn không được khóa bảo vệ.'
+          });
+        }
+      } catch (err: any) {
+        setLockStatus({
+          locked: false,
+          message: err.message || 'Khung giờ này đã bị khóa giữ chỗ bởi một người dùng khác.'
+        });
+        setValidationMsg({ text: 'Khung giờ này đang bị người khác giữ chỗ.', isValid: false });
+      }
+    }, 600);
+
+    return () => clearTimeout(lockTimer);
+  }, [selectedDay?.date, startTime, validationMsg.isValid, mentor.user?.username]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -572,6 +613,13 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                       <div className={`bk-validation-banner ${validationMsg.isValid ? 'valid' : 'invalid'}`}>
                         <i className={`bi ${validationMsg.isValid ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}`} />
                         <span>{validationMsg.text || 'Đang xác thực thời gian...'}</span>
+                      </div>
+                    )}
+
+                    {lockStatus && (
+                      <div className={`bk-validation-banner ${lockStatus.locked ? 'valid' : 'invalid'}`} style={{ marginTop: 10, background: lockStatus.locked ? 'rgba(25, 135, 84, 0.15)' : 'rgba(239, 68, 68, 0.15)', borderColor: lockStatus.locked ? '#198754' : '#dc3545', color: lockStatus.locked ? '#2eb573' : '#ff4757' }}>
+                        <i className={`bi ${lockStatus.locked ? 'bi-lock-fill' : 'bi-exclamation-circle-fill'}`} />
+                        <span>{lockStatus.message}</span>
                       </div>
                     )}
 

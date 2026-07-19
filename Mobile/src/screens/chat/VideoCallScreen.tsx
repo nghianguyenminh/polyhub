@@ -6,6 +6,7 @@ import {
   Modal,
   Animated,
   Easing,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
@@ -37,8 +38,8 @@ try {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const POLL_INTERVAL_MS = 30_000;      // Polling mỗi 30 giây để sync với server
-const WARNING_THRESHOLD_SEC = 30;      // Hiện popup khi còn ≤ 30 giây (để demo)
-const EXTENSION_OPTIONS = [1, 10, 20, 30]; // +1 phút để demo
+const WARNING_THRESHOLD_SEC = 60;      // Hiện popup khi còn ≤ 60 giây (1 phút)
+const EXTENSION_OPTIONS = [3, 5, 10, 15, 20, 25, 30]; // Mốc phút gia hạn mặc định
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface RemainingTimeInfo {
@@ -81,6 +82,7 @@ export const VideoCallScreen = () => {
   const [warningShownForThisSession, setWarningShownForThisSession] = useState(false);
   const [isExtending, setIsExtending] = useState(false);
   const [extendMessage, setExtendMessage] = useState<{ text: string; success: boolean } | null>(null);
+  const [allowedOptions, setAllowedOptions] = useState<number[]>(EXTENSION_OPTIONS);
 
   // ── Refs ──────────────────────────────────────────────────────────────────
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -133,6 +135,19 @@ export const VideoCallScreen = () => {
     pulseLoopRef.current.start();
   }, [warningAnimValue, pulseAnimValue]);
 
+  // ── Fetch extend limit từ server ──────────────────────────────────────────
+  const fetchExtendLimit = useCallback(async () => {
+    if (!bookingId || bookingId === 'call_test') return;
+    try {
+      const response = await api.get(`/api/bookings/${bookingId}/extend-limit`);
+      if (response.data && response.data.allowedOptions) {
+        setAllowedOptions(response.data.allowedOptions);
+      }
+    } catch (e) {
+      console.warn('Không thể lấy giới hạn gia hạn từ server:', e);
+    }
+  }, [bookingId]);
+
   // ── Start countdown ───────────────────────────────────────────────────────
   const startCountdown = useCallback((initialSeconds: number, currentWarningShown: boolean) => {
     if (countdownRef.current) clearInterval(countdownRef.current);
@@ -147,6 +162,7 @@ export const VideoCallScreen = () => {
       if (newVal <= WARNING_THRESHOLD_SEC && newVal > 0 && !currentWarningShown) {
         setWarningShownForThisSession(true);
         setShowWarningModal(true);
+        fetchExtendLimit(); // Quét và lấy các mốc gia hạn hợp lệ thời gian thực
         startWarningAnimation();
       }
 
@@ -154,7 +170,7 @@ export const VideoCallScreen = () => {
         handleAutoClose();
       }
     }, 1000);
-  }, [handleAutoClose, startWarningAnimation]);
+  }, [handleAutoClose, startWarningAnimation, fetchExtendLimit]);
 
   // ── Fetch remaining time từ server ────────────────────────────────────────
   const fetchRemainingTime = useCallback(async () => {
@@ -435,13 +451,13 @@ export const VideoCallScreen = () => {
             <View style={styles.modalDivider} />
 
             {/* Extension options */}
-            {canExtend ? (
+            {canExtend && allowedOptions.length > 0 ? (
               <>
                 <PolyText color="rgba(255,255,255,0.7)" weight="bold" style={styles.sectionLabel}>
-                  Chọn thời gian gia hạn:
+                  Chọn thời gian gia hạn (tối đa {timeInfo?.maxExtensions ?? 2} lần):
                 </PolyText>
-                <View style={styles.extButtonsRow}>
-                  {EXTENSION_OPTIONS.map((mins) => (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.extButtonsRow}>
+                  {allowedOptions.map((mins) => (
                     <TouchableOpacity
                       key={mins}
                       style={[styles.extBtn, isExtending && styles.extBtnDisabled]}
@@ -458,7 +474,7 @@ export const VideoCallScreen = () => {
                       </PolyText>
                     </TouchableOpacity>
                   ))}
-                </View>
+                </ScrollView>
               </>
             ) : (
               <View style={styles.maxExtReached}>
@@ -639,7 +655,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   extBtn: {
-    flex: 1,
+    width: 80,
     backgroundColor: 'rgba(255,152,0,0.1)',
     borderRadius: 16,
     paddingVertical: 18,

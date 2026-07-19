@@ -14,8 +14,8 @@ interface VideoCallRoomProps {
 }
 
 const POLL_INTERVAL_MS = 30_000;
-const WARNING_THRESHOLD_SEC = 30;      // 30s để demo
-const EXTENSION_OPTIONS = [1, 10, 20, 30]; // +1 phút để demo
+const WARNING_THRESHOLD_SEC = 60;      // 60s (1 phút) để gia hạn
+const EXTENSION_OPTIONS = [3, 5, 10, 15, 20, 25, 30]; // +1 phút để demo
 
 const fmtTime = (secs: number) => {
   if (secs <= 0) return '00:00';
@@ -62,6 +62,17 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
   const [canExtend, setCanExtend] = useState(true);
   const [isExtending, setIsExtending] = useState(false);
   const [extMsg, setExtMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [allowedOptions, setAllowedOptions] = useState<number[]>(EXTENSION_OPTIONS);
+
+  const fetchExtendLimit = useCallback(async () => {
+    if (!bookingId) return;
+    try {
+      const data = await fetchAPI(`/api/bookings/${bookingId}/extend-limit`);
+      if (data && data.allowedOptions) {
+        setAllowedOptions(data.allowedOptions);
+      }
+    } catch (_) { }
+  }, [bookingId]);
 
   const handleAutoClose = useCallback(async () => {
     if (autoClosedRef.current) return;
@@ -113,10 +124,11 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     if (timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0 && !modalShownOnce) {
       setModalShownOnce(true);
       setShowExtModal(true);
+      fetchExtendLimit(); // Quét và lấy giới hạn gia hạn thời gian thực
       playBeep(494, 0.5);
     }
     if (timeLeft === 60) playBeep(587, 0.6);
-  }, [timeLeft, modalShownOnce]);
+  }, [timeLeft, modalShownOnce, fetchExtendLimit]);
 
   // Fast poll (3s) khi popup đang hiển thị — detect gia hạn từ bên kia gần như tức thì
   useEffect(() => {
@@ -261,13 +273,13 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
             <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '18px 0' }} />
 
             {/* Extend buttons or limit msg */}
-            {canExtend ? (
+            {canExtend && allowedOptions.length > 0 ? (
               <>
                 <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, marginBottom: 14 }}>Chon thoi gian gia han:</div>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                  {EXTENSION_OPTIONS.map(mins => (
+                <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto', paddingBottom: 10 }}>
+                  {allowedOptions.map(mins => (
                     <button key={mins} onClick={() => handleExtend(mins)} disabled={isExtending}
-                      style={{ flex: 1, background: 'rgba(255,152,0,0.1)', border: '1.5px solid rgba(255,152,0,0.4)', borderRadius: 16, padding: '18px 0', cursor: isExtending ? 'not-allowed' : 'pointer', opacity: isExtending ? 0.5 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+                      style={{ minWidth: 80, flexShrink: 0, background: 'rgba(255,152,0,0.1)', border: '1.5px solid rgba(255,152,0,0.4)', borderRadius: 16, padding: '18px 0', cursor: isExtending ? 'not-allowed' : 'pointer', opacity: isExtending ? 0.5 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
                       onMouseEnter={e => { if (!isExtending) e.currentTarget.style.background = 'rgba(255,152,0,0.22)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,152,0,0.1)'; }}>
                       <span style={{ fontSize: 18 }}>&#43;</span>

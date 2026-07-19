@@ -100,6 +100,27 @@ public class AiService {
         }
     }
 
+    public String evaluateMentorBusyReason(String reason, int leadTimeHours, String fewShotExamples) {
+        String prompt = "Hãy phân tích lý do báo bận đột xuất của Mentor sau và đề xuất mức phạt điểm uy tín (từ 0% đến 10%).\n"
+                + "- Lý do báo bận: " + reason + "\n"
+                + "- Thời gian báo trước (Lead Time): " + leadTimeHours + " giờ.\n\n"
+                + "Quy tắc đánh giá:\n"
+                + "1. Nếu Mentor báo trước từ 24 - 48 giờ trở lên (ví dụ: xin nghỉ đi du lịch, có kế hoạch trước): Đây là hành vi hợp lệ, phạt 0%.\n"
+                + "2. Nếu Mentor báo bận sát giờ (Lead Time < 24 giờ) nhưng có lý do khẩn cấp chính đáng bất khả kháng (ốm đau đột xuất có minh chứng, tai nạn, việc gia đình khẩn cấp): Châm chước phạt rất nhẹ (từ 0% đến 2%).\n"
+                + "3. Nếu báo bận sát giờ với lý do không chính đáng (quên lịch, bận việc riêng thông thường, trùng lịch cá nhân không khẩn cấp): Phạt nặng (từ 5% đến 10%).\n\n"
+                + "Dưới đây là một số ví dụ thực tế mà người quản trị (Admin) đã từng phê duyệt/điều chỉnh để tham khảo:\n"
+                + "---------------------\n"
+                + (fewShotExamples.isEmpty() ? "(Không có ví dụ cũ)" : fewShotExamples) + "\n"
+                + "---------------------\n\n"
+                + "Yêu cầu trả về định dạng JSON nguyên bản chứa chính xác các trường sau, không trả thêm bất kỳ câu giải thích nào:\n"
+                + "{\n"
+                + "  \"validScore\": 80,\n"
+                + "  \"proposedPenalty\": 2.0,\n"
+                + "  \"reasoning\": \"[giải thích lý do]\"\n"
+                + "}";
+        return callGemini(createPayload(prompt));
+    }
+
     private ObjectNode createPayload(String prompt) {
         ObjectNode root = objectMapper.createObjectNode();
         ArrayNode contents = root.putArray("contents");

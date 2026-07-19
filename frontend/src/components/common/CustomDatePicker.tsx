@@ -11,6 +11,8 @@ interface CustomDatePickerProps {
   id?: string;
   error?: boolean;
   placement?: 'top' | 'bottom' | 'auto';
+  minDate?: string; // YYYY-MM-DD
+  theme?: 'light' | 'dark';
 }
 
 const MONTHS = [
@@ -88,6 +90,8 @@ export default function CustomDatePicker({
   id,
   error = false,
   placement = 'auto',
+  minDate,
+  theme = 'light',
 }: CustomDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPlacement, setDropdownPlacement] = useState<'top' | 'bottom'>('bottom');
@@ -97,6 +101,29 @@ export default function CustomDatePicker({
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+  const minDateTime = React.useMemo(() => {
+    if (!minDate) return null;
+    const parts = minDate.split('-');
+    if (parts.length !== 3) return null;
+    return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime();
+  }, [minDate]);
+
+  const checkIsDisabled = (day: number, offset: number) => {
+    if (minDateTime === null) return false;
+    let targetMonth = currentMonth + offset;
+    let targetYear = currentYear;
+
+    if (targetMonth < 0) {
+      targetMonth = 11;
+      targetYear -= 1;
+    } else if (targetMonth > 11) {
+      targetMonth = 0;
+      targetYear += 1;
+    }
+    const compareTime = new Date(targetYear, targetMonth, day).getTime();
+    return compareTime < minDateTime;
+  };
 
   // Smart placement detection
   useEffect(() => {
@@ -264,7 +291,7 @@ export default function CustomDatePicker({
   };
 
   return (
-    <div className={styles.pickerWrapper} ref={wrapperRef}>
+    <div className={`${styles.pickerWrapper} ${theme === 'dark' ? styles.darkTheme : ''}`} ref={wrapperRef}>
       {/* Input Selector Button */}
       <div
         id={id}
@@ -322,19 +349,26 @@ export default function CustomDatePicker({
 
           {/* Days Grid */}
           <div className={styles.daysGrid}>
-            {cells.map((cell, idx) => (
-              <div
-                key={idx}
-                className={`${styles.dayCell} ${
-                  cell.monthOffset !== 0 ? styles.otherMonth : ''
-                } ${cell.isSelected ? styles.selected : ''} ${
-                  cell.isToday ? styles.today : ''
-                }`}
-                onClick={() => handleSelectDay(cell.day, cell.monthOffset)}
-              >
-                {cell.day}
-              </div>
-            ))}
+            {cells.map((cell, idx) => {
+              const isDisabled = checkIsDisabled(cell.day, cell.monthOffset);
+              return (
+                <div
+                  key={idx}
+                  className={`${styles.dayCell} ${
+                    cell.monthOffset !== 0 ? styles.otherMonth : ''
+                  } ${cell.isSelected ? styles.selected : ''} ${
+                    cell.isToday ? styles.today : ''
+                  } ${isDisabled ? styles.disabled : ''}`}
+                  onClick={() => {
+                    if (!isDisabled) {
+                      handleSelectDay(cell.day, cell.monthOffset);
+                    }
+                  }}
+                >
+                  {cell.day}
+                </div>
+              );
+            })}
           </div>
 
           {/* Footer controls */}
