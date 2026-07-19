@@ -40,29 +40,34 @@ public class BookingApiController {
     @Autowired
     private EmailService emailService;
 
-    // Tự động đóng các lịch hẹn quá hạn 10 phút không tham gia, hoặc đã hết thời lượng
+    // Tự động đóng các lịch hẹn quá hạn 10 phút không tham gia, hoặc đã hết thời
+    // lượng
     private void checkAndCloseExpiredBookings() {
         try {
             LocalDateTime now = LocalDateTime.now();
             List<Booking> approvedBookings = bookingRepository.findAll(); // Lấy tất cả để quét (quy mô nhỏ)
-            
+
             List<Booking> toUpdate = new ArrayList<>();
             for (Booking b : approvedBookings) {
                 if (b.getStatus() == BookingStatus.APPROVED) {
                     LocalDateTime scheduledStart = LocalDateTime.of(b.getBookingDate(), b.getStartTime());
-                    
-                    // Case 1: Quá 10 phút kể từ giờ hẹn mà chưa có startedAt hoặc 1 trong 2 không vào
+
+                    // Case 1: Quá 10 phút kể từ giờ hẹn mà chưa có startedAt hoặc 1 trong 2 không
+                    // vào
                     if (now.isAfter(scheduledStart.plusMinutes(10))) {
                         if (b.getStartedAt() == null || !b.getStudentJoined() || !b.getMentorJoined()) {
                             b.setStatus(BookingStatus.CLOSED);
-                            b.setRejectionReason("Tự động đóng do một hoặc cả hai bên không tham gia cuộc gọi sau 10 phút.");
+                            b.setRejectionReason(
+                                    "Tự động đóng do một hoặc cả hai bên không tham gia cuộc gọi sau 10 phút.");
                             toUpdate.add(b);
 
                             // Tạo thông báo cho cả 2 bên
-                            createSystemNotification(b.getStudent(), "Lịch hẹn bị đóng", 
-                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
-                            createSystemNotification(b.getMentor(), "Lịch hẹn bị đóng", 
-                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
+                            createSystemNotification(b.getStudent(), "Lịch hẹn bị đóng",
+                                    "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime()
+                                            + " đã bị đóng do quá hạn 10 phút không tham gia.");
+                            createSystemNotification(b.getMentor(), "Lịch hẹn bị đóng",
+                                    "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime()
+                                            + " đã bị đóng do quá hạn 10 phút không tham gia.");
                             continue;
                         }
                     }
@@ -73,11 +78,13 @@ public class BookingApiController {
                         if (now.isAfter(scheduledEnd)) {
                             b.setStatus(BookingStatus.CLOSED);
                             toUpdate.add(b);
-                            
-                            createSystemNotification(b.getStudent(), "Cuộc gọi kết thúc", 
-                                "Cuộc gọi với Mentor " + b.getMentor().getFullname() + " đã kết thúc do hết thời lượng.");
-                            createSystemNotification(b.getMentor(), "Cuộc gọi kết thúc", 
-                                "Cuộc gọi với sinh viên " + b.getStudent().getFullname() + " đã kết thúc do hết thời lượng.");
+
+                            createSystemNotification(b.getStudent(), "Cuộc gọi kết thúc",
+                                    "Cuộc gọi với Mentor " + b.getMentor().getFullname()
+                                            + " đã kết thúc do hết thời lượng.");
+                            createSystemNotification(b.getMentor(), "Cuộc gọi kết thúc",
+                                    "Cuộc gọi với sinh viên " + b.getStudent().getFullname()
+                                            + " đã kết thúc do hết thời lượng.");
                         }
                     }
                 }
@@ -97,6 +104,8 @@ public class BookingApiController {
             n.setUser(recipient);
             n.setTitle(title);
             n.setContent(content);
+            n.setMessage(content);
+            n.setType("BOOKING");
             n.setLink("/bookings");
             n.setIsRead(false);
             notificationRepository.save(n);
@@ -140,23 +149,26 @@ public class BookingApiController {
             String note = (String) payload.get("note");
 
             if (bookingDate.isBefore(LocalDate.now())) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Không thể đặt lịch hẹn cho những ngày trong quá khứ"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Không thể đặt lịch hẹn cho những ngày trong quá khứ"));
             }
 
             if (bookingDate.equals(LocalDate.now()) && startTime.isBefore(LocalTime.now())) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Không thể đặt lịch hẹn cho khung giờ đã qua trong ngày"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Không thể đặt lịch hẹn cho khung giờ đã qua trong ngày"));
             }
 
             List<Integer> validDurations = Arrays.asList(1, 20, 30, 40, 50, 60);
             if (!validDurations.contains(duration)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Thời lượng cuộc gọi không hợp lệ (chỉ chấp nhận 1, 20, 30, 40, 50, 60 phút)"));
+                return ResponseEntity.badRequest().body(
+                        Map.of("error", "Thời lượng cuộc gọi không hợp lệ (chỉ chấp nhận 1, 20, 30, 40, 50, 60 phút)"));
             }
 
             LocalTime endTime = startTime.plusMinutes(duration);
 
             int dayOfWeek = bookingDate.getDayOfWeek().getValue() + 1;
             List<MentorSchedule> mentorSchedules = mentorScheduleRepository.findByMentorUsername(mentorUsername);
-            
+
             boolean isWithinSchedule = false;
             for (MentorSchedule schedule : mentorSchedules) {
                 if (schedule.getDayOfWeek().equals(dayOfWeek)) {
@@ -168,21 +180,26 @@ public class BookingApiController {
             }
 
             if (!isWithinSchedule) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Khung giờ này nằm ngoài lịch rảnh của Mentor"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Khung giờ này nằm ngoài lịch rảnh của Mentor"));
             }
 
             List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
-            List<Booking> mentorBookings = bookingRepository.findBookingsByMentorAndDate(mentorUsername, bookingDate, activeStatuses);
+            List<Booking> mentorBookings = bookingRepository.findBookingsByMentorAndDate(mentorUsername, bookingDate,
+                    activeStatuses);
             for (Booking b : mentorBookings) {
                 if (startTime.isBefore(b.getEndTime()) && endTime.isAfter(b.getStartTime())) {
-                    return ResponseEntity.badRequest().body(Map.of("error", "Mentor đã có lịch hẹn khác trong khung giờ này"));
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("error", "Mentor đã có lịch hẹn khác trong khung giờ này"));
                 }
             }
 
-            List<Booking> studentBookings = bookingRepository.findBookingsByStudentAndDate(student.getUsername(), bookingDate, activeStatuses);
+            List<Booking> studentBookings = bookingRepository.findBookingsByStudentAndDate(student.getUsername(),
+                    bookingDate, activeStatuses);
             for (Booking b : studentBookings) {
                 if (startTime.isBefore(b.getEndTime()) && endTime.isAfter(b.getStartTime())) {
-                    return ResponseEntity.badRequest().body(Map.of("error", "Bạn đã có một lịch hẹn khác trùng vào khung giờ này"));
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("error", "Bạn đã có một lịch hẹn khác trùng vào khung giờ này"));
                 }
             }
 
@@ -199,12 +216,14 @@ public class BookingApiController {
             Booking saved = bookingRepository.save(booking);
 
             // Gửi thông báo hệ thống cho Mentor
-            createSystemNotification(mentor, "Yêu cầu đặt lịch mới", 
-                student.getFullname() + " đã đặt lịch call video với bạn ngày " + bookingDate + " lúc " + startTime + ".");
+            createSystemNotification(mentor, "Yêu cầu đặt lịch mới",
+                    student.getFullname() + " đã đặt lịch call video với bạn ngày " + bookingDate + " lúc " + startTime
+                            + ".");
 
             // Gửi thông báo hệ thống cho Student
-            createSystemNotification(student, "Yêu cầu đặt lịch mới", 
-                "Bạn đã gửi yêu cầu đặt lịch call video với Mentor " + mentor.getFullname() + " ngày " + bookingDate + " lúc " + startTime + ".");
+            createSystemNotification(student, "Yêu cầu đặt lịch mới",
+                    "Bạn đã gửi yêu cầu đặt lịch call video với Mentor " + mentor.getFullname() + " ngày " + bookingDate
+                            + " lúc " + startTime + ".");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 
@@ -220,7 +239,8 @@ public class BookingApiController {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
         }
-        List<Booking> bookings = bookingRepository.findByStudentUsernameOrderByBookingDateDescStartTimeDesc(principal.getName());
+        List<Booking> bookings = bookingRepository
+                .findByStudentUsernameOrderByBookingDateDescStartTimeDesc(principal.getName());
         return ResponseEntity.ok(bookings);
     }
 
@@ -231,7 +251,8 @@ public class BookingApiController {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
         }
-        List<Booking> bookings = bookingRepository.findByMentorUsernameOrderByBookingDateDescStartTimeDesc(principal.getName());
+        List<Booking> bookings = bookingRepository
+                .findByMentorUsernameOrderByBookingDateDescStartTimeDesc(principal.getName());
         return ResponseEntity.ok(bookings);
     }
 
@@ -264,18 +285,21 @@ public class BookingApiController {
             if (targetStatus == BookingStatus.CANCELLED) {
                 if (!booking.getStudent().getUsername().equalsIgnoreCase(currentUser) &&
                         !booking.getMentor().getUsername().equalsIgnoreCase(currentUser)) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền hủy lịch hẹn này"));
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("error", "Bạn không có quyền hủy lịch hẹn này"));
                 }
                 booking.setStatus(BookingStatus.CANCELLED);
                 bookingRepository.save(booking);
 
                 // Tạo thông báo cho bên đối phương
                 if (currentUser.equalsIgnoreCase(booking.getStudent().getUsername())) {
-                    createSystemNotification(booking.getMentor(), "Lịch hẹn đã bị hủy", 
-                        "Sinh viên " + booking.getStudent().getFullname() + " đã hủy lịch hẹn ngày " + booking.getBookingDate() + ".");
+                    createSystemNotification(booking.getMentor(), "Lịch hẹn đã bị hủy",
+                            "Sinh viên " + booking.getStudent().getFullname() + " đã hủy lịch hẹn ngày "
+                                    + booking.getBookingDate() + ".");
                 } else {
-                    createSystemNotification(booking.getStudent(), "Lịch hẹn đã bị hủy", 
-                        "Mentor " + booking.getMentor().getFullname() + " đã hủy lịch hẹn ngày " + booking.getBookingDate() + ".");
+                    createSystemNotification(booking.getStudent(), "Lịch hẹn đã bị hủy",
+                            "Mentor " + booking.getMentor().getFullname() + " đã hủy lịch hẹn ngày "
+                                    + booking.getBookingDate() + ".");
                 }
 
                 return ResponseEntity.ok(Map.of("message", "Lịch hẹn đã được hủy thành công"));
@@ -284,20 +308,22 @@ public class BookingApiController {
             if (targetStatus == BookingStatus.CLOSED) {
                 if (!booking.getStudent().getUsername().equalsIgnoreCase(currentUser) &&
                         !booking.getMentor().getUsername().equalsIgnoreCase(currentUser)) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền kết thúc cuộc gọi này"));
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("error", "Bạn không có quyền kết thúc cuộc gọi này"));
                 }
                 booking.setStatus(BookingStatus.CLOSED);
                 String reason = payload.get("reason");
-                booking.setRejectionReason(reason != null ? reason : "Cuộc gọi video đã được kết thúc do hết thời gian hoặc do người dùng rời phòng.");
+                booking.setRejectionReason(reason != null ? reason
+                        : "Cuộc gọi video đã được kết thúc do hết thời gian hoặc do người dùng rời phòng.");
                 bookingRepository.save(booking);
 
                 // Tạo thông báo cho bên đối phương
                 if (currentUser.equalsIgnoreCase(booking.getStudent().getUsername())) {
-                    createSystemNotification(booking.getMentor(), "Cuộc gọi kết thúc", 
-                        "Sinh viên " + booking.getStudent().getFullname() + " đã kết thúc cuộc gọi.");
+                    createSystemNotification(booking.getMentor(), "Cuộc gọi kết thúc",
+                            "Sinh viên " + booking.getStudent().getFullname() + " đã kết thúc cuộc gọi.");
                 } else {
-                    createSystemNotification(booking.getStudent(), "Cuộc gọi kết thúc", 
-                        "Mentor " + booking.getMentor().getFullname() + " đã kết thúc cuộc gọi.");
+                    createSystemNotification(booking.getStudent(), "Cuộc gọi kết thúc",
+                            "Mentor " + booking.getMentor().getFullname() + " đã kết thúc cuộc gọi.");
                 }
 
                 return ResponseEntity.ok(Map.of("message", "Cuộc gọi đã được kết thúc thành công"));
@@ -305,11 +331,13 @@ public class BookingApiController {
 
             if (targetStatus == BookingStatus.APPROVED || targetStatus == BookingStatus.REJECTED) {
                 if (!booking.getMentor().getUsername().equalsIgnoreCase(currentUser)) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền thực hiện hành động này"));
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("error", "Bạn không có quyền thực hiện hành động này"));
                 }
 
                 if (booking.getStatus() != BookingStatus.PENDING) {
-                    return ResponseEntity.badRequest().body(Map.of("error", "Chỉ có thể xử lý lịch hẹn đang ở trạng thái chờ duyệt"));
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("error", "Chỉ có thể xử lý lịch hẹn đang ở trạng thái chờ duyệt"));
                 }
 
                 if (targetStatus == BookingStatus.APPROVED) {
@@ -319,16 +347,16 @@ public class BookingApiController {
 
                     // Gửi thông báo email và thông báo hệ thống cho sinh viên
                     emailService.sendBookingStatusEmail(
-                        booking.getStudent().getEmail(), 
-                        booking.getStudent().getFullname(), 
-                        booking.getMentor().getFullname(), 
-                        booking.getBookingDate().toString(), 
-                        booking.getStartTime().toString(), 
-                        "APPROVED", 
-                        null
-                    );
-                    createSystemNotification(booking.getStudent(), "Lịch hẹn được chấp nhận", 
-                        "Mentor " + booking.getMentor().getFullname() + " đã chấp nhận lịch hẹn ngày " + booking.getBookingDate() + " lúc " + booking.getStartTime() + ".");
+                            booking.getStudent().getEmail(),
+                            booking.getStudent().getFullname(),
+                            booking.getMentor().getFullname(),
+                            booking.getBookingDate().toString(),
+                            booking.getStartTime().toString(),
+                            "APPROVED",
+                            null);
+                    createSystemNotification(booking.getStudent(), "Lịch hẹn được chấp nhận",
+                            "Mentor " + booking.getMentor().getFullname() + " đã chấp nhận lịch hẹn ngày "
+                                    + booking.getBookingDate() + " lúc " + booking.getStartTime() + ".");
                 } else {
                     booking.setStatus(BookingStatus.REJECTED);
                     String reason = payload.get("reason");
@@ -337,16 +365,17 @@ public class BookingApiController {
 
                     // Gửi thông báo email và thông báo hệ thống cho sinh viên
                     emailService.sendBookingStatusEmail(
-                        booking.getStudent().getEmail(), 
-                        booking.getStudent().getFullname(), 
-                        booking.getMentor().getFullname(), 
-                        booking.getBookingDate().toString(), 
-                        booking.getStartTime().toString(), 
-                        "REJECTED", 
-                        booking.getRejectionReason()
-                    );
-                    createSystemNotification(booking.getStudent(), "Lịch hẹn bị từ chối", 
-                        "Mentor " + booking.getMentor().getFullname() + " đã từ chối lịch hẹn ngày " + booking.getBookingDate() + " lúc " + booking.getStartTime() + ". Lý do: " + booking.getRejectionReason());
+                            booking.getStudent().getEmail(),
+                            booking.getStudent().getFullname(),
+                            booking.getMentor().getFullname(),
+                            booking.getBookingDate().toString(),
+                            booking.getStartTime().toString(),
+                            "REJECTED",
+                            booking.getRejectionReason());
+                    createSystemNotification(booking.getStudent(), "Lịch hẹn bị từ chối",
+                            "Mentor " + booking.getMentor().getFullname() + " đã từ chối lịch hẹn ngày "
+                                    + booking.getBookingDate() + " lúc " + booking.getStartTime() + ". Lý do: "
+                                    + booking.getRejectionReason());
                 }
 
                 return ResponseEntity.ok(Map.of("message", "Cập nhật trạng thái lịch hẹn thành công"));
@@ -378,7 +407,8 @@ public class BookingApiController {
         boolean isMentor = booking.getMentor().getUsername().equalsIgnoreCase(username);
 
         if (!isStudent && !isMentor) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền tham gia cuộc gọi này"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Bạn không có quyền tham gia cuộc gọi này"));
         }
 
         if (isStudent) {
@@ -400,7 +430,8 @@ public class BookingApiController {
     public ResponseEntity<?> getMentorAvailability(@PathVariable("username") String username) {
         User mentor = userRepository.findById(username).orElse(null);
         if (mentor == null || mentor.getRole() == null || !"MENTOR".equalsIgnoreCase(mentor.getRole().getId())) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Không tìm thấy Mentor hoặc người dùng không phải Mentor"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Không tìm thấy Mentor hoặc người dùng không phải Mentor"));
         }
 
         List<MentorSchedule> schedules = mentorScheduleRepository.findByMentorUsername(username);
@@ -472,7 +503,8 @@ public class BookingApiController {
         boolean isMentor = booking.getMentor().getUsername().equalsIgnoreCase(username);
 
         if (!isStudent && !isMentor) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền truy cập cuộc gọi này"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Bạn không có quyền truy cập cuộc gọi này"));
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -540,7 +572,8 @@ public class BookingApiController {
         boolean isMentor = booking.getMentor().getUsername().equalsIgnoreCase(username);
 
         if (!isStudent && !isMentor) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền gia hạn cuộc gọi này"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Bạn không có quyền gia hạn cuộc gọi này"));
         }
 
         // Kiểm tra giới hạn gia hạn
@@ -549,10 +582,9 @@ public class BookingApiController {
 
         if (currentExtCount >= maxExtensions) {
             return ResponseEntity.badRequest().body(Map.of(
-                "error", "Đã đạt giới hạn gia hạn (" + maxExtensions + " lần). Không thể gia hạn thêm.",
-                "extensionCount", currentExtCount,
-                "maxExtensions", maxExtensions
-            ));
+                    "error", "Đã đạt giới hạn gia hạn (" + maxExtensions + " lần). Không thể gia hạn thêm.",
+                    "extensionCount", currentExtCount,
+                    "maxExtensions", maxExtensions));
         }
 
         // Validate số phút gia hạn
@@ -570,12 +602,14 @@ public class BookingApiController {
 
         List<Integer> validExtensions = Arrays.asList(10, 20, 30);
         if (!validExtensions.contains(additionalMinutes)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Thời gian gia hạn chỉ được là 10, 20 hoặc 30 phút"));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Thời gian gia hạn chỉ được là 10, 20 hoặc 30 phút"));
         }
 
         // Cập nhật booking
         int newDuration = booking.getDuration() + additionalMinutes;
-        int newExtendedMinutes = (booking.getExtendedMinutes() != null ? booking.getExtendedMinutes() : 0) + additionalMinutes;
+        int newExtendedMinutes = (booking.getExtendedMinutes() != null ? booking.getExtendedMinutes() : 0)
+                + additionalMinutes;
 
         booking.setDuration(newDuration);
         booking.setExtensionCount(currentExtCount + 1);
@@ -596,7 +630,8 @@ public class BookingApiController {
         User notifyTarget = isStudent ? booking.getMentor() : booking.getStudent();
 
         createSystemNotification(notifyTarget, "Cuộc gọi được gia hạn",
-            extenderName + " đã gia hạn cuộc gọi thêm " + additionalMinutes + " phút. Thời gian mới: " + newDuration + " phút.");
+                extenderName + " đã gia hạn cuộc gọi thêm " + additionalMinutes + " phút. Thời gian mới: " + newDuration
+                        + " phút.");
 
         // Trả về thông tin đầy đủ sau gia hạn
         Map<String, Object> response = new HashMap<>();
@@ -617,11 +652,13 @@ public class BookingApiController {
     @Transactional
     public ResponseEntity<?> deleteBooking(@PathVariable Long id, Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Vui lòng đăng nhập"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Vui lòng đăng nhập"));
         }
         User user = userRepository.findByUsername(principal.getName()).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Không tìm thấy user"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Không tìm thấy user"));
         }
 
         Booking booking = bookingRepository.findById(id).orElse(null);
@@ -629,16 +666,19 @@ public class BookingApiController {
             return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Không tìm thấy lịch hẹn"));
         }
 
-        if (booking.getStatus() != BookingStatus.CANCELLED && booking.getStatus() != BookingStatus.REJECTED && booking.getStatus() != BookingStatus.CLOSED) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Chỉ có thể xóa lịch hẹn đã kết thúc, đã hủy hoặc bị từ chối"));
+        if (booking.getStatus() != BookingStatus.CANCELLED && booking.getStatus() != BookingStatus.REJECTED
+                && booking.getStatus() != BookingStatus.CLOSED) {
+            return ResponseEntity.badRequest().body(
+                    Collections.singletonMap("message", "Chỉ có thể xóa lịch hẹn đã kết thúc, đã hủy hoặc bị từ chối"));
         }
 
-        if (!booking.getStudent().getUsername().equals(user.getUsername()) && !booking.getMentor().getUsername().equals(user.getUsername())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("message", "Không có quyền xóa lịch hẹn này"));
+        if (!booking.getStudent().getUsername().equals(user.getUsername())
+                && !booking.getMentor().getUsername().equals(user.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("message", "Không có quyền xóa lịch hẹn này"));
         }
 
         bookingRepository.delete(booking);
         return ResponseEntity.ok(Collections.singletonMap("message", "Đã xóa lịch hẹn thành công"));
     }
 }
-
