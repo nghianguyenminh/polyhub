@@ -28,6 +28,7 @@ export const CreatePostScreen = ({ navigation }: any) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const selectImage = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
@@ -72,6 +73,44 @@ export const CreatePostScreen = ({ navigation }: any) => {
       Alert.alert('Lỗi', error.message || 'Không thể đăng bài viết. Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleImproveText = async () => {
+    if (!content.trim()) return;
+    setIsAiLoading(true);
+    try {
+      const response = await api.post('/api/ai/improve-text', { text: content });
+      if (response.data) {
+        setContent(response.data);
+      }
+    } catch (error: any) {
+      console.error('AI improvement failed:', error);
+      Alert.alert('Lỗi', 'Không thể cải thiện văn bản lúc này.');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleSuggestCaption = async () => {
+    if (!imageFile) return;
+    setIsAiLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile as any);
+      const response = await api.post('/api/ai/suggest-caption', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      if (response.data) {
+        setContent(response.data);
+      }
+    } catch (error: any) {
+      console.error('AI caption suggestion failed:', error);
+      Alert.alert('Lỗi', 'Không thể tạo gợi ý từ ảnh lúc này.');
+    } finally {
+      setIsAiLoading(false);
     }
   };
 
@@ -131,6 +170,43 @@ export const CreatePostScreen = ({ navigation }: any) => {
           value={content}
           onChangeText={setContent}
         />
+
+        {/* AI Auxiliary Buttons */}
+        <View style={styles.aiButtonsContainer}>
+          <TouchableOpacity 
+            style={[styles.aiButton, (!content.trim() || isAiLoading) && styles.aiButtonDisabled]} 
+            onPress={handleImproveText}
+            disabled={!content.trim() || isAiLoading}
+          >
+            <Icon name="zap" size={16} color={(!content.trim() || isAiLoading) ? theme.colors.textMuted : theme.colors.primary} />
+            <PolyText 
+              variant="small" 
+              weight="medium"
+              color={(!content.trim() || isAiLoading) ? theme.colors.textMuted : theme.colors.primary}
+              style={{ marginLeft: 6 }}
+            >
+              {isAiLoading ? 'AI đang xử lý...' : 'Cải thiện văn bản'}
+            </PolyText>
+          </TouchableOpacity>
+
+          {imageUri && (
+            <TouchableOpacity 
+              style={[styles.aiButton, isAiLoading && styles.aiButtonDisabled, { marginLeft: 10 }]} 
+              onPress={handleSuggestCaption}
+              disabled={isAiLoading}
+            >
+              <Icon name="star" size={16} color={isAiLoading ? theme.colors.textMuted : '#22c55e'} />
+              <PolyText 
+                variant="small" 
+                weight="medium"
+                color={isAiLoading ? theme.colors.textMuted : '#22c55e'}
+                style={{ marginLeft: 6 }}
+              >
+                Gợi ý caption
+              </PolyText>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* Selected Image Preview */}
         {imageUri ? (
@@ -229,6 +305,25 @@ const styles = StyleSheet.create({
     color: theme.colors.textMain,
     minHeight: 120,
     textAlignVertical: 'top',
+  },
+  aiButtonsContainer: {
+    flexDirection: 'row',
+    marginTop: theme.spacing.md,
+    alignItems: 'center',
+  },
+  aiButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+  },
+  aiButtonDisabled: {
+    opacity: 0.6,
+    backgroundColor: theme.colors.background,
   },
   imagePreviewContainer: {
     position: 'relative',

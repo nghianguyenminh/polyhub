@@ -67,7 +67,7 @@ public class AiService {
 
     public String askClientCopilot(String question, String contextData) {
         String prompt = "Bạn là Trợ lý Ảo (PolyHUB Copilot) thân thiện, được thiết kế để hỗ trợ sinh viên và người dùng trên nền tảng mạng xã hội học tập PolyHUB.\n"
-                + "Bạn cần trả lời một cách lịch sự, tự nhiên và chính xác. Xưng hô là 'mình' và 'bạn'.\n"
+                + "Bạn cần trả lời một cách lịch sự, tự nhiên và chính xác ngắn gọn đừng quá dài. Xưng hô là 'mình' và 'bạn'.\n"
                 + "Dưới đây là DỮ LIỆU NGƯỜI DÙNG HIỆN TẠI VÀ THÔNG TIN HỆ THỐNG:\n"
                 + "---------------------\n"
                 + contextData + "\n"

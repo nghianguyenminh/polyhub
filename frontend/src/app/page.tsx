@@ -25,7 +25,7 @@ let globalFeedCache: {
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
 export default function HomePage() {
-  
+
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -66,10 +66,10 @@ export default function HomePage() {
 
     try {
       const data = await fetchAPI(`/api/v2/posts/feed?page=${page}&size=10`);
-      
+
       setPosts((prev) => {
         const newPosts = page === 0 ? (data.posts || []) : [...prev, ...(data.posts || [])];
-        
+
         // Update global cache
         globalFeedCache = {
           posts: newPosts,
@@ -78,10 +78,10 @@ export default function HomePage() {
           hasNext: !!data.hasNext,
           lastFetch: Date.now()
         };
-        
+
         return newPosts;
       });
-      
+
       setFeedPage(data.currentPage || 0);
       setTotalPages(data.totalPages || 0);
       setHasNext(!!data.hasNext);
@@ -93,7 +93,7 @@ export default function HomePage() {
     }
   }, []);
 
-  
+
 
   useEffect(() => {
     if (user) {
@@ -145,10 +145,12 @@ export default function HomePage() {
     if (!postContent.trim()) return;
     setAiLoading(true);
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const res = await fetch(`${API_BASE_URL}/api/ai/improve-text`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ text: postContent }),
       });
@@ -170,8 +172,12 @@ export default function HomePage() {
       const formData = new FormData();
       formData.append('image', postImages[0]); // AI gợi ý từ ảnh đầu tiên
 
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const res = await fetch(`${API_BASE_URL}/api/ai/suggest-caption`, {
         method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: formData,
       });
       if (res.ok) {
@@ -233,9 +239,9 @@ export default function HomePage() {
 
   return (
     <>
-   
+
       <Header />
-    
+
       <div className="app-container">
         <main className="w-100 d-flex justify-content-between">
           <LeftSidebar activeMenu="home" />
@@ -412,31 +418,34 @@ export default function HomePage() {
                 )}
 
                 {/* AI Auxiliary Buttons */}
-                <div className="d-flex align-items-center gap-2 mt-3">
+                <div className="d-flex align-items-center gap-2 mt-3 flex-wrap">
                   <button
                     type="button"
-                    className="btn btn-outline-primary btn-sm rounded-pill fw-medium"
+                    className="btn-ai-magic"
                     onClick={handleImproveText}
                     disabled={aiLoading || !postContent.trim()}
                     title="Yêu cầu AI cải thiện nội dung bạn vừa nhập"
                   >
-                    <i className="bi bi-magic me-1"></i>Cải thiện văn bản
+                    <i className="bi bi-stars me-2 fs-6"></i>Cải thiện văn bản
                   </button>
                   {postImages.length > 0 && (
                     <button
                       type="button"
-                      className="btn btn-outline-success btn-sm rounded-pill fw-medium"
+                      className="btn-ai-suggest"
                       onClick={handleSuggestCaption}
                       disabled={aiLoading}
                       title="AI sẽ gợi ý nội dung phù hợp với bức ảnh đầu tiên"
                     >
-                      <i className="bi bi-stars me-1"></i>Gợi ý từ ảnh
+                      <i className="bi bi-magic me-2 fs-6"></i>Gợi ý từ ảnh
                     </button>
                   )}
                 </div>
 
                 {aiLoading && (
-                  <p className="text-muted mt-2 mb-0" style={{ fontSize: '13px' }}><i className="spinner-border spinner-border-sm me-1" role="status"></i>AI đang suy nghĩ...</p>
+                  <div className="mt-3 ai-loading-indicator d-flex align-items-center">
+                    <i className="spinner-border spinner-border-sm me-2" role="status"></i>
+                    <span style={{ fontSize: '13.5px' }}>Đang tiến hành cải thiện...</span>
+                  </div>
                 )}
 
                 {/* Toolbar */}
