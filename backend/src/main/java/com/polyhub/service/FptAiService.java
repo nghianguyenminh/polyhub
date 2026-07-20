@@ -18,8 +18,8 @@ public class FptAiService {
     @Value("${fpt.ai.api-key:mock}")
     private String apiKey;
 
-    // Service Python local thay the cho FPT.AI OCR (PaddleOCR detect + VietOCR doc chu)
-    private static final String LOCAL_OCR_URL = "http://localhost:8001/ocr-cccd?side=auto";
+    @Value("${local.ocr.url:http://localhost:8001/ocr-cccd?side=auto}")
+    private String localOcrUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -68,7 +68,7 @@ public class FptAiService {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(LOCAL_OCR_URL, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(localOcrUrl, requestEntity, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
                 return mapper.readTree(response.getBody());
             } else {
@@ -81,8 +81,8 @@ public class FptAiService {
         }
     }
 
-    // Service Python local thay the cho FPT.AI Liveness V3 (InsightFace)
-    private static final String LOCAL_FACE_URL = "http://localhost:8002/verify-face";
+    @Value("${local.face.url:http://localhost:8002/verify-face}")
+    private String localFaceUrl;
 
     /**
      * Xác thực Liveness (kiểm tra chuyển động qua nhiều frame) + so khớp
@@ -141,7 +141,7 @@ public class FptAiService {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(LOCAL_FACE_URL, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(localFaceUrl, requestEntity, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
                 return mapper.readTree(response.getBody());
             } else {
