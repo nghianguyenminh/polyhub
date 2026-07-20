@@ -84,7 +84,6 @@ export async function fetchAPI(path: string, options: FetchOptions = {}) {
 
     return await response.json().catch(() => ({}));
   } catch (error: any) {
-    console.error(`[API Error tại ${path}]:`, error);
     throw new Error(error.message || 'Không thể kết nối đến máy chủ Backend.');
   }
 }

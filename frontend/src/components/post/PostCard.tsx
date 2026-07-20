@@ -504,6 +504,12 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
         </div>
 
         {/* ─── Content ─── */}
+        {post.moderationStatus === 'PENDING_REVIEW' && (
+          <div className="mx-3 mb-2 px-3 py-2 bg-warning bg-opacity-10 text-warning rounded-2 d-flex align-items-center gap-2" style={{ fontSize: '13px', border: '1px solid rgba(255,193,7,0.3)' }}>
+            <i className="bi bi-hourglass-split text-warning"></i>
+            <span className="fw-medium">Bài viết của bạn đang chờ quản trị viên kiểm duyệt. Hiện tại nó bị ẩn với người khác.</span>
+          </div>
+        )}
         <div className="px-3 pb-2">
           {isEditing ? (
             <div className="mb-2 mt-2">

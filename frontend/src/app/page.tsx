@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { fetchAPI, API_BASE_URL } from '@/lib/api';
 import { Post } from '@/lib/types';
 import Header from '@/components/layout/Header';
@@ -45,6 +46,8 @@ export default function HomePage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+
+  const { showError } = useToast();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -220,8 +223,8 @@ export default function HomePage() {
 
       // Refresh feed (force bypass cache)
       loadFeed(0, true);
-    } catch (err) {
-      console.error('Failed to create post', err);
+    } catch (err: any) {
+      showError(err.message || 'Có lỗi xảy ra khi tạo bài viết');
     } finally {
       setSubmitLoading(false);
     }

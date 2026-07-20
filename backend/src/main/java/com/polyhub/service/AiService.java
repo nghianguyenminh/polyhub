@@ -174,6 +174,42 @@ public class AiService {
         }
     }
 
+    /**
+     * Gọi AI để kiểm duyệt nội dung bài đăng.
+     * KHÁC với callAiWithFallback(): method này THROW RuntimeException thay vì
+     * trả về chuỗi lỗi tiếng Việt, để ContentModerationService phân biệt
+     * "AI không khả dụng" vs "AI xác nhận nội dung vi phạm".
+     *
+     * Thứ tự ưu tiên: Gemini → Groq (fallback) → throw RuntimeException("AI_UNAVAILABLE")
+     */
+    public String callAiForModeration(String prompt) {
+        boolean hasGemini = geminiApiKey != null && !geminiApiKey.isBlank()
+                && !geminiApiKey.contains("your-gemini-api-key");
+        boolean hasGroq = groqApiKey != null && !groqApiKey.isBlank();
+
+        if (!hasGemini && hasGroq) {
+            log.info("[Moderation] Gemini chưa cấu hình, dùng Groq trực tiếp.");
+            return callGroq(prompt); // Groq exception sẽ tự bubble up
+        }
+
+        try {
+            return callGeminiRaw(createPayload(prompt));
+        } catch (QuotaExceededException e) {
+            log.warn("[Moderation] Gemini hết quota, thử fallback Groq...");
+            if (!hasGroq) {
+                throw new RuntimeException("AI_UNAVAILABLE: Gemini hết quota và chưa cấu hình Groq.");
+            }
+            try {
+                return callGroq(prompt);
+            } catch (Exception groqEx) {
+                log.error("[Moderation] Groq fallback cũng lỗi: {}", groqEx.getMessage());
+                throw new RuntimeException("AI_UNAVAILABLE: Cả Gemini và Groq đều không khả dụng.", groqEx);
+            }
+        } catch (AiServiceException e) {
+            throw new RuntimeException("AI_UNAVAILABLE: " + e.getMessage(), e);
+        }
+    }
+
     public String evaluateMentorBusyReason(String reason, int leadTimeHours, String fewShotExamples) {
         String prompt = "Hãy phân tích lý do báo bận đột xuất của Mentor sau và đề xuất mức phạt điểm uy tín (từ 0% đến 10%).\n"
                 + "- Lý do báo bận: " + reason + "\n"

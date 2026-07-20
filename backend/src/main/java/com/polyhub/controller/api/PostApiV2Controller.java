@@ -8,6 +8,7 @@ import com.polyhub.repository.LikeRepository;
 import com.polyhub.repository.PostRepository;
 import com.polyhub.repository.UserRepository;
 import com.polyhub.service.PostService;
+import com.polyhub.service.PostService.ContentViolationException;
 import com.polyhub.service.client.SavedPostService;
 import com.polyhub.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,10 +64,24 @@ public class PostApiV2Controller {
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Đã tạo bài viết thành công!");
             response.put("postId", newPost.getId());
 
+            // Thông báo phù hợp theo trạng thái kiểm duyệt
+            String moderationStatus = newPost.getModerationStatus() != null
+                    ? newPost.getModerationStatus().name() : "APPROVED";
+            response.put("moderationStatus", moderationStatus);
+
+            if ("PENDING_REVIEW".equals(moderationStatus)) {
+                response.put("message", "⏳ Bài viết của bạn đang được đội ngũ PolyHUB xem xét. Bạn sẽ nhận thông báo khi được duyệt. ⏳");
+            } else {
+                response.put("message", "Đã tạo bài viết thành công!");
+            }
+
             return ResponseEntity.ok(response);
+        } catch (ContentViolationException e) {
+            // HTTP 422 Unprocessable Entity: nội dung hợp lệ về kỹ thuật nhưng vi phạm nội quy
+            return ResponseEntity.unprocessableEntity()
+                    .body(Map.of("error", e.getMessage(), "violationType", "CONTENT_VIOLATION"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -244,6 +259,14 @@ public class PostApiV2Controller {
         map.put("createdAt", post.getCreatedAt());
         map.put("isSaved", savedPostIds.contains(post.getId()));
 
+        // Trạng thái kiểm duyệt (hiển thị cho chính chủ bài viết và admin)
+        String moderationStatus = post.getModerationStatus() != null
+                ? post.getModerationStatus().name() : "APPROVED";
+        map.put("moderationStatus", moderationStatus);
+        if (!"APPROVED".equals(moderationStatus)) {
+            map.put("moderationCategory", post.getModerationCategory());
+        }
+
         // Multi-image: trả về danh sách URL ảnh
         List<String> imageUrls = new ArrayList<>();
         if (post.getImages() != null && !post.getImages().isEmpty()) {
@@ -343,7 +366,15 @@ public class PostApiV2Controller {
                 return ResponseEntity.badRequest().body(Map.of("error", "Nội dung bài viết không được để trống."));
             }
             Post updatedPost = postService.updatePost(postId, newContent, principal.getName());
-            return ResponseEntity.ok(Map.of("message", "Đã cập nhật bài viết thành công."));
+            String moderationStatus = updatedPost.getModerationStatus() != null
+                    ? updatedPost.getModerationStatus().name() : "APPROVED";
+            String message = "PENDING_REVIEW".equals(moderationStatus)
+                    ? "⏳ Nội dung chỉnh sửa đang được xem xét bởi đội ngũ PolyHUB."
+                    : "Đã cập nhật bài viết thành công.";
+            return ResponseEntity.ok(Map.of("message", message, "moderationStatus", moderationStatus));
+        } catch (ContentViolationException e) {
+            return ResponseEntity.unprocessableEntity()
+                    .body(Map.of("error", e.getMessage(), "violationType", "CONTENT_VIOLATION"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
