@@ -231,6 +231,36 @@ public class AiService {
         return callGeminiRaw(createPayload(prompt));
     }
 
+
+    public String moderateImage(MultipartFile image) {
+    try {
+        String base64Image = Base64.getEncoder().encodeToString(image.getBytes());
+        String mimeType = image.getContentType();
+        String prompt = """
+                Bạn là hệ thống kiểm duyệt ảnh cho mạng xã hội học tập PolyHUB \
+                (sinh viên Cao đẳng FPT Polytechnic).
+                Hãy phân tích bức ảnh sau theo các tiêu chí:
+                1. Khỏa thân, khiêu dâm, gợi dục
+                2. Bạo lực, máu me, kinh dị, tự hại
+                3. Ma túy, chất kích thích, vũ khí
+                4. Hình ảnh phản cảm, không phù hợp thuần phong mỹ tục Việt Nam
+
+                Trả về DUY NHẤT JSON theo định dạng sau, không giải thích thêm:
+                {"verdict": "SAFE|SUSPICIOUS|VIOLATION", \
+                "category": "SAFE|ADULT_CONTENT|VIOLENCE|DRUGS_WEAPONS|OFFENSIVE", \
+                "reason": "Giải thích ngắn gọn bằng tiếng Việt (null nếu SAFE)", \
+                "userMessage": "Thông báo thân thiện gửi cho người dùng (null nếu SAFE)"}
+                """;
+        return callGeminiRaw(createPayloadWithImage(prompt, base64Image, mimeType));
+    } catch (QuotaExceededException e) {
+        throw new RuntimeException("AI_UNAVAILABLE: Gemini Vision hết quota/quá tải khi kiểm duyệt ảnh.", e);
+    } catch (AiServiceException e) {
+        throw new RuntimeException("AI_UNAVAILABLE: " + e.getMessage(), e);
+    } catch (java.io.IOException e) {
+        log.error("Lỗi đọc file ảnh khi kiểm duyệt: {}", e.getMessage(), e);
+        throw new RuntimeException("AI_UNAVAILABLE: Không đọc được file ảnh.", e);
+    }
+}
     /**
      * Fallback provider: Groq (OpenAI-compatible endpoint), model mặc định Llama
      * 3.3 70B.

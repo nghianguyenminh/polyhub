@@ -6,6 +6,7 @@ import com.polyhub.entity.ModerationStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -89,6 +90,22 @@ public class ContentModerationService {
         // Layer 2: AI — phân tích ngữ cảnh
         return analyzeWithAi(content);
     }
+
+    public ModerationResult moderateImage(MultipartFile image) {
+    if (image == null || image.isEmpty()) {
+        return ModerationResult.approved();
+    }
+    try {
+        String raw = aiService.moderateImage(image);
+        return parseModerationResult(raw);
+    } catch (Exception e) {
+        log.warn("[Moderation][Image] AI không khả dụng, fallback PENDING_REVIEW. Lý do: {}", e.getMessage());
+        return ModerationResult.pendingReview(
+                "AI_UNAVAILABLE",
+                "Hệ thống AI tạm thời không khả dụng, ảnh cần admin xem thủ công.",
+                "AI_FALLBACK");
+    }
+}
 
     // -------------------------------------------------------------------------
     // Layer 1: Blacklist

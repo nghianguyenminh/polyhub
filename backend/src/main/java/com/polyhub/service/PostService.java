@@ -56,6 +56,48 @@ public class PostService {
             }
         }
 
+
+    // --- Upload + kiểm duyệt ảnh qua Cloudinary AI Vision (gộp làm 1 lần gọi/ảnh) ---
+java.util.List<Map<String, Object>> uploadedImageResults = new java.util.ArrayList<>();
+if (images != null && images.length > 0) {
+    for (MultipartFile image : images) {
+        if (image != null && !image.isEmpty()) {
+            Map<String, Object> uploadResult = fileStorageService.uploadImageWithModeration(image, "polyhub_posts");
+            log.info("[DEBUG] Full upload result: {}", uploadResult);
+            String modStatus = fileStorageService.extractModerationStatus(uploadResult);
+            log.info("[Moderation][Image] user={} cloudinary_status={} public_id={}",
+                    username, modStatus, uploadResult.get("public_id"));
+
+            if ("rejected".equalsIgnoreCase(modStatus)) {
+                // Rollback: xóa ảnh vừa bị từ chối + mọi ảnh đã upload thành công trước đó của bài này
+                uploadedImageResults.add(uploadResult);
+                for (Map<String, Object> r : uploadedImageResults) {
+                    try {
+                        fileStorageService.deleteFile((String) r.get("public_id"));
+                    } catch (IOException e) {
+                        log.error("[Moderation][Image] Không xóa được ảnh rác public_id={}", r.get("public_id"), e);
+                    }
+                }
+                throw new ContentViolationException(
+                        "Ảnh đăng kèm chứa nội dung không phù hợp với cộng đồng học tập PolyHUB. Vui lòng chọn ảnh khác. 🙏");
+            }
+
+            if (!"approved".equalsIgnoreCase(modStatus)) {
+                // null hoặc "pending" (add-on rơi về async) → fail-safe, không tự ý coi là an toàn
+                if (moderationResult.status() != ModerationStatus.PENDING_REVIEW) {
+                    moderationResult = ModerationResult.pendingReview(
+                            "IMAGE_MODERATION_UNCERTAIN",
+                            "Không xác định được kết quả kiểm duyệt ảnh (status=" + modStatus + ").",
+                            "CLOUDINARY_AI_VISION");
+                }
+            }
+
+            uploadedImageResults.add(uploadResult);
+        }
+        
+    }
+}
+
         // Tìm User trong DB, nếu không có thì lấy một tài khoản mặc định để demo
         User user = userRepository.findById(username).orElseGet(() -> {
             User newUser = new User();
@@ -81,34 +123,28 @@ public class PostService {
                     username, moderationResult.category());
         }
 
-        if (images != null && images.length > 0) {
-            int order = 0;
-            if (post.getImages() == null) {
-                post.setImages(new java.util.ArrayList<>());
-            }
-            for (MultipartFile image : images) {
-                if (image != null && !image.isEmpty()) {
-                    Map<String, Object> uploadResult = fileStorageService.uploadImage(image, "polyhub_posts");
-                    String url = (String) uploadResult.get("url");
-                    String publicId = (String) uploadResult.get("public_id");
+        if (!uploadedImageResults.isEmpty()) {
+    post.setImages(new java.util.ArrayList<>());
+    int order = 0;
+    for (Map<String, Object> uploadResult : uploadedImageResults) {
+        String url = (String) uploadResult.get("url");
+        String publicId = (String) uploadResult.get("public_id");
 
-                    // Ảnh đầu tiên gán vào field cũ (backward compatibility)
-                    if (order == 0) {
-                        post.setImageUrl(url);
-                        post.setImagePublicId(publicId);
-                    }
-
-                    PostImage postImage = PostImage.builder()
-                            .post(post)
-                            .imageUrl(url)
-                            .publicId(publicId)
-                            .displayOrder(order)
-                            .build();
-                    post.getImages().add(postImage);
-                    order++;
-                }
-            }
+        if (order == 0) {
+            post.setImageUrl(url);
+            post.setImagePublicId(publicId);
         }
+
+        PostImage postImage = PostImage.builder()
+                .post(post)
+                .imageUrl(url)
+                .publicId(publicId)
+                .displayOrder(order)
+                .build();
+        post.getImages().add(postImage);
+        order++;
+    }
+}
 
         return postRepository.save(post);
     }
