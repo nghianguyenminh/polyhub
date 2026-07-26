@@ -1,5 +1,6 @@
 package com.polyhub.controller.api;
 
+import com.polyhub.entity.PostImage;
 import com.polyhub.entity.User;
 import com.polyhub.entity.SavedDocument;
 import com.polyhub.entity.SavedPost;
@@ -31,112 +32,131 @@ public class SavedApiController {
     private UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<?> getSaved(
-            @RequestParam(value = "type", defaultValue = "documents") String type,
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "8") int size,
-            Principal principal) {
+public ResponseEntity<?> getSaved(
+        @RequestParam(value = "type", defaultValue = "documents") String type,
+        @RequestParam(value = "page", defaultValue = "1") int page,
+        @RequestParam(value = "size", defaultValue = "8") int size,
+        Principal principal) {
 
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Vui lòng đăng nhập!"));
-        }
-
-        User currentUser = userRepository.findById(principal.getName()).orElse(null);
-        if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Người dùng không tồn tại"));
-        }
-
-        long totalSavedDocs = savedDocumentService.countSavedDocumentsByUser(currentUser);
-        Page<SavedPost> allSavedPosts = savedPostService.getSavedPostsByUser(currentUser, PageRequest.of(0, 99999));
-        long totalSavedPosts = allSavedPosts.getTotalElements();
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("type", type);
-        response.put("totalSavedDocs", totalSavedDocs);
-        response.put("totalSavedPosts", totalSavedPosts);
-
-        if ("documents".equals(type)) {
-            Page<SavedDocument> savedDocsPage = savedDocumentService.getSavedDocumentsByUser(currentUser, page, size);
-            List<Map<String, Object>> docsList = savedDocsPage.getContent().stream()
-                    .map(sd -> {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("id", sd.getId());
-                        map.put("savedAt", sd.getSavedAt());
-                        if (sd.getDocument() != null) {
-                            Map<String, Object> docMap = new HashMap<>();
-                            docMap.put("id", sd.getDocument().getId());
-                            docMap.put("title", sd.getDocument().getTitle());
-                            docMap.put("description", sd.getDocument().getDescription());
-                            docMap.put("documentType", sd.getDocument().getDocumentType());
-                            docMap.put("fileUrl", sd.getDocument().getFileUrl());
-                            docMap.put("fileSize", sd.getDocument().getFileSize());
-                            docMap.put("downloadCount", sd.getDocument().getDownloadCount());
-                            docMap.put("createdAt", sd.getDocument().getCreatedAt());
-                            if (sd.getDocument().getUploader() != null) {
-                                docMap.put("uploader", Map.of(
-                                        "username", sd.getDocument().getUploader().getUsername(),
-                                        "fullname", sd.getDocument().getUploader().getFullname(),
-                                        "avatar", sd.getDocument().getUploader().getAvatar()
-                                ));
-                            }
-                            map.put("document", docMap);
-                        }
-                        return map;
-                    })
-                    .collect(Collectors.toList());
-
-            response.put("savedDocs", docsList);
-            response.put("content", docsList);
-            response.put("currentPage", savedDocsPage.getNumber() + 1);
-            response.put("totalPages", savedDocsPage.getTotalPages());
-            response.put("hasNext", savedDocsPage.hasNext());
-        } else if ("posts".equals(type)) {
-            Page<SavedPost> savedPostsPage = savedPostService.getSavedPostsByUser(currentUser, PageRequest.of(page - 1, size));
-            List<Map<String, Object>> postsList = savedPostsPage.getContent().stream()
-                    .map(sp -> {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("id", sp.getId());
-                        map.put("savedAt", sp.getSavedAt());
-                        if (sp.getPost() != null) {
-                            Map<String, Object> postMap = new HashMap<>();
-                            postMap.put("id", sp.getPost().getId());
-                            
-                            if (Boolean.TRUE.equals(sp.getPost().getIsDeleted())) {
-                                postMap.put("content", "Bài viết đã bị xóa");
-                                postMap.put("imageUrl", null);
-                            } else {
-                                postMap.put("content", sp.getPost().getContent());
-                                postMap.put("imageUrl", sp.getPost().getImageUrl());
-                            }
-                            
-                            postMap.put("isDeleted", sp.getPost().getIsDeleted());
-                            postMap.put("isPrivate", sp.getPost().getIsPrivate());
-                            postMap.put("createdAt", sp.getPost().getCreatedAt());
-                            
-                            if (sp.getPost().getUser() != null) {
-                                postMap.put("user", Map.of(
-                                        "username", sp.getPost().getUser().getUsername(),
-                                        "fullname", sp.getPost().getUser().getFullname(),
-                                        "avatar", sp.getPost().getUser().getAvatar()
-                                ));
-                            }
-                            map.put("post", postMap);
-                        }
-                        return map;
-                    })
-                    .collect(Collectors.toList());
-
-            response.put("savedPosts", postsList);
-            response.put("content", postsList);
-            response.put("currentPage", savedPostsPage.getNumber() + 1);
-            response.put("totalPages", savedPostsPage.getTotalPages());
-            response.put("hasNext", savedPostsPage.hasNext());
-        }
-
-        return ResponseEntity.ok(response);
+    if (principal == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Vui lòng đăng nhập!"));
     }
+
+    User currentUser = userRepository.findById(principal.getName()).orElse(null);
+    if (currentUser == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Người dùng không tồn tại"));
+    }
+
+    long totalSavedDocs = savedDocumentService.countSavedDocumentsByUser(currentUser);
+    Page<SavedPost> allSavedPosts = savedPostService.getSavedPostsByUser(currentUser, PageRequest.of(0, 99999));
+    long totalSavedPosts = allSavedPosts.getTotalElements();
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("type", type);
+    response.put("totalSavedDocs", totalSavedDocs);
+    response.put("totalSavedPosts", totalSavedPosts);
+
+    if ("documents".equals(type)) {
+        Page<SavedDocument> savedDocsPage = savedDocumentService.getSavedDocumentsByUser(currentUser, page, size);
+        List<Map<String, Object>> docsList = savedDocsPage.getContent().stream()
+                .map(sd -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", sd.getId());
+                    map.put("savedAt", sd.getSavedAt());
+                    if (sd.getDocument() != null) {
+                        Map<String, Object> docMap = new HashMap<>();
+                        docMap.put("id", sd.getDocument().getId());
+                        docMap.put("title", sd.getDocument().getTitle());
+                        docMap.put("description", sd.getDocument().getDescription());
+                        docMap.put("documentType", sd.getDocument().getDocumentType());
+                        docMap.put("fileUrl", sd.getDocument().getFileUrl());
+                        docMap.put("fileSize", sd.getDocument().getFileSize());
+                        docMap.put("downloadCount", sd.getDocument().getDownloadCount());
+                        docMap.put("createdAt", sd.getDocument().getCreatedAt());
+                        if (sd.getDocument().getUploader() != null) {
+                            docMap.put("uploader", Map.of(
+                                    "username", sd.getDocument().getUploader().getUsername(),
+                                    "fullname", sd.getDocument().getUploader().getFullname(),
+                                    "avatar", sd.getDocument().getUploader().getAvatar()
+                            ));
+                        }
+                        map.put("document", docMap);
+                    }
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+        response.put("savedDocs", docsList);
+        response.put("content", docsList);
+        response.put("currentPage", savedDocsPage.getNumber() + 1);
+        response.put("totalPages", savedDocsPage.getTotalPages());
+        response.put("hasNext", savedDocsPage.hasNext());
+    } else if ("posts".equals(type)) {
+        Page<SavedPost> savedPostsPage = savedPostService.getSavedPostsByUser(currentUser, PageRequest.of(page - 1, size));
+        List<Map<String, Object>> postsList = savedPostsPage.getContent().stream()
+                .map(sp -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", sp.getId());
+                    map.put("savedAt", sp.getSavedAt());
+                    if (sp.getPost() != null) {
+                        Map<String, Object> postMap = new HashMap<>();
+                        postMap.put("id", sp.getPost().getId());
+
+                        List<String> imageUrls = new ArrayList<>();
+                        if (sp.getPost().getImages() != null && !sp.getPost().getImages().isEmpty()) {
+                            imageUrls = sp.getPost().getImages().stream()
+                                    .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
+                                    .map(PostImage::getImageUrl)
+                                    .collect(Collectors.toList());
+                        } else if (sp.getPost().getImageUrl() != null && !sp.getPost().getImageUrl().isEmpty()) {
+                            imageUrls = List.of(sp.getPost().getImageUrl());
+                        }
+
+                        boolean isOwner = sp.getPost().getUser() != null && sp.getPost().getUser().getUsername().equals(currentUser.getUsername());
+                        boolean isHiddenFromUser = Boolean.TRUE.equals(sp.getPost().getIsPrivate()) && !isOwner;
+
+                        if (Boolean.TRUE.equals(sp.getPost().getIsDeleted())) {
+                            postMap.put("content", "Bài viết đã bị xóa");
+                            postMap.put("imageUrl", null);
+                            postMap.put("imageUrls", new ArrayList<>());
+                        } else if (isHiddenFromUser) {
+                            postMap.put("content", "Bài viết này đã bị ẩn");
+                            postMap.put("imageUrl", null);
+                            postMap.put("imageUrls", new ArrayList<>());
+                        } else {
+                            postMap.put("content", sp.getPost().getContent());
+                            postMap.put("imageUrl", sp.getPost().getImageUrl());
+                            postMap.put("imageUrls", imageUrls);
+                        }
+                        
+                        postMap.put("isDeleted", sp.getPost().getIsDeleted());
+                        postMap.put("isPrivate", sp.getPost().getIsPrivate());
+                        postMap.put("createdAt", sp.getPost().getCreatedAt());
+                        
+                        if (sp.getPost().getUser() != null) {
+                            postMap.put("user", Map.of(
+                                    "username", sp.getPost().getUser().getUsername(),
+                                    "fullname", sp.getPost().getUser().getFullname(),
+                                    "avatar", sp.getPost().getUser().getAvatar()
+                            ));
+                        }
+                        map.put("post", postMap);
+                    }
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+        response.put("savedPosts", postsList);
+        response.put("content", postsList);
+        response.put("currentPage", savedPostsPage.getNumber() + 1);
+        response.put("totalPages", savedPostsPage.getTotalPages());
+        response.put("hasNext", savedPostsPage.hasNext());
+    }
+
+    return ResponseEntity.ok(response);
+}
 
     @PostMapping({"/posts/toggle", "/togglePost"})
     public ResponseEntity<?> toggleSavedPost(
