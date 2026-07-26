@@ -118,6 +118,51 @@ export const SavedListScreen = () => {
     return `${getApiBaseUrl()}${avatarName}`;
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const getDocIconClass = (docType: string) => {
+    switch (docType?.toUpperCase()) {
+      case 'PDF': return { icon: 'file-text', color: '#e74c3c' }; // Red
+      case 'WORD': return { icon: 'file', color: '#2980b9' }; // Blue
+      case 'EXCEL': return { icon: 'grid', color: '#27ae60' }; // Green
+      case 'ZIP': return { icon: 'archive', color: '#f39c12' }; // Orange
+      default: return { icon: 'file', color: theme.colors.primary };
+    }
+  };
+
+  const renderPostImages = (post: any) => {
+    const images = post.imageUrls || (post.imageUrl ? [post.imageUrl] : []);
+    if (images.length === 0) return null;
+
+    if (images.length === 1) {
+      return (
+        <Image source={{ uri: images[0] }} style={styles.singleImage} />
+      );
+    }
+    
+    return (
+      <View style={styles.imageGridContainer}>
+        {images.slice(0, 4).map((uri: string, index: number) => (
+          <View key={index} style={[styles.gridImageWrapper, images.length === 2 ? { width: '49%' } : (images.length === 3 && index === 0 ? { width: '100%', height: 150 } : { width: '49%', height: 120 })]}>
+            <Image source={{ uri }} style={styles.gridImage} />
+            {index === 3 && images.length > 4 && (
+              <View style={styles.overlayMore}>
+                <PolyText variant="h3" color="#FFF" weight="bold">
+                  +{images.length - 4}
+                </PolyText>
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   const renderPostItem = ({ item }: { item: any }) => {
     const post = item.post;
     if (!post) return null;
@@ -129,24 +174,45 @@ export const SavedListScreen = () => {
           <Image source={{ uri: getAvatarUri(post.user?.avatar) }} style={styles.avatar} />
           <View style={styles.metaInfo}>
             <PolyText weight="bold">{post.user?.fullname || 'Ẩn danh'}</PolyText>
-            <PolyText variant="caption" color={theme.colors.textMuted}>{timeAgo}</PolyText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="calendar" size={12} color={theme.colors.textMuted} />
+              <PolyText variant="caption" color={theme.colors.textMuted} style={{ marginLeft: 4, marginRight: 8 }}>
+                {timeAgo}
+              </PolyText>
+              <Icon name={post.isPrivate ? 'lock' : 'globe'} size={12} color={theme.colors.textMuted} />
+              <PolyText variant="caption" color={theme.colors.textMuted} style={{ marginLeft: 4 }}>
+                {post.isPrivate ? 'Riêng tư' : 'Công khai'}
+              </PolyText>
+            </View>
           </View>
           <TouchableOpacity onPress={() => handleUnsavePost(post.id)}>
             <Icon name="bookmark" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
-        <PolyText numberOfLines={3} style={styles.bodyText}>
-          {post.content}
-        </PolyText>
-        <PolyButton
-          variant="outline"
-          title="Xem chi tiết"
-          style={styles.detailBtn}
-          onPress={() => {
-            // Can open a preview or alert for now
-            Alert.alert('Bài viết', post.content);
-          }}
-        />
+        
+        {post.content ? (
+          <PolyText style={styles.bodyText}>
+            {post.content}
+          </PolyText>
+        ) : null}
+        
+        {renderPostImages(post)}
+        
+        {/* Post Stats */}
+        <View style={styles.postStats}>
+          <View style={styles.statItem}>
+            <Icon name="heart" size={16} color="#e74c3c" />
+            <PolyText variant="small" style={styles.statText}>{post.likesCount || 0}</PolyText>
+          </View>
+          <View style={styles.statItem}>
+            <Icon name="message-circle" size={16} color={theme.colors.textLight} />
+            <PolyText variant="small" style={styles.statText}>{post.commentsCount || 0}</PolyText>
+          </View>
+          <View style={styles.statItem}>
+            <Icon name="share-2" size={16} color={theme.colors.textLight} />
+            <PolyText variant="small" style={styles.statText}>{post.sharesCount || 0}</PolyText>
+          </View>
+        </View>
       </PolyCard>
     );
   };
@@ -155,19 +221,55 @@ export const SavedListScreen = () => {
     const doc = item.document;
     if (!doc) return null;
 
+    const { icon, color } = getDocIconClass(doc.documentType);
+
     return (
       <PolyCard style={styles.itemCard}>
         <View style={styles.cardHeader}>
-          <View style={styles.docIconBox}>
-            <Icon name="file-text" size={24} color={theme.colors.primary} />
+          <View style={[styles.docIconBox, { backgroundColor: color + '20' }]}>
+            <Icon name={icon} size={24} color={color} />
           </View>
           <View style={styles.metaInfo}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+              <Icon name="tag" size={12} color={theme.colors.primary} />
+              <PolyText variant="caption" color={theme.colors.primary} style={{ marginLeft: 4 }}>
+                {doc.category?.name || 'Chuyên ngành'}
+              </PolyText>
+            </View>
             <PolyText weight="bold" numberOfLines={1}>{doc.title}</PolyText>
-            <PolyText variant="caption" color={theme.colors.textMuted}>
-              {doc.documentType?.toUpperCase()} • {doc.uploader?.fullname || 'Hệ thống'}
-            </PolyText>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 4 }}>
+              <View style={styles.docStat}>
+                <Icon name="user" size={12} color={theme.colors.textMuted} />
+                <PolyText variant="caption" color={theme.colors.textMuted} style={styles.docStatText}>
+                  {doc.uploader?.fullname || 'Hệ thống'}
+                </PolyText>
+              </View>
+              <View style={styles.docStat}>
+                <Icon name="file" size={12} color={theme.colors.textMuted} />
+                <PolyText variant="caption" color={theme.colors.textMuted} style={styles.docStatText}>
+                  {doc.documentType}
+                </PolyText>
+              </View>
+              {doc.fileSize > 0 && (
+                <View style={styles.docStat}>
+                  <Icon name="hard-drive" size={12} color={theme.colors.textMuted} />
+                  <PolyText variant="caption" color={theme.colors.textMuted} style={styles.docStatText}>
+                    {formatFileSize(doc.fileSize)}
+                  </PolyText>
+                </View>
+              )}
+              {doc.downloadCount > 0 && (
+                <View style={styles.docStat}>
+                  <Icon name="download" size={12} color={theme.colors.textMuted} />
+                  <PolyText variant="caption" color={theme.colors.textMuted} style={styles.docStatText}>
+                    {doc.downloadCount}
+                  </PolyText>
+                </View>
+              )}
+            </View>
           </View>
-          <TouchableOpacity onPress={() => handleUnsaveDoc(doc.id)}>
+          <TouchableOpacity onPress={() => handleUnsaveDoc(doc.id)} style={{ alignSelf: 'flex-start' }}>
             <Icon name="bookmark" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
@@ -315,5 +417,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
+  },
+  singleImage: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: theme.borderRadius.md,
+    marginTop: theme.spacing.md,
+    resizeMode: 'cover',
+  },
+  imageGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.md,
+    gap: 4,
+  },
+  gridImageWrapper: {
+    height: 120,
+    marginBottom: 4,
+    borderRadius: theme.borderRadius.md,
+    overflow: 'hidden',
+  },
+  gridImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  overlayMore: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  postStats: {
+    flexDirection: 'row',
+    marginTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing.md,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: theme.spacing.lg,
+  },
+  statText: {
+    marginLeft: 4,
+    color: theme.colors.textLight,
+  },
+  docStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 4,
+  },
+  docStatText: {
+    marginLeft: 4,
   },
 });

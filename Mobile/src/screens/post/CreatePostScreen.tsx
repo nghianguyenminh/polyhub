@@ -25,40 +25,45 @@ export const CreatePostScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const [content, setContent] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<any>(null);
+  const [imageUris, setImageUris] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   const selectImage = () => {
-    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8, selectionLimit: 10 }, (response) => {
       if (response.didCancel) return;
       if (response.errorMessage) {
         console.error(response.errorMessage);
         return;
       }
-      const asset = response.assets?.[0];
-      if (asset && asset.uri) {
-        setImageUri(asset.uri);
-        setImageFile({
-          uri: Platform.OS === 'android' ? asset.uri : asset.uri.replace('file://', ''),
-          name: asset.fileName || 'post-image.jpg',
+      if (response.assets && response.assets.length > 0) {
+        const uris = response.assets.map(asset => asset.uri).filter(Boolean) as string[];
+        const files = response.assets.map(asset => ({
+          uri: Platform.OS === 'android' ? asset.uri : asset.uri?.replace('file://', ''),
+          name: asset.fileName || `post-image-${Date.now()}.jpg`,
           type: asset.type || 'image/jpeg',
-        });
+        }));
+        
+        setImageUris(prev => [...prev, ...uris].slice(0, 10));
+        setImageFiles(prev => [...prev, ...files].slice(0, 10));
       }
     });
   };
 
   const handlePost = async () => {
-    if (!content.trim() && !imageUri) return;
+    if (!content.trim() && imageUris.length === 0) return;
     setIsSubmitting(true);
 
     try {
       const formData = new FormData();
       formData.append('content', content.trim());
       formData.append('isPrivate', 'false'); // Mặc định là công khai
-      if (imageFile) {
-        formData.append('file', imageFile as any);
+      
+      if (imageFiles && imageFiles.length > 0) {
+        imageFiles.forEach(file => {
+          formData.append('images', file as any);
+        });
       }
 
       await api.post('/api/v2/posts/create', formData, {
@@ -93,11 +98,11 @@ export const CreatePostScreen = ({ navigation }: any) => {
   };
 
   const handleSuggestCaption = async () => {
-    if (!imageFile) return;
+    if (imageFiles.length === 0) return;
     setIsAiLoading(true);
     try {
       const formData = new FormData();
-      formData.append('image', imageFile as any);
+      formData.append('image', imageFiles[0] as any);
       const response = await api.post('/api/ai/suggest-caption', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -135,7 +140,7 @@ export const CreatePostScreen = ({ navigation }: any) => {
         <PolyText variant="h3" weight="bold">Tạo bài viết</PolyText>
         <PolyButton 
           title="Đăng" 
-          disabled={(!content.trim() && !imageUri) || isSubmitting} 
+          disabled={(!content.trim() && imageUris.length === 0) || isSubmitting} 
           isLoading={isSubmitting}
           onPress={handlePost}
           style={styles.postBtn}
@@ -189,7 +194,7 @@ export const CreatePostScreen = ({ navigation }: any) => {
             </PolyText>
           </TouchableOpacity>
 
-          {imageUri && (
+          {imageUris.length > 0 && (
             <TouchableOpacity 
               style={[styles.aiButton, isAiLoading && styles.aiButtonDisabled, { marginLeft: 10 }]} 
               onPress={handleSuggestCaption}
@@ -209,18 +214,30 @@ export const CreatePostScreen = ({ navigation }: any) => {
         </View>
 
         {/* Selected Image Preview */}
-        {imageUri ? (
-          <View style={styles.imagePreviewContainer}>
-            <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-            <TouchableOpacity 
-              style={styles.removeImageBtn}
-              onPress={() => {
-                setImageUri(null);
-                setImageFile(null);
-              }}
-            >
-              <Icon name="x" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
+        {imageUris.length > 0 ? (
+          <View style={styles.imagePreviewWrapper}>
+            <View style={styles.imagePreviewGrid}>
+              {imageUris.map((uri, index) => (
+                <View key={index} style={[
+                  styles.imagePreviewContainer,
+                  imageUris.length === 1 ? styles.fullWidthImage : styles.gridImage
+                ]}>
+                  <Image source={{ uri }} style={styles.imagePreview} />
+                  <TouchableOpacity 
+                    style={styles.removeImageBtn}
+                    onPress={() => {
+                      setImageUris(prev => prev.filter((_, i) => i !== index));
+                      setImageFiles(prev => prev.filter((_, i) => i !== index));
+                    }}
+                  >
+                    <Icon name="x" size={16} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+            <PolyText variant="small" color={theme.colors.textMuted} style={{ marginTop: 8 }}>
+              {imageUris.length}/10 ảnh
+            </PolyText>
           </View>
         ) : null}
       </ScrollView>
@@ -325,25 +342,42 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     backgroundColor: theme.colors.background,
   },
+  imagePreviewWrapper: {
+    marginTop: theme.spacing.xl,
+  },
+  imagePreviewGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
   imagePreviewContainer: {
     position: 'relative',
-    marginTop: theme.spacing.xl,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
+    padding: 4,
+  },
+  fullWidthImage: {
+    width: '100%',
+    aspectRatio: 1,
+  },
+  gridImage: {
+    width: '33.33%',
+    aspectRatio: 1,
   },
   imagePreview: {
     width: '100%',
-    height: 250,
+    height: '100%',
     resizeMode: 'cover',
+    borderRadius: theme.borderRadius.md,
   },
   removeImageBtn: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 8,
+    right: 8,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },

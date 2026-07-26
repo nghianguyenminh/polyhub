@@ -25,14 +25,40 @@ import { Client } from '@stomp/stompjs';
 if (typeof TextEncoder === 'undefined') {
   class TextEncoderPolyfill {
     encode(str: string) {
-      const arr = new Uint8Array(str.length);
-      for (let i = 0; i < str.length; i++) {
-        arr[i] = str.charCodeAt(i) & 0xff;
+      try {
+        const utf8 = unescape(encodeURIComponent(str));
+        const arr = new Uint8Array(utf8.length);
+        for (let i = 0; i < utf8.length; i++) {
+          arr[i] = utf8.charCodeAt(i);
+        }
+        return arr;
+      } catch (e) {
+        const arr = new Uint8Array(str.length);
+        for (let i = 0; i < str.length; i++) {
+          arr[i] = str.charCodeAt(i) & 0xff;
+        }
+        return arr;
       }
-      return arr;
     }
   }
   globalThis.TextEncoder = TextEncoderPolyfill as any;
+}
+
+if (typeof TextDecoder === 'undefined') {
+  class TextDecoderPolyfill {
+    decode(arr: Uint8Array) {
+      let str = '';
+      for (let i = 0; i < arr.length; i++) {
+        str += String.fromCharCode(arr[i]);
+      }
+      try {
+        return decodeURIComponent(escape(str));
+      } catch (e) {
+        return str;
+      }
+    }
+  }
+  globalThis.TextDecoder = TextDecoderPolyfill as any;
 }
 
 const Icon = Feather as any;
@@ -47,6 +73,7 @@ export const ChatDetailScreen = () => {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [incomingCall, setIncomingCall] = useState<any>(null);
 
   const stompClientRef = useRef<Client | null>(null);
   const flatListRef = useRef<FlatList | null>(null);
@@ -103,6 +130,8 @@ export const ChatDetailScreen = () => {
 
     const client = new Client({
       brokerURL: wsUrl,
+      forceBinaryWSFrames: true,
+      appendMissingNULLonIncoming: true,
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -114,6 +143,27 @@ export const ChatDetailScreen = () => {
         client.subscribe(`/topic/chat/${roomId}`, (message) => {
           const newMsg = JSON.parse(message.body);
           
+          if (newMsg.type === 'CALL_OFFER') {
+            if (newMsg.senderId !== user?.username) {
+              setIncomingCall(newMsg);
+            }
+            return;
+          }
+
+          if (newMsg.type === 'CALL_REJECT') {
+            if (newMsg.senderId !== user?.username) {
+              setIncomingCall(null);
+              Alert.alert('Thông báo', 'Cuộc gọi đã bị từ chối.');
+            }
+            return;
+          }
+
+          if (newMsg.type === 'CALL_ENDED') {
+            setMessages((prev) => [...prev, newMsg]);
+            setIncomingCall(null);
+            return;
+          }
+
           // Only add text message or call actions
           setMessages((prev) => {
             // Check if message is already added (e.g. sent by me and optimistically added)
@@ -161,14 +211,28 @@ export const ChatDetailScreen = () => {
   };
 
   const handleVideoCall = () => {
-    if (!roomId) {
+    if (!roomId || !isConnected || !stompClientRef.current) {
       Alert.alert('Chờ kết nối', 'Đang thiết lập phòng hội thoại, vui lòng thử lại sau.');
       return;
     }
+
+    const callOfferMsg = {
+      roomId: roomId,
+      senderId: user?.username,
+      content: `${user?.fullname || user?.username || 'Ai đó'} đang gọi video cho bạn`,
+      type: 'CALL_OFFER',
+    };
+
+    stompClientRef.current.publish({
+      destination: '/app/chat.sendMessage',
+      body: JSON.stringify(callOfferMsg),
+    });
+
     // Navigate to ZegoCloud VideoCall
     navigation.navigate('VideoCall', {
       bookingId: roomId,
       userName: user?.fullname || 'User',
+      isPeerToPeer: true,
     });
   };
 
@@ -177,6 +241,20 @@ export const ChatDetailScreen = () => {
     const timeStr = item.timestamp
       ? new Date(item.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
       : '';
+
+    if (item.type === 'CALL_ENDED') {
+      return (
+        <View style={styles.callEventWrapper}>
+          <View style={styles.callEventBadge}>
+            <Icon name="video" size={14} color={theme.colors.textLight} />
+            <PolyText variant="small" color={theme.colors.textLight} style={{ marginLeft: 6 }}>
+              {isMe ? 'Bạn đã kết thúc cuộc gọi video' : `${targetFullname} đã kết thúc cuộc gọi video`}
+            </PolyText>
+          </View>
+          {timeStr ? <PolyText variant="small" color={theme.colors.textLight} style={styles.callEventTime}>{timeStr}</PolyText> : null}
+        </View>
+      );
+    }
 
     return (
       <View style={[styles.messageWrapper, isMe ? styles.messageWrapperMe : styles.messageWrapperOther]}>
@@ -268,6 +346,48 @@ export const ChatDetailScreen = () => {
           <Icon name="send" size={18} color={inputText.trim() ? "#FFFFFF" : theme.colors.textLight} />
         </TouchableOpacity>
       </View>
+
+      {/* Incoming Call Overlay */}
+      {incomingCall && (
+        <View style={styles.incomingCallOverlay}>
+          <View style={styles.incomingCallCard}>
+            <View style={styles.incomingAvatarWrapper}>
+              <Image source={{ uri: targetAvatar }} style={styles.incomingAvatar} />
+            </View>
+            <PolyText weight="bold" style={styles.incomingName}>{targetFullname}</PolyText>
+            <PolyText color={theme.colors.textLight} style={styles.incomingLabel}>Đang gọi video cho bạn...</PolyText>
+            
+            <View style={styles.incomingActions}>
+              <TouchableOpacity 
+                style={[styles.callActionBtn, styles.callRejectBtn]} 
+                onPress={() => {
+                  setIncomingCall(null);
+                  if (!user) return;
+                  stompClientRef.current?.publish({
+                    destination: '/app/chat.sendMessage',
+                    body: JSON.stringify({ roomId, senderId: user.username, content: "Đã từ chối cuộc gọi", type: "CALL_REJECT" })
+                  });
+                }}
+              >
+                <Icon name="phone-off" size={24} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.callActionBtn, styles.callAcceptBtn]} 
+                onPress={() => {
+                  setIncomingCall(null);
+                  navigation.navigate('VideoCall', {
+                    bookingId: roomId,
+                    userName: user?.fullname || 'User',
+                    isPeerToPeer: true,
+                  });
+                }}
+              >
+                <Icon name="video" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 };
@@ -382,5 +502,86 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  callEventWrapper: {
+    alignItems: 'center',
+    marginVertical: theme.spacing.md,
+  },
+  callEventBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  callEventTime: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  incomingCallOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  incomingCallCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  incomingAvatarWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: theme.colors.primary,
+    padding: 2,
+  },
+  incomingAvatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 40,
+  },
+  incomingName: {
+    fontSize: 20,
+    marginBottom: 8,
+  },
+  incomingLabel: {
+    marginBottom: 32,
+  },
+  incomingActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  callActionBtn: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  callRejectBtn: {
+    backgroundColor: theme.colors.danger,
+  },
+  callAcceptBtn: {
+    backgroundColor: theme.colors.success,
   },
 });
