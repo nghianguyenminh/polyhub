@@ -23,7 +23,7 @@ export const getApiBaseUrl = () => {
     host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
   }
   
-  const apiBase = `http://${host}:8080`;
+  const apiBase = process.env.EXPO_PUBLIC_API_URL || `http://${host}:8080`;
   
   console.log('Using API Base URL:', apiBase);
   return apiBase;
