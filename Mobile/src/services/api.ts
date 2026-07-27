@@ -11,20 +11,20 @@ export const setCustomApiBase = (url: string) => {
 
 export const getApiBaseUrl = () => {
   if (customBaseUrl) return customBaseUrl;
-  
+
   // Tự động phát hiện IP máy tính (host) đang chạy Metro Bundler để kết nối backend
   const hostUri = Constants.expoConfig?.hostUri;
   let host = 'localhost';
-  
+
   if (hostUri) {
     host = hostUri.split(':')[0];
   } else {
     // Dự phòng khi chạy độc lập
     host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
   }
-  
-  const apiBase = process.env.EXPO_PUBLIC_API_URL || `http://192.168.1.25:8080`;
-  
+
+  const apiBase = process.env.EXPO_PUBLIC_API_URL || `http://172.16.32.115:8080`;
+
   console.log('Using API Base URL:', apiBase);
   return apiBase;
 };
