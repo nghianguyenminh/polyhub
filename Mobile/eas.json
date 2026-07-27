@@ -13,7 +13,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://172.16.32.115:8080"
+        "EXPO_PUBLIC_API_URL": "https://polyhub-xec9.onrender.com"
       }
     },
     "production": {}
