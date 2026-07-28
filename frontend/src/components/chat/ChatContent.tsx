@@ -134,6 +134,10 @@ export default function ChatContent() {
 
   const handleStartVideoCall = () => {
     if (!roomId || !targetUser || !user || !stompClientRef.current) return;
+    if (!stompClientRef.current.connected) {
+      alert("Đang kết nối đến server chat, vui lòng thử lại sau giây lát.");
+      return;
+    }
 
     const callOfferMsg = {
       roomId: roomId,
@@ -150,7 +154,7 @@ export default function ChatContent() {
   };
 
   const handleLeaveRoom = () => {
-    if (roomId && user && stompClientRef.current) {
+    if (roomId && user && stompClientRef.current && stompClientRef.current.connected) {
       const callEndedMsg = {
         roomId: roomId,
         senderId: user.username,
@@ -168,6 +172,10 @@ export default function ChatContent() {
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageInput.trim() || !stompClientRef.current || !roomId || !user) return;
+    if (!stompClientRef.current.connected) {
+      alert("Đang kết nối đến server chat, vui lòng thử lại sau giây lát.");
+      return;
+    }
 
     const chatMessage = {
       roomId: roomId,

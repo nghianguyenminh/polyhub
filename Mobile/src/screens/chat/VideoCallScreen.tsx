@@ -19,20 +19,27 @@ import api from '../../services/api';
 const Icon = Feather as any;
 
 // ZegoCloud configuration
-const APP_ID = 1435055187;
-const APP_SIGN = "b4651fdf344e4930bff5005595c6c0a4b4651fdf344e4930bff5005595c6c0a4";
+const APP_ID = 905044708;
+const APP_SIGN = "4270820a8d733faada23745c7e0bc5ea1db7d6412c55a990f78bc3d507fdd2f5";
 
 let ZegoUIKitPrebuiltCall: any = null;
 let ONE_ON_ONE_VIDEO_CALL_CONFIG: any = null;
 let isZegoSupported = false;
 
+import { NativeModules } from 'react-native';
+
 try {
-  const ZegoPrebuilt = require('@zegocloud/zego-uikit-prebuilt-call-rn');
-  ZegoUIKitPrebuiltCall = ZegoPrebuilt.ZegoUIKitPrebuiltCall;
-  ONE_ON_ONE_VIDEO_CALL_CONFIG = ZegoPrebuilt.ONE_ON_ONE_VIDEO_CALL_CONFIG;
-  isZegoSupported = true;
+  if (!NativeModules.ZegoExpressEngine) {
+    console.warn('ZegoExpressEngine native module is missing (likely running in Expo Go).');
+    isZegoSupported = false;
+  } else {
+    const ZegoPrebuilt = require('@zegocloud/zego-uikit-prebuilt-call-rn');
+    ZegoUIKitPrebuiltCall = ZegoPrebuilt.ZegoUIKitPrebuiltCall;
+    ONE_ON_ONE_VIDEO_CALL_CONFIG = ZegoPrebuilt.ONE_ON_ONE_VIDEO_CALL_CONFIG;
+    isZegoSupported = true;
+  }
 } catch (error) {
-  console.warn('ZegoCloud is not supported in this environment (likely Expo Go):', error);
+  console.warn('ZegoCloud module missing or error:', error);
   isZegoSupported = false;
 }
 
