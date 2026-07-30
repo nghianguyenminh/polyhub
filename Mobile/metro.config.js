@@ -20,16 +20,16 @@ const MOCKED_MODULES = {
   '@sayem314/react-native-keep-awake': ZEGO_MOCK,
 };
 
-config.resolver = config.resolver || {};
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (MOCKED_MODULES[moduleName]) {
-    return {
-      filePath: MOCKED_MODULES[moduleName],
-      type: 'sourceFile',
-    };
-  }
-  // Fallback về Metro resolver mặc định
-  return context.resolveRequest(context, moduleName, platform);
-};
+// config.resolver = config.resolver || {};
+// config.resolver.resolveRequest = (context, moduleName, platform) => {
+//   if (MOCKED_MODULES[moduleName]) {
+//     return {
+//       filePath: MOCKED_MODULES[moduleName],
+//       type: 'sourceFile',
+//     };
+//   }
+//   // Fallback về Metro resolver mặc định
+//   return context.resolveRequest(context, moduleName, platform);
+// };
 
 module.exports = config;

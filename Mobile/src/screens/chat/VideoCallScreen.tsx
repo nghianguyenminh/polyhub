@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Component } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,9 @@ import {
   Animated,
   Easing,
   ScrollView,
+  PermissionsAndroid,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
@@ -22,25 +25,25 @@ const Icon = Feather as any;
 const APP_ID = 905044708;
 const APP_SIGN = "4270820a8d733faada23745c7e0bc5ea1db7d6412c55a990f78bc3d507fdd2f5";
 
-let ZegoUIKitPrebuiltCall: any = null;
-let ONE_ON_ONE_VIDEO_CALL_CONFIG: any = null;
-let isZegoSupported = false;
+import { ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn';
+const isZegoSupported = true; // Chạy trên dev client / APK luôn hỗ trợ
 
-import { NativeModules } from 'react-native';
-
-try {
-  if (!NativeModules.ZegoExpressEngine) {
-    console.warn('ZegoExpressEngine native module is missing (likely running in Expo Go).');
-    isZegoSupported = false;
-  } else {
-    const ZegoPrebuilt = require('@zegocloud/zego-uikit-prebuilt-call-rn');
-    ZegoUIKitPrebuiltCall = ZegoPrebuilt.ZegoUIKitPrebuiltCall;
-    ONE_ON_ONE_VIDEO_CALL_CONFIG = ZegoPrebuilt.ONE_ON_ONE_VIDEO_CALL_CONFIG;
-    isZegoSupported = true;
+// ─── Helper: xin quyền Camera + Microphone trên Android ──────────────────────
+async function requestAndroidPermissions(): Promise<boolean> {
+  if (Platform.OS !== 'android') return true;
+  try {
+    const grants = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.CAMERA,
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+    ]);
+    const cameraGranted = grants[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED;
+    const audioGranted = grants[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;
+    console.log('[Permissions] Camera:', cameraGranted, '| Microphone:', audioGranted);
+    return cameraGranted && audioGranted;
+  } catch (err) {
+    console.warn('[Permissions] Error requesting permissions:', err);
+    return false;
   }
-} catch (error) {
-  console.warn('ZegoCloud module missing or error:', error);
-  isZegoSupported = false;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -80,13 +83,24 @@ export const VideoCallScreen = () => {
   const { user } = useAuthStore();
 
   const { bookingId, userName, isPeerToPeer } = route.params || { bookingId: 'call_test', userName: 'User', isPeerToPeer: false };
-  const rawUserId = user?.username || 'user_' + Math.floor(Math.random() * 1000);
-  const userId = rawUserId.replace(/[^a-zA-Z0-9_]/g, '_');
+  const userId = React.useMemo(() => {
+    const rawUserId = user?.username || 'user_' + Math.floor(Math.random() * 1000);
+    return rawUserId.replace(/[^a-zA-Z0-9_]/g, '_');
+  }, [user?.username]);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
   const [timeInfo, setTimeInfo] = useState<RemainingTimeInfo | null>(null);
   const [showWarningModal, setShowWarningModal] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null); // null = đang xin
+
+  // ── Xin quyền Camera + Micro khi vào màn hình ────────────────────────────
+  useEffect(() => {
+    requestAndroidPermissions().then((granted) => {
+      console.log('[VideoCallScreen] Permission result:', granted);
+      setPermissionGranted(granted);
+    });
+  }, []);
   const [warningShownForThisSession, setWarningShownForThisSession] = useState(false);
   const [isExtending, setIsExtending] = useState(false);
   const [extendMessage, setExtendMessage] = useState<{ text: string; success: boolean } | null>(null);
@@ -254,7 +268,7 @@ export const VideoCallScreen = () => {
           // Restart countdown với thời gian mới
           startCountdown(data.remainingSeconds, false);
         }
-      } catch (_) {}
+      } catch (_) { }
     }, 3000);
     return () => clearInterval(fastPoll);
   }, [showWarningModal, bookingId]);
@@ -272,14 +286,14 @@ export const VideoCallScreen = () => {
       setTimeInfo((prev) =>
         prev
           ? {
-              ...prev,
-              remainingSeconds: data.remainingSeconds,
-              duration: data.newDuration,
-              extensionCount: data.extensionCount,
-              maxExtensions: data.maxExtensions,
-              extendedMinutes: data.extendedMinutes,
-              canExtend: data.canExtend,
-            }
+            ...prev,
+            remainingSeconds: data.remainingSeconds,
+            duration: data.newDuration,
+            extensionCount: data.extensionCount,
+            maxExtensions: data.maxExtensions,
+            extendedMinutes: data.extendedMinutes,
+            canExtend: data.canExtend,
+          }
           : prev
       );
 
@@ -322,6 +336,53 @@ export const VideoCallScreen = () => {
   const maxExtensions = timeInfo?.maxExtensions ?? 3;
   const canExtend = timeInfo?.canExtend ?? true;
 
+  const zegoConfig = React.useMemo(() => ({
+    ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
+    turnOnCameraWhenJoining: true,
+    turnOnMicrophoneWhenJoining: true,
+    onHangUp: handleHangUp,
+    onCallEnd: (callID: string, reason: string, duration: number) => {
+      console.log('Call Ended', callID, reason, duration);
+      handleHangUp();
+    },
+    onError: (errorCode: number, message: string) => {
+      console.error('[Zego ERROR]', 'code:', errorCode, 'message:', message);
+    },
+  }), [handleHangUp]);
+
+  // ── Fallback: đang xin quyền ────────────────────────────────────────────
+  if (permissionGranted === null) {
+    return (
+      <View style={styles.fallbackContainer}>
+        <PolyText color="#FFFFFF">Đang yêu cầu quyền Camera và Microphone...</PolyText>
+      </View>
+    );
+  }
+
+  // ── Fallback: bị từ chối quyền ──────────────────────────────────────────
+  if (permissionGranted === false) {
+    return (
+      <View style={styles.fallbackContainer}>
+        <View style={styles.iconBox}>
+          <Icon name="camera-off" size={48} color={theme.colors.danger} />
+        </View>
+        <PolyText variant="h2" weight="bold" color="#FFFFFF" style={styles.fallbackTitle}>
+          Thiếu quyền truy cập
+        </PolyText>
+        <PolyText color={theme.colors.textLight} align="center" style={styles.fallbackDesc}>
+          Ứng dụng cần quyền truy cập Camera và Microphone để thực hiện cuộc gọi video.
+          Vui lòng vào Cài đặt → Ứng dụng → PolyHubMobile → Quyền và bật Camera + Microphone.
+        </PolyText>
+        <PolyButton
+          variant="outline"
+          title="Quay lại"
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        />
+      </View>
+    );
+  }
+
   // ── Fallback (Expo Go) ────────────────────────────────────────────────────
   if (!isZegoSupported) {
     return (
@@ -347,20 +408,37 @@ export const VideoCallScreen = () => {
   }
 
   // ── Main Render ───────────────────────────────────────────────────────────
+  // ZegoCloud yêu cầu callID chỉ gồm chữ cái, số, dấu gạch dưới/gạch ngang, tối đa 128 ký tự
+  const safeCallID = bookingId.toString().replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+  console.log('[VideoCallScreen] Rendering ZegoUIKitPrebuiltCall with:', {
+    appID: APP_ID,
+    userID: userId,
+    userName,
+    callID: safeCallID,
+  });
+
+  const { width, height } = Dimensions.get('window');
+
   return (
     <View style={styles.container}>
-      {/* ZegoCloud Video Call */}
-      <ZegoUIKitPrebuiltCall
-        appID={APP_ID}
-        appSign={APP_SIGN}
-        userID={userId}
-        userName={userName}
-        callID={bookingId.toString()}
-        config={{
-          ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
-          onHangUp: handleHangUp,
-        }}
-      />
+      <ErrorBoundary>
+        <View style={{ flex: 1 }}>
+          <ZegoUIKitPrebuiltCall
+            appID={APP_ID}
+            appSign={APP_SIGN}
+            userID={userId}
+            userName={userName}
+            callID={safeCallID}
+            config={zegoConfig}
+          />
+        </View>
+      </ErrorBoundary>
+
+      {/* Debug Text để xem React Native có đang render view này không */}
+      {/* <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: 'rgba(255,0,0,0.5)', padding: 10, borderRadius: 8, zIndex: 9999 }}>
+        <PolyText color="white" weight="bold">Zego Call Screen</PolyText>
+      </View> */}
+
 
       {/* ── Timer Overlay (floating trên màn hình call) ── */}
       {remainingSeconds > 0 && (
@@ -394,7 +472,7 @@ export const VideoCallScreen = () => {
         visible={showWarningModal}
         transparent
         animationType="none"
-        onRequestClose={() => {}}
+        onRequestClose={() => { }}
       >
         <View style={styles.modalOverlay}>
           <Animated.View
@@ -522,6 +600,33 @@ export const VideoCallScreen = () => {
     </View>
   );
 };
+
+class ErrorBoundary extends Component<any, { hasError: boolean, errorMsg: string }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, errorMsg: '' };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, errorMsg: error?.toString() || 'Unknown Error' };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Zego Component Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#330000', padding: 20 }}>
+          <PolyText color="white" weight="bold" style={{ marginBottom: 10 }}>Zego Render Error:</PolyText>
+          <PolyText color="red" align="center">{this.state.errorMsg}</PolyText>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({

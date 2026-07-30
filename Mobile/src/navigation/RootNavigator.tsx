@@ -117,7 +117,11 @@ export const RootNavigator = () => {
               />
               <Stack.Screen 
                 name="VideoCall" 
-                component={VideoCallScreen} 
+                component={VideoCallScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'none',
+                }}
               />
             </>
           ) : (

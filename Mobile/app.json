@@ -4,6 +4,7 @@
     "slug": "PolyHubMobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "polyhubmobile",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
@@ -39,7 +40,19 @@
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN"
       ],
-      "package": "com.anonymous.PolyHubMobile"
+      "package": "com.anonymous.PolyHubMobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "polyhubmobile"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       [
