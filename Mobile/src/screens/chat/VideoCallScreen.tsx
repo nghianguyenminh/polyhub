@@ -72,8 +72,9 @@ export const VideoCallScreen = () => {
   const route = useRoute<any>();
   const { user } = useAuthStore();
 
-  const { bookingId, userName } = route.params || { bookingId: 'call_test', userName: 'User' };
-  const userId = user?.username || 'user_' + Math.floor(Math.random() * 1000);
+  const { bookingId, userName, isPeerToPeer } = route.params || { bookingId: 'call_test', userName: 'User', isPeerToPeer: false };
+  const rawUserId = user?.username || 'user_' + Math.floor(Math.random() * 1000);
+  const userId = rawUserId.replace(/[^a-zA-Z0-9_]/g, '_');
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
@@ -105,16 +106,18 @@ export const VideoCallScreen = () => {
     if (hasAutoClosedRef.current) return;
     hasAutoClosedRef.current = true;
     clearAllTimers();
-    try {
-      await api.put(`/api/bookings/${bookingId}/status`, {
-        status: 'CLOSED',
-        reason: 'Cuộc gọi video đã được tự động kết thúc do hết thời lượng.',
-      });
-    } catch (e) {
-      console.warn('Không thể cập nhật trạng thái booking:', e);
+    if (!isPeerToPeer) {
+      try {
+        await api.put(`/api/bookings/${bookingId}/status`, {
+          status: 'CLOSED',
+          reason: 'Cuộc gọi video đã được tự động kết thúc do hết thời lượng.',
+        });
+      } catch (e) {
+        console.warn('Không thể cập nhật trạng thái booking:', e);
+      }
     }
     navigation.goBack();
-  }, [bookingId, navigation, clearAllTimers]);
+  }, [bookingId, navigation, clearAllTimers, isPeerToPeer]);
 
   // ── Warning animation ─────────────────────────────────────────────────────
   const startWarningAnimation = useCallback(() => {
@@ -137,7 +140,7 @@ export const VideoCallScreen = () => {
 
   // ── Fetch extend limit từ server ──────────────────────────────────────────
   const fetchExtendLimit = useCallback(async () => {
-    if (!bookingId || bookingId === 'call_test') return;
+    if (isPeerToPeer || !bookingId || bookingId === 'call_test') return;
     try {
       const response = await api.get(`/api/bookings/${bookingId}/extend-limit`);
       if (response.data && response.data.allowedOptions) {
@@ -174,7 +177,7 @@ export const VideoCallScreen = () => {
 
   // ── Fetch remaining time từ server ────────────────────────────────────────
   const fetchRemainingTime = useCallback(async () => {
-    if (!bookingId || bookingId === 'call_test') return;
+    if (isPeerToPeer || !bookingId || bookingId === 'call_test') return;
     try {
       const response = await api.get(`/api/bookings/${bookingId}/remaining-time`);
       const data: RemainingTimeInfo = response.data;
@@ -203,7 +206,7 @@ export const VideoCallScreen = () => {
   useEffect(() => {
     let mounted = true;
     const init = async () => {
-      if (!bookingId || bookingId === 'call_test') return;
+      if (isPeerToPeer || !bookingId || bookingId === 'call_test') return;
       try {
         const response = await api.get(`/api/bookings/${bookingId}/remaining-time`);
         if (!mounted) return;
@@ -229,7 +232,7 @@ export const VideoCallScreen = () => {
 
   // ── Fast poll (3s) khi popup đang hiển — detect gia hạn từ bên kia ————————
   useEffect(() => {
-    if (!showWarningModal || !bookingId || bookingId === 'call_test') return;
+    if (isPeerToPeer || !showWarningModal || !bookingId || bookingId === 'call_test') return;
     const fastPoll = setInterval(async () => {
       try {
         const response = await api.get(`/api/bookings/${bookingId}/remaining-time`);
@@ -250,6 +253,7 @@ export const VideoCallScreen = () => {
   }, [showWarningModal, bookingId]);
 
   const handleExtend = useCallback(async (additionalMinutes: number) => {
+    if (isPeerToPeer) return;
     setIsExtending(true);
     setExtendMessage(null);
     try {

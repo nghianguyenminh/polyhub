@@ -26,8 +26,10 @@ import com.polyhub.service.EmailService;
 import com.polyhub.service.OtpService;
 
 /**
- * REST API cho xác thực: Login (trả JWT), Register, lấy thông tin user hiện tại.
+ * REST API cho xác thực: Login (trả JWT), Register, lấy thông tin user hiện
+ * tại.
  */
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthApiController {
@@ -72,8 +74,7 @@ public class AuthApiController {
 
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
-            );
+                    new UsernamePasswordAuthenticationToken(username, password));
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             String token = jwtService.generateToken(userDetails);
@@ -98,7 +99,8 @@ public class AuthApiController {
 
     /**
      * POST /api/auth/register
-     * Body: { "username": "...", "password": "...", "confirmPassword": "...", "fullname": "...", "email": "..." }
+     * Body: { "username": "...", "password": "...", "confirmPassword": "...",
+     * "fullname": "...", "email": "..." }
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
@@ -153,7 +155,8 @@ public class AuthApiController {
             try {
                 user.setBirthday(java.time.LocalDate.parse(birthdayStr));
             } catch (Exception e) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Ngày sinh không đúng định dạng (yyyy-MM-dd)."));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Ngày sinh không đúng định dạng (yyyy-MM-dd)."));
             }
         }
 
@@ -194,7 +197,8 @@ public class AuthApiController {
      * Helper: Build user response map (loại bỏ password và thông tin nhạy cảm).
      */
     private Map<String, Object> buildUserResponse(User user) {
-        if (user == null) return Map.of();
+        if (user == null)
+            return Map.of();
 
         Map<String, Object> map = new HashMap<>();
         map.put("username", user.getUsername());
