@@ -243,23 +243,41 @@ public class PostApiV2Controller {
     }
 
     private Map<String, Object> buildPostResponse(Post post, Set<Long> savedPostIds, String viewerUsername) {
-    Map<String, Object> map = new HashMap<>();
-    map.put("id", post.getId());
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", post.getId());
+
+        boolean isOwner = post.getUser() != null && post.getUser().getUsername().equals(viewerUsername);
+        boolean isHiddenFromUser = Boolean.TRUE.equals(post.getIsPrivate()) && !isOwner;
 
         if (Boolean.TRUE.equals(post.getIsDeleted())) {
             map.put("content", "Bài viết đã bị xóa");
             map.put("imageUrl", null);
+            map.put("imageUrls", new ArrayList<>());
+        } else if (isHiddenFromUser) {
+            map.put("content", "Bài viết này đã bị ẩn");
+            map.put("imageUrl", null);
+            map.put("imageUrls", new ArrayList<>());
         } else {
             map.put("content", post.getContent());
             map.put("imageUrl", post.getImageUrl());
+            
+            List<String> imageUrls = new ArrayList<>();
+            if (post.getImages() != null && !post.getImages().isEmpty()) {
+                imageUrls = post.getImages().stream()
+                        .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
+                        .map(PostImage::getImageUrl)
+                        .collect(Collectors.toList());
+            } else if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
+                imageUrls = List.of(post.getImageUrl());
+            }
+            map.put("imageUrls", imageUrls);
         }
 
         map.put("isDeleted", post.getIsDeleted());
         map.put("isPrivate", post.getIsPrivate());
         map.put("createdAt", post.getCreatedAt());
-        map.put("isSaved", savedPostIds.contains(post.getId()));
+        map.put("isSaved", savedPostIds != null && savedPostIds.contains(post.getId()));
 
-        // Trạng thái kiểm duyệt (hiển thị cho chính chủ bài viết và admin)
         String moderationStatus = post.getModerationStatus() != null
                 ? post.getModerationStatus().name() : "APPROVED";
         map.put("moderationStatus", moderationStatus);
@@ -267,23 +285,9 @@ public class PostApiV2Controller {
             map.put("moderationCategory", post.getModerationCategory());
         }
 
-        // Multi-image: trả về danh sách URL ảnh
-        List<String> imageUrls = new ArrayList<>();
-        if (post.getImages() != null && !post.getImages().isEmpty()) {
-            imageUrls = post.getImages().stream()
-                    .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
-                    .map(PostImage::getImageUrl)
-                    .collect(Collectors.toList());
-        } else if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
-            // Backward compatibility: bài cũ chỉ có 1 ảnh
-            imageUrls = List.of(post.getImageUrl());
-        }
-        map.put("imageUrls", imageUrls);
-
-        // Like info
         long likesCount = likeRepository.countByPostId(post.getId());
         map.put("likesCount", likesCount);
-        boolean isLiked = !viewerUsername.isEmpty()
+        boolean isLiked = viewerUsername != null && !viewerUsername.isEmpty()
                 && likeRepository.findByPostIdAndUsername(post.getId(), viewerUsername).isPresent();
         map.put("isLiked", isLiked);
 
@@ -304,118 +308,58 @@ public class PostApiV2Controller {
         map.put("sharesCount", post.getShares() != null ? post.getShares().size() : 0);
 
         if (post.getSharedPost() != null) {
-    Post shared = post.getSharedPost();
-    Map<String, Object> sharedMap = new HashMap<>();
-    sharedMap.put("id", shared.getId());
-    sharedMap.put("createdAt", shared.getCreatedAt());
+            Post shared = post.getSharedPost();
+            Map<String, Object> sharedMap = new HashMap<>();
+            sharedMap.put("id", shared.getId());
+            sharedMap.put("createdAt", shared.getCreatedAt());
 
-    List<String> sharedImageUrls = new ArrayList<>();
-    if (shared.getImages() != null && !shared.getImages().isEmpty()) {
-        sharedImageUrls = shared.getImages().stream()
-                .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
-                .map(PostImage::getImageUrl)
-                .collect(Collectors.toList());
-    } else if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
-        imageUrls = List.of(post.getImageUrl());
-    }
+            boolean isSharedOwner = shared.getUser() != null && shared.getUser().getUsername().equals(viewerUsername);
+            boolean isSharedHiddenFromUser = Boolean.TRUE.equals(shared.getIsPrivate()) && !isSharedOwner;
 
-    boolean isOwner = post.getUser() != null && post.getUser().getUsername().equals(viewerUsername);
-    boolean isHiddenFromUser = Boolean.TRUE.equals(post.getIsPrivate()) && !isOwner;
-
-    if (Boolean.TRUE.equals(post.getIsDeleted())) {
-        map.put("content", "Bài viết đã bị xóa");
-        map.put("imageUrl", null);
-        map.put("imageUrls", new ArrayList<>());
-    } else if (isHiddenFromUser) {
-        map.put("content", "Bài viết này đã bị ẩn");
-        map.put("imageUrl", null);
-        map.put("imageUrls", new ArrayList<>());
-    } else {
-        map.put("content", post.getContent());
-        map.put("imageUrl", post.getImageUrl());
-        map.put("imageUrls", imageUrls);
-    }
-
-    map.put("isDeleted", post.getIsDeleted());
-    map.put("isPrivate", post.getIsPrivate());
-    map.put("createdAt", post.getCreatedAt());
-    map.put("isSaved", savedPostIds.contains(post.getId()));
-
-    long likesCount = likeRepository.countByPostId(post.getId());
-    map.put("likesCount", likesCount);
-    boolean isLiked = !viewerUsername.isEmpty()
-            && likeRepository.findByPostIdAndUsername(post.getId(), viewerUsername).isPresent();
-    map.put("isLiked", isLiked);
-
-    if (post.getUser() != null) {
-        Map<String, Object> userMap = new HashMap<>();
-        userMap.put("username", post.getUser().getUsername());
-        userMap.put("fullname", post.getUser().getFullname());
-        userMap.put("avatar", post.getUser().getAvatar());
-        if (post.getUser().getRole() != null) {
-            userMap.put("role", Map.of(
-                    "id", post.getUser().getRole().getId(),
-                    "name", post.getUser().getRole().getName()));
-        }
-        map.put("user", userMap);
-    }
-
-    map.put("commentsCount", post.getComments() != null ? post.getComments().size() : 0);
-    map.put("sharesCount", post.getShares() != null ? post.getShares().size() : 0);
-
-    if (post.getSharedPost() != null) {
-        Post shared = post.getSharedPost();
-        Map<String, Object> sharedMap = new HashMap<>();
-        sharedMap.put("id", shared.getId());
-        sharedMap.put("createdAt", shared.getCreatedAt());
-
-        List<String> sharedImageUrls = new ArrayList<>();
-        if (shared.getImages() != null && !shared.getImages().isEmpty()) {
-            sharedImageUrls = shared.getImages().stream()
-                    .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
-                    .map(PostImage::getImageUrl)
-                    .collect(Collectors.toList());
-        } else if (shared.getImageUrl() != null && !shared.getImageUrl().isEmpty()) {
-            sharedImageUrls = List.of(shared.getImageUrl());
-        }
-
-        boolean isSharedOwner = shared.getUser() != null && shared.getUser().getUsername().equals(viewerUsername);
-        boolean isSharedHiddenFromUser = Boolean.TRUE.equals(shared.getIsPrivate()) && !isSharedOwner;
-
-        if (Boolean.TRUE.equals(shared.getIsDeleted())) {
-            sharedMap.put("content", "Bài viết đã bị xóa");
-            sharedMap.put("imageUrl", null);
-            sharedMap.put("imageUrls", new ArrayList<>());
-        } else if (isSharedHiddenFromUser) {
-            sharedMap.put("content", "Bài viết này đã bị ẩn");
-            sharedMap.put("imageUrl", null);
-            sharedMap.put("imageUrls", new ArrayList<>());
-        } else {
-            sharedMap.put("content", shared.getContent());
-            sharedMap.put("imageUrl", shared.getImageUrl());
-            sharedMap.put("imageUrls", sharedImageUrls);
-        }
-
-        sharedMap.put("isDeleted", shared.getIsDeleted());
-        sharedMap.put("isPrivate", shared.getIsPrivate());
-
-        if (shared.getUser() != null) {
-            Map<String, Object> sharedUserMap = new HashMap<>();
-            sharedUserMap.put("username", shared.getUser().getUsername());
-            sharedUserMap.put("fullname", shared.getUser().getFullname());
-            sharedUserMap.put("avatar", shared.getUser().getAvatar());
-            if (shared.getUser().getRole() != null) {
-                sharedUserMap.put("role", Map.of(
-                        "id", shared.getUser().getRole().getId(),
-                        "name", shared.getUser().getRole().getName()));
+            if (Boolean.TRUE.equals(shared.getIsDeleted())) {
+                sharedMap.put("content", "Bài viết đã bị xóa");
+                sharedMap.put("imageUrl", null);
+                sharedMap.put("imageUrls", new ArrayList<>());
+            } else if (isSharedHiddenFromUser) {
+                sharedMap.put("content", "Bài viết này đã bị ẩn");
+                sharedMap.put("imageUrl", null);
+                sharedMap.put("imageUrls", new ArrayList<>());
+            } else {
+                sharedMap.put("content", shared.getContent());
+                sharedMap.put("imageUrl", shared.getImageUrl());
+                
+                List<String> sharedImageUrls = new ArrayList<>();
+                if (shared.getImages() != null && !shared.getImages().isEmpty()) {
+                    sharedImageUrls = shared.getImages().stream()
+                            .sorted(Comparator.comparingInt(PostImage::getDisplayOrder))
+                            .map(PostImage::getImageUrl)
+                            .collect(Collectors.toList());
+                } else if (shared.getImageUrl() != null && !shared.getImageUrl().isEmpty()) {
+                    sharedImageUrls = List.of(shared.getImageUrl());
+                }
+                sharedMap.put("imageUrls", sharedImageUrls);
             }
-            sharedMap.put("user", sharedUserMap);
-        }
-        map.put("sharedPost", sharedMap);
-    }
 
-    return map;
-}
+            sharedMap.put("isDeleted", shared.getIsDeleted());
+            sharedMap.put("isPrivate", shared.getIsPrivate());
+
+            if (shared.getUser() != null) {
+                Map<String, Object> sharedUserMap = new HashMap<>();
+                sharedUserMap.put("username", shared.getUser().getUsername());
+                sharedUserMap.put("fullname", shared.getUser().getFullname());
+                sharedUserMap.put("avatar", shared.getUser().getAvatar());
+                if (shared.getUser().getRole() != null) {
+                    sharedUserMap.put("role", Map.of(
+                            "id", shared.getUser().getRole().getId(),
+                            "name", shared.getUser().getRole().getName()));
+                }
+                sharedMap.put("user", sharedUserMap);
+            }
+            map.put("sharedPost", sharedMap);
+        }
+
+        return map;
+    }
 
     /** 
      * PUT /api/v2/posts/{postId}
