@@ -74,6 +74,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/documents/download/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mentors").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mentors/*").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/verify-otp", "/api/auth/send-2fa-sms").permitAll()
                 .requestMatchers("/api/auth/verify-2fa").permitAll()
                 .requestMatchers("/api/comments/**").permitAll()
                 // Các action bài viết (like, share, create...): JWT filter tự xác thực,

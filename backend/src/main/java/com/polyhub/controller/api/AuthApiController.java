@@ -24,18 +24,14 @@ import java.util.Random;
 
 import com.polyhub.service.EmailService;
 import com.polyhub.service.OtpService;
+import com.polyhub.service.SmsService;
 
-<<<<<<< HEAD
-/**
- * REST API cho xác thực: Login (trả JWT), Register, lấy thông tin user hiện
- * tại.
- */
-@CrossOrigin(origins = "*")
-=======
->>>>>>> 2step-verification
 @RestController
 @RequestMapping("/api/auth")
 public class AuthApiController {
+
+    @Autowired
+    private SmsService smsService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -62,64 +58,93 @@ public class AuthApiController {
     private OtpService otpService;
 
 @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String password = request.get("password");
+public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+    String username = request.get("username");
+    String password = request.get("password");
 
-        if (username == null || password == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Username và password không được để trống"));
-        }
-
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password));
-
-            User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
-
-            if (user != null && Boolean.TRUE.equals(user.getIsTwoFactorEnabled())) {
-                Random random = new Random();
-                int otpNumber = 100000 + random.nextInt(900000);
-                String otp = String.valueOf(otpNumber);
-
-                user.setTwoFactorCode(otp);
-                user.setTwoFactorCodeExpireTime(LocalDateTime.now().plusMinutes(5));
-                userRepository.save(user);
-
-                emailService.send2FAEmail(user.getEmail(), user.getFullname(), otp);
-
-                return ResponseEntity.ok(Map.of(
-                        "status", "REQUIRES_2FA",
-                        "message", "Mã xác minh đã được gửi đến email",
-                        "username", user.getUsername(),
-                        "email", user.getEmail()
-                ));
-            }
-
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            String token = jwtService.generateToken(userDetails);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("user", buildUserResponse(user));
-
-            return ResponseEntity.ok(response);
-
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Sai tên đăng nhập hoặc mật khẩu"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Đã xảy ra lỗi: " + e.getMessage()));
-        }
+    if (username == null || password == null) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Username và password không được để trống"));
     }
 
-<<<<<<< HEAD
-    /**
-     * POST /api/auth/register
-     * Body: { "username": "...", "password": "...", "confirmPassword": "...",
-     * "fullname": "...", "email": "..." }
-     */
-=======
+    try {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
+
+        User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
+
+        if (user != null && Boolean.TRUE.equals(user.getIsTwoFactorEnabled())) {
+            Random random = new Random();
+            int otpNumber = 100000 + random.nextInt(900000);
+            String otp = String.valueOf(otpNumber);
+
+            user.setTwoFactorCode(otp);
+            user.setTwoFactorCodeExpireTime(LocalDateTime.now().plusMinutes(5));
+            userRepository.save(user);
+
+            emailService.send2FAEmail(user.getEmail(), user.getFullname(), otp);
+
+            Map<String, Object> response2FA = new HashMap<>();
+            response2FA.put("status", "REQUIRES_2FA");
+            response2FA.put("message", "Mã xác minh đã được gửi đến email");
+            response2FA.put("username", user.getUsername());
+            response2FA.put("email", user.getEmail());
+            
+            if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+                response2FA.put("phone", user.getPhone());
+            }
+
+            return ResponseEntity.ok(response2FA);
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        String token = jwtService.generateToken(userDetails);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("user", buildUserResponse(user));
+
+        return ResponseEntity.ok(response);
+
+    } catch (BadCredentialsException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Sai tên đăng nhập hoặc mật khẩu"));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Đã xảy ra lỗi: " + e.getMessage()));
+    }
+}
+
+    @PostMapping("/send-2fa-sms")
+    public ResponseEntity<?> send2FASms(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+
+        if (username == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username không được để trống"));
+        }
+
+        User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
+
+        if (user == null || user.getPhone() == null || user.getPhone().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Số điện thoại không khả dụng"));
+        }
+
+        Random random = new Random();
+        int otpNumber = 100000 + random.nextInt(900000);
+        String otp = String.valueOf(otpNumber);
+
+        user.setTwoFactorCode(otp);
+        user.setTwoFactorCodeExpireTime(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        smsService.sendSms(user.getPhone(), otp);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SMS_SENT",
+                "message", "Mã xác minh đã được gửi qua SMS"
+        ));
+    }
+
     @PostMapping("/verify-2fa")
     public ResponseEntity<?> verify2fa(@RequestBody Map<String, String> request) {
         String username = request.get("username");
@@ -153,7 +178,6 @@ public class AuthApiController {
         return ResponseEntity.ok(response);
     }
 
->>>>>>> 2step-verification
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
         String username = request.get("username");
@@ -204,8 +228,7 @@ public class AuthApiController {
             try {
                 user.setBirthday(java.time.LocalDate.parse(birthdayStr));
             } catch (Exception e) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Ngày sinh không đúng định dạng (yyyy-MM-dd)."));
+                return ResponseEntity.badRequest().body(Map.of("error", "Ngày sinh không đúng định dạng (yyyy-MM-dd)."));
             }
         }
 
@@ -239,8 +262,7 @@ public class AuthApiController {
     }
 
     private Map<String, Object> buildUserResponse(User user) {
-        if (user == null)
-            return Map.of();
+        if (user == null) return Map.of();
 
         Map<String, Object> map = new HashMap<>();
         map.put("username", user.getUsername());
@@ -256,8 +278,6 @@ public class AuthApiController {
         map.put("active", user.getActive());
         map.put("createdAt", user.getCreatedAt());
         map.put("role", user.getRole() != null ? user.getRole().getId() : null);
-        
-        // ĐÃ THÊM TRƯỜNG NÀY ĐỂ ĐỒNG BỘ VỚI FRONTEND
         map.put("IsTwoFactorEnabled", user.getIsTwoFactorEnabled() != null ? user.getIsTwoFactorEnabled() : false);
         
         return map;

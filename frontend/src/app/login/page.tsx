@@ -22,6 +22,11 @@ function LoginContent() {
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
+  
+  // States mới cho việc đổi phương thức xác minh (Email / Phone)
+  const [method, setMethod] = useState<'email' | 'phone'>('email');
+  const [isPhoneAvailable, setIsPhoneAvailable] = useState(false); // Đổi thành true nếu muốn test nhảy sang SMS thành công
+  const [phoneString, setPhoneString] = useState('********89');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -46,6 +51,7 @@ function LoginContent() {
       sessionStorage.setItem('hasSeenSplash', 'true');
     }
   }, []);
+
   // Particle background effect
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -226,11 +232,21 @@ function LoginContent() {
       }
 
       if (data.status === 'REQUIRES_2FA') {
-        setMaskedEmail(data.email);
-        setStep(2);
-        setLoadingState(false);
-        return;
-      }
+  setMaskedEmail(data.email);
+  
+  if (data.phone) {
+    setIsPhoneAvailable(true);
+    const phoneStr = String(data.phone);
+    const maskedPhone = "********" + phoneStr.slice(-2);
+    setPhoneString(maskedPhone);
+  } else {
+    setIsPhoneAvailable(false);
+  }
+  
+  setStep(2);
+  setLoadingState(false);
+  return;
+}
 
       await login(username, password);
     } catch (err: any) {
@@ -239,7 +255,7 @@ function LoginContent() {
     }
   };
 
-const handleVerifyOtp = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setLoadingState(true);
@@ -250,8 +266,7 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Gửi username và mã OTP
-        body: JSON.stringify({ username, code: otp }),
+        body: JSON.stringify({ username, code: otp }), // Có thể cần gửi thêm tham số `method` xuống backend nếu API yêu cầu phân biệt SMS/Email
       });
 
       const data = await res.json();
@@ -260,10 +275,8 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
         throw new Error(data.error || 'Mã xác minh không hợp lệ!');
       }
 
-      // Lưu token vào localStorage sau khi đã xác minh thành công
       localStorage.setItem('token', data.token);
 
-      // Chuyển hướng dựa trên role
       if (data.user && data.user.role && ['SUPER_ADMIN', 'ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN'].includes(data.user.role)) {
         window.location.href = '/admin';
       } else {
@@ -271,6 +284,40 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Xác minh thất bại!');
+      setLoadingState(false);
+    }
+  };
+
+  // Hàm xử lý khi bấm nút "Thử cách khác"
+  const handleTryOtherWay = async () => {
+    if (!isPhoneAvailable) {
+      setErrorMsg('Phương thức không khả dụng do bạn chưa xác minh số điện thoại.');
+      return;
+    }
+
+    setLoadingState(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/send-2fa-sms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Không thể gửi mã SMS. Vui lòng thử lại!');
+      }
+
+      setMethod('phone');
+      setOtp('');
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
       setLoadingState(false);
     }
   };
@@ -291,7 +338,11 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
               {step === 1 ? 'Chào mừng trở lại!' : 'Xác minh bảo mật'}
             </h1>
             <p className="auth-subtitle">
-              {step === 1 ? 'Vui lòng đăng nhập vào tài khoản của bạn' : 'Nhập mã 6 số được gửi về email của bạn'}
+              {step === 1 
+                ? 'Vui lòng đăng nhập vào tài khoản của bạn' 
+                : method === 'email' 
+                  ? 'Nhập mã 6 số được gửi về email của bạn' 
+                  : 'Nhập mã 6 số được gửi về số điện thoại của bạn'}
             </p>
           </div>
 
@@ -385,8 +436,12 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
           ) : (
             <form onSubmit={handleVerifyOtp}>
               <div className="text-center mb-4">
-                <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '8px' }}>Mã xác minh đã được gửi đến:</p>
-                <strong className="text-dark d-block p-2 bg-light rounded border">{maskedEmail}</strong>
+                <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '8px' }}>
+                  {method === 'email' ? 'Mã xác minh đã được gửi đến:' : 'Mã xác minh SMS đã được gửi đến:'}
+                </p>
+                <strong className="text-dark d-block p-2 bg-light rounded border">
+                  {method === 'email' ? maskedEmail : phoneString}
+                </strong>
               </div>
 
               <div className="form-group mb-4">
@@ -414,11 +469,25 @@ const handleVerifyOtp = async (e: React.FormEvent) => {
                 ) : 'Xác minh'}
               </button>
 
+                {/* <button 
+                  type="button" 
+                  className="btn btn-link text-decoration-none w-100 mb-2 fw-medium" 
+                  style={{ color: '#f26522', fontSize: '14px' }}
+                  onClick={handleTryOtherWay} 
+                  disabled={loadingState}
+                >
+                  Thử cách khác
+                </button> */}
+
               <button 
                 type="button" 
                 className="btn btn-link text-decoration-none w-100" 
                 style={{ color: '#6B7280', fontSize: '14px' }}
-                onClick={() => setStep(1)} 
+                onClick={() => {
+                  setStep(1);
+                  setMethod('email'); // Reset về email khi back lại
+                  setErrorMsg('');
+                }} 
                 disabled={loadingState}
               >
                 <i className="bi bi-arrow-left me-1"></i> Quay lại đăng nhập

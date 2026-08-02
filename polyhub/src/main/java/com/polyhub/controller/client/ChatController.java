@@ -1,7 +1,5 @@
 package com.polyhub.controller.client;
 
-import org.springframework.web.bind.annotation.GetMapping;
-
 @org.springframework.stereotype.Controller
 public class ChatController {
 

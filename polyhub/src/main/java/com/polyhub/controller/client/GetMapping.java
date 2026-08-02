@@ -5,4 +5,6 @@ package com.polyhub.controller.client;
  */
 public @interface GetMapping {
 
+    String value();
+
 }
