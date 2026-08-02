@@ -121,6 +121,19 @@ public class BookingApiController {
                         }
                     }
                 }
+
+                // Case 3: Tự động từ chối các lịch hẹn PENDING đã quá giờ bắt đầu
+                if (b.getStatus() == BookingStatus.PENDING) {
+                    LocalDateTime scheduledStart = LocalDateTime.of(b.getBookingDate(), b.getStartTime());
+                    if (now.isAfter(scheduledStart)) {
+                        b.setStatus(BookingStatus.REJECTED);
+                        b.setRejectionReason("Tự động từ chối do quá hạn thời gian phê duyệt (lịch hẹn đã bắt đầu).");
+                        toUpdate.add(b);
+
+                        createSystemNotification(b.getStudent(), "Lịch hẹn bị hủy tự động", 
+                            "Yêu cầu đặt lịch ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị hủy tự động do quá giờ bắt đầu mà chưa được Mentor phê duyệt.");
+                    }
+                }
             }
 
             if (!toUpdate.isEmpty()) {
@@ -363,6 +376,10 @@ public class BookingApiController {
                 }
 
                 if (targetStatus == BookingStatus.APPROVED) {
+                    LocalDateTime scheduledStart = LocalDateTime.of(booking.getBookingDate(), booking.getStartTime());
+                    if (LocalDateTime.now().isAfter(scheduledStart)) {
+                        return ResponseEntity.badRequest().body(Map.of("error", "Lịch hẹn đã quá thời gian bắt đầu, không thể phê duyệt"));
+                    }
                     booking.setStatus(BookingStatus.APPROVED);
                     booking.setRoomId("booking_" + booking.getId());
                     bookingRepository.save(booking);
@@ -384,6 +401,21 @@ public class BookingApiController {
                     String reason = payload.get("reason");
                     booking.setRejectionReason(reason != null ? reason : "Mentor không sắp xếp được thời gian");
                     bookingRepository.save(booking);
+
+                    // Cấp quyền ưu tiên đặt lại lịch 48h cho sinh viên khi bị từ chối
+                    try {
+                        BookingPriority priority = new BookingPriority();
+                        priority.setStudent(booking.getStudent());
+                        priority.setMentor(booking.getMentor());
+                        priority.setOriginalBookingId(booking.getId());
+                        priority.setDuration(booking.getDuration());
+                        priority.setExpiresAt(LocalDateTime.now().plusDays(2));
+                        priority.setPriorityOrder(booking.getCreatedAt() != null ? booking.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() : System.currentTimeMillis());
+                        priority.setStatus(PriorityStatus.ACTIVE);
+                        bookingPriorityRepository.save(priority);
+                    } catch (Exception ex) {
+                        System.err.println("Failed to save priority: " + ex.getMessage());
+                    }
 
                     // Gửi thông báo email và thông báo hệ thống cho sinh viên
                     emailService.sendBookingStatusEmail(
@@ -446,7 +478,111 @@ public class BookingApiController {
         return ResponseEntity.ok(saved);
     }
 
+
+    // ======================================================
+    // GỢI Ý MENTOR THAY THẾ
+    // ======================================================
+
+    /**
+     * Trả về tối đa 5 mentor khác có lịch rảnh trùng hoặc gần với khung giờ đã chỉ định.
+     * Query params: date (yyyy-MM-dd), startTime (HH:mm), endTime (HH:mm), excludeMentor (username)
+     */
+    @GetMapping("/suggest-mentors")
+    public ResponseEntity<?> suggestMentors(
+            @RequestParam String date,
+            @RequestParam String startTime,
+            @RequestParam String endTime,
+            @RequestParam(required = false, defaultValue = "") String excludeMentor,
+            Principal principal) {
+
+        LocalDate targetDate = LocalDate.parse(date);
+        LocalTime targetStart = LocalTime.parse(startTime.length() == 5 ? startTime + ":00" : startTime);
+        LocalTime targetEnd   = LocalTime.parse(endTime.length()   == 5 ? endTime   + ":00" : endTime);
+        // Mở rộng ±2 giờ để tìm mentor gần đó
+        LocalTime windowStart = targetStart.minusHours(2);
+        LocalTime windowEnd   = targetEnd.plusHours(2);
+
+        // Lấy tất cả mentor trong hệ thống
+        List<User> allMentors = userRepository.findAll().stream()
+                .filter(u -> u.getRole() != null && "MENTOR".equalsIgnoreCase(u.getRole().getId()))
+                .filter(u -> !u.getUsername().equals(excludeMentor))
+                .toList();
+
+        int dayOfWeek = targetDate.getDayOfWeek().getValue() + 1; // 2..8
+        LocalDateTime nowDt = LocalDateTime.now();
+        activeLocks.entrySet().removeIf(e -> e.getValue().expiresAt.isBefore(nowDt));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (User mentor : allMentors) {
+            List<MentorSchedule> schedules = mentorScheduleRepository.findByMentorUsername(mentor.getUsername());
+
+            // Kiểm tra mentor có khung nào rảnh gần target không
+            boolean hasOverlap = false;
+            List<Map<String, String>> matchedSlots = new ArrayList<>();
+
+            for (MentorSchedule sch : schedules) {
+                boolean dateMatch;
+                if (sch.getSpecificDate() != null) {
+                    dateMatch = sch.getSpecificDate().equals(targetDate);
+                } else {
+                    dateMatch = sch.getDayOfWeek().equals(dayOfWeek);
+                    if (dateMatch && sch.getExpireDate() != null) {
+                        dateMatch = !targetDate.isAfter(sch.getExpireDate());
+                    }
+                }
+                if (!dateMatch) continue;
+
+                LocalTime slotStart = sch.getStartTime();
+                LocalTime slotEnd   = sch.getEndTime();
+
+                // Kiểm tra slot có nằm trong cửa sổ ±2h không (overlap)
+                boolean inWindow = slotStart.isBefore(windowEnd) && slotEnd.isAfter(windowStart);
+                if (inWindow) {
+                    hasOverlap = true;
+                    Map<String, String> sm = new HashMap<>();
+                    sm.put("startTime", slotStart.toString());
+                    sm.put("endTime", slotEnd.toString());
+                    matchedSlots.add(sm);
+                }
+            }
+
+            if (!hasOverlap) continue;
+
+            // Kiểm tra mentor có thực sự rảnh (không bị booking/busy) tại target time không
+            List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
+            List<Booking> existing = bookingRepository.findBookingsByMentorAndDate(mentor.getUsername(), targetDate, activeStatuses);
+            boolean isBusyAtTarget = existing.stream().anyMatch(b -> {
+                return b.getStartTime().isBefore(targetEnd) && b.getEndTime().isAfter(targetStart);
+            });
+
+            List<MentorBusy> busyPeriods = mentorBusyRepository.findOverlappingBusyPeriods(
+                    mentor.getUsername(),
+                    targetDate.atTime(targetStart),
+                    targetDate.atTime(targetEnd)
+            );
+            if (!busyPeriods.isEmpty()) isBusyAtTarget = true;
+
+            Map<String, Object> info = new LinkedHashMap<>();
+            info.put("username", mentor.getUsername());
+            info.put("fullname", mentor.getFullname());
+            info.put("avatar", mentor.getAvatar());
+            info.put("major", mentor.getMajor());
+            info.put("availableAtExact", !isBusyAtTarget);
+            info.put("matchedSlots", matchedSlots);
+            result.add(info);
+
+            if (result.size() >= 5) break;
+        }
+
+        // Sắp xếp: mentor rảnh đúng giờ lên đầu
+        result.sort((a, b) -> Boolean.compare(!(Boolean) a.get("availableAtExact"), !(Boolean) b.get("availableAtExact")));
+
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/mentor/{username}/availability")
+
     public ResponseEntity<?> getMentorAvailability(@PathVariable("username") String username) {
         User mentor = userRepository.findById(username).orElse(null);
         if (mentor == null || mentor.getRole() == null || !"MENTOR".equalsIgnoreCase(mentor.getRole().getId())) {
@@ -822,8 +958,34 @@ public class BookingApiController {
         }
 
         try {
-            LocalDateTime startTime = LocalDateTime.parse((String) payload.get("startTime"));
-            LocalDateTime endTime = LocalDateTime.parse((String) payload.get("endTime"));
+            String startStr = ((String) payload.get("startTime")).trim();
+            String endStr = ((String) payload.get("endTime")).trim();
+            
+            LocalDateTime startTime;
+            LocalDateTime endTime;
+            // Parse start time
+            try {
+                java.time.OffsetDateTime odtStart = java.time.OffsetDateTime.parse(startStr, java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                startTime = odtStart.atZoneSameInstant(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
+            } catch (Exception e) {
+                try {
+                    startTime = java.time.LocalDate.parse(startStr).atStartOfDay();
+                } catch (Exception ex) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Thời gian bắt đầu không hợp lệ: " + startStr));
+                }
+            }
+            // Parse end time
+            try {
+                java.time.OffsetDateTime odtEnd = java.time.OffsetDateTime.parse(endStr, java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                endTime = odtEnd.atZoneSameInstant(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
+            } catch (Exception e) {
+                try {
+                    endTime = java.time.LocalDate.parse(endStr).atStartOfDay();
+                } catch (Exception ex) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Thời gian kết thúc không hợp lệ: " + endStr));
+                }
+            }
+
             String reason = (String) payload.get("reason");
 
             if (startTime.isAfter(endTime)) {
@@ -880,9 +1042,10 @@ public class BookingApiController {
             }
 
             // Gọi AI đánh giá bất đồng bộ
+            final LocalDateTime finalStartTime = startTime;
             new Thread(() -> {
                 try {
-                    int leadTimeHours = (int) java.time.Duration.between(LocalDateTime.now(), startTime).toHours();
+                    int leadTimeHours = (int) java.time.Duration.between(LocalDateTime.now(), finalStartTime).toHours();
                     List<AiFeedbackLoop> pastFeedback = aiFeedbackLoopRepository.findTop5ByOrderByCreatedAtDesc();
                     StringBuilder fewShot = new StringBuilder();
                     for (AiFeedbackLoop f : pastFeedback) {
@@ -937,8 +1100,16 @@ public class BookingApiController {
                 principal.getName(), mentorUsername, PriorityStatus.ACTIVE, LocalDateTime.now()
         );
 
-        if (priorities.isEmpty()) {
-            return ResponseEntity.ok(Map.of("locked", false, "message", "Bạn đặt lịch ngoài khoảng ưu tiên, không được khóa bảo vệ chống tranh chấp."));
+        boolean hasPriority = !priorities.isEmpty();
+        if (!hasPriority) {
+            // Kiểm tra xem sinh viên có lịch hẹn bị từ chối hoặc hủy gần đây với Mentor này không
+            boolean hasRejectedOrCancelled = bookingRepository.findAll().stream()
+                .anyMatch(b -> b.getStudent() != null && b.getStudent().getUsername().equalsIgnoreCase(principal.getName())
+                        && b.getMentor() != null && b.getMentor().getUsername().equalsIgnoreCase(mentorUsername)
+                        && (b.getStatus() == BookingStatus.REJECTED || b.getStatus() == BookingStatus.CANCELLED));
+            if (hasRejectedOrCancelled) {
+                hasPriority = true;
+            }
         }
 
         String lockKey = mentorUsername + "_" + dateStr + "_" + startTimeStr;
@@ -956,8 +1127,44 @@ public class BookingApiController {
         return ResponseEntity.ok(Map.of(
             "locked", true,
             "expiresAt", now.plusMinutes(3).toString(),
-            "message", "Khung giờ đã được khóa bảo vệ thành công trong 3 phút để bạn thực hiện thao tác đặt lịch."
+            "message", hasPriority 
+                ? "Khung giờ đã được khóa bảo vệ ưu tiên thành công trong 3 phút để bạn thực hiện thao tác đặt lại lịch."
+                : "Khung giờ đã được giữ chỗ tạm thời thành công trong 3 phút để bạn thực hiện thao tác đặt lịch."
         ));
+    }
+
+    /**
+     * Mentor xem danh sách báo bận của chính mình.
+     */
+    @GetMapping("/mentor/busy")
+    public ResponseEntity<?> getMyBusyHistory(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+
+        User mentor = userRepository.findById(principal.getName()).orElse(null);
+        if (mentor == null || mentor.getRole() == null || !"MENTOR".equalsIgnoreCase(mentor.getRole().getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Quyền truy cập bị từ chối"));
+        }
+
+        List<MentorBusy> busyList = mentorBusyRepository.findByMentorUsername(mentor.getUsername());
+        // Sắp xếp theo thứ tự mới nhất lên đầu
+        busyList.sort((a, b) -> b.getId().compareTo(a.getId()));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (MentorBusy mb : busyList) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", mb.getId());
+            map.put("startTime", mb.getStartTime().toString());
+            map.put("endTime", mb.getEndTime().toString());
+            map.put("reason", mb.getReason());
+            map.put("reliabilityImpact", mb.getReliabilityImpact());
+            map.put("adminApproved", mb.getAdminApproved());
+            map.put("createdAt", mb.getCreatedAt() != null ? mb.getCreatedAt().toString() : "");
+            result.add(map);
+        }
+
+        return ResponseEntity.ok(result);
     }
 
     /**
