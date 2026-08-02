@@ -1152,11 +1152,6 @@ public class BookingApiController {
                 .findByStudentUsernameAndMentorUsernameAndStatusAndExpiresAtAfter(
                         principal.getName(), mentorUsername, PriorityStatus.ACTIVE, LocalDateTime.now());
 
-<<<<<<< HEAD
-        if (priorities.isEmpty()) {
-            return ResponseEntity.ok(Map.of("locked", false, "message",
-                    "Bạn đặt lịch ngoài khoảng ưu tiên, không được khóa bảo vệ chống tranh chấp."));
-=======
         boolean hasPriority = !priorities.isEmpty();
         if (!hasPriority) {
             // Kiểm tra xem sinh viên có lịch hẹn bị từ chối hoặc hủy gần đây với Mentor này không
@@ -1167,7 +1162,6 @@ public class BookingApiController {
             if (hasRejectedOrCancelled) {
                 hasPriority = true;
             }
->>>>>>> origin/feat/advanced-booking-system
         }
 
         String lockKey = mentorUsername + "_" + dateStr + "_" + startTimeStr;
@@ -1184,19 +1178,12 @@ public class BookingApiController {
         activeLocks.put(lockKey, new SlotLock(principal.getName(), now.plusMinutes(3)));
 
         return ResponseEntity.ok(Map.of(
-<<<<<<< HEAD
-                "locked", true,
-                "expiresAt", now.plusMinutes(3).toString(),
-                "message",
-                "Khung giờ đã được khóa bảo vệ thành công trong 3 phút để bạn thực hiện thao tác đặt lịch."));
-=======
             "locked", true,
             "expiresAt", now.plusMinutes(3).toString(),
             "message", hasPriority 
                 ? "Khung giờ đã được khóa bảo vệ ưu tiên thành công trong 3 phút để bạn thực hiện thao tác đặt lại lịch."
                 : "Khung giờ đã được giữ chỗ tạm thời thành công trong 3 phút để bạn thực hiện thao tác đặt lịch."
         ));
->>>>>>> origin/feat/advanced-booking-system
     }
 
     /**
