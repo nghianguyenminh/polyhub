@@ -19,15 +19,22 @@ function LoginContent() {
   const [errorMsg, setErrorMsg] = useState('');
   const [loadingState, setLoadingState] = useState(false);
 
+  const [step, setStep] = useState(1);
+  const [otp, setOtp] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
+  
+  // States mới cho việc đổi phương thức xác minh (Email / Phone)
+  const [method, setMethod] = useState<'email' | 'phone'>('email');
+  const [isPhoneAvailable, setIsPhoneAvailable] = useState(false); // Đổi thành true nếu muốn test nhảy sang SMS thành công
+  const [phoneString, setPhoneString] = useState('********89');
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Read URL parameters for alerts
   const showLogoutSuccess = searchParams.get('logout') === 'true';
   const showRegisterSuccess = searchParams.get('registerSuccess') === 'true';
   const showResetSuccess = searchParams.get('resetSuccess') === 'true';
 
   useEffect(() => {
-    // If already logged in, redirect based on role
     if (user) {
       if (user.role && ['SUPER_ADMIN', 'ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN'].includes(user.role)) {
         router.push('/admin');
@@ -37,7 +44,7 @@ function LoginContent() {
     }
   }, [user, router]);
 
-    useEffect(() => {
+  useEffect(() => {
     const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
     if (!hasSeenSplash) {
       setShowSplash(true);
@@ -45,12 +52,6 @@ function LoginContent() {
     }
   }, []);
 
-  useEffect(() => {
-    document.body.classList.add('auth-body');
-    return () => {
-      document.body.classList.remove('auth-body');
-    };
-  }, []);
   // Particle background effect
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -216,10 +217,106 @@ function LoginContent() {
     setLoadingState(true);
 
     try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Đăng nhập thất bại. Vui lòng kiểm tra lại!');
+      }
+
+      if (data.status === 'REQUIRES_2FA') {
+  setMaskedEmail(data.email);
+  
+  if (data.phone) {
+    setIsPhoneAvailable(true);
+    const phoneStr = String(data.phone);
+    const maskedPhone = "********" + phoneStr.slice(-2);
+    setPhoneString(maskedPhone);
+  } else {
+    setIsPhoneAvailable(false);
+  }
+  
+  setStep(2);
+  setLoadingState(false);
+  return;
+}
+
       await login(username, password);
-      // Redirect is handled by the useEffect above when user state updates
     } catch (err: any) {
       setErrorMsg(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại!');
+      setLoadingState(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setLoadingState(true);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/verify-2fa`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, code: otp }), // Có thể cần gửi thêm tham số `method` xuống backend nếu API yêu cầu phân biệt SMS/Email
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Mã xác minh không hợp lệ!');
+      }
+
+      localStorage.setItem('token', data.token);
+
+      if (data.user && data.user.role && ['SUPER_ADMIN', 'ADMIN', 'USER_ADMIN', 'CONTENT_ADMIN'].includes(data.user.role)) {
+        window.location.href = '/admin';
+      } else {
+        window.location.href = '/';
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Xác minh thất bại!');
+      setLoadingState(false);
+    }
+  };
+
+  // Hàm xử lý khi bấm nút "Thử cách khác"
+  const handleTryOtherWay = async () => {
+    if (!isPhoneAvailable) {
+      setErrorMsg('Phương thức không khả dụng do bạn chưa xác minh số điện thoại.');
+      return;
+    }
+
+    setLoadingState(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/send-2fa-sms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Không thể gửi mã SMS. Vui lòng thử lại!');
+      }
+
+      setMethod('phone');
+      setOtp('');
+    } catch (err: any) {
+      setErrorMsg(err.message);
     } finally {
       setLoadingState(false);
     }
@@ -227,7 +324,7 @@ function LoginContent() {
 
   return (
     <>
-     {showSplash && <SplashScreen />}
+      {showSplash && <SplashScreen />}
       <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0, pointerEvents: 'none' }} />
 
       <div className="auth-wrapper">
@@ -237,8 +334,16 @@ function LoginContent() {
             <div className="d-inline-flex align-items-center justify-content-center mb-3 bg-poly-soft rounded-circle" style={{ width: '48px', height: '48px' }}>
               <i className="bi bi-hexagon-fill text-poly fs-4"></i>
             </div>
-            <h1 className="auth-title text-dark">Chào mừng trở lại!</h1>
-            <p className="auth-subtitle">Vui lòng đăng nhập vào tài khoản của bạn</p>
+            <h1 className="auth-title text-dark">
+              {step === 1 ? 'Chào mừng trở lại!' : 'Xác minh bảo mật'}
+            </h1>
+            <p className="auth-subtitle">
+              {step === 1 
+                ? 'Vui lòng đăng nhập vào tài khoản của bạn' 
+                : method === 'email' 
+                  ? 'Nhập mã 6 số được gửi về email của bạn' 
+                  : 'Nhập mã 6 số được gửi về số điện thoại của bạn'}
+            </p>
           </div>
 
           {errorMsg && (
@@ -247,84 +352,148 @@ function LoginContent() {
             </div>
           )}
 
-          {showLogoutSuccess && (
+          {showLogoutSuccess && step === 1 && (
             <div className="alert-custom alert-success">
               <i className="bi bi-check-circle-fill"></i> Bạn đã đăng xuất thành công.
             </div>
           )}
 
-          {showRegisterSuccess && (
+          {showRegisterSuccess && step === 1 && (
             <div className="alert-custom alert-success">
               <i className="bi bi-check-circle-fill"></i> Đăng ký thành công! Vui lòng đăng nhập.
             </div>
           )}
 
-          {showResetSuccess && (
+          {showResetSuccess && step === 1 && (
             <div className="alert-custom alert-success">
               <i className="bi bi-check-circle-fill"></i> Mật khẩu đã được cấp lại thành công! Vui lòng đăng nhập.
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="username">Email hoặc Mã sinh viên</label>
-              <div className="input-wrapper">
-                <i className="bi bi-person input-icon"></i>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  id="username" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Nhập email hoặc mã sinh viên" 
-                  required 
-                  autoFocus
-                />
-              </div>
-            </div>
+          {step === 1 ? (
+            <>
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="username">Email hoặc Mã sinh viên</label>
+                  <div className="input-wrapper">
+                    <i className="bi bi-person input-icon"></i>
+                    <input 
+                      type="text" 
+                      className="form-control-custom" 
+                      id="username" 
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Nhập email hoặc mã sinh viên" 
+                      required 
+                      autoFocus
+                    />
+                  </div>
+                </div>
 
-            <div className="form-group" style={{ marginBottom: '24px' }}>
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <label className="form-label mb-0" htmlFor="password">Mật khẩu</label>
-                <Link href="/forgot-password" className="text-poly text-decoration-none fw-medium" style={{ fontSize: '13px' }}>Quên mật khẩu?</Link>
-              </div>
-              <div className="input-wrapper">
-                <i className="bi bi-lock input-icon"></i>
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  className="form-control-custom pe-5" 
-                  id="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  required 
-                />
-                <button 
-                  type="button" 
-                  className="btn-toggle-pass" 
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                <div className="form-group" style={{ marginBottom: '24px' }}>
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <label className="form-label mb-0" htmlFor="password">Mật khẩu</label>
+                    <Link href="/forgot-password" className="text-poly text-decoration-none fw-medium" style={{ fontSize: '13px' }}>Quên mật khẩu?</Link>
+                  </div>
+                  <div className="input-wrapper">
+                    <i className="bi bi-lock input-icon"></i>
+                    <input 
+                      type={showPassword ? 'text' : 'password'} 
+                      className="form-control-custom pe-5" 
+                      id="password" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••" 
+                      required 
+                    />
+                    <button 
+                      type="button" 
+                      className="btn-toggle-pass" 
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-check custom-check mb-4">
+                  <input type="checkbox" className="form-check-input shadow-none" id="remember-me" />
+                  <label className="form-check-label" htmlFor="remember-me">Ghi nhớ đăng nhập</label>
+                </div>
+
+                <button type="submit" className="btn-submit" disabled={loadingState}>
+                  {loadingState ? (
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  ) : 'Đăng nhập'}
                 </button>
+              </form>
+
+              <div className="text-center mt-4 pt-2">
+                <span style={{ fontSize: '14px', color: '#6B7280' }}>Chưa có tài khoản? </span>
+                <Link href="/register" className="text-poly text-decoration-none fw-semibold" style={{ fontSize: '14px' }}>Đăng ký ngay</Link>
               </div>
-            </div>
+            </>
+          ) : (
+            <form onSubmit={handleVerifyOtp}>
+              <div className="text-center mb-4">
+                <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '8px' }}>
+                  {method === 'email' ? 'Mã xác minh đã được gửi đến:' : 'Mã xác minh SMS đã được gửi đến:'}
+                </p>
+                <strong className="text-dark d-block p-2 bg-light rounded border">
+                  {method === 'email' ? maskedEmail : phoneString}
+                </strong>
+              </div>
 
-            <div className="form-check custom-check mb-4">
-              <input type="checkbox" className="form-check-input shadow-none" id="remember-me" />
-              <label className="form-check-label" htmlFor="remember-me">Ghi nhớ đăng nhập</label>
-            </div>
+              <div className="form-group mb-4">
+                <label className="form-label text-center w-100" htmlFor="otp">Nhập mã OTP</label>
+                <div className="input-wrapper">
+                  <i className="bi bi-shield-lock input-icon"></i>
+                  <input
+                    type="text"
+                    className="form-control-custom text-center fw-bold"
+                    style={{ letterSpacing: '4px', fontSize: '18px' }}
+                    id="otp"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="000000"
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
 
-            <button type="submit" className="btn-submit" disabled={loadingState}>
-              {loadingState ? (
-                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              ) : 'Đăng nhập'}
-            </button>
-          </form>
+              <button type="submit" className="btn-submit mb-3" disabled={loadingState}>
+                {loadingState ? (
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : 'Xác minh'}
+              </button>
 
-          <div className="text-center mt-4 pt-2">
-            <span style={{ fontSize: '14px', color: '#6B7280' }}>Chưa có tài khoản? </span>
-            <Link href="/register" className="text-poly text-decoration-none fw-semibold" style={{ fontSize: '14px' }}>Đăng ký ngay</Link>
-          </div>
+                {/* <button 
+                  type="button" 
+                  className="btn btn-link text-decoration-none w-100 mb-2 fw-medium" 
+                  style={{ color: '#f26522', fontSize: '14px' }}
+                  onClick={handleTryOtherWay} 
+                  disabled={loadingState}
+                >
+                  Thử cách khác
+                </button> */}
+
+              <button 
+                type="button" 
+                className="btn btn-link text-decoration-none w-100" 
+                style={{ color: '#6B7280', fontSize: '14px' }}
+                onClick={() => {
+                  setStep(1);
+                  setMethod('email'); // Reset về email khi back lại
+                  setErrorMsg('');
+                }} 
+                disabled={loadingState}
+              >
+                <i className="bi bi-arrow-left me-1"></i> Quay lại đăng nhập
+              </button>
+            </form>
+          )}
 
         </div>
       </div>

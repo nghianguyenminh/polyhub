@@ -18,8 +18,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [token, setToken] = useState<string | null>(null);
 
-  // Tab 1: Account Info State
   const [fullname, setFullname] = useState('');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
@@ -27,7 +27,6 @@ export default function SettingsPage() {
   const [birthday, setBirthday] = useState('');
   const [gender, setGender] = useState<boolean>(true);
 
-  // Tab 2: Security & Password State
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,22 +35,18 @@ export default function SettingsPage() {
   const [passwordStrengthText, setPasswordStrengthText] = useState('Chưa có');
   const [passwordMatchValid, setPasswordMatchValid] = useState<boolean | null>(null);
 
-  // Tab 3: Privacy State
   const [whoCanSeeFollowers, setWhoCanSeeFollowers] = useState('private');
   const [whoCanMessage, setWhoCanMessage] = useState('everyone');
 
-  // Tab 4: Notifications State
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [notifyComment, setNotifyComment] = useState(true);
   const [notifyLike, setNotifyLike] = useState(true);
   const [notifyFollow, setNotifyFollow] = useState(true);
   const [notifyRecommend, setNotifyRecommend] = useState(false);
 
-  // Tab 5: Appearance/Display State
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
   const [language, setLanguage] = useState<'vi' | 'en'>('vi');
 
-  // Load User Data & LocalStorage properties
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -67,10 +62,9 @@ export default function SettingsPage() {
       setGender(user.gender !== undefined ? user.gender : true);
     }
 
-    // Load LocalStorage parameters
     if (typeof window !== 'undefined') {
-      const stored2FA = localStorage.getItem('polyhub_2fa');
-      if (stored2FA) setIs2FAEnabled(stored2FA === 'true');
+      const storedToken = localStorage.getItem('token');
+      setToken(storedToken);
 
       const storedSeeFollowers = localStorage.getItem('polyhub_privacy_see_followers');
       if (storedSeeFollowers) setWhoCanSeeFollowers(storedSeeFollowers);
@@ -101,7 +95,23 @@ export default function SettingsPage() {
     }
   }, [user, authLoading, router]);
 
-  // Sync tab from URL hash if present
+useEffect(() => {
+    const fetch2FAStatus = async () => {
+      if (!user) return;
+      try {
+        const timestamp = new Date().getTime();
+        const data = await fetchAPI(`/api/users/${user.username}?t=${timestamp}`, {
+          method: 'GET'
+        });
+        
+        setIs2FAEnabled(data.IsTwoFactorEnabled ?? data.IsTwoFactorEnabled ?? false);
+      } catch (err) {
+      }
+    };
+
+    fetch2FAStatus();
+  }, [user]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '') as SettingTab;
@@ -118,7 +128,6 @@ export default function SettingsPage() {
     setErrorMsg('');
   };
 
-  // Submit Account Info Update
   const handleUpdateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -146,7 +155,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Submit Password Change
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -185,11 +193,9 @@ export default function SettingsPage() {
     }
   };
 
-  // Password Logic checks
   const handleNewPasswordChange = (val: string) => {
     setNewPassword(val);
     
-    // Evaluate strength
     let strength = 0;
     if (val.length > 0) {
       if (val.length >= 8) strength++;
@@ -209,7 +215,6 @@ export default function SettingsPage() {
       setPasswordStrengthText('Mạnh (Bảo mật tốt)');
     }
 
-    // Match check
     if (confirmPassword.length > 0) {
       setPasswordMatchValid(val === confirmPassword);
     }
@@ -224,14 +229,26 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle 2FA Switch Toggle
-  const handleToggle2FA = (checked: boolean) => {
+const handleToggle2FA = async (checked: boolean) => {
+    // Thêm dòng này để TypeScript yên tâm
+    if (!user) return; 
+
     setIs2FAEnabled(checked);
-    localStorage.setItem('polyhub_2fa', checked ? 'true' : 'false');
-    setSuccessMsg(checked ? 'Đã bật xác thực 2 yếu tố!' : 'Đã tắt xác thực 2 yếu tố.');
+    setErrorMsg('');
+    
+    try {
+      const data = await fetchAPI(`/api/users/${user.username}/toggle-2fa`, {
+        method: 'PUT',
+        body: JSON.stringify({ enable: checked }),
+      });
+
+      setSuccessMsg(data.message || (checked ? 'Đã bật xác thực 2 yếu tố!' : 'Đã tắt xác thực 2 yếu tố.'));
+    } catch (err: any) {
+      setIs2FAEnabled(!checked);
+      setErrorMsg(err.message || 'Không thể thay đổi cài đặt 2FA lúc này.');
+    }
   };
 
-  // Handle Privacy Updates
   const handlePrivacySave = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('polyhub_privacy_see_followers', whoCanSeeFollowers);
@@ -239,7 +256,6 @@ export default function SettingsPage() {
     setSuccessMsg('Đã lưu cấu hình quyền riêng tư!');
   };
 
-  // Handle Notifications Switch Updates
   const handleNotifySave = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('polyhub_notify_email', notifyEmail ? 'true' : 'false');
@@ -250,14 +266,12 @@ export default function SettingsPage() {
     setSuccessMsg('Đã lưu cấu hình thông báo thành công!');
   };
 
-  // Handle Theme Options
   const handleThemeModeSelect = (mode: 'light' | 'dark') => {
     setThemeMode(mode);
     localStorage.setItem('polyhub_theme', mode);
     setSuccessMsg(`Đã chuyển đổi sang Giao diện ${mode === 'light' ? 'Sáng' : 'Tối'}!`);
   };
 
-  // Handle Language Option Change
   const handleLanguageSelect = (lang: 'vi' | 'en') => {
     setLanguage(lang);
     localStorage.setItem('polyhub_language', lang);
@@ -299,7 +313,6 @@ export default function SettingsPage() {
             )}
 
             <div className="row g-4">
-              {/* Left Sidebar Navigation */}
               <div className="col-md-4">
                 <div className="poly-card p-0 overflow-hidden sticky-top" style={{ top: '80px', zIndex: 10, backgroundColor: 'white' }}>
                   <div className="list-group list-group-flush settings-nav">
@@ -367,11 +380,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Right Content Area */}
               <div className="col-md-8">
                 <div className="tab-content">
                   
-                  {/* TAB 1: ACCOUNT INFO */}
                   {activeTab === 'account' && (
                     <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
                       <h4 className="fw-bold mb-1 text-dark">Thông tin cá nhân</h4>
@@ -477,7 +488,6 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {/* TAB 2: SECURITY */}
                   {activeTab === 'security' && (
                     <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
                       <div className="d-flex align-items-center mb-4">
@@ -560,7 +570,6 @@ export default function SettingsPage() {
                         </div>
                       </form>
 
-                      {/* 2FA Section */}
                       <div className="border-top pt-4">
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
@@ -581,7 +590,6 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {/* TAB 3: PRIVACY */}
                   {activeTab === 'privacy' && (
                     <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
                       <h4 className="fw-bold mb-1 text-dark">Quyền riêng tư</h4>
@@ -624,7 +632,6 @@ export default function SettingsPage() {
                         </div>
                       </form>
 
-                      {/* Danger zone */}
                       <div className="p-4 border border-danger border-opacity-25 rounded-3 bg-danger bg-opacity-10 mt-3">
                         <h5 className="fw-bold text-danger mb-2"><i className="bi bi-exclamation-triangle-fill me-2"></i>Vùng nguy hiểm</h5>
                         <p className="text-danger opacity-75 mb-3" style={{ fontSize: '13.5px' }}>Khi bạn xóa tài khoản, toàn bộ dữ liệu, bài viết và tương tác của bạn sẽ bị xóa vĩnh viễn và không thể khôi phục lại được.</p>
@@ -633,7 +640,6 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {/* TAB 4: NOTIFICATIONS */}
                   {activeTab === 'notifications' && (
                     <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
                       <h4 className="fw-bold mb-4 text-dark">Cài đặt thông báo</h4>
@@ -707,7 +713,6 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {/* TAB 5: DISPLAY */}
                   {activeTab === 'display' && (
                     <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
                       <h4 className="fw-bold mb-4 text-dark">Giao diện hệ thống</h4>

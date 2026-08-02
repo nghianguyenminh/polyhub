@@ -24,15 +24,14 @@ import java.util.Random;
 
 import com.polyhub.service.EmailService;
 import com.polyhub.service.OtpService;
+import com.polyhub.service.SmsService;
 
-/**
- * REST API cho xác thực: Login (trả JWT), Register, lấy thông tin user hiện
- * tại.
- */
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthApiController {
+
+    @Autowired
+    private SmsService smsService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -58,50 +57,127 @@ public class AuthApiController {
     @Autowired
     private OtpService otpService;
 
-    /**
-     * POST /api/auth/login
-     * Body: { "username": "...", "password": "..." }
-     * Response: { "token": "...", "user": { ... } }
-     */
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String password = request.get("password");
+@PostMapping("/login")
+public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+    String username = request.get("username");
+    String password = request.get("password");
 
-        if (username == null || password == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Username và password không được để trống"));
-        }
-
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password));
-
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            String token = jwtService.generateToken(userDetails);
-
-            // Lấy thông tin user đầy đủ
-            User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("user", buildUserResponse(user));
-
-            return ResponseEntity.ok(response);
-
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Sai tên đăng nhập hoặc mật khẩu"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Đã xảy ra lỗi: " + e.getMessage()));
-        }
+    if (username == null || password == null) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Username và password không được để trống"));
     }
 
-    /**
-     * POST /api/auth/register
-     * Body: { "username": "...", "password": "...", "confirmPassword": "...",
-     * "fullname": "...", "email": "..." }
-     */
+    try {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
+
+        User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
+
+        if (user != null && Boolean.TRUE.equals(user.getIsTwoFactorEnabled())) {
+            Random random = new Random();
+            int otpNumber = 100000 + random.nextInt(900000);
+            String otp = String.valueOf(otpNumber);
+
+            user.setTwoFactorCode(otp);
+            user.setTwoFactorCodeExpireTime(LocalDateTime.now().plusMinutes(5));
+            userRepository.save(user);
+
+            emailService.send2FAEmail(user.getEmail(), user.getFullname(), otp);
+
+            Map<String, Object> response2FA = new HashMap<>();
+            response2FA.put("status", "REQUIRES_2FA");
+            response2FA.put("message", "Mã xác minh đã được gửi đến email");
+            response2FA.put("username", user.getUsername());
+            response2FA.put("email", user.getEmail());
+            
+            if (user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+                response2FA.put("phone", user.getPhone());
+            }
+
+            return ResponseEntity.ok(response2FA);
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        String token = jwtService.generateToken(userDetails);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("user", buildUserResponse(user));
+
+        return ResponseEntity.ok(response);
+
+    } catch (BadCredentialsException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Sai tên đăng nhập hoặc mật khẩu"));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Đã xảy ra lỗi: " + e.getMessage()));
+    }
+}
+
+    @PostMapping("/send-2fa-sms")
+    public ResponseEntity<?> send2FASms(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+
+        if (username == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username không được để trống"));
+        }
+
+        User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
+
+        if (user == null || user.getPhone() == null || user.getPhone().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Số điện thoại không khả dụng"));
+        }
+
+        Random random = new Random();
+        int otpNumber = 100000 + random.nextInt(900000);
+        String otp = String.valueOf(otpNumber);
+
+        user.setTwoFactorCode(otp);
+        user.setTwoFactorCodeExpireTime(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        smsService.sendSms(user.getPhone(), otp);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SMS_SENT",
+                "message", "Mã xác minh đã được gửi qua SMS"
+        ));
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<?> verify2fa(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String code = request.get("code");
+
+        if (username == null || code == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng cung cấp username và mã xác minh"));
+        }
+
+        User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
+
+        if (user == null || user.getTwoFactorCode() == null || !user.getTwoFactorCode().equals(code)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Mã xác minh không chính xác"));
+        }
+
+        if (user.getTwoFactorCodeExpireTime() == null || user.getTwoFactorCodeExpireTime().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Mã xác minh đã hết hạn"));
+        }
+
+        user.setTwoFactorCode(null);
+        user.setTwoFactorCodeExpireTime(null);
+        userRepository.save(user);
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+        String token = jwtService.generateToken(userDetails);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("user", buildUserResponse(user));
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
         String username = request.get("username");
@@ -110,7 +186,6 @@ public class AuthApiController {
         String fullname = request.get("fullname");
         String email = request.get("email");
 
-        // Validation
         if (username == null || password == null || fullname == null || email == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng điền đầy đủ thông tin"));
         }
@@ -127,7 +202,6 @@ public class AuthApiController {
             return ResponseEntity.badRequest().body(Map.of("error", "Email này đã được sử dụng!"));
         }
 
-        // Lấy Role "CLIENT" mặc định
         Role clientRole = roleRepository.findById("CLIENT").orElse(null);
         if (clientRole == null) {
             clientRole = new Role("CLIENT", "Khách hàng");
@@ -137,7 +211,6 @@ public class AuthApiController {
         String phone = request.get("phone");
         String birthdayStr = request.get("birthday");
 
-        // Tạo user mới
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
@@ -155,14 +228,12 @@ public class AuthApiController {
             try {
                 user.setBirthday(java.time.LocalDate.parse(birthdayStr));
             } catch (Exception e) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Ngày sinh không đúng định dạng (yyyy-MM-dd)."));
+                return ResponseEntity.badRequest().body(Map.of("error", "Ngày sinh không đúng định dạng (yyyy-MM-dd)."));
             }
         }
 
         userRepository.save(user);
 
-        // Tạo JWT token luôn cho user mới
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         String token = jwtService.generateToken(userDetails);
 
@@ -174,9 +245,6 @@ public class AuthApiController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * GET /api/auth/me — Lấy thông tin user đang đăng nhập (cần JWT).
-     */
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Principal principal) {
         if (principal == null) {
@@ -193,12 +261,8 @@ public class AuthApiController {
         return ResponseEntity.ok(buildUserResponse(user));
     }
 
-    /**
-     * Helper: Build user response map (loại bỏ password và thông tin nhạy cảm).
-     */
     private Map<String, Object> buildUserResponse(User user) {
-        if (user == null)
-            return Map.of();
+        if (user == null) return Map.of();
 
         Map<String, Object> map = new HashMap<>();
         map.put("username", user.getUsername());
@@ -214,12 +278,11 @@ public class AuthApiController {
         map.put("active", user.getActive());
         map.put("createdAt", user.getCreatedAt());
         map.put("role", user.getRole() != null ? user.getRole().getId() : null);
+        map.put("IsTwoFactorEnabled", user.getIsTwoFactorEnabled() != null ? user.getIsTwoFactorEnabled() : false);
+        
         return map;
     }
 
-    /**
-     * POST /api/auth/forgot-password
-     */
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -241,9 +304,6 @@ public class AuthApiController {
         return ResponseEntity.ok(Map.of("message", "Mã OTP đã được gửi đến email của bạn."));
     }
 
-    /**
-     * POST /api/auth/verify-otp
-     */
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> request) {
         String email = request.get("email");
