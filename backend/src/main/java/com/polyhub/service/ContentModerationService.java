@@ -121,8 +121,8 @@ public class ContentModerationService {
                 return ModerationResult.rejected(
                         "OFFENSIVE_LANGUAGE",
                         "Nội dung chứa từ ngữ bị cấm: \"" + word + "\"",
-                        "Bài viết của bạn chứa ngôn từ không phù hợp với cộng đồng học tập PolyHUB. "
-                                + "Vui lòng chỉnh sửa nội dung và thử lại. 🙏",
+                        "Bài viết của bạn chứa ngôn từ không phù hợp PolyHUB. "
+                                + "Vui lòng chỉnh sửa nội dung và thử lại!",
                         "BLACKLIST");
             }
         }

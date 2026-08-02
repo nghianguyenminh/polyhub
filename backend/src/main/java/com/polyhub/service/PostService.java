@@ -79,7 +79,7 @@ if (images != null && images.length > 0) {
                     }
                 }
                 throw new ContentViolationException(
-                        "Ảnh đăng kèm chứa nội dung không phù hợp với cộng đồng học tập PolyHUB. Vui lòng chọn ảnh khác. 🙏");
+                        "Ảnh đăng kèm chứa nội dung không phù hợp với cộng đồng học tập PolyHUB. Vui lòng chọn ảnh khác!");
             }
 
             if (!"approved".equalsIgnoreCase(modStatus)) {
