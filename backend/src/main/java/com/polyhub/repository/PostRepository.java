@@ -1,5 +1,6 @@
 package com.polyhub.repository;
 
+import com.polyhub.entity.ModerationStatus;
 import com.polyhub.entity.Post;
 import com.polyhub.entity.User;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,10 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+
+    // ---- Moderation queries ----
+    Page<Post> findByModerationStatusOrderByCreatedAtDesc(ModerationStatus status, Pageable pageable);
+    long countByModerationStatus(ModerationStatus status);
 
     @Query("SELECT p FROM Post p " +
             "WHERE ((p.isPrivate = false OR p.isPrivate IS NULL) OR p.user.username = :viewerUsername) " +

@@ -39,6 +39,8 @@ export interface Post {
   commentsCount: number;
   sharesCount: number;
   sharedPost?: Omit<Post, 'commentsCount' | 'sharesCount' | 'isSaved' | 'sharedPost' | 'isLiked' | 'likesCount'>;
+  moderationStatus?: string;
+  moderationCategory?: string;
 }
 
 export interface Comment {

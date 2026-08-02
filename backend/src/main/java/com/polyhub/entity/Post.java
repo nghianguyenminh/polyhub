@@ -81,6 +81,22 @@ public class Post {
     @Column(name = "is_locked")
     @Builder.Default
     private Boolean isLocked = false;
+
+    // ---- Kiểm duyệt nội dung (AI Moderation) ----
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moderation_status", length = 20)
+    @Builder.Default
+    private ModerationStatus moderationStatus = ModerationStatus.APPROVED;
+
+    /** Lý do bị từ chối hoặc đưa vào PENDING_REVIEW (null nếu APPROVED) */
+    @Column(name = "moderation_reason", length = 500)
+    private String moderationReason;
+
+    /** Danh mục vi phạm do AI phân loại (OFFENSIVE_LANGUAGE, SPAM, ...) */
+    @Column(name = "moderation_category", length = 50)
+    private String moderationCategory;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

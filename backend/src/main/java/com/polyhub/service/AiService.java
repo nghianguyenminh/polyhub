@@ -174,6 +174,42 @@ public class AiService {
         }
     }
 
+    /**
+     * Gọi AI để kiểm duyệt nội dung bài đăng.
+     * KHÁC với callAiWithFallback(): method này THROW RuntimeException thay vì
+     * trả về chuỗi lỗi tiếng Việt, để ContentModerationService phân biệt
+     * "AI không khả dụng" vs "AI xác nhận nội dung vi phạm".
+     *
+     * Thứ tự ưu tiên: Gemini → Groq (fallback) → throw RuntimeException("AI_UNAVAILABLE")
+     */
+    public String callAiForModeration(String prompt) {
+        boolean hasGemini = geminiApiKey != null && !geminiApiKey.isBlank()
+                && !geminiApiKey.contains("your-gemini-api-key");
+        boolean hasGroq = groqApiKey != null && !groqApiKey.isBlank();
+
+        if (!hasGemini && hasGroq) {
+            log.info("[Moderation] Gemini chưa cấu hình, dùng Groq trực tiếp.");
+            return callGroq(prompt); // Groq exception sẽ tự bubble up
+        }
+
+        try {
+            return callGeminiRaw(createPayload(prompt));
+        } catch (QuotaExceededException e) {
+            log.warn("[Moderation] Gemini hết quota, thử fallback Groq...");
+            if (!hasGroq) {
+                throw new RuntimeException("AI_UNAVAILABLE: Gemini hết quota và chưa cấu hình Groq.");
+            }
+            try {
+                return callGroq(prompt);
+            } catch (Exception groqEx) {
+                log.error("[Moderation] Groq fallback cũng lỗi: {}", groqEx.getMessage());
+                throw new RuntimeException("AI_UNAVAILABLE: Cả Gemini và Groq đều không khả dụng.", groqEx);
+            }
+        } catch (AiServiceException e) {
+            throw new RuntimeException("AI_UNAVAILABLE: " + e.getMessage(), e);
+        }
+    }
+
     public String evaluateMentorBusyReason(String reason, int leadTimeHours, String fewShotExamples) {
         String prompt = "Hãy phân tích lý do báo bận đột xuất của Mentor sau và đề xuất mức phạt điểm uy tín (từ 0% đến 10%).\n"
                 + "- Lý do báo bận: " + reason + "\n"
@@ -195,6 +231,36 @@ public class AiService {
         return callGeminiRaw(createPayload(prompt));
     }
 
+
+    public String moderateImage(MultipartFile image) {
+    try {
+        String base64Image = Base64.getEncoder().encodeToString(image.getBytes());
+        String mimeType = image.getContentType();
+        String prompt = """
+                Bạn là hệ thống kiểm duyệt ảnh cho mạng xã hội học tập PolyHUB \
+                (sinh viên Cao đẳng FPT Polytechnic).
+                Hãy phân tích bức ảnh sau theo các tiêu chí:
+                1. Khỏa thân, khiêu dâm, gợi dục
+                2. Bạo lực, máu me, kinh dị, tự hại
+                3. Ma túy, chất kích thích, vũ khí
+                4. Hình ảnh phản cảm, không phù hợp thuần phong mỹ tục Việt Nam
+
+                Trả về DUY NHẤT JSON theo định dạng sau, không giải thích thêm:
+                {"verdict": "SAFE|SUSPICIOUS|VIOLATION", \
+                "category": "SAFE|ADULT_CONTENT|VIOLENCE|DRUGS_WEAPONS|OFFENSIVE", \
+                "reason": "Giải thích ngắn gọn bằng tiếng Việt (null nếu SAFE)", \
+                "userMessage": "Thông báo thân thiện gửi cho người dùng (null nếu SAFE)"}
+                """;
+        return callGeminiRaw(createPayloadWithImage(prompt, base64Image, mimeType));
+    } catch (QuotaExceededException e) {
+        throw new RuntimeException("AI_UNAVAILABLE: Gemini Vision hết quota/quá tải khi kiểm duyệt ảnh.", e);
+    } catch (AiServiceException e) {
+        throw new RuntimeException("AI_UNAVAILABLE: " + e.getMessage(), e);
+    } catch (java.io.IOException e) {
+        log.error("Lỗi đọc file ảnh khi kiểm duyệt: {}", e.getMessage(), e);
+        throw new RuntimeException("AI_UNAVAILABLE: Không đọc được file ảnh.", e);
+    }
+}
     /**
      * Fallback provider: Groq (OpenAI-compatible endpoint), model mặc định Llama
      * 3.3 70B.

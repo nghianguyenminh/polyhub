@@ -21,6 +21,29 @@ public class FileStorageService {
     private long lastCacheTime = 0;
     private static final long CACHE_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> uploadImageWithModeration(MultipartFile file, String folder) throws IOException {
+        Map<String, Object> options = ObjectUtils.asMap(
+                "folder", folder,
+                "resource_type", "image",
+                "moderation", "aws_rek" // Chuyển sang dùng Amazon Rekognition (cần bật Add-on trong Cloudinary Console)
+        );
+        Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+        return uploadResult;
+    }
+
+
+@SuppressWarnings("unchecked")
+public String extractModerationStatus(Map<String, Object> uploadResult) {
+    Object moderationObj = uploadResult.get("moderation");
+    if (moderationObj instanceof java.util.List<?> list && !list.isEmpty()
+            && list.get(0) instanceof Map<?, ?> map) {
+        Object status = map.get("status");
+        return status != null ? status.toString() : null;
+    }
+    return null;
+}
+
     /**
      * LẤY THÔNG TIN SỬ DỤNG DUNG LƯỢNG (USAGE) TỪ CLOUDINARY (Có Cache 10 phút)
      */
