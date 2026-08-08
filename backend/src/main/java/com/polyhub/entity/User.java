@@ -73,6 +73,13 @@ public class User implements Serializable {
     @Column(columnDefinition = "NVARCHAR(500)")
     private String bio; 
 
+    @Column(name = "coins")
+    private Integer coins = 100;
+
+    public Integer getCoins() {
+        return coins != null ? coins : 100;
+    }
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;

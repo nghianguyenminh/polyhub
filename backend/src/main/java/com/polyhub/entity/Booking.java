@@ -79,6 +79,9 @@ public class Booking implements Serializable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "coins_spent")
+    private Integer coinsSpent = 10; // Số xu sử dụng cho lịch hẹn
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -90,6 +93,7 @@ public class Booking implements Serializable {
         if (extensionCount == null) extensionCount = 0;
         if (maxExtensions == null) maxExtensions = 2;
         if (extendedMinutes == null) extendedMinutes = 0;
+        if (coinsSpent == null) coinsSpent = 10;
     }
 
     @PreUpdate

@@ -12,6 +12,7 @@ export interface User {
   followersCount?: number;
   followingCount?: number;
   role?: string;
+  coins?: number;
 }
 
 export interface SimpleUser {

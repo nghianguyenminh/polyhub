@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchAPI } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Mentor } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import ClockPicker from '../common/ClockPicker';
@@ -23,6 +24,11 @@ interface DayAvailability {
 
 export default function BookingModal({ isOpen, onClose, mentor }: BookingModalProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const userCoins = user?.coins ?? 100;
+  const coinsRequired = 10;
+  const hasEnoughCoins = userCoins >= coinsRequired;
+
   const [loading, setLoading] = useState(true);
   const [availability, setAvailability] = useState<DayAvailability[]>([]);
   const [selectedDay, setSelectedDay] = useState<DayAvailability | null>(null);
@@ -641,6 +647,36 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                       </div>
                     )}
 
+                    {/* Chi phí xu */}
+                    <div className="bk-form-section" style={{ background: '#fff7ed', border: '1px solid #ffedd5', padding: '14px 16px', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 24 }}>🪙</span>
+                          <div>
+                            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#9a3412' }}>Chi phí xu cho buổi call</div>
+                            <div style={{ fontSize: 12, color: '#c2410c' }}>
+                              Số xu hiện có: <strong>{userCoins} Xu</strong>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: hasEnoughCoins ? '#15803d' : '#dc2626' }}>
+                            -{coinsRequired} Xu
+                          </div>
+                          <div style={{ fontSize: 11, color: hasEnoughCoins ? '#166534' : '#b91c1c', fontWeight: 600 }}>
+                            {hasEnoughCoins ? `Còn lại: ${userCoins - coinsRequired} Xu` : '⚠️ Không đủ xu'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {!hasEnoughCoins && (
+                      <div className="bk-validation-banner invalid" style={{ marginTop: 10 }}>
+                        <i className="bi bi-exclamation-triangle-fill" />
+                        <span>Bạn không đủ xu để đặt lịch (Hiện có: {userCoins} Xu, cần: {coinsRequired} Xu).</span>
+                      </div>
+                    )}
+
                     {/* Step 5: Ghi chú */}
                     <div className="bk-form-section" style={{ marginBottom: 0 }}>
                       <div className="bk-section-label">
@@ -668,7 +704,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                   </button>
                   <button
                     type="submit"
-                    disabled={submitting || !selectedDay || !validationMsg.isValid}
+                    disabled={submitting || !selectedDay || !validationMsg.isValid || !hasEnoughCoins}
                     className="bk-btn-submit"
                   >
                     {submitting ? (

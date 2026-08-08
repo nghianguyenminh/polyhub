@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 
+import CoinHistoryModal from '@/components/common/CoinHistoryModal';
+
 function formatTimeAgo(dateString: string) {
   const date = new Date(dateString);
   const now = new Date();
@@ -24,12 +26,13 @@ function formatTimeAgo(dateString: string) {
 }
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const toast = useToast();
   const router = useRouter();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [showCoinModal, setShowCoinModal] = useState(false);
 
   const loadNotifications = async () => {
     try {
@@ -103,6 +106,19 @@ export default function Header() {
         </Link>
 
         <div className="d-flex align-items-center gap-3">
+          {/* Coin Balance Badge */}
+          {user && (
+            <div 
+              className="d-flex align-items-center gap-1 px-3 py-1.5 rounded-pill shadow-sm text-dark me-1" 
+              style={{ cursor: 'pointer', fontSize: '13px', fontWeight: 800, background: 'linear-gradient(135deg, #fef3c7, #fde68a)', border: '1px solid #f59e0b', transition: 'transform 0.15s ease' }}
+              onClick={() => setShowCoinModal(true)}
+              title="Số xu hiện có (Click để xem nhật ký)"
+            >
+              <span style={{ fontSize: '15px' }}>🪙</span>
+              <span style={{ color: '#b45309' }}>{user.coins ?? 100} Xu</span>
+            </div>
+          )}
+
           {/* Notifications Dropdown */}
           {user && (
             <div className="dropdown">
@@ -236,6 +252,13 @@ export default function Header() {
           )}
         </div>
       </div>
+
+      <CoinHistoryModal
+        isOpen={showCoinModal}
+        onClose={() => setShowCoinModal(false)}
+        coins={user?.coins ?? 100}
+        onRefreshUser={refreshUser}
+      />
     </header>
   );
 }

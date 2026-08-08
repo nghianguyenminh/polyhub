@@ -210,6 +210,7 @@ public class AuthApiController {
         map.put("active", user.getActive());
         map.put("createdAt", user.getCreatedAt());
         map.put("role", user.getRole() != null ? user.getRole().getId() : null);
+        map.put("coins", user.getCoins());
         return map;
     }
 

@@ -18,6 +18,8 @@ import com.polyhub.repository.BookingExtensionRepository;
 import com.polyhub.repository.MentorBusyRepository;
 import com.polyhub.repository.BookingPriorityRepository;
 import com.polyhub.repository.AiFeedbackLoopRepository;
+import com.polyhub.entity.CoinTransaction;
+import com.polyhub.repository.CoinTransactionRepository;
 import com.polyhub.service.EmailService;
 import com.polyhub.service.AiService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +64,9 @@ public class BookingApiController {
 
     @Autowired
     private AiFeedbackLoopRepository aiFeedbackLoopRepository;
+
+    @Autowired
+    private CoinTransactionRepository coinTransactionRepository;
 
     @Autowired
     private AiService aiService;
@@ -249,6 +254,24 @@ public class BookingApiController {
                 }
             }
 
+            // Kiểm tra số dư xu của Sinh viên
+            int coinsRequired = 10;
+            if (student.getCoins() < coinsRequired) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Bạn không đủ xu để đặt lịch (Cần " + coinsRequired + " xu, số xu hiện có của bạn: " + student.getCoins() + " xu)"));
+            }
+
+            // Trừ 10 xu của Sinh viên khi tạo lịch hẹn
+            student.setCoins(student.getCoins() - coinsRequired);
+            userRepository.save(student);
+
+            // Ghi nhật ký giao dịch xu
+            CoinTransaction tx = new CoinTransaction();
+            tx.setUser(student);
+            tx.setAmount(-coinsRequired);
+            tx.setType("SPENT");
+            tx.setDescription("Trừ " + coinsRequired + " xu cho lịch hẹn với Mentor " + mentor.getFullname() + " ngày " + bookingDate + " lúc " + startTime);
+            coinTransactionRepository.save(tx);
+
             Booking booking = new Booking();
             booking.setStudent(student);
             booking.setMentor(mentor);
@@ -258,6 +281,7 @@ public class BookingApiController {
             booking.setDuration(duration);
             booking.setStatus(BookingStatus.PENDING);
             booking.setNote(note);
+            booking.setCoinsSpent(coinsRequired);
 
             Booking saved = bookingRepository.save(booking);
 
@@ -415,6 +439,25 @@ public class BookingApiController {
                         bookingPriorityRepository.save(priority);
                     } catch (Exception ex) {
                         System.err.println("Failed to save priority: " + ex.getMessage());
+                    }
+
+                    // Hoàn lại 10 xu cho Sinh viên khi bị từ chối
+                    try {
+                        int refundAmount = booking.getCoinsSpent() != null ? booking.getCoinsSpent() : 10;
+                        User studentToRefund = booking.getStudent();
+                        if (studentToRefund != null) {
+                            studentToRefund.setCoins(studentToRefund.getCoins() + refundAmount);
+                            userRepository.save(studentToRefund);
+
+                            CoinTransaction refundTx = new CoinTransaction();
+                            refundTx.setUser(studentToRefund);
+                            refundTx.setAmount(refundAmount);
+                            refundTx.setType("REFUND");
+                            refundTx.setDescription("Hoàn " + refundAmount + " xu do lịch hẹn ngày " + booking.getBookingDate() + " lúc " + booking.getStartTime() + " bị từ chối.");
+                            coinTransactionRepository.save(refundTx);
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Lỗi hoàn xu: " + ex.getMessage());
                     }
 
                     // Gửi thông báo email và thông báo hệ thống cho sinh viên
@@ -1037,6 +1080,25 @@ public class BookingApiController {
                 priority.setStatus(PriorityStatus.ACTIVE);
                 bookingPriorityRepository.save(priority);
 
+                // Hoàn lại xu cho sinh viên khi bị hủy do mentor báo bận
+                try {
+                    int refundAmount = b.getCoinsSpent() != null ? b.getCoinsSpent() : 10;
+                    User studentToRefund = b.getStudent();
+                    if (studentToRefund != null) {
+                        studentToRefund.setCoins(studentToRefund.getCoins() + refundAmount);
+                        userRepository.save(studentToRefund);
+
+                        CoinTransaction refundTx = new CoinTransaction();
+                        refundTx.setUser(studentToRefund);
+                        refundTx.setAmount(refundAmount);
+                        refundTx.setType("REFUND");
+                        refundTx.setDescription("Hoàn " + refundAmount + " xu do Mentor báo bận đột xuất hủy lịch hẹn ngày " + b.getBookingDate());
+                        coinTransactionRepository.save(refundTx);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Lỗi hoàn xu khi báo bận: " + ex.getMessage());
+                }
+
                 createSystemNotification(b.getStudent(), "Lịch hẹn bị hủy đột xuất", 
                     "Mentor " + mentor.getFullname() + " đã hủy lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " do bận đột xuất. Bạn được cấp 1 quyền ưu tiên đặt lại lịch bù.");
             }
@@ -1058,9 +1120,7 @@ public class BookingApiController {
                     String aiResult = aiService.evaluateMentorBusyReason(reason, leadTimeHours, fewShot.toString());
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                     com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(aiResult);
-                    double proposedPenalty = node.path("proposedPenalty").asDouble(0.0);
-                    
-                    savedBusy.setReliabilityImpact(proposedPenalty);
+                    savedBusy.setReliabilityImpact(0.0);
                     mentorBusyRepository.save(savedBusy);
                 } catch (Exception ex) {
                     System.err.println("Lỗi AI đánh giá báo bận: " + ex.getMessage());
@@ -1242,6 +1302,51 @@ public class BookingApiController {
         mentorBusyRepository.save(busy);
 
         return ResponseEntity.ok(Map.of("message", "Đã phê duyệt đợt báo bận và áp dụng điểm phạt uy tín thành công."));
+    }
+
+    /**
+     * GET /api/bookings/coins/transactions - Lấy lịch sử giao dịch xu của người dùng
+     */
+    @GetMapping("/coins/transactions")
+    public ResponseEntity<?> getMyCoinTransactions(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+        List<CoinTransaction> txs = coinTransactionRepository.findByUserUsernameOrderByCreatedAtDesc(principal.getName());
+        return ResponseEntity.ok(txs);
+    }
+
+    /**
+     * POST /api/bookings/coins/grant-100 - Cấp 100 xu cho tất cả người dùng Sinh viên
+     */
+    @PostMapping("/coins/grant-100")
+    @Transactional
+    public ResponseEntity<?> grant100CoinsToStudents(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+        List<User> students = userRepository.findAll().stream()
+            .filter(u -> u.getRole() == null || "STUDENT".equalsIgnoreCase(u.getRole().getId()))
+            .toList();
+
+        int updatedCount = 0;
+        for (User s : students) {
+            s.setCoins(100);
+            userRepository.save(s);
+
+            CoinTransaction tx = new CoinTransaction();
+            tx.setUser(s);
+            tx.setAmount(100);
+            tx.setType("INITIAL_GRANT");
+            tx.setDescription("Hệ thống tặng 100 xu để đặt lịch Mentor call");
+            coinTransactionRepository.save(tx);
+            updatedCount++;
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "message", "Đã cấp thành công 100 xu cho " + updatedCount + " tài khoản Sinh viên!",
+            "updatedCount", updatedCount
+        ));
     }
 }
 

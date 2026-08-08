@@ -387,13 +387,14 @@ export default function BookingsPage() {
   };
 
   // Helper: Get active Available schedule slots for a selected date
+  // Helper: Get active Available schedule slots for a selected date (excluding booked/busy slots)
   const getAvailabilityForDate = (dateStr: string) => {
-    if (!user || user.role !== 'MENTOR') return [];
+    if (!scheduleSlots || scheduleSlots.length === 0) return [];
     
     const dateObj = new Date(dateStr);
     const dayOfWeek = dateObj.getDay() === 0 ? 8 : dateObj.getDay() + 1;
     
-    return scheduleSlots.filter(slot => {
+    const rawSlots = scheduleSlots.filter(slot => {
       if (slot.specificDate) {
         return slot.specificDate === dateStr;
       }
@@ -405,6 +406,48 @@ export default function BookingsPage() {
       
       return false;
     }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    // Lọc bỏ các khung giờ đã có lịch hẹn (PENDING, APPROVED, CLOSED) hoặc báo bận
+    const dateBookings = (bookings || []).filter(
+      (b: Booking) => b.bookingDate === dateStr && (b.status === 'PENDING' || b.status === 'APPROVED' || b.status === 'CLOSED')
+    );
+
+    const cellDate = new Date(dateStr);
+    const startOfDay = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate(), 0, 0, 0);
+    const endOfDay = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate(), 23, 59, 59);
+
+    const dateBusies = (busyHistory || []).filter(item => {
+      const busyStart = new Date(item.startTime);
+      const busyEnd = new Date(item.endTime);
+      return busyStart <= endOfDay && busyEnd >= startOfDay;
+    });
+
+    return rawSlots.filter(slot => {
+      const [sh, sm] = slot.startTime.split(':').map(Number);
+      const [eh, em] = slot.endTime.split(':').map(Number);
+      const sMin = sh * 60 + sm;
+      const eMin = eh * 60 + em;
+
+      const isBooked = dateBookings.some((b: Booking) => {
+        const [bSh, bSm] = b.startTime.split(':').map(Number);
+        const [bEh, bEm] = b.endTime.split(':').map(Number);
+        const bSMin = bSh * 60 + bSm;
+        const bEMin = bEh * 60 + bEm;
+        return bSMin < eMin && bEMin > sMin;
+      });
+
+      if (isBooked) return false;
+
+      const isBusy = dateBusies.some(item => {
+        const bStart = new Date(item.startTime);
+        const bEnd = new Date(item.endTime);
+        const bStartMin = bStart.getHours() * 60 + bStart.getMinutes();
+        const bEndMin = bEnd.getHours() * 60 + bEnd.getMinutes();
+        return bStartMin < eMin && bEndMin > sMin;
+      });
+
+      return !isBusy;
+    });
   };
 
   // Helper: format standard ISO time to AM/PM format (e.g. "09:00" -> "9AM", "13:30" -> "1:30PM")
@@ -742,14 +785,6 @@ export default function BookingsPage() {
     if (start < new Date()) {
       setBusyError('Thời gian báo bận không thể ở quá khứ');
       return;
-    }
-
-    if (busyType === 'PLANNED') {
-      const minStart = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      if (start < minStart) {
-        setBusyError('Bận báo trước phải đăng ký trước ít nhất 24 giờ (1 ngày)');
-        return;
-      }
     }
     
     const confirmCancel = window.confirm(
@@ -1380,9 +1415,25 @@ export default function BookingsPage() {
                               });
                             })();
 
-                            const totalItemCount = dayBookings.length + dayBusies.length;
-                            const displayBookings = dayBookings.slice(0, Math.max(0, 3 - dayBusies.length));
-                            const extraCount = totalItemCount - (dayBusies.length + displayBookings.length);
+                            const dayAvails = getAvailabilityForDate(dateStr);
+
+                            const totalItemCount = dayBookings.length + dayBusies.length + dayAvails.length;
+                            
+                            // Phân bổ hiển thị ưu tiên: 1. Bận -> 2. Lịch hẹn thực tế -> 3. Giờ rảnh còn trống
+                            const maxDisplay = 3;
+                            let rem = maxDisplay;
+
+                            const displayBusies = dayBusies.slice(0, rem);
+                            rem -= displayBusies.length;
+
+                            const displayBookings = dayBookings.slice(0, Math.max(0, rem));
+                            rem -= displayBookings.length;
+
+                            const displayAvails = dayAvails.slice(0, Math.max(0, rem));
+                            rem -= displayAvails.length;
+
+                            const displayedCount = displayBusies.length + displayBookings.length + displayAvails.length;
+                            const extraCount = totalItemCount - displayedCount;
                             
                             return (
                               <div
@@ -1392,15 +1443,22 @@ export default function BookingsPage() {
                               >
                                 <div className="gcal-day-number-wrapper" style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row-reverse', alignItems: 'center' }}>
                                   <span className="gcal-day-number">{cell.date.getDate()}</span>
-                                  {totalItemCount > 0 && (
-                                    <span style={{ fontSize: 10, background: '#f8f9fa', border: '1px solid #e2e8f0', borderRadius: 4, padding: '1px 5px', fontWeight: 700, color: '#475569' }}>
-                                      {totalItemCount}
-                                    </span>
-                                  )}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    {dayAvails.length > 0 && (
+                                      <span style={{ fontSize: 9.5, background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 4, padding: '1px 4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2 }} title={`Có ${dayAvails.length} khung giờ rảnh còn trống`}>
+                                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e' }} /> Rảnh
+                                      </span>
+                                    )}
+                                    {totalItemCount > 0 && (
+                                      <span style={{ fontSize: 10, background: '#f8f9fa', border: '1px solid #e2e8f0', borderRadius: 4, padding: '1px 5px', fontWeight: 700, color: '#475569' }}>
+                                        {totalItemCount}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                                 
                                 <div className="gcal-event-list">
-                                  {dayBusies.map((busy) => (
+                                  {displayBusies.map((busy) => (
                                     <div
                                       key={`cal-busy-${busy.id}`}
                                       className="gcal-event-badge"
@@ -1426,6 +1484,7 @@ export default function BookingsPage() {
                                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{busy.reason}</span>
                                     </div>
                                   ))}
+
                                   {displayBookings.map((b) => {
                                     const isStudentView = activeTab === 'student';
                                     const targetUser = isStudentView ? b.mentor : b.student;
@@ -1444,6 +1503,36 @@ export default function BookingsPage() {
                                       </div>
                                     );
                                   })}
+
+                                  {displayAvails.map((avail, aIdx) => (
+                                    <div
+                                      key={`cal-avail-${aIdx}`}
+                                      className="gcal-event-badge"
+                                      style={{
+                                        background: '#dcfce7',
+                                        color: '#15803d',
+                                        borderLeft: '2.5px solid #22c55e',
+                                        padding: '2px 4px',
+                                        borderRadius: '3px',
+                                        fontSize: '11px',
+                                        marginBottom: '2px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      title={`Giờ rảnh còn trống: ${avail.startTime} - ${avail.endTime}`}
+                                    >
+                                      <span className="gcal-event-dot" style={{ backgroundColor: '#22c55e' }} />
+                                      <span style={{ fontWeight: 800, marginRight: 2 }}>
+                                        {formatTimeToGCal(avail.startTime)}
+                                      </span>
+                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>Rảnh</span>
+                                    </div>
+                                  ))}
+
                                   {extraCount > 0 && (
                                     <div className="gcal-more-indicator">
                                       + {extraCount} mục khác
@@ -2060,57 +2149,8 @@ export default function BookingsPage() {
                     Báo bận &amp; Nghỉ phép (Vacation Mode)
                   </h5>
                   <p className="sch-sub">
-                    Chọn loại báo bận và khoảng thời gian bạn bận. Hệ thống sẽ tự động hủy hàng loạt các lịch hẹn trùng và gửi thông báo tới sinh viên.
+                    Chọn khoảng thời gian bạn bận. Hệ thống sẽ tự động hủy hàng loạt các lịch hẹn trùng và gửi thông báo tới sinh viên.
                   </p>
-
-                  {/* Mode Selector */}
-                  <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-                    <button
-                      type="button"
-                      onClick={() => setBusyType('EMERGENCY')}
-                      style={{
-                        flex: 1,
-                        padding: '12px 16px',
-                        borderRadius: 12,
-                        border: '1.5px solid',
-                        borderColor: busyType === 'EMERGENCY' ? '#ef4444' : '#e5e7eb',
-                        background: busyType === 'EMERGENCY' ? 'rgba(239, 68, 68, 0.06)' : '#ffffff',
-                        color: busyType === 'EMERGENCY' ? '#dc2626' : '#4b5563',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 4
-                      }}
-                    >
-                      <span style={{ fontSize: 14.5 }}>🚨 Bận đột xuất</span>
-                      <span style={{ fontSize: 11, fontWeight: 'normal', opacity: 0.8 }}>Báo việc gấp, nghỉ liền</span>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => setBusyType('PLANNED')}
-                      style={{
-                        flex: 1,
-                        padding: '12px 16px',
-                        borderRadius: 12,
-                        border: '1.5px solid',
-                        borderColor: busyType === 'PLANNED' ? '#ef4444' : '#e5e7eb',
-                        background: busyType === 'PLANNED' ? 'rgba(239, 68, 68, 0.06)' : '#ffffff',
-                        color: busyType === 'PLANNED' ? '#dc2626' : '#4b5563',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 4
-                      }}
-                    >
-                      <span style={{ fontSize: 14.5 }}>📅 Bận báo trước</span>
-                      <span style={{ fontSize: 11, fontWeight: 'normal', opacity: 0.8 }}>Du lịch / Kế hoạch trước 1-2 ngày</span>
-                    </button>
-                  </div>
 
                   <form onSubmit={handleRegisterBusy} style={{ marginTop: 20 }}>
                     {/* Date selection & Time selection separate */}
@@ -2182,7 +2222,7 @@ export default function BookingsPage() {
                       <textarea
                         value={busyReason}
                         onChange={(e) => setBusyReason(e.target.value)}
-                        placeholder="Nhập lý do báo bận đột xuất để AI đánh giá uy tín..."
+                        placeholder="Nhập lý do báo bận đột xuất..."
                         style={{
                           background: '#ffffff',
                           color: '#1a1a2e',
@@ -2261,7 +2301,6 @@ export default function BookingsPage() {
                             <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>
                               <th style={{ padding: '10px 14px', fontWeight: 600, color: '#374151' }}>Thời gian bận</th>
                               <th style={{ padding: '10px 14px', fontWeight: 600, color: '#374151' }}>Lý do</th>
-                              <th style={{ padding: '10px 14px', fontWeight: 600, color: '#374151', textAlign: 'center' }}>Phạt uy tín</th>
                               <th style={{ padding: '10px 14px', fontWeight: 600, color: '#374151', textAlign: 'center' }}>Trạng thái</th>
                             </tr>
                           </thead>
@@ -2286,9 +2325,6 @@ export default function BookingsPage() {
                                   </td>
                                   <td style={{ padding: '12px 14px', color: '#4b5563', maxWidth: 220, wordWrap: 'break-word', whiteSpace: 'normal' }}>
                                     {item.reason}
-                                  </td>
-                                  <td style={{ padding: '12px 14px', textAlign: 'center', color: item.reliabilityImpact > 0 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
-                                    {item.reliabilityImpact > 0 ? `-${item.reliabilityImpact}%` : '0%'}
                                   </td>
                                   <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                                     <span style={{
