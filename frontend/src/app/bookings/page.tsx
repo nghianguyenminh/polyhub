@@ -696,20 +696,21 @@ export default function BookingsPage() {
     for (const s of scheduleSlots) {
       let dateOverlap = false;
       if (specificDate && s.specificDate) {
+        // Cả 2 đều là ngày cụ thể
         dateOverlap = specificDate === s.specificDate;
       } else if (!specificDate && !s.specificDate) {
+        // Cả 2 đều là lặp hàng tuần
         dateOverlap = dayOfWeek === s.dayOfWeek;
       } else {
-        const spec = specificDate || s.specificDate;
-        const weekDay = specificDate ? dayOfWeek : s.dayOfWeek;
-        const exp = specificDate ? s.expireDate : expireDate;
+        // Một bên ngày cụ thể, một bên lặp hàng tuần
+        const specDateStr = specificDate || s.specificDate!;
+        const specDayOfWeek = specificDate ? dayOfWeek : s.dayOfWeek;
+        const recDayOfWeek = specificDate ? s.dayOfWeek : dayOfWeek;
+        const recExpireDate = specificDate ? s.expireDate : expireDate;
 
-        if (spec) {
-          const specDayOfWeek = new Date(spec).getDay() === 0 ? 8 : new Date(spec).getDay() + 1;
-          if (specDayOfWeek === weekDay) {
-            if (!exp || new Date(spec).getTime() <= new Date(exp).getTime()) {
-              dateOverlap = true;
-            }
+        if (specDayOfWeek === recDayOfWeek) {
+          if (!recExpireDate || specDateStr <= recExpireDate) {
+            dateOverlap = true;
           }
         }
       }
