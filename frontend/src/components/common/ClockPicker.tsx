@@ -116,11 +116,6 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      if (activeModeRef.current === 'hours') {
-        setTimeout(() => {
-          setActiveMode('minutes');
-        }, 300);
-      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -181,22 +176,26 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
     if (activeMode === 'hours') {
       setHours(num);
       updateTime(num, minutes, isPM);
-      // Auto switch to minutes mode
-      setTimeout(() => {
-        setActiveMode('minutes');
-      }, 300);
     } else {
       setMinutes(num);
       updateTime(hours, num, isPM);
     }
   };
 
-  const adjustOneMinute = (amount: number) => {
-    let nextMin = minutes + amount;
-    if (nextMin >= 60) nextMin = 0;
-    if (nextMin < 0) nextMin = 59;
-    setMinutes(nextMin);
-    updateTime(hours, nextMin, isPM);
+  const adjustValue = (amount: number) => {
+    if (activeMode === 'hours') {
+      let nextHour = hours + amount;
+      if (nextHour > 12) nextHour = 1;
+      if (nextHour < 1) nextHour = 12;
+      setHours(nextHour);
+      updateTime(nextHour, minutes, isPM);
+    } else {
+      let nextMin = minutes + amount;
+      if (nextMin >= 60) nextMin = 0;
+      if (nextMin < 0) nextMin = 59;
+      setMinutes(nextMin);
+      updateTime(hours, nextMin, isPM);
+    }
   };
 
   const toggleAMPM = (pm: boolean) => {
@@ -245,6 +244,7 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
             <span 
               className={`${styles.digitalNum} ${activeMode === 'hours' ? styles.activeText : ''}`}
               onClick={() => setActiveMode('hours')}
+              title="Chỉnh giờ"
             >
               {String(hours).padStart(2, '0')}
             </span>
@@ -252,6 +252,7 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
             <span 
               className={`${styles.digitalNum} ${activeMode === 'minutes' ? styles.activeText : ''}`}
               onClick={() => setActiveMode('minutes')}
+              title="Chỉnh phút"
             >
               {String(minutes).padStart(2, '0')}
             </span>
@@ -326,24 +327,39 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
             </div>
           </div>
 
-          {/* Precise Minute Adjustments */}
+          {/* Precise Adjustments Panel */}
           <div className={styles.adjustmentPanel}>
             <button 
               type="button" 
               className={styles.adjustBtn} 
-              onClick={() => adjustOneMinute(-1)}
-              title="Giảm 1 phút"
+              onClick={() => adjustValue(-1)}
+              title={activeMode === 'hours' ? "Giảm 1 giờ" : "Giảm 1 phút"}
             >
               <i className="bi bi-dash" />
             </button>
-            <span className={styles.adjustmentLabel}>
-              {activeMode === 'hours' ? 'Chỉnh giờ' : 'Chỉnh phút'}
-            </span>
+            <div className="d-flex align-items-center gap-1">
+              <button
+                type="button"
+                className={`btn btn-sm px-2 py-1 rounded-pill ${activeMode === 'hours' ? 'fw-bold text-white' : 'text-secondary'}`}
+                style={{ fontSize: '11px', background: activeMode === 'hours' ? '#f27125' : '#f3f4f6', border: 'none' }}
+                onClick={() => setActiveMode('hours')}
+              >
+                Chỉnh giờ
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm px-2 py-1 rounded-pill ${activeMode === 'minutes' ? 'fw-bold text-white' : 'text-secondary'}`}
+                style={{ fontSize: '11px', background: activeMode === 'minutes' ? '#f27125' : '#f3f4f6', border: 'none' }}
+                onClick={() => setActiveMode('minutes')}
+              >
+                Chỉnh phút
+              </button>
+            </div>
             <button 
               type="button" 
               className={styles.adjustBtn} 
-              onClick={() => adjustOneMinute(1)}
-              title="Tăng 1 phút"
+              onClick={() => adjustValue(1)}
+              title={activeMode === 'hours' ? "Tăng 1 giờ" : "Tăng 1 phút"}
             >
               <i className="bi bi-plus" />
             </button>
