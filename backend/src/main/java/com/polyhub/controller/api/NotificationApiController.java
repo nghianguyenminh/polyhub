@@ -39,8 +39,17 @@ public class NotificationApiController {
         List<Map<String, Object>> notiList = new ArrayList<>();
         for (Notification noti : notiPage.getContent()) {
             Map<String, Object> map = new HashMap<>();
-            map.put("id", noti.getId());
-            map.put("message", noti.getMessage());
+            String msg = noti.getMessage();
+            if (msg == null || msg.trim().isEmpty()) {
+                if (noti.getTitle() != null && !noti.getTitle().trim().isEmpty()) {
+                    msg = noti.getTitle() + (noti.getContent() != null ? ": " + noti.getContent() : "");
+                } else if (noti.getContent() != null) {
+                    msg = noti.getContent();
+                }
+            }
+            map.put("message", msg);
+            map.put("title", noti.getTitle());
+            map.put("content", noti.getContent());
             map.put("isRead", noti.getIsRead());
             map.put("type", noti.getType());
             map.put("targetId", noti.getTargetId());

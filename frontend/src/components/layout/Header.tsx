@@ -165,7 +165,7 @@ export default function Header() {
                         style={{ cursor: 'pointer' }}
                       >
                         <img 
-                          src={noti.sender && noti.sender.avatar && noti.sender.avatar !== 'default.png' ? noti.sender.avatar : `https://ui-avatars.com/api/?name=${noti.sender ? noti.sender.fullname : 'System'}`} 
+                          src={noti.sender && noti.sender.avatar && noti.sender.avatar !== 'default.png' ? noti.sender.avatar : `https://ui-avatars.com/api/?name=System&background=F27125&color=fff`} 
                           className="rounded-circle" width="40" height="40" alt="avatar" 
                           style={{ objectFit: 'cover' }}
                         />

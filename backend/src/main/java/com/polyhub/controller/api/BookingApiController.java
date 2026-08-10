@@ -155,6 +155,8 @@ public class BookingApiController {
             n.setUser(recipient);
             n.setTitle(title);
             n.setContent(content);
+            n.setMessage(title != null ? (title + ": " + content) : content);
+            n.setType("SYSTEM");
             n.setLink("/bookings");
             n.setIsRead(false);
             notificationRepository.save(n);
