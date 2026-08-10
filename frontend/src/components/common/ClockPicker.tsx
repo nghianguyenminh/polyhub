@@ -176,6 +176,10 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
     if (activeMode === 'hours') {
       setHours(num);
       updateTime(num, minutes, isPM);
+      // Tự động chuyển sang chọn phút khi chọn xong số giờ trên mặt đồng hồ
+      setTimeout(() => {
+        setActiveMode('minutes');
+      }, 250);
     } else {
       setMinutes(num);
       updateTime(hours, num, isPM);
@@ -239,12 +243,12 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
 
       {isOpen && (
         <div className={styles.clockDropdown}>
-          {/* Digital Readout Header */}
+          {/* Digital Readout Header - Click vào số giờ/phút ở trên để chuyển chế độ */}
           <div className={styles.digitalHeader}>
             <span 
               className={`${styles.digitalNum} ${activeMode === 'hours' ? styles.activeText : ''}`}
               onClick={() => setActiveMode('hours')}
-              title="Chỉnh giờ"
+              title="Nhấn để chỉnh giờ"
             >
               {String(hours).padStart(2, '0')}
             </span>
@@ -252,7 +256,7 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
             <span 
               className={`${styles.digitalNum} ${activeMode === 'minutes' ? styles.activeText : ''}`}
               onClick={() => setActiveMode('minutes')}
-              title="Chỉnh phút"
+              title="Nhấn để chỉnh phút"
             >
               {String(minutes).padStart(2, '0')}
             </span>
@@ -337,24 +341,9 @@ export default function ClockPicker({ value, onChange, label, id }: ClockPickerP
             >
               <i className="bi bi-dash" />
             </button>
-            <div className="d-flex align-items-center gap-1">
-              <button
-                type="button"
-                className={`btn btn-sm px-2 py-1 rounded-pill ${activeMode === 'hours' ? 'fw-bold text-white' : 'text-secondary'}`}
-                style={{ fontSize: '11px', background: activeMode === 'hours' ? '#f27125' : '#f3f4f6', border: 'none' }}
-                onClick={() => setActiveMode('hours')}
-              >
-                Chỉnh giờ
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm px-2 py-1 rounded-pill ${activeMode === 'minutes' ? 'fw-bold text-white' : 'text-secondary'}`}
-                style={{ fontSize: '11px', background: activeMode === 'minutes' ? '#f27125' : '#f3f4f6', border: 'none' }}
-                onClick={() => setActiveMode('minutes')}
-              >
-                Chỉnh phút
-              </button>
-            </div>
+            <span className={styles.adjustmentLabel}>
+              {activeMode === 'hours' ? 'Chỉnh giờ' : 'Chỉnh phút'}
+            </span>
             <button 
               type="button" 
               className={styles.adjustBtn} 
