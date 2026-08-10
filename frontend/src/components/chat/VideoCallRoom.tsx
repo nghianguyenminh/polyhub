@@ -47,6 +47,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
   const zpRef = useRef<any>(null);
   const autoClosedRef = useRef(false);
 
+  const [isInRoom, setIsInRoom] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(() => {
     if (!startedAt || !duration) return 0;
     const end = new Date(startedAt).getTime() + duration * 60_000;
@@ -120,15 +121,16 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startedAt, duration, bookingId]);
 
+  // Chỉ hiển thị popup gia hạn & phát âm thanh khi người dùng đã THẬT SỰ JOIN vào phòng cuộc gọi
   useEffect(() => {
-    if (timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0 && !modalShownOnce) {
+    if (isInRoom && timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0 && !modalShownOnce) {
       setModalShownOnce(true);
       setShowExtModal(true);
       fetchExtendLimit(); // Quét và lấy giới hạn gia hạn thời gian thực
       playBeep(494, 0.5);
     }
-    if (timeLeft === 60) playBeep(587, 0.6);
-  }, [timeLeft, modalShownOnce, fetchExtendLimit]);
+    if (isInRoom && timeLeft === 60) playBeep(587, 0.6);
+  }, [isInRoom, timeLeft, modalShownOnce, fetchExtendLimit]);
 
   // Fast poll (3s) khi popup đang hiển thị — detect gia hạn từ bên kia gần như tức thì
   useEffect(() => {
@@ -136,7 +138,6 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     const fastPoll = setInterval(async () => {
       try {
         const data = await fetchAPI(`/api/bookings/${bookingId}/remaining-time`);
-        // Nếu server trả về nhiều hơn local > 30s → bên kia đã gia hạn → đóng popup
         if (data.remainingSeconds > timeLeftRef.current + 30) {
           timeLeftRef.current = data.remainingSeconds;
           setTimeLeft(data.remainingSeconds);
@@ -145,7 +146,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           setExtMinutes(data.extendedMinutes ?? 0);
           setCanExtend(data.canExtend ?? true);
           setModalShownOnce(false);
-          setShowExtModal(false); // ← Đóng popup ở User B
+          setShowExtModal(false);
         }
       } catch (_) { }
     }, 3000);
@@ -198,9 +199,13 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           turnOnMicrophoneWhenJoining: true,
           turnOnCameraWhenJoining: true,
           showPreJoinView: false,
+          onJoinRoom: () => {
+            setIsInRoom(true);
+          },
           onLeaveRoom: () => {
             if (autoClosedRef.current) return;
             joinedRef.current = false;
+            setIsInRoom(false);
             setTimeout(() => onLeaveRoom(), 500);
           },
         });
