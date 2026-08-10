@@ -184,16 +184,20 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       try {
         const appID = 1435055187;
         const serverSecret = 'b4651fdf344e4930bff5005595c6c0a4';
-        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomId, user.username, user.fullname || 'Nguoi dung');
+        const cleanUserId = String(user.username || 'user').replace(/[^a-zA-Z0-9_]/g, '_');
+        const cleanRoomId = String(roomId || 'room_default').replace(/[^a-zA-Z0-9_]/g, '_');
+        const userName = user.fullname || user.username || 'Nguoi dung';
+
+        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, cleanRoomId, cleanUserId, userName);
         const zp = ZegoUIKitPrebuilt.create(kitToken);
         zpRef.current = zp;
         zp.joinRoom({
           container: containerRef.current,
           scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
           showScreenSharingButton: true,
-          turnOnMicrophoneWhenJoining: false,
-          turnOnCameraWhenJoining: false,
-          showPreJoinView: true,
+          turnOnMicrophoneWhenJoining: true,
+          turnOnCameraWhenJoining: true,
+          showPreJoinView: false,
           onLeaveRoom: () => {
             if (autoClosedRef.current) return;
             joinedRef.current = false;
