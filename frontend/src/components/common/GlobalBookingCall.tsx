@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { fetchAPI } from '@/lib/api';
 import dynamic from 'next/dynamic';
 import '@/styles/chat.css';
@@ -26,6 +27,7 @@ interface Booking {
 
 export default function GlobalBookingCall() {
   const { user } = useAuth();
+  const { showError } = useToast();
   
   const [activeCallRoomId, setActiveCallRoomId] = useState<string | null>(null);
   const [selectedBookingForCall, setSelectedBookingForCall] = useState<Booking | null>(null);
@@ -106,7 +108,7 @@ export default function GlobalBookingCall() {
       setActiveCallRoomId(updatedBooking.roomId || `booking_${updatedBooking.id}`);
       setUpcomingBooking(null);
     } catch (err: any) {
-      alert(err.message || 'Không thể tham gia cuộc gọi vào lúc này.');
+      showError(err.message || 'Không thể tham gia cuộc gọi vào lúc này.');
     }
   };
 

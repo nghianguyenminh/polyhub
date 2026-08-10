@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Post, Comment } from '@/lib/types';
 import { fetchAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import MentorBadge from '@/components/common/MentorBadge';
 
 interface PostCardProps {
@@ -12,6 +13,7 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, onPostUpdated }: PostCardProps) {
+  const { showError, showSuccess } = useToast();
   // --- Save state ---
   const [isSaved, setIsSaved] = useState(post.isSaved || false);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -67,7 +69,7 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
         noRedirectOn401: true,
       });
       setShowReportModal(false);
-      alert('Cảm ơn bạn đã báo cáo. Quản trị viên sẽ xem xét.');
+      showSuccess('Cảm ơn bạn đã báo cáo. Quản trị viên sẽ xem xét.');
     } catch (err: any) {
       showError(err?.message || 'Báo cáo thất bại');
     }
@@ -82,10 +84,6 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
 
   // --- Error toast ---
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const showError = (msg: string) => {
-    setErrorMsg(msg);
-    setTimeout(() => setErrorMsg(null), 3500);
-  };
 
   // ─── Helpers ───────────────────────────────────────────────────────
   const formatDate = (dateStr: string) => {

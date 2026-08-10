@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { fetchAPI } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
@@ -242,6 +243,7 @@ const SuggestedMentorsWidget = ({
 
 export default function BookingsPage() {
   const { user, loading: authLoading } = useAuth();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'student' | 'mentor-bookings' | 'mentor-schedule'>('student');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
@@ -656,7 +658,7 @@ export default function BookingsPage() {
       setSelectedBookingForCall(updatedBooking);
       setActiveCallRoomId(updatedBooking.roomId || `booking_${updatedBooking.id}`);
     } catch (err: any) {
-      alert(err.message || 'Không thể tham gia cuộc gọi vào lúc này.');
+      toast.showError(err.message || 'Không thể tham gia cuộc gọi vào lúc này.');
     }
   };
 
@@ -666,7 +668,7 @@ export default function BookingsPage() {
     const [sh, sm] = newSlotStart.split(':').map(Number);
     const [eh, em] = newSlotEnd.split(':').map(Number);
     if (sh * 60 + sm >= eh * 60 + em) {
-      alert('Thời gian bắt đầu phải trước thời gian kết thúc.');
+      toast.showWarning('Thời gian bắt đầu phải trước thời gian kết thúc.');
       return;
     }
 
@@ -722,7 +724,7 @@ export default function BookingsPage() {
         const slotEndMin = slotEh * 60 + slotEm;
 
         if (startMin < slotEndMin && endMin > slotStartMin) {
-          alert('Khung giờ này bị trùng lặp với một lịch rảnh khác đã cấu hình.');
+          toast.showWarning('Khung giờ này bị trùng lặp với một lịch rảnh khác đã cấu hình.');
           return;
         }
       }
