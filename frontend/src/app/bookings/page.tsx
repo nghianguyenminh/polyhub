@@ -274,8 +274,13 @@ export default function BookingsPage() {
   const [slotType, setSlotType] = useState<'ONCE' | 'WEEKLY'>('ONCE');
   const [slotDate, setSlotDate] = useState(() => getLocalDateString());
   const [slotDayOfWeek, setSlotDayOfWeek] = useState<number>(2);
-  const [newSlotStart, setNewSlotStart] = useState('09:00');
-  const [newSlotEnd, setNewSlotEnd] = useState('11:00');
+  const [newSlotStart, setNewSlotStart] = useState(() => getLocalTimeRounded(15));
+  const [newSlotEnd, setNewSlotEnd] = useState(() => {
+    const start = getLocalTimeRounded(15);
+    const [sh, sm] = start.split(':').map(Number);
+    const endH = (sh + 2) % 24;
+    return `${String(endH).padStart(2, '0')}:${String(sm).padStart(2, '0')}`;
+  });
   const [expiryPreset, setExpiryPreset] = useState<'FOREVER' | '1_WEEK' | '2_WEEKS' | 'CUSTOM'>('FOREVER');
   const [slotExpiryDate, setSlotExpiryDate] = useState('');
 
@@ -670,6 +675,16 @@ export default function BookingsPage() {
     if (sh * 60 + sm >= eh * 60 + em) {
       toast.showWarning('Thời gian bắt đầu phải trước thời gian kết thúc.');
       return;
+    }
+
+    const now = new Date();
+    const todayStr = getLocalDateString(now);
+    if (slotType === 'ONCE' && slotDate === todayStr) {
+      const currentMin = now.getHours() * 60 + now.getMinutes();
+      if (sh * 60 + sm < currentMin) {
+        toast.showWarning('Khung giờ rảnh của ngày hôm nay phải chọn từ thời điểm hiện tại trở đi.');
+        return;
+      }
     }
 
     const specificDate = slotType === 'ONCE' ? slotDate : undefined;

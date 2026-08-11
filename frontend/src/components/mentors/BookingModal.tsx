@@ -90,10 +90,23 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
     };
   }, [zoom, selectedDay, loading]);
 
+  const getCurrentTimeRounded = () => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + 15);
+    const m = d.getMinutes();
+    const remainder = m % 15;
+    if (remainder > 0) {
+      d.setMinutes(d.getMinutes() + (15 - remainder));
+    }
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${min}`;
+  };
+
   useEffect(() => {
     if (isOpen && mentor.user?.username) {
       loadAvailability();
-      setStartTime('09:00');
+      setStartTime(getCurrentTimeRounded());
       setDuration(30);
       setNote('');
       setError('');
