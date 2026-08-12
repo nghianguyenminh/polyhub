@@ -256,14 +256,15 @@ public class BookingApiController {
                 }
             }
 
-            // Kiểm tra số dư xu của Sinh viên
+            // Kiểm tra số dư xu của Sinh viên (Xử lý an toàn tránh NullPointerException)
             int coinsRequired = 10;
-            if (student.getCoins() < coinsRequired) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Bạn không đủ xu để đặt lịch (Cần " + coinsRequired + " xu, số xu hiện có của bạn: " + student.getCoins() + " xu)"));
+            int studentCoins = student.getCoins() != null ? student.getCoins() : 100;
+            if (studentCoins < coinsRequired) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Bạn không đủ xu để đặt lịch (Cần " + coinsRequired + " xu, số xu hiện có của bạn: " + studentCoins + " xu)"));
             }
 
             // Trừ 10 xu của Sinh viên khi tạo lịch hẹn
-            student.setCoins(student.getCoins() - coinsRequired);
+            student.setCoins(studentCoins - coinsRequired);
             userRepository.save(student);
 
             // Ghi nhật ký giao dịch xu
