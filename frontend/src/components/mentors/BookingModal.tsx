@@ -49,6 +49,25 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
   // Validation feedback
   const [validationMsg, setValidationMsg] = useState({ text: '', isValid: false });
   const [lockStatus, setLockStatus] = useState<{ locked: boolean; message: string; expiresAt?: string } | null>(null);
+  const lockedSlotRef = useRef<{ mentorUsername: string; date: string; startTime: string } | null>(null);
+
+  const releaseCurrentLock = async () => {
+    if (lockedSlotRef.current) {
+      const { mentorUsername, date, startTime } = lockedSlotRef.current;
+      lockedSlotRef.current = null;
+      try {
+        await fetchAPI('/api/bookings/unlock-slot', {
+          method: 'POST',
+          body: JSON.stringify({ mentorUsername, date, startTime }),
+        });
+      } catch (_) { }
+    }
+  };
+
+  const handleSafeClose = async () => {
+    await releaseCurrentLock();
+    onClose();
+  };
 
   // Native wheel event binding to allow preventDefault (React passive listener bypass)
   useEffect(() => {
@@ -114,7 +133,12 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       setSelectedDay(null);
       setZoom(1);
       setHasManuallySelectedTime(false);
+    } else if (!isOpen) {
+      releaseCurrentLock();
     }
+    return () => {
+      releaseCurrentLock();
+    };
   }, [isOpen, mentor]);
 
   const loadAvailability = async () => {
@@ -272,6 +296,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
     const lockTimer = setTimeout(async () => {
       try {
+        await releaseCurrentLock();
         const data = await fetchAPI('/api/bookings/lock-slot', {
           method: 'POST',
           body: JSON.stringify({
@@ -281,6 +306,11 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
           })
         });
         if (data.locked) {
+          lockedSlotRef.current = {
+            mentorUsername: mentor.user?.username || '',
+            date: selectedDay.date,
+            startTime: startTime
+          };
           setLockStatus({
             locked: true,
             message: 'Khung giờ này đã được giữ chỗ riêng cho bạn trong 3 phút.',
@@ -393,17 +423,16 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="bk-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bk-modal-dialog">
-        <div className="bk-modal-content">
+    <div className="bk-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) handleSafeClose(); }}>
+      <div className="bk-modal-container">
 
-          {/* Header */}
-          <div className="bk-modal-header">
-            <div className="bk-modal-title">
-              <i className="bi bi-calendar-event-fill" />
-              Đặt lịch hẹn với Mentor
-            </div>
-            <button className="bk-modal-close" onClick={onClose} aria-label="Close">
+        {/* Modal Header */}
+        <div className="bk-modal-header">
+          <div className="bk-modal-title">
+            <i className="bi bi-calendar-event me-2 text-primary"></i>
+            <span>Đặt lịch hẹn với Mentor</span>
+          </div>
+          <button className="bk-modal-close" onClick={handleSafeClose} aria-label="Close">
               <i className="bi bi-x-lg" />
             </button>
           </div>
@@ -712,7 +741,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
                 {/* Footer */}
                 <div className="bk-modal-footer" style={{ marginTop: 20, padding: '16px 0 0', background: 'transparent', border: 'none', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                  <button type="button" className="bk-btn-cancel" onClick={onClose}>
+                  <button type="button" className="bk-btn-cancel" onClick={handleSafeClose}>
                     Đóng
                   </button>
                   <button
@@ -738,6 +767,5 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
           </div>
         </div>
       </div>
-    </div>
   );
 }

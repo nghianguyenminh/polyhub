@@ -1197,6 +1197,32 @@ public class BookingApiController {
     }
 
     /**
+     * Giải phóng (mở khóa) slot tạm thời khi người dùng đóng modal hoặc đổi giờ.
+     */
+    @PostMapping("/unlock-slot")
+    public ResponseEntity<?> unlockSlot(
+            @RequestBody Map<String, Object> payload,
+            Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
+        }
+
+        String mentorUsername = (String) payload.get("mentorUsername");
+        String dateStr = (String) payload.get("date");
+        String startTimeStr = (String) payload.get("startTime");
+
+        if (mentorUsername != null && dateStr != null && startTimeStr != null) {
+            String lockKey = mentorUsername + "_" + dateStr + "_" + startTimeStr;
+            SlotLock lock = activeLocks.get(lockKey);
+            if (lock != null && lock.studentUsername.equalsIgnoreCase(principal.getName())) {
+                activeLocks.remove(lockKey);
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("unlocked", true));
+    }
+
+    /**
      * Mentor xem danh sách báo bận của chính mình.
      */
     @GetMapping("/mentor/busy")
