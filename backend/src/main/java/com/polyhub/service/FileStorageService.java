@@ -87,7 +87,20 @@ public String extractModerationStatus(Map<String, Object> uploadResult) {
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> uploadFile(MultipartFile file) throws IOException {
-        String originalFilename = file.getOriginalFilename();
+        return uploadFileBytes(file.getBytes(), file.getOriginalFilename());
+    }
+
+    /**
+     * UPLOAD FILE TỪ BYTE ARRAY (Thread-safe)
+     * Dùng khi cần gọi từ CompletableFuture / thread khác với request thread.
+     * MultipartFile.getBytes() phải được đọc trước trên request thread,
+     * rồi truyền byte[] vào đây để tránh lỗi truy cập cross-thread.
+     *
+     * @param fileBytes        Nội dung file đã được đọc sẵn (pre-read trên request thread)
+     * @param originalFilename Tên file gốc để xác định extension và resource_type
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> uploadFileBytes(byte[] fileBytes, String originalFilename) throws IOException {
         String extension = "";
         String baseName = "document";
 
@@ -124,8 +137,8 @@ public String extractModerationStatus(Map<String, Object> uploadResult) {
                 "public_id", publicId
         );
 
-        // Upload lên Cloudinary
-        Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(file.getBytes(), options);
+        // Upload lên Cloudinary (byte[] là thread-safe, không phụ thuộc HTTP request context)
+        Map<String, Object> uploadResult = (Map<String, Object>) (Map<?, ?>) cloudinary.uploader().upload(fileBytes, options);
 
         return uploadResult;
     }

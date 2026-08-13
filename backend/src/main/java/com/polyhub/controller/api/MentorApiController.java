@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/mentors")
 public class MentorApiController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MentorApiController.class);
+
     @Autowired
     private CategoryService categoryService;
 
@@ -290,73 +292,173 @@ public class MentorApiController {
             request.setStatus(RequestStatus.PENDING);
             request.setRejectionReason(null);
 
-            // Upload files concurrently to speed up the process
-            java.util.concurrent.CompletableFuture<String> frontUpload = (cccdFrontFile != null
-                    && !cccdFrontFile.isEmpty())
-                            ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                                try {
-                                    return fileStorageService.uploadFile(cccdFrontFile).get("url").toString();
-                                } catch (Exception e) {
-                                    return null;
-                                }
-                            })
-                            : java.util.concurrent.CompletableFuture.completedFuture(null);
+            // ── Pre-read tất cả bytes trên REQUEST THREAD ──
+            log.info("[MentorRegister] ====== BẮT ĐẦU UPLOAD FILES ======");
+            log.info("[MentorRegister] cvFile       : name='{}', size={}B, empty={}",
+                    cvFile != null ? cvFile.getOriginalFilename() : "NULL",
+                    cvFile != null ? cvFile.getSize() : -1,
+                    cvFile == null || cvFile.isEmpty());
+            log.info("[MentorRegister] frontFile    : name='{}', size={}B",
+                    cccdFrontFile != null ? cccdFrontFile.getOriginalFilename() : "NULL",
+                    cccdFrontFile != null ? cccdFrontFile.getSize() : -1);
+            log.info("[MentorRegister] backFile     : name='{}', size={}B",
+                    cccdBackFile != null ? cccdBackFile.getOriginalFilename() : "NULL",
+                    cccdBackFile != null ? cccdBackFile.getSize() : -1);
+            log.info("[MentorRegister] faceFile     : name='{}', size={}B",
+                    faceFile != null ? faceFile.getOriginalFilename() : "NULL",
+                    faceFile != null ? faceFile.getSize() : -1);
+            log.info("[MentorRegister] certFile     : name='{}', size={}B",
+                    certificateFile != null ? certificateFile.getOriginalFilename() : "NULL",
+                    certificateFile != null ? certificateFile.getSize() : -1);
+            log.info("[MentorRegister] degreeFile   : name='{}', size={}B",
+                    degreeFile != null ? degreeFile.getOriginalFilename() : "NULL",
+                    degreeFile != null ? degreeFile.getSize() : -1);
 
-            java.util.concurrent.CompletableFuture<String> backUpload = (cccdBackFile != null
-                    && !cccdBackFile.isEmpty())
-                            ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                                try {
-                                    return fileStorageService.uploadFile(cccdBackFile).get("url").toString();
-                                } catch (Exception e) {
-                                    return null;
-                                }
-                            })
-                            : java.util.concurrent.CompletableFuture.completedFuture(null);
+            byte[] frontBytes, backBytes, faceBytes, cvBytes, certBytes, degreeBytes;
+            try {
+                frontBytes  = (cccdFrontFile   != null && !cccdFrontFile.isEmpty())   ? cccdFrontFile.getBytes()   : null;
+                backBytes   = (cccdBackFile    != null && !cccdBackFile.isEmpty())    ? cccdBackFile.getBytes()    : null;
+                faceBytes   = (faceFile        != null && !faceFile.isEmpty())        ? faceFile.getBytes()        : null;
+                cvBytes     = (cvFile          != null && !cvFile.isEmpty())          ? cvFile.getBytes()          : null;
+                certBytes   = (certificateFile != null && !certificateFile.isEmpty()) ? certificateFile.getBytes() : null;
+                degreeBytes = (degreeFile      != null && !degreeFile.isEmpty())      ? degreeFile.getBytes()      : null;
+            } catch (Exception readEx) {
+                log.error("[MentorRegister] LỖI khi đọc bytes từ MultipartFile: {}", readEx.getMessage(), readEx);
+                return ResponseEntity.badRequest().body(Map.of("error", "Lỗi đọc file upload: " + readEx.getMessage()));
+            }
 
-            java.util.concurrent.CompletableFuture<String> faceUpload = (faceFile != null && !faceFile.isEmpty())
+            log.info("[MentorRegister] Bytes đã đọc — front={}B, back={}B, face={}B, cv={}B, cert={}B, degree={}B",
+                    frontBytes != null ? frontBytes.length : 0,
+                    backBytes  != null ? backBytes.length  : 0,
+                    faceBytes  != null ? faceBytes.length  : 0,
+                    cvBytes    != null ? cvBytes.length    : 0,
+                    certBytes  != null ? certBytes.length  : 0,
+                    degreeBytes!= null ? degreeBytes.length: 0);
+
+            if (cvBytes == null || cvBytes.length == 0) {
+                log.error("[MentorRegister] cvBytes là null hoặc rỗng sau khi đọc — cvFile.isEmpty()={}",
+                        cvFile == null || cvFile.isEmpty());
+                return ResponseEntity.badRequest().body(Map.of("error", "CV file rỗng hoặc không thể đọc."));
+            }
+
+            String frontName  = cccdFrontFile  != null ? cccdFrontFile.getOriginalFilename()  : null;
+            String backName   = cccdBackFile   != null ? cccdBackFile.getOriginalFilename()   : null;
+            String faceName   = faceFile       != null ? faceFile.getOriginalFilename()       : null;
+            String cvName     = cvFile         != null ? cvFile.getOriginalFilename()         : null;
+            String certName   = certificateFile!= null ? certificateFile.getOriginalFilename(): null;
+            String degreeName = degreeFile     != null ? degreeFile.getOriginalFilename()     : null;
+
+            log.info("[MentorRegister] Bắt đầu {} Cloudinary upload song song...",
+                    (frontBytes!=null?1:0)+(backBytes!=null?1:0)+(faceBytes!=null?1:0)+
+                    (cvBytes!=null?1:0)+(certBytes!=null?1:0)+(degreeBytes!=null?1:0));
+            long uploadStart = System.currentTimeMillis();
+
+            // Upload files concurrently — dùng byte[] thay vì MultipartFile (thread-safe)
+            java.util.concurrent.CompletableFuture<String> frontUpload = (frontBytes != null)
                     ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        long t = System.currentTimeMillis();
                         try {
-                            return fileStorageService.uploadFile(faceFile).get("url").toString();
+                            Map<String, Object> res = fileStorageService.uploadFileBytes(frontBytes, frontName);
+                            Object url = res.get("url");
+                            log.info("[MentorRegister] frontUpload OK  ({}ms) → url={}", System.currentTimeMillis()-t, url);
+                            return url != null ? url.toString() : null;
                         } catch (Exception e) {
+                            log.error("[MentorRegister] frontUpload FAIL ({}ms) [{}]: {}",
+                                    System.currentTimeMillis()-t, e.getClass().getSimpleName(), e.getMessage(), e);
                             return null;
                         }
                     })
                     : java.util.concurrent.CompletableFuture.completedFuture(null);
 
-            java.util.concurrent.CompletableFuture<String> cvUpload = (cvFile != null && !cvFile.isEmpty())
+            java.util.concurrent.CompletableFuture<String> backUpload = (backBytes != null)
                     ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        long t = System.currentTimeMillis();
                         try {
-                            return fileStorageService.uploadFile(cvFile).get("url").toString();
+                            Map<String, Object> res = fileStorageService.uploadFileBytes(backBytes, backName);
+                            Object url = res.get("url");
+                            log.info("[MentorRegister] backUpload  OK  ({}ms) → url={}", System.currentTimeMillis()-t, url);
+                            return url != null ? url.toString() : null;
                         } catch (Exception e) {
+                            log.error("[MentorRegister] backUpload  FAIL ({}ms) [{}]: {}",
+                                    System.currentTimeMillis()-t, e.getClass().getSimpleName(), e.getMessage(), e);
+                            return null;
+                        }
+                    })
+                    : java.util.concurrent.CompletableFuture.completedFuture(null);
+
+            java.util.concurrent.CompletableFuture<String> faceUpload = (faceBytes != null)
+                    ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        long t = System.currentTimeMillis();
+                        try {
+                            Map<String, Object> res = fileStorageService.uploadFileBytes(faceBytes, faceName);
+                            Object url = res.get("url");
+                            log.info("[MentorRegister] faceUpload  OK  ({}ms) → url={}", System.currentTimeMillis()-t, url);
+                            return url != null ? url.toString() : null;
+                        } catch (Exception e) {
+                            log.error("[MentorRegister] faceUpload  FAIL ({}ms) [{}]: {}",
+                                    System.currentTimeMillis()-t, e.getClass().getSimpleName(), e.getMessage(), e);
+                            return null;
+                        }
+                    })
+                    : java.util.concurrent.CompletableFuture.completedFuture(null);
+
+            java.util.concurrent.CompletableFuture<String> cvUpload = (cvBytes != null)
+                    ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        long t = System.currentTimeMillis();
+                        try {
+                            log.info("[MentorRegister] cvUpload    START — file='{}', bytes={}B", cvName, cvBytes.length);
+                            Map<String, Object> res = fileStorageService.uploadFileBytes(cvBytes, cvName);
+                            log.info("[MentorRegister] cvUpload    Cloudinary response keys: {}", res.keySet());
+                            Object url = res.get("url");
+                            Object secureUrl = res.get("secure_url");
+                            Object error = res.get("error");
+                            log.info("[MentorRegister] cvUpload    OK  ({}ms) → url='{}', secure_url='{}', error='{}'",
+                                    System.currentTimeMillis()-t, url, secureUrl, error);
+                            return url != null ? url.toString() : (secureUrl != null ? secureUrl.toString() : null);
+                        } catch (Exception e) {
+                            log.error("[MentorRegister] cvUpload    FAIL ({}ms) [{}]: {}",
+                                    System.currentTimeMillis()-t, e.getClass().getSimpleName(), e.getMessage(), e);
                             return null;
                         }
                     })
                     : java.util.concurrent.CompletableFuture.completedFuture(request.getCvFile());
 
-            java.util.concurrent.CompletableFuture<String> certUpload = (certificateFile != null
-                    && !certificateFile.isEmpty())
-                            ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                                try {
-                                    return fileStorageService.uploadFile(certificateFile).get("url").toString();
-                                } catch (Exception e) {
-                                    return null;
-                                }
-                            })
-                            : java.util.concurrent.CompletableFuture.completedFuture(null);
-
-            java.util.concurrent.CompletableFuture<String> degreeUpload = (degreeFile != null && !degreeFile.isEmpty())
+            java.util.concurrent.CompletableFuture<String> certUpload = (certBytes != null)
                     ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        long t = System.currentTimeMillis();
                         try {
-                            return fileStorageService.uploadFile(degreeFile).get("url").toString();
+                            Map<String, Object> res = fileStorageService.uploadFileBytes(certBytes, certName);
+                            Object url = res.get("url");
+                            log.info("[MentorRegister] certUpload  OK  ({}ms) → url={}", System.currentTimeMillis()-t, url);
+                            return url != null ? url.toString() : null;
                         } catch (Exception e) {
+                            log.error("[MentorRegister] certUpload  FAIL ({}ms) [{}]: {}",
+                                    System.currentTimeMillis()-t, e.getClass().getSimpleName(), e.getMessage(), e);
                             return null;
                         }
                     })
                     : java.util.concurrent.CompletableFuture.completedFuture(null);
 
-            // Wait for all uploads to complete
+            java.util.concurrent.CompletableFuture<String> degreeUpload = (degreeBytes != null)
+                    ? java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        long t = System.currentTimeMillis();
+                        try {
+                            Map<String, Object> res = fileStorageService.uploadFileBytes(degreeBytes, degreeName);
+                            Object url = res.get("url");
+                            log.info("[MentorRegister] degreeUpload OK  ({}ms) → url={}", System.currentTimeMillis()-t, url);
+                            return url != null ? url.toString() : null;
+                        } catch (Exception e) {
+                            log.error("[MentorRegister] degreeUpload FAIL ({}ms) [{}]: {}",
+                                    System.currentTimeMillis()-t, e.getClass().getSimpleName(), e.getMessage(), e);
+                            return null;
+                        }
+                    })
+                    : java.util.concurrent.CompletableFuture.completedFuture(null);
+
+            // Chờ tất cả uploads hoàn thành song song
             java.util.concurrent.CompletableFuture
                     .allOf(frontUpload, backUpload, faceUpload, cvUpload, certUpload, degreeUpload).join();
+            log.info("[MentorRegister] Tất cả uploads xong trong {}ms", System.currentTimeMillis() - uploadStart);
 
             if (frontUpload.join() != null)
                 request.setCccdFrontFile(frontUpload.join());
@@ -366,10 +468,12 @@ public class MentorApiController {
                 request.setFaceFile(faceUpload.join());
 
             String cvUrl = cvUpload.join();
+            log.info("[MentorRegister] cvUrl sau upload: '{}'", cvUrl);
             if (cvUrl != null && !cvUrl.isEmpty()) {
                 request.setCvFile(cvUrl);
             } else {
-                return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng đính kèm CV nộp hồ sơ."));
+                log.error("[MentorRegister] cvUrl null/empty → trả về lỗi 400");
+                return ResponseEntity.badRequest().body(Map.of("error", "Tải CV lên thất bại. Vui lòng thử lại."));
             }
 
             if (certUpload.join() != null)
