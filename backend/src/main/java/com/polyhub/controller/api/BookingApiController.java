@@ -628,8 +628,10 @@ public class BookingApiController {
     }
 
     @GetMapping("/mentor/{username}/availability")
-
-    public ResponseEntity<?> getMentorAvailability(@PathVariable("username") String username) {
+    public ResponseEntity<?> getMentorAvailability(
+            @PathVariable("username") String username,
+            Principal principal) {
+        String currentUsername = principal != null ? principal.getName() : null;
         User mentor = userRepository.findById(username).orElse(null);
         if (mentor == null || mentor.getRole() == null || !"MENTOR".equalsIgnoreCase(mentor.getRole().getId())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Không tìm thấy Mentor hoặc người dùng không phải Mentor"));
@@ -698,13 +700,15 @@ public class BookingApiController {
                 busySlots.add(busyMap);
             }
 
-            // 3. Khóa giữ chỗ tạm thời (LOCK_CHOOSING)
+            // 3. Khóa giữ chỗ tạm thời (LOCK_CHOOSING) - Chỉ hiển thị đỏ bận với NGUỜI KHÁC, không tự khóa chính chủ
             activeLocks.forEach((key, lock) -> {
                 String prefix = username + "_" + date.toString() + "_";
                 if (key.startsWith(prefix) && lock.expiresAt.isAfter(nowTime)) {
+                    if (currentUsername != null && lock.studentUsername.equalsIgnoreCase(currentUsername)) {
+                        return;
+                    }
                     String startTimeStr = key.substring(prefix.length());
                     LocalTime sTime = LocalTime.parse(startTimeStr);
-                    // Giả sử thời lượng lock hiển thị 30 phút
                     LocalTime eTime = sTime.plusMinutes(30);
 
                     Map<String, Object> busyMap = new HashMap<>();
@@ -1185,6 +1189,12 @@ public class BookingApiController {
             }
         }
 
+        // Dọn dẹp tất cả các lock cũ của người dùng này với mentor này trước khi đặt lock mới
+        activeLocks.entrySet().removeIf(e -> 
+            e.getValue().studentUsername.equalsIgnoreCase(principal.getName()) && 
+            e.getKey().startsWith(mentorUsername + "_")
+        );
+
         activeLocks.put(lockKey, new SlotLock(principal.getName(), now.plusMinutes(3)));
 
         return ResponseEntity.ok(Map.of(
@@ -1208,15 +1218,16 @@ public class BookingApiController {
         }
 
         String mentorUsername = (String) payload.get("mentorUsername");
-        String dateStr = (String) payload.get("date");
-        String startTimeStr = (String) payload.get("startTime");
 
-        if (mentorUsername != null && dateStr != null && startTimeStr != null) {
-            String lockKey = mentorUsername + "_" + dateStr + "_" + startTimeStr;
-            SlotLock lock = activeLocks.get(lockKey);
-            if (lock != null && lock.studentUsername.equalsIgnoreCase(principal.getName())) {
-                activeLocks.remove(lockKey);
-            }
+        if (mentorUsername != null) {
+            activeLocks.entrySet().removeIf(e -> 
+                e.getValue().studentUsername.equalsIgnoreCase(principal.getName()) && 
+                e.getKey().startsWith(mentorUsername + "_")
+            );
+        } else {
+            activeLocks.entrySet().removeIf(e -> 
+                e.getValue().studentUsername.equalsIgnoreCase(principal.getName())
+            );
         }
 
         return ResponseEntity.ok(Map.of("unlocked", true));
