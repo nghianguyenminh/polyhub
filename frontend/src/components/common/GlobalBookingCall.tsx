@@ -38,13 +38,23 @@ export default function GlobalBookingCall() {
   // Rating Modal state
   const [ratingBooking, setRatingBooking] = useState<Booking | null>(null);
 
+  // Lắng nghe sự kiện mở cuộc gọi từ bất kỳ trang nào (ví dụ trang /bookings)
+  useEffect(() => {
+    const handleCustomCallEvent = (e: any) => {
+      const booking = e.detail;
+      if (booking) {
+        setSelectedBookingForCall(booking);
+        setActiveCallRoomId(booking.roomId || `booking_${booking.id}`);
+        setUpcomingBooking(null);
+      }
+    };
+    window.addEventListener('open-video-call', handleCustomCallEvent);
+    return () => window.removeEventListener('open-video-call', handleCustomCallEvent);
+  }, []);
+
   // Poll bookings
   useEffect(() => {
     if (!user) return;
-    
-    // Don't show popup if we are on bookings page, since they can join from there directly?
-    // User requested: "pop-up này sẽ xem người dùng đang ở trang nào để hiển thị ở trang đó để người dùng ấn vào call video."
-    // So we show it everywhere.
     if (activeCallRoomId) return; // already in call
 
     const checkBookings = async () => {
@@ -58,6 +68,8 @@ export default function GlobalBookingCall() {
         let joinableBooking: Booking | null = null;
 
         for (const booking of approvedBookings) {
+          if (dismissedBookingId && booking.id === dismissedBookingId) continue;
+
           const startDateTime = new Date(`${booking.bookingDate}T${booking.startTime}`);
           const limitDateTime = new Date(startDateTime.getTime() + 10 * 60 * 1000);
           const diff = startDateTime.getTime() - now.getTime();
@@ -98,7 +110,7 @@ export default function GlobalBookingCall() {
     checkBookings();
     const interval = setInterval(checkBookings, 10000);
     return () => clearInterval(interval);
-  }, [user, activeCallRoomId]);
+  }, [user, activeCallRoomId, dismissedBookingId]);
 
   const handleJoinCall = async () => {
     if (!upcomingBooking) return;

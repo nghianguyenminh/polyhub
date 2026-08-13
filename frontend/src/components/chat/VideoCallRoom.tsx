@@ -78,6 +78,8 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
   const handleAutoClose = useCallback(async () => {
     if (autoClosedRef.current) return;
     autoClosedRef.current = true;
+    setShowExtModal(false);
+    setIsInRoom(false);
     try { zpRef.current?.destroy(); } catch (_) { }
     if (bookingId) {
       try {
@@ -216,7 +218,12 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       }
     };
     initZego();
-    return () => { try { zpRef.current?.destroy(); } catch (_) { } joinedRef.current = false; };
+    return () => { 
+      try { zpRef.current?.destroy(); } catch (_) { } 
+      joinedRef.current = false; 
+      setIsInRoom(false);
+      setShowExtModal(false);
+    };
   }, [roomId, user.username, user.fullname]);
 
   const isWarning = timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0;
