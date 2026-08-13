@@ -497,8 +497,28 @@ public class BookingApiController {
         }
 
         Booking booking = bookingRepository.findById(id).orElse(null);
-        if (booking == null || booking.getStatus() != BookingStatus.APPROVED) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Lịch hẹn không hợp lệ hoặc chưa được duyệt"));
+        if (booking == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Không tìm thấy lịch hẹn trong hệ thống"));
+        }
+
+        if (booking.getStatus() == BookingStatus.PENDING) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lịch hẹn đang chờ Mentor phê duyệt. Sau khi Mentor chấp nhận, bạn sẽ vào được cuộc gọi!"));
+        }
+
+        if (booking.getStatus() == BookingStatus.CLOSED) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lịch hẹn này đã kết thúc hoặc đã bị tự động đóng do quá 10 phút không ai tham gia."));
+        }
+
+        if (booking.getStatus() == BookingStatus.REJECTED) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lịch hẹn này đã bị Mentor từ chối."));
+        }
+
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lịch hẹn này đã bị hủy."));
+        }
+
+        if (booking.getStatus() != BookingStatus.APPROVED) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lịch hẹn chưa sẵn sàng để tham gia cuộc gọi."));
         }
 
         String username = principal.getName();
