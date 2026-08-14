@@ -195,7 +195,8 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       try {
         const appID = 1435055187;
         const serverSecret = 'b4651fdf344e4930bff5005595c6c0a4';
-        const cleanUserId = String(user.username || 'user').replace(/[^a-zA-Z0-9_]/g, '_');
+        const sessionSuffix = Math.floor(1000 + Math.random() * 9000);
+        const cleanUserId = `${String(user.username || 'user').replace(/[^a-zA-Z0-9_]/g, '_')}_${sessionSuffix}`;
         const cleanRoomId = String(roomId || 'room_default').replace(/[^a-zA-Z0-9_]/g, '_');
         const userName = user.fullname || user.username || 'Nguoi dung';
 
@@ -206,8 +207,8 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           container: containerRef.current,
           scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
           showScreenSharingButton: true,
-          turnOnMicrophoneWhenJoining: true,
-          turnOnCameraWhenJoining: true,
+          turnOnMicrophoneWhenJoining: false,
+          turnOnCameraWhenJoining: false,
           showPreJoinView: false,
           onJoinRoom: () => {
             setIsInRoom(true);

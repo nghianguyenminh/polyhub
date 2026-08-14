@@ -30,7 +30,12 @@ export default function GlobalBookingCall() {
   const { showError } = useToast();
   
   const [activeCallRoomId, setActiveCallRoomId] = useState<string | null>(null);
+  const activeCallRoomIdRef = React.useRef<string | null>(null);
+  activeCallRoomIdRef.current = activeCallRoomId;
+
   const [selectedBookingForCall, setSelectedBookingForCall] = useState<Booking | null>(null);
+  const selectedBookingForCallRef = React.useRef<Booking | null>(null);
+  selectedBookingForCallRef.current = selectedBookingForCall;
   
   const [upcomingBooking, setUpcomingBooking] = useState<Booking | null>(null);
   const [dismissedBookingId, setDismissedBookingId] = useState<number | null>(null);
@@ -38,11 +43,16 @@ export default function GlobalBookingCall() {
   // Rating Modal state
   const [ratingBooking, setRatingBooking] = useState<Booking | null>(null);
 
+  const isMentor = user?.role === 'MENTOR' || (typeof user?.role === 'object' && (user?.role as any)?.id === 'MENTOR');
+
+  const callStartTimeRef = React.useRef<number>(0);
+
   // Lắng nghe sự kiện mở cuộc gọi từ bất kỳ trang nào (ví dụ trang /bookings)
   useEffect(() => {
     const handleCustomCallEvent = (e: any) => {
       const booking = e.detail;
       if (booking) {
+        callStartTimeRef.current = Date.now();
         setSelectedBookingForCall(booking);
         setActiveCallRoomId(booking.roomId || `booking_${booking.id}`);
         setUpcomingBooking(null);
@@ -55,13 +65,15 @@ export default function GlobalBookingCall() {
   // Poll bookings
   useEffect(() => {
     if (!user) return;
-    if (activeCallRoomId) return; // already in call
 
     const checkBookings = async () => {
+      if (activeCallRoomIdRef.current) return; // Không poll popup khi đang trong cuộc gọi
       try {
-        const endpoint = user.role === 'MENTOR' ? '/api/bookings/mentor' : '/api/bookings/student';
+        const endpoint = isMentor ? '/api/bookings/mentor' : '/api/bookings/student';
         const data = await fetchAPI(endpoint);
         
+        if (activeCallRoomIdRef.current) return; // Double check
+
         const now = new Date();
         const approvedBookings: Booking[] = (data || []).filter((b: Booking) => b.status === 'APPROVED');
         
@@ -100,8 +112,9 @@ export default function GlobalBookingCall() {
           }
         }
         
-        setUpcomingBooking(joinableBooking);
-        
+        if (!activeCallRoomIdRef.current) {
+          setUpcomingBooking(joinableBooking);
+        }
       } catch (err) {
         // ignore errors silently
       }
@@ -110,12 +123,13 @@ export default function GlobalBookingCall() {
     checkBookings();
     const interval = setInterval(checkBookings, 10000);
     return () => clearInterval(interval);
-  }, [user, activeCallRoomId, dismissedBookingId]);
+  }, [user, isMentor, dismissedBookingId]);
 
   const handleJoinCall = async () => {
     if (!upcomingBooking) return;
     try {
       const updatedBooking = await fetchAPI(`/api/bookings/${upcomingBooking.id}/join`, { method: 'POST' });
+      callStartTimeRef.current = Date.now();
       setSelectedBookingForCall(updatedBooking);
       setActiveCallRoomId(updatedBooking.roomId || `booking_${updatedBooking.id}`);
       setUpcomingBooking(null);
@@ -135,8 +149,23 @@ export default function GlobalBookingCall() {
     }
     setUpcomingBooking(null);
   };
+
+  const handleLeaveRoom = React.useCallback(() => {
+    const currentBooking = selectedBookingForCallRef.current;
+    const durationInCall = Math.floor((Date.now() - callStartTimeRef.current) / 1000);
+    setActiveCallRoomId(null);
+    setSelectedBookingForCall(null);
+    
+    if (currentBooking) {
+      setDismissedBookingId(currentBooking.id);
+      // Chỉ hiện modal đánh giá nếu sinh viên đã tham gia cuộc gọi trên 10 giây
+      if (!isMentor && durationInCall >= 10) {
+        setRatingBooking(currentBooking);
+      }
+    }
+  }, [isMentor]);
   
-  const targetUser = user?.role === 'MENTOR' ? upcomingBooking?.student : upcomingBooking?.mentor;
+  const targetUser = isMentor ? upcomingBooking?.student : upcomingBooking?.mentor;
   const showPopup = upcomingBooking && upcomingBooking.id !== dismissedBookingId && !activeCallRoomId;
 
   return (
@@ -185,19 +214,7 @@ export default function GlobalBookingCall() {
         <VideoCallRoom
           roomId={activeCallRoomId}
           user={{ username: user.username, fullname: user.fullname }}
-          onLeaveRoom={() => {
-            setActiveCallRoomId(null);
-            
-            // If student leaves the call, show rating modal
-            if (user.role !== 'MENTOR') {
-              setRatingBooking(selectedBookingForCall);
-            }
-            
-            if (selectedBookingForCall) {
-              setDismissedBookingId(selectedBookingForCall.id);
-            }
-            setSelectedBookingForCall(null);
-          }}
+          onLeaveRoom={handleLeaveRoom}
           bookingId={selectedBookingForCall.id}
           duration={selectedBookingForCall.duration}
           startedAt={selectedBookingForCall.startedAt}
