@@ -96,18 +96,20 @@ public class BookingApiController {
                 if (b.getStatus() == BookingStatus.APPROVED) {
                     LocalDateTime scheduledStart = LocalDateTime.of(b.getBookingDate(), b.getStartTime());
                     
-                    // Case 1: Quá 10 phút kể từ giờ hẹn mà chưa có ai vào phòng (startedAt == null)
-                    if (b.getStartedAt() == null && now.isAfter(scheduledStart.plusMinutes(10))) {
-                        b.setStatus(BookingStatus.CLOSED);
-                        b.setRejectionReason("Tự động đóng do không có người tham gia cuộc gọi sau 10 phút.");
-                        toUpdate.add(b);
+                    // Case 1: Quá 10 phút kể từ giờ hẹn mà chưa có startedAt và cả 2 chưa ai vào
+                    if (now.isAfter(scheduledStart.plusMinutes(10))) {
+                        if (b.getStartedAt() == null && (!b.getStudentJoined() && !b.getMentorJoined())) {
+                            b.setStatus(BookingStatus.CLOSED);
+                            b.setRejectionReason("Tự động đóng do không ai tham gia cuộc gọi sau 10 phút.");
+                            toUpdate.add(b);
 
-                        // Tạo thông báo cho cả 2 bên
-                        createSystemNotification(b.getStudent(), "Lịch hẹn bị đóng", 
-                            "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
-                        createSystemNotification(b.getMentor(), "Lịch hẹn bị đóng", 
-                            "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
-                        continue;
+                            // Tạo thông báo cho cả 2 bên
+                            createSystemNotification(b.getStudent(), "Lịch hẹn bị đóng", 
+                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
+                            createSystemNotification(b.getMentor(), "Lịch hẹn bị đóng", 
+                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
+                            continue;
+                        }
                     }
 
                     // Case 2: Cuộc gọi đã bắt đầu và đã vượt quá thời lượng (startedAt + duration)
