@@ -538,7 +538,7 @@ export default function BookingsPage() {
       // Load schedule slots in background so they are available on the timeline immediately
       try {
         const scheduleData = await fetchAPI('/api/mentor/schedule');
-        setScheduleSlots(scheduleData || []);
+        setScheduleSlots(filterActiveSlots(scheduleData || []));
       } catch (scheduleErr) {
         console.error('Lỗi tải lịch rảnh:', scheduleErr);
       }
@@ -557,13 +557,32 @@ export default function BookingsPage() {
     }
   };
 
+  const filterActiveSlots = (slots: ScheduleSlot[]) => {
+    const now = new Date();
+    return (slots || []).filter(slot => {
+      if (slot.specificDate) {
+        const [eh, em] = (slot.endTime || '23:59').split(':').map(Number);
+        const [y, m, d] = slot.specificDate.split('-').map(Number);
+        const endDt = new Date(y, m - 1, d, eh, em, 0);
+        return now.getTime() <= endDt.getTime();
+      }
+      if (slot.expireDate) {
+        const [eh, em] = (slot.endTime || '23:59').split(':').map(Number);
+        const [y, m, d] = slot.expireDate.split('-').map(Number);
+        const endDt = new Date(y, m - 1, d, eh, em, 0);
+        return now.getTime() <= endDt.getTime();
+      }
+      return true;
+    });
+  };
+
   const loadMentorSchedule = async () => {
     setLoadingBookings(true);
     setErrorMsg('');
     try {
       const data = await fetchAPI('/api/mentor/schedule');
       const slots: ScheduleSlot[] = data || [];
-      setScheduleSlots(slots);
+      setScheduleSlots(filterActiveSlots(slots));
       setIsDirty(false);
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi tải cấu hình lịch rảnh');
@@ -1329,10 +1348,10 @@ export default function BookingsPage() {
                       const busyStart = new Date(item.startTime);
                       const busyEnd = new Date(item.endTime);
                       
-                      let startHour = 7;
+                      let startHour = 0;
                       let startMin = 0;
-                      let endHour = 21;
-                      let endMin = 0;
+                      let endHour = 23;
+                      let endMin = 59;
 
                       const localStartDateStr = getLocalDateString(busyStart);
                       if (localStartDateStr === selectedDateStr) {
@@ -1346,10 +1365,10 @@ export default function BookingsPage() {
                         endMin = busyEnd.getMinutes();
                       }
 
-                      if (startHour < 7) { startHour = 7; startMin = 0; }
-                      if (startHour > 21) { startHour = 21; startMin = 0; }
-                      if (endHour < 7) { endHour = 7; endMin = 0; }
-                      if (endHour > 21) { endHour = 21; endMin = 0; }
+                      if (startHour < 0) { startHour = 0; startMin = 0; }
+                      if (startHour > 23) { startHour = 23; startMin = 0; }
+                      if (endHour < 0) { endHour = 0; endMin = 0; }
+                      if (endHour > 23) { endHour = 23; endMin = 59; }
 
                       const startTimeStr = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
                       const endTimeStr = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
@@ -1366,12 +1385,12 @@ export default function BookingsPage() {
                     });
                   })();
                   
-                  const hours = Array.from({ length: 15 }, (_, i) => i + 7); // 7 to 21
+                  const hours = Array.from({ length: 24 }, (_, i) => i); // 0 to 23
                   
                   const getSlotPosition = (startTimeStr: string, endTimeStr: string) => {
                     const [sh, sm] = startTimeStr.split(':').map(Number);
                     const [eh, em] = endTimeStr.split(':').map(Number);
-                    const startOffsetMinutes = (sh - 7) * 60 + sm;
+                    const startOffsetMinutes = sh * 60 + sm;
                     const durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
                     
                     const pxPerMin = 75 / 60;
@@ -1651,7 +1670,7 @@ export default function BookingsPage() {
                                </div>
                                
                                {hours.map((hr) => {
-                                 const displayHour = hr < 12 ? `${hr}:00 AM` : hr === 12 ? '12:00 PM' : `${hr - 12}:00 PM`;
+                                 const displayHour = hr === 0 ? '12:00 AM' : hr < 12 ? `${hr}:00 AM` : hr === 12 ? '12:00 PM' : `${hr - 12}:00 PM`;
                                  return (
                                    <div key={hr} className="gcal-timeline-row">
                                     <div className="gcal-timeline-hour">{displayHour}</div>

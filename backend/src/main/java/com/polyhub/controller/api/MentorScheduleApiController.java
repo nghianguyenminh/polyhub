@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -23,7 +24,36 @@ public class MentorScheduleApiController {
     @Autowired
     private MentorScheduleRepository mentorScheduleRepository;
 
+    private void cleanExpiredSchedules(String username) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            List<MentorSchedule> schedules = mentorScheduleRepository.findByMentorUsername(username);
+            List<MentorSchedule> toDelete = new ArrayList<>();
+
+            for (MentorSchedule s : schedules) {
+                if (s.getSpecificDate() != null) {
+                    LocalDateTime endDt = LocalDateTime.of(s.getSpecificDate(), s.getEndTime());
+                    if (now.isAfter(endDt)) {
+                        toDelete.add(s);
+                    }
+                } else if (s.getExpireDate() != null) {
+                    LocalDateTime endDt = LocalDateTime.of(s.getExpireDate(), s.getEndTime());
+                    if (now.isAfter(endDt)) {
+                        toDelete.add(s);
+                    }
+                }
+            }
+
+            if (!toDelete.isEmpty()) {
+                mentorScheduleRepository.deleteAll(toDelete);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi dọn dẹp lịch rảnh hết hạn: " + e.getMessage());
+        }
+    }
+
     @GetMapping
+    @Transactional
     public ResponseEntity<?> getSchedule(Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Chưa đăng nhập"));
@@ -33,6 +63,8 @@ public class MentorScheduleApiController {
         if (user == null || user.getRole() == null || !"MENTOR".equalsIgnoreCase(user.getRole().getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Chỉ Mentor mới có quyền truy cập"));
         }
+
+        cleanExpiredSchedules(user.getUsername());
 
         List<MentorSchedule> schedules = mentorScheduleRepository.findByMentorUsername(user.getUsername());
         return ResponseEntity.ok(schedules);

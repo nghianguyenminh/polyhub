@@ -647,7 +647,36 @@ public class BookingApiController {
         return ResponseEntity.ok(result);
     }
 
+    private void cleanExpiredSchedules(String username) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            List<MentorSchedule> schedules = mentorScheduleRepository.findByMentorUsername(username);
+            List<MentorSchedule> toDelete = new ArrayList<>();
+
+            for (MentorSchedule s : schedules) {
+                if (s.getSpecificDate() != null) {
+                    LocalDateTime endDt = LocalDateTime.of(s.getSpecificDate(), s.getEndTime());
+                    if (now.isAfter(endDt)) {
+                        toDelete.add(s);
+                    }
+                } else if (s.getExpireDate() != null) {
+                    LocalDateTime endDt = LocalDateTime.of(s.getExpireDate(), s.getEndTime());
+                    if (now.isAfter(endDt)) {
+                        toDelete.add(s);
+                    }
+                }
+            }
+
+            if (!toDelete.isEmpty()) {
+                mentorScheduleRepository.deleteAll(toDelete);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi dọn dẹp lịch rảnh hết hạn: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/mentor/{username}/availability")
+    @Transactional
     public ResponseEntity<?> getMentorAvailability(
             @PathVariable("username") String username,
             Principal principal) {
@@ -656,6 +685,8 @@ public class BookingApiController {
         if (mentor == null || mentor.getRole() == null || !"MENTOR".equalsIgnoreCase(mentor.getRole().getId())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Không tìm thấy Mentor hoặc người dùng không phải Mentor"));
         }
+
+        cleanExpiredSchedules(username);
 
         List<MentorSchedule> schedules = mentorScheduleRepository.findByMentorUsername(username);
 
