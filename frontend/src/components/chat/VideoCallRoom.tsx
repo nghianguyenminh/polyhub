@@ -96,43 +96,51 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     if (!bookingId) return;
     try {
       const data = await fetchAPI(`/api/bookings/${bookingId}/remaining-time`);
-      if (data.status !== 'APPROVED') { handleAutoClose(); return; }
+      if (data.status && data.status !== 'APPROVED') { handleAutoClose(); return; }
       setExtCount(data.extensionCount ?? 0);
       setMaxExt(data.maxExtensions ?? 3);
       setExtMinutes(data.extendedMinutes ?? 0);
       setCanExtend(data.canExtend ?? true);
-      if (data.remainingSeconds > timeLeftRef.current + 30) {
-        timeLeftRef.current = data.remainingSeconds;
-        setTimeLeft(data.remainingSeconds);
-        setModalShownOnce(false);
-        setShowExtModal(false);
+      if (typeof data.remainingSeconds === 'number') {
+        if (data.remainingSeconds > timeLeftRef.current + 10 || timeLeftRef.current === 0) {
+          timeLeftRef.current = data.remainingSeconds;
+          setTimeLeft(data.remainingSeconds);
+          setModalShownOnce(false);
+          setShowExtModal(false);
+        }
       }
     } catch (_) { }
   }, [bookingId, handleAutoClose]);
 
   useEffect(() => {
-    if (!startedAt || !duration || !bookingId) return;
+    if (!bookingId) return;
+    fetchRemaining();
     const tick = setInterval(() => {
       const newVal = Math.max(0, timeLeftRef.current - 1);
       timeLeftRef.current = newVal;
       setTimeLeft(newVal);
-      if (newVal <= 0) { clearInterval(tick); handleAutoClose(); }
+      if (newVal <= 0 && timeLeftRef.current <= 0) { 
+        clearInterval(tick); 
+        handleAutoClose(); 
+      }
     }, 1000);
     const poll = setInterval(fetchRemaining, POLL_INTERVAL_MS);
     return () => { clearInterval(tick); clearInterval(poll); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startedAt, duration, bookingId]);
+  }, [bookingId]);
 
   // Chỉ hiển thị popup gia hạn & phát âm thanh khi người dùng đã THẬT SỰ JOIN vào phòng cuộc gọi
   useEffect(() => {
-    if (isInRoom && timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0 && !modalShownOnce) {
+    // Với cuộc gọi thường (>= 3 phút): cảnh báo trước 2 phút (120s). Với cuộc gọi ngắn (< 3 phút): cảnh báo trước 1 phút (60s)
+    const thresholdSec = (duration && duration >= 3) ? 120 : 60;
+    if (isInRoom && timeLeft <= thresholdSec && timeLeft > 0 && !modalShownOnce) {
       setModalShownOnce(true);
       setShowExtModal(true);
       fetchExtendLimit(); // Quét và lấy giới hạn gia hạn thời gian thực
       playBeep(494, 0.5);
     }
     if (isInRoom && timeLeft === 60) playBeep(587, 0.6);
-  }, [isInRoom, timeLeft, modalShownOnce, fetchExtendLimit]);
+  }, [isInRoom, timeLeft, modalShownOnce, fetchExtendLimit, duration]);
 
   // Fast poll (3s) khi popup đang hiển thị — detect gia hạn từ bên kia gần như tức thì
   useEffect(() => {
