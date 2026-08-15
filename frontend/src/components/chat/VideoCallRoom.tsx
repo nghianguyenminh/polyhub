@@ -47,12 +47,10 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
   const zpRef = useRef<any>(null);
   const autoClosedRef = useRef(false);
 
-  const [isInRoom, setIsInRoom] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    if (!startedAt || !duration) return duration ? duration * 60 : 300;
+    if (!startedAt || !duration) return 0;
     const end = new Date(startedAt).getTime() + duration * 60_000;
-    const diff = Math.floor((end - Date.now()) / 1000);
-    return diff > 0 ? diff : (duration ? duration * 60 : 300);
+    return Math.max(0, Math.floor((end - Date.now()) / 1000));
   });
   const timeLeftRef = useRef<number>(timeLeft);
 
@@ -79,8 +77,6 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
   const handleAutoClose = useCallback(async () => {
     if (autoClosedRef.current) return;
     autoClosedRef.current = true;
-    setShowExtModal(false);
-    setIsInRoom(false);
     try { zpRef.current?.destroy(); } catch (_) { }
     if (bookingId) {
       try {
@@ -97,51 +93,42 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     if (!bookingId) return;
     try {
       const data = await fetchAPI(`/api/bookings/${bookingId}/remaining-time`);
-      if (data.status && data.status !== 'APPROVED') { handleAutoClose(); return; }
+      if (data.status !== 'APPROVED') { handleAutoClose(); return; }
       setExtCount(data.extensionCount ?? 0);
       setMaxExt(data.maxExtensions ?? 3);
       setExtMinutes(data.extendedMinutes ?? 0);
       setCanExtend(data.canExtend ?? true);
-      if (typeof data.remainingSeconds === 'number') {
-        if (data.remainingSeconds > timeLeftRef.current + 10 || timeLeftRef.current === 0) {
-          timeLeftRef.current = data.remainingSeconds;
-          setTimeLeft(data.remainingSeconds);
-          setModalShownOnce(false);
-          setShowExtModal(false);
-        }
+      if (data.remainingSeconds > timeLeftRef.current + 30) {
+        timeLeftRef.current = data.remainingSeconds;
+        setTimeLeft(data.remainingSeconds);
+        setModalShownOnce(false);
+        setShowExtModal(false);
       }
     } catch (_) { }
   }, [bookingId, handleAutoClose]);
 
   useEffect(() => {
-    if (!bookingId) return;
-    fetchRemaining();
+    if (!startedAt || !duration || !bookingId) return;
     const tick = setInterval(() => {
       const newVal = Math.max(0, timeLeftRef.current - 1);
       timeLeftRef.current = newVal;
       setTimeLeft(newVal);
-      if (newVal <= 0 && timeLeftRef.current <= 0) { 
-        clearInterval(tick); 
-        handleAutoClose(); 
-      }
+      if (newVal <= 0) { clearInterval(tick); handleAutoClose(); }
     }, 1000);
     const poll = setInterval(fetchRemaining, POLL_INTERVAL_MS);
     return () => { clearInterval(tick); clearInterval(poll); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingId]);
+  }, [startedAt, duration, bookingId]);
 
-  // Chỉ hiển thị popup gia hạn & phát âm thanh khi người dùng đã THẬT SỰ JOIN vào phòng cuộc gọi
   useEffect(() => {
-    // Với cuộc gọi thường (>= 3 phút): cảnh báo trước 2 phút (120s). Với cuộc gọi ngắn (< 3 phút): cảnh báo trước 1 phút (60s)
-    const thresholdSec = (duration && duration >= 3) ? 120 : 60;
-    if (isInRoom && timeLeft <= thresholdSec && timeLeft > 0 && !modalShownOnce) {
+    if (timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0 && !modalShownOnce) {
       setModalShownOnce(true);
       setShowExtModal(true);
       fetchExtendLimit(); // Quét và lấy giới hạn gia hạn thời gian thực
       playBeep(494, 0.5);
     }
-    if (isInRoom && timeLeft === 60) playBeep(587, 0.6);
-  }, [isInRoom, timeLeft, modalShownOnce, fetchExtendLimit, duration]);
+    if (timeLeft === 60) playBeep(587, 0.6);
+  }, [timeLeft, modalShownOnce, fetchExtendLimit]);
 
   // Fast poll (3s) khi popup đang hiển thị — detect gia hạn từ bên kia gần như tức thì
   useEffect(() => {
@@ -149,6 +136,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     const fastPoll = setInterval(async () => {
       try {
         const data = await fetchAPI(`/api/bookings/${bookingId}/remaining-time`);
+        // Nếu server trả về nhiều hơn local > 30s → bên kia đã gia hạn → đóng popup
         if (data.remainingSeconds > timeLeftRef.current + 30) {
           timeLeftRef.current = data.remainingSeconds;
           setTimeLeft(data.remainingSeconds);
@@ -157,34 +145,37 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           setExtMinutes(data.extendedMinutes ?? 0);
           setCanExtend(data.canExtend ?? true);
           setModalShownOnce(false);
-          setShowExtModal(false);
+          setShowExtModal(false); // ← Đóng popup ở User B
         }
       } catch (_) { }
     }, 3000);
     return () => clearInterval(fastPoll);
   }, [showExtModal, bookingId]);
 
-  const handleExtend = async (mins: number) => {
+  const handleExtend = async (minutes: number) => {
     if (!bookingId || isExtending) return;
-    setIsExtending(true); setExtMsg(null);
+    setIsExtending(true);
+    setExtMsg(null);
     try {
-      const data = await fetchAPI(`/api/bookings/${bookingId}/extend`, {
+      const res = await fetchAPI(`/api/bookings/${bookingId}/extend`, {
         method: 'POST',
-        body: JSON.stringify({ additionalMinutes: mins }),
+        body: JSON.stringify({ minutes }),
       });
-      timeLeftRef.current = data.remainingSeconds;
-      setTimeLeft(data.remainingSeconds);
-      setExtCount(data.extensionCount);
-      setMaxExt(data.maxExtensions);
-      setExtMinutes(data.extendedMinutes);
-      setCanExtend(data.canExtend);
+      const added = minutes * 60;
+      timeLeftRef.current += added;
+      setTimeLeft(prev => prev + added);
+      setExtCount(res.extensionCount ?? (extCount + 1));
+      setMaxExt(res.maxExtensions ?? maxExt);
+      setExtMinutes(res.extendedMinutes ?? (extMinutes + minutes));
+      setCanExtend(res.canExtend ?? (extCount + 1 < maxExt));
+      setShowExtModal(false);
       setModalShownOnce(false);
-      setExtMsg({ text: `Da gia han them ${mins} phut! Tong: ${data.newDuration} phut.`, ok: true });
-      playBeep(523, 0.3);
-      setTimeout(() => { setShowExtModal(false); setExtMsg(null); }, 1600);
+      setExtMsg({ text: `Đã gia hạn thành công +${minutes} phút!`, ok: true });
     } catch (err: any) {
-      setExtMsg({ text: err.message || 'Gia han that bai. Thu lai!', ok: false });
-    } finally { setIsExtending(false); }
+      setExtMsg({ text: err.message || 'Gia hạn thất bại. Vui lòng thử lại.', ok: false });
+    } finally {
+      setIsExtending(false);
+    }
   };
 
   const handleEndFromModal = () => { setShowExtModal(false); handleAutoClose(); };
@@ -199,9 +190,9 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
         const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
           appID,
           serverSecret,
-          String(roomId),
-          String(user.username),
-          user.fullname || user.username || 'Người dùng PolyHUB'
+          roomId,
+          user.username,
+          user.fullname || user.username
         );
         const zp = ZegoUIKitPrebuilt.create(kitToken);
         zpRef.current = zp;
@@ -209,21 +200,13 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           container: containerRef.current,
           scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
           showScreenSharingButton: true,
-          showPreJoinView: false,
-          showLeavingView: false,
-          turnOnMicrophoneWhenJoining: true,
-          turnOnCameraWhenJoining: true,
-          showMyCameraToggleButton: true,
-          showMyMicrophoneToggleButton: true,
-          showAudioVideoSettingsButton: true,
-          onJoinRoom: () => {
-            setIsInRoom(true);
-          },
+          turnOnMicrophoneWhenJoining: false,
+          turnOnCameraWhenJoining: false,
+          showPreJoinView: true,
           onLeaveRoom: () => {
             if (autoClosedRef.current) return;
             joinedRef.current = false;
-            setIsInRoom(false);
-            setTimeout(() => onLeaveRoom(), 300);
+            setTimeout(() => onLeaveRoom(), 500);
           },
         });
       } catch (err) {
@@ -233,13 +216,8 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       }
     };
     initZego();
-    return () => { 
-      try { zpRef.current?.destroy(); } catch (_) { } 
-      joinedRef.current = false; 
-      setIsInRoom(false);
-      setShowExtModal(false);
-    };
-  }, [roomId, user.username, user.fullname]);
+    return () => { try { zpRef.current?.destroy(); } catch (_) { } joinedRef.current = false; };
+  }, [roomId, user.username, user.fullname, onLeaveRoom]);
 
   const isWarning = timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0;
   const isCritical = timeLeft <= 60 && timeLeft > 0;
@@ -268,7 +246,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           animation: isCritical ? 'pulse-r 1s infinite' : isWarning ? 'warnPulse 1.4s infinite' : 'none',
         }}>
           <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', backgroundColor: isCritical ? '#dc3545' : isWarning ? '#F27125' : '#10b981', animation: 'blink 1s infinite' }} />
-          <span>Thoi gian con lai: {fmtTime(timeLeft)}</span>
+          <span>Thời gian còn lại: {fmtTime(timeLeft)}</span>
           {extCount > 0 && <span style={{ background: '#F27125', color: '#fff', borderRadius: 10, padding: '2px 8px', fontSize: 11, fontWeight: 700, marginLeft: 4 }}>+{extMinutes}ph</span>}
         </div>
       )}
@@ -281,17 +259,17 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <div style={{ width: 64, height: 64, borderRadius: 32, margin: '0 auto 16px', background: 'rgba(255,152,0,0.12)', border: '1.5px solid rgba(255,152,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-                &#9200;
+                ⏰
               </div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Sap het thoi gian!</div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Sắp hết thời gian!</div>
               <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15 }}>
-                Con <span style={{ color: '#FF9800', fontWeight: 700 }}>{fmtTime(timeLeft)}</span> trong cuoc goi nay
+                Còn <span style={{ color: '#FF9800', fontWeight: 700 }}>{fmtTime(timeLeft)}</span> trong cuộc gọi này
               </div>
             </div>
 
             {/* Ext count */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 10, color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
-              Da gia han {extCount}/{maxExt} lan
+              Đã gia hạn {extCount}/{maxExt} lần
             </div>
 
             {/* Feedback */}
@@ -306,24 +284,24 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
             {/* Extend buttons or limit msg */}
             {canExtend && allowedOptions.length > 0 ? (
               <>
-                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, marginBottom: 14 }}>Chon thoi gian gia han:</div>
+                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, marginBottom: 14 }}>Chọn thời gian gia hạn:</div>
                 <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto', paddingBottom: 10 }}>
                   {allowedOptions.map(mins => (
                     <button key={mins} onClick={() => handleExtend(mins)} disabled={isExtending}
                       style={{ minWidth: 80, flexShrink: 0, background: 'rgba(255,152,0,0.1)', border: '1.5px solid rgba(255,152,0,0.4)', borderRadius: 16, padding: '18px 0', cursor: isExtending ? 'not-allowed' : 'pointer', opacity: isExtending ? 0.5 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
                       onMouseEnter={e => { if (!isExtending) e.currentTarget.style.background = 'rgba(255,152,0,0.22)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,152,0,0.1)'; }}>
-                      <span style={{ fontSize: 18 }}>&#43;</span>
+                      <span style={{ fontSize: 18 }}>+</span>
                       <span style={{ color: '#fff', fontWeight: 700, fontSize: 22 }}>+{mins}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>phut</span>
+                      <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>phút</span>
                     </button>
                   ))}
                 </div>
               </>
             ) : (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.22)', borderRadius: 12, padding: 14, marginBottom: 18 }}>
-                <span>&#9888;&#65039;</span>
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.6 }}>Da dat gioi han gia han ({maxExt} lan).<br />Cuoc goi se tu dong ket thuc khi het gio.</span>
+                <span>⚠️</span>
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.6 }}>Đã đạt giới hạn gia hạn ({maxExt} lần).<br />Cuộc gọi sẽ tự động kết thúc khi hết giờ.</span>
               </div>
             )}
 
@@ -332,20 +310,20 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
               style={{ width: '100%', padding: '15px 0', background: '#B71C1C', border: 'none', borderRadius: 14, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}
               onMouseEnter={e => { e.currentTarget.style.background = '#C62828'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#B71C1C'; }}>
-              &#128244; Ket thuc cuoc goi
+              📞 Kết thúc cuộc gọi
             </button>
 
             {/* Dismiss */}
             {canExtend && (
               <button onClick={() => setShowExtModal(false)} style={{ width: '100%', padding: '10px 0', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer' }}>
-                Dong canh bao &amp; tiep tuc goi
+                Đóng cảnh báo & tiếp tục gọi
               </button>
             )}
           </div>
         </div>
       )}
 
-      <div ref={containerRef} style={{ width: '100vw', height: '100vh', position: 'relative' }} />
+      <div ref={containerRef} style={{ flex: 1, width: '100%' }} />
     </div>
   );
 }
