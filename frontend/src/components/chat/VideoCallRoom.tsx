@@ -209,9 +209,13 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           container: containerRef.current,
           scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
           showScreenSharingButton: true,
-          turnOnMicrophoneWhenJoining: false,
-          turnOnCameraWhenJoining: false,
-          showPreJoinView: true,
+          showPreJoinView: false,
+          showLeavingView: false,
+          turnOnMicrophoneWhenJoining: true,
+          turnOnCameraWhenJoining: true,
+          showMyCameraToggleButton: true,
+          showMyMicrophoneToggleButton: true,
+          showAudioVideoSettingsButton: true,
           onJoinRoom: () => {
             setIsInRoom(true);
           },
@@ -219,7 +223,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
             if (autoClosedRef.current) return;
             joinedRef.current = false;
             setIsInRoom(false);
-            setTimeout(() => onLeaveRoom(), 500);
+            setTimeout(() => onLeaveRoom(), 300);
           },
         });
       } catch (err) {
@@ -341,7 +345,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
         </div>
       )}
 
-      <div ref={containerRef} style={{ flex: 1, width: '100%' }} />
+      <div ref={containerRef} style={{ width: '100vw', height: '100vh', position: 'relative' }} />
     </div>
   );
 }
