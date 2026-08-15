@@ -536,6 +536,10 @@ public class BookingApiController {
             booking.setMentorJoined(true);
         }
 
+        if (booking.getRoomId() == null || booking.getRoomId().trim().isEmpty()) {
+            booking.setRoomId("booking_" + booking.getId());
+        }
+
         if (booking.getStartedAt() == null) {
             booking.setStartedAt(LocalDateTime.now());
         }

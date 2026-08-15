@@ -187,12 +187,16 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       try {
         const appID = 1435055187;
         const serverSecret = 'b4651fdf344e4930bff5005595c6c0a4';
+        const cleanRoomId = String(roomId || `booking_${bookingId || '1'}`).trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+        const cleanUserId = String(user?.username || 'user').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+        const cleanUserName = user?.fullname || user?.username || 'User';
+
         const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
           appID,
           serverSecret,
-          roomId,
-          user.username,
-          user.fullname || user.username
+          cleanRoomId,
+          cleanUserId,
+          cleanUserName
         );
         const zp = ZegoUIKitPrebuilt.create(kitToken);
         zpRef.current = zp;
