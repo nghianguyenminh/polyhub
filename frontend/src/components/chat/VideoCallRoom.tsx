@@ -185,6 +185,16 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     joinedRef.current = true;
     const initZego = async () => {
       try {
+        try {
+          if ((ZegoUIKitPrebuilt as any).core) {
+            (ZegoUIKitPrebuilt as any).core = undefined;
+          }
+          if (zpRef.current) {
+            zpRef.current.destroy();
+            zpRef.current = null;
+          }
+        } catch (_) {}
+
         const appID = 1435055187;
         const serverSecret = 'b4651fdf344e4930bff5005595c6c0a4';
         const cleanRoomId = String(roomId || `booking_${bookingId || '1'}`).trim().replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -204,23 +214,28 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           container: containerRef.current,
           scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
           showScreenSharingButton: true,
-          turnOnMicrophoneWhenJoining: false,
-          turnOnCameraWhenJoining: false,
           showPreJoinView: true,
           onLeaveRoom: () => {
             if (autoClosedRef.current) return;
             joinedRef.current = false;
-            setTimeout(() => onLeaveRoom(), 500);
+            try { zp.destroy(); } catch (_) {}
+            try { if ((ZegoUIKitPrebuilt as any).core) { (ZegoUIKitPrebuilt as any).core = undefined; } } catch (_) {}
+            setTimeout(() => onLeaveRoom(), 300);
           },
         });
       } catch (err) {
         console.error('Loi khoi tao ZegoCloud:', err);
         joinedRef.current = false;
         try { zpRef.current?.destroy(); } catch (_) { }
+        try { if ((ZegoUIKitPrebuilt as any).core) { (ZegoUIKitPrebuilt as any).core = undefined; } } catch (_) {}
       }
     };
     initZego();
-    return () => { try { zpRef.current?.destroy(); } catch (_) { } joinedRef.current = false; };
+    return () => { 
+      try { zpRef.current?.destroy(); } catch (_) { } 
+      try { if ((ZegoUIKitPrebuilt as any).core) { (ZegoUIKitPrebuilt as any).core = undefined; } } catch (_) {}
+      joinedRef.current = false; 
+    };
   }, [roomId, user.username, user.fullname, onLeaveRoom]);
 
   const isWarning = timeLeft <= WARNING_THRESHOLD_SEC && timeLeft > 0;
