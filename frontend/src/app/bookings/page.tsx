@@ -708,8 +708,7 @@ export default function BookingsPage() {
   const handleJoinCall = async (booking: Booking) => {
     try {
       const updatedBooking = await fetchAPI(`/api/bookings/${booking.id}/join`, { method: 'POST' });
-      setSelectedBookingForCall(updatedBooking);
-      setActiveCallRoomId(updatedBooking.roomId || `booking_${updatedBooking.id}`);
+      window.dispatchEvent(new CustomEvent('open-video-call', { detail: updatedBooking }));
     } catch (err: any) {
       toast.showError(err.message || 'Không thể tham gia cuộc gọi vào lúc này.');
     }
@@ -2486,24 +2485,7 @@ export default function BookingsPage() {
 
 
       
-      {/* Video Call Room trực tiếp */}
-      {activeCallRoomId && user && selectedBookingForCall && (
-        <VideoCallRoom
-          roomId={activeCallRoomId}
-          user={{ username: user.username, fullname: user.fullname }}
-          onLeaveRoom={() => {
-            setActiveCallRoomId(null);
-            if (activeTab === 'student') {
-              setRatingBooking(selectedBookingForCall);
-            }
-            setSelectedBookingForCall(null);
-            activeTab === 'student' ? loadStudentBookings() : loadMentorBookings();
-          }}
-          bookingId={selectedBookingForCall.id}
-          duration={selectedBookingForCall.duration}
-          startedAt={selectedBookingForCall.startedAt || new Date().toISOString()}
-        />
-      )}
+
 
       {ratingBooking && (
         <RatingModal
