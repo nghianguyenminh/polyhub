@@ -196,12 +196,13 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       try {
         const appID = 1435055187;
         const serverSecret = 'b4651fdf344e4930bff5005595c6c0a4';
-        const sessionSuffix = Math.floor(1000 + Math.random() * 9000);
-        const cleanUserId = `${String(user.username || 'user').replace(/[^a-zA-Z0-9_]/g, '_')}_${sessionSuffix}`;
-        const cleanRoomId = String(roomId || 'room_default').replace(/[^a-zA-Z0-9_]/g, '_');
-        const userName = user.fullname || user.username || 'Nguoi dung';
-
-        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, cleanRoomId, cleanUserId, userName);
+        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+          appID,
+          serverSecret,
+          String(roomId),
+          String(user.username),
+          user.fullname || user.username || 'Người dùng PolyHUB'
+        );
         const zp = ZegoUIKitPrebuilt.create(kitToken);
         zpRef.current = zp;
         zp.joinRoom({
