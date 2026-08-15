@@ -89,10 +89,10 @@ public class BookingApiController {
     private void checkAndCloseExpiredBookings() {
         try {
             LocalDateTime now = LocalDateTime.now();
-            List<Booking> approvedBookings = bookingRepository.findAll(); // Lấy tất cả để quét (quy mô nhỏ)
+            List<Booking> activeBookings = bookingRepository.findByStatusIn(List.of(BookingStatus.APPROVED, BookingStatus.PENDING));
             
             List<Booking> toUpdate = new ArrayList<>();
-            for (Booking b : approvedBookings) {
+            for (Booking b : activeBookings) {
                 if (b.getStatus() == BookingStatus.APPROVED) {
                     LocalDateTime scheduledStart = LocalDateTime.of(b.getBookingDate(), b.getStartTime());
                     

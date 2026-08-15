@@ -509,6 +509,35 @@ export default function BookingsPage() {
     }
   }, [activeTab, user]);
 
+  // Tự động đồng bộ danh sách đặt lịch ngầm mỗi 3 giây (Real-time update)
+  useEffect(() => {
+    if (!user) return;
+    const pollBookings = async () => {
+      try {
+        if (activeTab === 'student') {
+          const data = await fetchAPI('/api/bookings/student');
+          if (Array.isArray(data)) {
+            const sorted = data.sort((a: Booking, b: Booking) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            setBookings(sorted);
+          }
+        } else if (activeTab === 'mentor-bookings') {
+          const data = await fetchAPI('/api/bookings/mentor');
+          if (Array.isArray(data)) {
+            const sorted = data.sort((a: Booking, b: Booking) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            setBookings(sorted);
+          }
+        }
+      } catch (_) {}
+    };
+
+    const interval = setInterval(pollBookings, 3000);
+    return () => clearInterval(interval);
+  }, [user, activeTab]);
+
   const loadStudentBookings = async () => {
     setLoadingBookings(true);
     setErrorMsg('');

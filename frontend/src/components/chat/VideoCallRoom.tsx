@@ -49,9 +49,10 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
 
   const [isInRoom, setIsInRoom] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    if (!startedAt || !duration) return 0;
+    if (!startedAt || !duration) return duration ? duration * 60 : 300;
     const end = new Date(startedAt).getTime() + duration * 60_000;
-    return Math.max(0, Math.floor((end - Date.now()) / 1000));
+    const diff = Math.floor((end - Date.now()) / 1000);
+    return diff > 0 ? diff : (duration ? duration * 60 : 300);
   });
   const timeLeftRef = useRef<number>(timeLeft);
 
@@ -209,7 +210,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           showScreenSharingButton: true,
           turnOnMicrophoneWhenJoining: false,
           turnOnCameraWhenJoining: false,
-          showPreJoinView: false,
+          showPreJoinView: true,
           onJoinRoom: () => {
             setIsInRoom(true);
           },

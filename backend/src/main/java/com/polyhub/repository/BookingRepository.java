@@ -13,6 +13,7 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByStudentUsernameOrderByBookingDateDescStartTimeDesc(String username);
     List<Booking> findByMentorUsernameOrderByBookingDateDescStartTimeDesc(String username);
+    List<Booking> findByStatusIn(List<BookingStatus> statuses);
 
     @Query("SELECT b FROM Booking b WHERE b.mentor.username = :mentorUsername " +
            "AND b.bookingDate = :date AND b.status IN :statuses")

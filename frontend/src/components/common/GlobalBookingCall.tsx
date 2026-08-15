@@ -52,9 +52,12 @@ export default function GlobalBookingCall() {
     const handleCustomCallEvent = (e: any) => {
       const booking = e.detail;
       if (booking) {
+        const roomId = booking.roomId || `booking_${booking.id}`;
         callStartTimeRef.current = Date.now();
+        activeCallRoomIdRef.current = roomId;
+        selectedBookingForCallRef.current = booking;
         setSelectedBookingForCall(booking);
-        setActiveCallRoomId(booking.roomId || `booking_${booking.id}`);
+        setActiveCallRoomId(roomId);
         setUpcomingBooking(null);
       }
     };
@@ -129,9 +132,12 @@ export default function GlobalBookingCall() {
     if (!upcomingBooking) return;
     try {
       const updatedBooking = await fetchAPI(`/api/bookings/${upcomingBooking.id}/join`, { method: 'POST' });
+      const roomId = updatedBooking.roomId || `booking_${updatedBooking.id}`;
       callStartTimeRef.current = Date.now();
+      activeCallRoomIdRef.current = roomId;
+      selectedBookingForCallRef.current = updatedBooking;
       setSelectedBookingForCall(updatedBooking);
-      setActiveCallRoomId(updatedBooking.roomId || `booking_${updatedBooking.id}`);
+      setActiveCallRoomId(roomId);
       setUpcomingBooking(null);
     } catch (err: any) {
       showError(err.message || 'Không thể tham gia cuộc gọi vào lúc này.');
