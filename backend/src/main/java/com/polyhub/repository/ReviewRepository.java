@@ -25,4 +25,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     // Kiểm tra xem 1 booking đã được review chưa
     boolean existsByBookingId(Long bookingId);
+
+    // Lấy review theo bookingId
+    Optional<Review> findByBookingId(Long bookingId);
 }

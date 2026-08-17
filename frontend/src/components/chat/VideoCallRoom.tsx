@@ -84,6 +84,8 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           method: 'PUT',
           body: JSON.stringify({ status: 'CLOSED', reason: 'Cuộc gọi tự động kết thúc do hết thời lượng' }),
         });
+        window.dispatchEvent(new CustomEvent('refresh-coins'));
+        window.dispatchEvent(new CustomEvent('refresh-user'));
       } catch (_) { }
     }
     onLeaveRoom();
@@ -185,21 +187,11 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     joinedRef.current = true;
     const initZego = async () => {
       try {
-        try {
-          if ((ZegoUIKitPrebuilt as any).core) {
-            (ZegoUIKitPrebuilt as any).core = undefined;
-          }
-          if (zpRef.current) {
-            zpRef.current.destroy();
-            zpRef.current = null;
-          }
-        } catch (_) {}
-
-        const appID = 1435055187;
-        const serverSecret = 'b4651fdf344e4930bff5005595c6c0a4';
+        const appID = 905044708;
+        const serverSecret = '3bdf8aafea76e67ccb4c669d005c0835';
         const cleanRoomId = String(roomId || `booking_${bookingId || '1'}`).trim().replace(/[^a-zA-Z0-9_-]/g, '_');
         const cleanUserId = String(user?.username || 'user').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-        const cleanUserName = user?.fullname || user?.username || 'User';
+        const cleanUserName = user?.fullname || user?.username || 'Nguoi dung';
 
         const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
           appID,
@@ -214,27 +206,25 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           container: containerRef.current,
           scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
           showScreenSharingButton: true,
+          turnOnMicrophoneWhenJoining: false,
+          turnOnCameraWhenJoining: false,
           showPreJoinView: true,
           onLeaveRoom: () => {
             if (autoClosedRef.current) return;
             joinedRef.current = false;
-            try { zp.destroy(); } catch (_) {}
-            try { if ((ZegoUIKitPrebuilt as any).core) { (ZegoUIKitPrebuilt as any).core = undefined; } } catch (_) {}
-            setTimeout(() => onLeaveRoom(), 300);
+            setTimeout(() => onLeaveRoom(), 500);
           },
         });
       } catch (err) {
         console.error('Loi khoi tao ZegoCloud:', err);
         joinedRef.current = false;
         try { zpRef.current?.destroy(); } catch (_) { }
-        try { if ((ZegoUIKitPrebuilt as any).core) { (ZegoUIKitPrebuilt as any).core = undefined; } } catch (_) {}
       }
     };
     initZego();
-    return () => { 
-      try { zpRef.current?.destroy(); } catch (_) { } 
-      try { if ((ZegoUIKitPrebuilt as any).core) { (ZegoUIKitPrebuilt as any).core = undefined; } } catch (_) {}
-      joinedRef.current = false; 
+    return () => {
+      try { zpRef.current?.destroy(); } catch (_) { }
+      joinedRef.current = false;
     };
   }, [roomId, user.username, user.fullname, onLeaveRoom]);
 

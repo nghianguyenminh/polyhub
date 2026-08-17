@@ -103,11 +103,11 @@ public class BookingApiController {
                             b.setRejectionReason("Tự động đóng do không ai tham gia cuộc gọi sau 10 phút.");
                             toUpdate.add(b);
 
-                            // Tạo thông báo cho cả 2 bên
+                            // Tạo thông báo cho cả 2 bên (không trừ xu do cuộc gọi không diễn ra)
                             createSystemNotification(b.getStudent(), "Lịch hẹn bị đóng", 
-                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
+                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không ai tham gia.");
                             createSystemNotification(b.getMentor(), "Lịch hẹn bị đóng", 
-                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không tham gia.");
+                                "Lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " đã bị đóng do quá hạn 10 phút không ai tham gia.");
                             continue;
                         }
                     }
@@ -118,11 +118,48 @@ public class BookingApiController {
                         if (now.isAfter(scheduledEnd)) {
                             b.setStatus(BookingStatus.CLOSED);
                             toUpdate.add(b);
+
+                            // QUY TRÌNH TRỪ TIỀN SV VÀ CHUYỂN XU CHO MENTOR KHI HOÀN THÀNH CUỘC GỌI
+                            try {
+                                int coinsAmount = b.getCoinsSpent() != null ? b.getCoinsSpent() : 10;
+
+                                // 1. Trừ xu Sinh viên
+                                User studentToCharge = b.getStudent();
+                                if (studentToCharge != null) {
+                                    int currentStudentCoins = studentToCharge.getCoins() != null ? studentToCharge.getCoins() : 100;
+                                    studentToCharge.setCoins(Math.max(0, currentStudentCoins - coinsAmount));
+                                    userRepository.save(studentToCharge);
+
+                                    CoinTransaction spendTx = new CoinTransaction();
+                                    spendTx.setUser(studentToCharge);
+                                    spendTx.setAmount(-coinsAmount);
+                                    spendTx.setType("SPENT");
+                                    spendTx.setDescription("Thanh toán " + coinsAmount + " xu cho buổi tư vấn với Mentor " + b.getMentor().getFullname() + " ngày " + b.getBookingDate());
+                                    coinTransactionRepository.save(spendTx);
+                                }
+
+                                // 2. Chuyển xu cho Mentor
+                                User mentorToReward = b.getMentor();
+                                if (mentorToReward != null) {
+                                    int currentMentorCoins = mentorToReward.getCoins() != null ? mentorToReward.getCoins() : 100;
+                                    mentorToReward.setCoins(currentMentorCoins + coinsAmount);
+                                    userRepository.save(mentorToReward);
+
+                                    CoinTransaction earnTx = new CoinTransaction();
+                                    earnTx.setUser(mentorToReward);
+                                    earnTx.setAmount(coinsAmount);
+                                    earnTx.setType("EARNING");
+                                    earnTx.setDescription("Nhận " + coinsAmount + " xu từ buổi tư vấn với sinh viên " + b.getStudent().getFullname() + " ngày " + b.getBookingDate());
+                                    coinTransactionRepository.save(earnTx);
+                                }
+                            } catch (Exception ex) {
+                                System.err.println("Lỗi xử lý thanh toán xu Case 2: " + ex.getMessage());
+                            }
                             
                             createSystemNotification(b.getStudent(), "Cuộc gọi kết thúc", 
-                                "Cuộc gọi với Mentor " + b.getMentor().getFullname() + " đã kết thúc do hết thời lượng.");
+                                "Cuộc gọi với Mentor " + b.getMentor().getFullname() + " đã kết thúc do hết thời lượng. Bạn đã thanh toán " + (b.getCoinsSpent() != null ? b.getCoinsSpent() : 10) + " xu.");
                             createSystemNotification(b.getMentor(), "Cuộc gọi kết thúc", 
-                                "Cuộc gọi với sinh viên " + b.getStudent().getFullname() + " đã kết thúc do hết thời lượng.");
+                                "Cuộc gọi với sinh viên " + b.getStudent().getFullname() + " đã kết thúc do hết thời lượng. Bạn nhận được +" + (b.getCoinsSpent() != null ? b.getCoinsSpent() : 10) + " xu.");
                         }
                     }
                 }
@@ -256,24 +293,12 @@ public class BookingApiController {
                 }
             }
 
-            // Kiểm tra số dư xu của Sinh viên (Xử lý an toàn tránh NullPointerException)
+            // Kiểm tra số dư xu của Sinh viên (chỉ kiểm tra điều kiện đủ xu, chưa trừ xu lúc đặt lịch)
             int coinsRequired = 10;
             int studentCoins = student.getCoins() != null ? student.getCoins() : 100;
             if (studentCoins < coinsRequired) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Bạn không đủ xu để đặt lịch (Cần " + coinsRequired + " xu, số xu hiện có của bạn: " + studentCoins + " xu)"));
+                return ResponseEntity.badRequest().body(Map.of("error", "Bạn không đủ xu để đặt lịch (Cần tối thiểu " + coinsRequired + " xu trong tài khoản)"));
             }
-
-            // Trừ 10 xu của Sinh viên khi tạo lịch hẹn
-            student.setCoins(studentCoins - coinsRequired);
-            userRepository.save(student);
-
-            // Ghi nhật ký giao dịch xu
-            CoinTransaction tx = new CoinTransaction();
-            tx.setUser(student);
-            tx.setAmount(-coinsRequired);
-            tx.setType("SPENT");
-            tx.setDescription("Trừ " + coinsRequired + " xu cho lịch hẹn với Mentor " + mentor.getFullname() + " ngày " + bookingDate + " lúc " + startTime);
-            coinTransactionRepository.save(tx);
 
             Booking booking = new Booking();
             booking.setStudent(student);
@@ -381,13 +406,50 @@ public class BookingApiController {
                 booking.setRejectionReason(reason != null ? reason : "Cuộc gọi video đã được kết thúc do hết thời gian hoặc do người dùng rời phòng.");
                 bookingRepository.save(booking);
 
+                // QUY TRÌNH TRỪ TIỀN SV VÀ CHUYỂN XU CHO MENTOR KHI KẾT THÚC CUỘC GỌI
+                try {
+                    int coinsAmount = booking.getCoinsSpent() != null ? booking.getCoinsSpent() : 10;
+
+                    // 1. Trừ xu của Sinh viên
+                    User studentToCharge = booking.getStudent();
+                    if (studentToCharge != null) {
+                        int currentStudentCoins = studentToCharge.getCoins() != null ? studentToCharge.getCoins() : 100;
+                        studentToCharge.setCoins(Math.max(0, currentStudentCoins - coinsAmount));
+                        userRepository.save(studentToCharge);
+
+                        CoinTransaction spendTx = new CoinTransaction();
+                        spendTx.setUser(studentToCharge);
+                        spendTx.setAmount(-coinsAmount);
+                        spendTx.setType("SPENT");
+                        spendTx.setDescription("Thanh toán " + coinsAmount + " xu cho buổi tư vấn với Mentor " + booking.getMentor().getFullname() + " ngày " + booking.getBookingDate());
+                        coinTransactionRepository.save(spendTx);
+                    }
+
+                    // 2. Chuyển xu cho Mentor
+                    User mentorToReward = booking.getMentor();
+                    if (mentorToReward != null) {
+                        int currentMentorCoins = mentorToReward.getCoins() != null ? mentorToReward.getCoins() : 100;
+                        mentorToReward.setCoins(currentMentorCoins + coinsAmount);
+                        userRepository.save(mentorToReward);
+
+                        CoinTransaction earnTx = new CoinTransaction();
+                        earnTx.setUser(mentorToReward);
+                        earnTx.setAmount(coinsAmount);
+                        earnTx.setType("EARNING");
+                        earnTx.setDescription("Nhận " + coinsAmount + " xu từ buổi tư vấn với sinh viên " + booking.getStudent().getFullname() + " ngày " + booking.getBookingDate());
+                        coinTransactionRepository.save(earnTx);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Lỗi xử lý thanh toán xu khi kết thúc call: " + ex.getMessage());
+                }
+
                 // Tạo thông báo cho bên đối phương
                 if (currentUser.equalsIgnoreCase(booking.getStudent().getUsername())) {
                     createSystemNotification(booking.getMentor(), "Cuộc gọi kết thúc", 
-                        "Sinh viên " + booking.getStudent().getFullname() + " đã kết thúc cuộc gọi.");
+                        "Sinh viên " + booking.getStudent().getFullname() + " đã kết thúc cuộc gọi. Bạn nhận được +" + (booking.getCoinsSpent() != null ? booking.getCoinsSpent() : 10) + " xu.");
                 } else {
                     createSystemNotification(booking.getStudent(), "Cuộc gọi kết thúc", 
-                        "Mentor " + booking.getMentor().getFullname() + " đã kết thúc cuộc gọi.");
+                        "Mentor " + booking.getMentor().getFullname() + " đã kết thúc cuộc gọi. Bạn đã thanh toán " + (booking.getCoinsSpent() != null ? booking.getCoinsSpent() : 10) + " xu.");
                 }
 
                 return ResponseEntity.ok(Map.of("message", "Cuộc gọi đã được kết thúc thành công"));
@@ -442,25 +504,6 @@ public class BookingApiController {
                         bookingPriorityRepository.save(priority);
                     } catch (Exception ex) {
                         System.err.println("Failed to save priority: " + ex.getMessage());
-                    }
-
-                    // Hoàn lại 10 xu cho Sinh viên khi bị từ chối
-                    try {
-                        int refundAmount = booking.getCoinsSpent() != null ? booking.getCoinsSpent() : 10;
-                        User studentToRefund = booking.getStudent();
-                        if (studentToRefund != null) {
-                            studentToRefund.setCoins(studentToRefund.getCoins() + refundAmount);
-                            userRepository.save(studentToRefund);
-
-                            CoinTransaction refundTx = new CoinTransaction();
-                            refundTx.setUser(studentToRefund);
-                            refundTx.setAmount(refundAmount);
-                            refundTx.setType("REFUND");
-                            refundTx.setDescription("Hoàn " + refundAmount + " xu do lịch hẹn ngày " + booking.getBookingDate() + " lúc " + booking.getStartTime() + " bị từ chối.");
-                            coinTransactionRepository.save(refundTx);
-                        }
-                    } catch (Exception ex) {
-                        System.err.println("Lỗi hoàn xu: " + ex.getMessage());
                     }
 
                     // Gửi thông báo email và thông báo hệ thống cho sinh viên
@@ -1142,25 +1185,6 @@ public class BookingApiController {
                 priority.setPriorityOrder(b.getCreatedAt() != null ? b.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() : System.currentTimeMillis());
                 priority.setStatus(PriorityStatus.ACTIVE);
                 bookingPriorityRepository.save(priority);
-
-                // Hoàn lại xu cho sinh viên khi bị hủy do mentor báo bận
-                try {
-                    int refundAmount = b.getCoinsSpent() != null ? b.getCoinsSpent() : 10;
-                    User studentToRefund = b.getStudent();
-                    if (studentToRefund != null) {
-                        studentToRefund.setCoins(studentToRefund.getCoins() + refundAmount);
-                        userRepository.save(studentToRefund);
-
-                        CoinTransaction refundTx = new CoinTransaction();
-                        refundTx.setUser(studentToRefund);
-                        refundTx.setAmount(refundAmount);
-                        refundTx.setType("REFUND");
-                        refundTx.setDescription("Hoàn " + refundAmount + " xu do Mentor báo bận đột xuất hủy lịch hẹn ngày " + b.getBookingDate());
-                        coinTransactionRepository.save(refundTx);
-                    }
-                } catch (Exception ex) {
-                    System.err.println("Lỗi hoàn xu khi báo bận: " + ex.getMessage());
-                }
 
                 createSystemNotification(b.getStudent(), "Lịch hẹn bị hủy đột xuất", 
                     "Mentor " + mentor.getFullname() + " đã hủy lịch hẹn ngày " + b.getBookingDate() + " lúc " + b.getStartTime() + " do bận đột xuất. Bạn được cấp 1 quyền ưu tiên đặt lại lịch bù.");

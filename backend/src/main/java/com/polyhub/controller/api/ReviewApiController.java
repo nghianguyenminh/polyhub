@@ -115,6 +115,15 @@ public class ReviewApiController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/booking/{bookingId}")
+    public ResponseEntity<?> getReviewByBookingId(@PathVariable Long bookingId) {
+        Review review = reviewRepository.findByBookingId(bookingId).orElse(null);
+        if (review == null) {
+            return ResponseEntity.ok(Map.of("hasReview", false));
+        }
+        return ResponseEntity.ok(Map.of("hasReview", true, "review", buildReviewMap(review)));
+    }
+
     private Map<String, Object> buildReviewMap(Review r) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", r.getId());

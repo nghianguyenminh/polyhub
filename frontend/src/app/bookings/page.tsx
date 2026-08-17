@@ -35,6 +35,12 @@ interface Booking {
   studentJoined?: boolean;
   startedAt?: string;
   createdAt: string;
+  review?: {
+    id: number;
+    rating: number;
+    comment?: string;
+    createdAt?: string;
+  };
 }
 
 interface ScheduleSlot {
@@ -508,6 +514,16 @@ export default function BookingsPage() {
       }
     }
   }, [activeTab, user]);
+
+  // Lắng nghe sự kiện refresh-bookings từ GlobalBookingCall khi kết thúc cuộc gọi
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (activeTab === 'student') loadStudentBookings();
+      else if (activeTab === 'mentor-bookings') loadMentorBookings();
+    };
+    window.addEventListener('refresh-bookings', handleRefresh);
+    return () => window.removeEventListener('refresh-bookings', handleRefresh);
+  }, [activeTab]);
 
   // Tự động đồng bộ danh sách đặt lịch ngầm mỗi 3 giây (Real-time update)
   useEffect(() => {
@@ -1198,15 +1214,19 @@ export default function BookingsPage() {
                                           }`} />
                                           {cdt.text}
                                         </div>
-                                      ) : booking.status === 'REJECTED' || booking.status === 'CLOSED' || booking.status === 'CANCELLED' ? (
-                                        <div>
-                                          <div style={{ fontSize: '12px', color: '#dc3545', background: 'rgba(220,53,69,0.08)', padding: '6px 10px', borderRadius: '8px' }}>
-                                            <strong>Lý do: </strong>{booking.rejectionReason || 'Không có'}
-                                          </div>
-                                          {isStudentView && (booking.status === 'REJECTED' || booking.status === 'CANCELLED') && (
-                                            <SuggestedMentorsWidget booking={booking} onSelectMentor={handleRebook} />
-                                          )}
-                                        </div>
+                                       ) : booking.status === 'REJECTED' || booking.status === 'CANCELLED' ? (
+                                         <div>
+                                           <div style={{ fontSize: '12px', color: booking.status === 'REJECTED' ? '#dc3545' : '#d97706', background: booking.status === 'REJECTED' ? 'rgba(220,53,69,0.08)' : 'rgba(217,119,6,0.08)', padding: '6px 10px', borderRadius: '8px' }}>
+                                             <strong>{booking.status === 'REJECTED' ? 'Lý do từ chối: ' : 'Lý do hủy: '}</strong>{booking.rejectionReason || 'Không có'}
+                                           </div>
+                                           {isStudentView && (
+                                             <SuggestedMentorsWidget booking={booking} onSelectMentor={handleRebook} />
+                                           )}
+                                         </div>
+                                       ) : booking.status === 'CLOSED' ? (
+                                         <div style={{ fontSize: '12px', color: '#475569', background: '#f1f5f9', padding: '6px 10px', borderRadius: '8px' }}>
+                                           <strong style={{ color: '#0f766e' }}>Thông tin kết thúc: </strong>{booking.rejectionReason || 'Buổi tư vấn đã hoàn thành'}
+                                         </div>
                                       ) : booking.note ? (
                                         <div style={{ fontSize: '12px', color: '#495057', background: '#f8f9fb', padding: '6px 10px', borderRadius: '8px', border: '1px solid #e0e4ea' }}>
                                           <i className="bi bi-chat-left-text" style={{ marginRight: '6px', color: '#adb5bd' }}/>
@@ -1275,6 +1295,27 @@ export default function BookingsPage() {
                                           </button>
                                         )}
 
+                                         {isStudentView && booking.status === 'CLOSED' && (
+                                           <button
+                                             onClick={() => setRatingBooking(booking)}
+                                             className="bkp-btn-approve"
+                                             style={{
+                                               padding: '6px 12px',
+                                               fontSize: '12px',
+                                               background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                                               color: '#b45309',
+                                               border: '1px solid #f59e0b',
+                                               fontWeight: 700,
+                                               display: 'flex',
+                                               alignItems: 'center',
+                                               gap: 4
+                                             }}
+                                             title="Đánh giá chất lượng Mentor"
+                                           >
+                                             <i className="bi bi-star-fill" style={{ color: '#d97706', marginRight: 0 }} />
+                                             Đánh giá
+                                           </button>
+                                         )}
                                         {(booking.status === 'CANCELLED' || booking.status === 'REJECTED' || booking.status === 'CLOSED' || (booking.status === 'PENDING' && isBookingPast(booking))) && (
                                           <button
                                             onClick={() => handleDeleteBooking(booking.id)}
@@ -1776,11 +1817,21 @@ export default function BookingsPage() {
                                         </div>
                                       )}
                                       
-                                      {(booking.status === 'REJECTED' || booking.status === 'CLOSED') && booking.rejectionReason && (
-                                        <div style={{ fontSize: 11.5, color: '#dc3545', marginTop: 2, borderTop: '1px solid #e2e8f0', paddingTop: 4 }}>
-                                          <strong>Lý do từ chối: </strong>{booking.rejectionReason}
-                                        </div>
-                                      )}
+                                       {booking.status === 'REJECTED' && booking.rejectionReason && (
+                                         <div style={{ fontSize: 11.5, color: '#dc3545', marginTop: 2, borderTop: '1px solid #e2e8f0', paddingTop: 4 }}>
+                                           <strong>Lý do từ chối: </strong>{booking.rejectionReason}
+                                         </div>
+                                       )}
+                                       {booking.status === 'CANCELLED' && booking.rejectionReason && (
+                                         <div style={{ fontSize: 11.5, color: '#d97706', marginTop: 2, borderTop: '1px solid #e2e8f0', paddingTop: 4 }}>
+                                           <strong>Lý do hủy: </strong>{booking.rejectionReason}
+                                         </div>
+                                       )}
+                                       {booking.status === 'CLOSED' && booking.rejectionReason && (
+                                         <div style={{ fontSize: 11.5, color: '#475569', marginTop: 2, borderTop: '1px solid #e2e8f0', paddingTop: 4 }}>
+                                           <strong style={{ color: '#0f766e' }}>Thông tin kết thúc: </strong>{booking.rejectionReason}
+                                         </div>
+                                       )}
 
                                       {isStudentView && (booking.status === 'REJECTED' || booking.status === 'CANCELLED') && (
                                         <SuggestedMentorsWidget booking={booking} onSelectMentor={handleRebook} />

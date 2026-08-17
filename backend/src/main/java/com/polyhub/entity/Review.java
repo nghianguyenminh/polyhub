@@ -18,9 +18,9 @@ public class Review implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false)
-    @JsonIgnoreProperties({"mentor", "student"})
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false, unique = true)
+    @JsonIgnoreProperties({"mentor", "student", "review"})
     private Booking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)

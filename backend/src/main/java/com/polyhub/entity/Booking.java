@@ -82,6 +82,10 @@ public class Booking implements Serializable {
     @Column(name = "coins_spent")
     private Integer coinsSpent = 10; // Số xu sử dụng cho lịch hẹn
 
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"booking", "mentor", "student"})
+    private Review review;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

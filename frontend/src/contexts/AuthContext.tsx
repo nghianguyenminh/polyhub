@@ -46,6 +46,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, []);
 
+  // Tự động đồng bộ số dư xu thời gian thực và lắng nghe sự kiện từ các component
+  useEffect(() => {
+    const handleRefresh = () => {
+      refreshUser();
+    };
+
+    window.addEventListener('refresh-user', handleRefresh);
+    window.addEventListener('refresh-coins', handleRefresh);
+
+    const timer = setInterval(() => {
+      const token = getAuthToken();
+      if (token) {
+        fetchAPI('/api/auth/me')
+          .then((data) => {
+            if (data && data.username) {
+              setUser((prev) => {
+                if (!prev || prev.coins !== data.coins || prev.avatar !== data.avatar || prev.fullname !== data.fullname) {
+                  return data;
+                }
+                return prev;
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('refresh-user', handleRefresh);
+      window.removeEventListener('refresh-coins', handleRefresh);
+      clearInterval(timer);
+    };
+  }, []);
+
   const triggerTransition = async () => {
     setIsTransitioning(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));

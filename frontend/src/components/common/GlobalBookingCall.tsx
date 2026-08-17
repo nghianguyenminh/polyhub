@@ -156,20 +156,52 @@ export default function GlobalBookingCall() {
     setUpcomingBooking(null);
   };
 
+  // Modal xác nhận kết thúc booking khi rời phòng sớm
+  const [pendingLeaveBooking, setPendingLeaveBooking] = useState<Booking | null>(null);
+  const [isClosingBooking, setIsClosingBooking] = useState<boolean>(false);
+
   const handleLeaveRoom = React.useCallback(() => {
     const currentBooking = selectedBookingForCallRef.current;
-    const durationInCall = Math.floor((Date.now() - callStartTimeRef.current) / 1000);
     setActiveCallRoomId(null);
     setSelectedBookingForCall(null);
     
     if (currentBooking) {
       setDismissedBookingId(currentBooking.id);
-      // Chỉ hiện modal đánh giá nếu sinh viên đã tham gia cuộc gọi trên 10 giây
-      if (!isMentor && durationInCall >= 10) {
-        setRatingBooking(currentBooking);
-      }
+      // Mở modal hỏi người dùng có muốn kết thúc luôn buổi tư vấn hay chỉ tạm thời rời phòng
+      setPendingLeaveBooking(currentBooking);
     }
-  }, [isMentor]);
+  }, []);
+
+  const handleConfirmEndSession = async () => {
+    if (!pendingLeaveBooking || isClosingBooking) return;
+    setIsClosingBooking(true);
+    try {
+      await fetchAPI(`/api/bookings/${pendingLeaveBooking.id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          status: 'CLOSED',
+          reason: 'Buổi tư vấn đã được người tham gia xác nhận kết thúc.'
+        })
+      });
+      // Nếu là học viên, hiện modal đánh giá
+      if (!isMentor) {
+        setRatingBooking(pendingLeaveBooking);
+      }
+      window.dispatchEvent(new CustomEvent('refresh-bookings'));
+      window.dispatchEvent(new CustomEvent('refresh-coins'));
+      window.dispatchEvent(new CustomEvent('refresh-user'));
+    } catch (err: any) {
+      showError(err.message || 'Không thể kết thúc lịch hẹn');
+    } finally {
+      setIsClosingBooking(false);
+      setPendingLeaveBooking(null);
+    }
+  };
+
+  const handleCancelEndSession = () => {
+    // Chỉ tạm thời rời phòng, vẫn giữ booking APPROVED
+    setPendingLeaveBooking(null);
+  };
   
   const targetUser = isMentor ? upcomingBooking?.student : upcomingBooking?.mentor;
   const showPopup = upcomingBooking && upcomingBooking.id !== dismissedBookingId && !activeCallRoomId;
@@ -225,6 +257,69 @@ export default function GlobalBookingCall() {
           duration={selectedBookingForCall.duration}
           startedAt={selectedBookingForCall.startedAt}
         />
+      )}
+
+      {/* Modal xác nhận kết thúc buổi tư vấn */}
+      {pendingLeaveBooking && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100020,
+          backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div style={{
+            background: '#1e293b', borderRadius: '20px', padding: '28px 24px',
+            width: '100%', maxWidth: '440px', border: '1px solid rgba(242,113,37,0.3)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)', textAlign: 'center', color: '#fff'
+          }}>
+            <div style={{
+              width: '60px', height: '60px', borderRadius: '50%',
+              backgroundColor: 'rgba(242,113,37,0.15)', color: '#F27125',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '28px', margin: '0 auto 16px'
+            }}>
+              <i className="bi bi-telephone-x-fill" />
+            </div>
+
+            <h3 style={{ fontSize: '19px', fontWeight: 700, marginBottom: '8px', color: '#fff' }}>
+              Xác nhận kết thúc buổi tư vấn
+            </h3>
+
+            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '22px' }}>
+              Bạn vừa rời phòng gọi video. Bạn có muốn <strong>kết thúc luôn buổi tư vấn này</strong> không?
+              <br /><span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)' }}>(Nếu kết thúc, lịch hẹn sẽ chuyển sang Hoàn thành và mở phần Đánh giá)</span>
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={handleCancelEndSession}
+                disabled={isClosingBooking}
+                style={{
+                  flex: 1, padding: '11px 16px', borderRadius: '12px',
+                  backgroundColor: 'rgba(255,255,255,0.08)', color: '#cbd5e1',
+                  border: '1px solid rgba(255,255,255,0.15)', fontWeight: 600,
+                  fontSize: '14px', cursor: 'pointer'
+                }}
+              >
+                Tạm rời phòng
+              </button>
+
+              <button
+                onClick={handleConfirmEndSession}
+                disabled={isClosingBooking}
+                style={{
+                  flex: 1, padding: '11px 16px', borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #F27125 0%, #E05A0E 100%)', color: '#fff',
+                  border: 'none', fontWeight: 600, fontSize: '14px',
+                  cursor: isClosingBooking ? 'not-allowed' : 'pointer',
+                  opacity: isClosingBooking ? 0.6 : 1,
+                  boxShadow: '0 4px 14px rgba(242,113,37,0.4)'
+                }}
+              >
+                {isClosingBooking ? 'Đang xử lý...' : 'Kết thúc buổi tư vấn'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       
       {ratingBooking && (

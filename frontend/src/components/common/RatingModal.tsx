@@ -28,7 +28,8 @@ export default function RatingModal({ bookingId, mentorName, onClose }: RatingMo
         body: JSON.stringify({ bookingId, rating, comment }),
       });
       setSuccess(true);
-      setTimeout(() => onClose(), 2000);
+      window.dispatchEvent(new CustomEvent('refresh-bookings'));
+      setTimeout(() => onClose(), 1500);
     } catch (err: any) {
       setErrorMsg(err.message || 'Đã xảy ra lỗi khi gửi đánh giá');
       setSubmitting(false);
