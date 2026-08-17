@@ -40,6 +40,38 @@ public class AiService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public record DocumentSummaryResult(String summary, java.util.List<String> keywords) {}
+
+    public DocumentSummaryResult summarizeDocument(String extractedText) {
+        String prompt = "Bạn là trợ lý AI chuyên tóm tắt tài liệu học tập cho sinh viên FPT Polytechnic.\n"
+                + "Dưới đây là nội dung trích xuất từ một tài liệu học tập:\n"
+                + "---\n"
+                + extractedText + "\n"
+                + "---\n"
+                + "Hãy thực hiện 2 nhiệm vụ và trả về DUY NHẤT một JSON theo định dạng sau,\n"
+                + "không giải thích thêm bất kỳ điều gì:\n"
+                + "{\"summary\": \"Đoạn tóm tắt tiếng Việt 100-150 từ, súc tích, học thuật\",\n"
+                + " \"keywords\": [\"từ khóa 1\", \"từ khóa 2\", \"... tối đa 8 từ khóa\"]}";
+
+        String jsonResponse = callAiWithFallback(prompt);
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+            String summary = rootNode.path("summary").asText("");
+            java.util.List<String> keywords = new java.util.ArrayList<>();
+            JsonNode keywordsNode = rootNode.path("keywords");
+            if (keywordsNode.isArray()) {
+                for (JsonNode keywordNode : keywordsNode) {
+                    keywords.add(keywordNode.asText());
+                }
+            }
+            return new DocumentSummaryResult(summary, keywords);
+        } catch (Exception e) {
+            log.error("Lỗi khi parse JSON từ AI trả về cho chức năng summarizeDocument: {}", e.getMessage(), e);
+            // Fallback: Nếu AI không trả về đúng chuẩn JSON, lấy nguyên text AI trả về làm summary
+            return new DocumentSummaryResult(jsonResponse, new java.util.ArrayList<>());
+        }
+    }
+
     public String improveText(String originalText) {
         String prompt = "Hãy sửa lỗi chính tả, làm câu văn mượt mà hơn, chuyên nghiệp hơn và thêm một vài emoji phù hợp cho đoạn văn sau. Trả về trực tiếp nội dung đã sửa, không cần giải thích thêm:\n\n"
                 + originalText;

@@ -369,8 +369,14 @@ export default function DocumentsPage() {
                           </div>
                         </div>
                         
-                        <div className="mb-2 flex-grow-1">
-                          <span className="badge bg-light text-dark border mb-2 fw-normal">{doc.category?.name || 'Tài liệu'}</span>
+                        <div className="mb-2 flex-grow-1 position-relative">
+                          <span className="badge bg-light text-dark border mb-2 fw-normal me-2">{doc.category?.name || 'Tài liệu'}</span>
+                          {doc.summaryStatus === 'COMPLETED' && (
+                            <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca', border: '1px solid #c7d2fe', fontSize: '10px' }} title={doc.aiSummary}>✨ AI Tóm tắt</span>
+                          )}
+                          {doc.summaryStatus === 'PROCESSING' && (
+                            <span className="badge bg-light text-secondary border" style={{ fontSize: '10px' }}>⏳ Đang phân tích...</span>
+                          )}
                           <h6 className="doc-title text-dark">{doc.title}</h6>
                         </div>
                         
@@ -512,6 +518,46 @@ export default function DocumentsPage() {
                     <p className="mb-0 text-muted" style={{ fontSize: '14px', lineHeight: 1.6 }}>
                       {selectedDoc.description || 'Chưa có mô tả cho tài liệu này.'}
                     </p>
+                  </div>
+
+                  {/* AI Summary Section */}
+                  <div className="p-3 mb-4" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                    <h6 className="fw-bold mb-2 d-flex align-items-center" style={{ fontSize: '13.5px', color: '#334155' }}>
+                      <span className="me-2 fs-5">🤖</span> Tóm tắt bởi AI
+                    </h6>
+                    
+                    {selectedDoc.summaryStatus === 'COMPLETED' ? (
+                      <>
+                        <p className="mb-3 text-dark" style={{ fontSize: '14px', lineHeight: 1.6 }}>
+                          {selectedDoc.aiSummary}
+                        </p>
+                        {selectedDoc.aiKeywords && (
+                          <div className="d-flex flex-wrap gap-1 mt-2">
+                            <span className="text-muted fw-medium me-1" style={{ fontSize: '12.5px' }}>📌 Từ khóa:</span>
+                            {selectedDoc.aiKeywords.split(',').map((kw, idx) => (
+                              <span key={idx} className="badge rounded-pill fw-medium" style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
+                                {kw.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : selectedDoc.summaryStatus === 'PROCESSING' ? (
+                      <div className="d-flex align-items-center text-muted">
+                        <div className="spinner-border spinner-border-sm me-2" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span style={{ fontSize: '13.5px' }}>Hệ thống đang phân tích tài liệu...</span>
+                      </div>
+                    ) : selectedDoc.summaryStatus === 'UNSUPPORTED' ? (
+                      <div className="text-muted" style={{ fontSize: '13.5px' }}>
+                        📄 Tài liệu này không hỗ trợ tóm tắt tự động (ảnh scan hoặc định dạng không tương thích).
+                      </div>
+                    ) : (
+                      <div className="text-muted" style={{ fontSize: '13.5px' }}>
+                        Tài liệu chưa được phân tích.
+                      </div>
+                    )}
                   </div>
                   
                   <hr className="border-light" />

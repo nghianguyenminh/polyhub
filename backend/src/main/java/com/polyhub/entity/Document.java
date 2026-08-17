@@ -53,6 +53,17 @@ public class Document {
     private DocumentStatus status = DocumentStatus.PENDING;
 
     @Column(columnDefinition = "TEXT")
+    private String aiSummary;
+
+    @Column(length = 500)
+    private String aiKeywords;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    @Builder.Default
+    private SummaryStatus summaryStatus = SummaryStatus.PENDING;
+
+    @Column(columnDefinition = "TEXT")
     private String rejectionReason;
 
     // Liên kết với Chuyên Ngành (Category) ManyToOne

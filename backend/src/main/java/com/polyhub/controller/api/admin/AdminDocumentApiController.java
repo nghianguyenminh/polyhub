@@ -108,4 +108,15 @@ public class AdminDocumentApiController {
             return ResponseEntity.status(400).body(Map.of("message", "Lỗi: " + e.getMessage()));
         }
     }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'CONTENT_ADMIN')")
+    @PostMapping("/{id}/summarize")
+    public ResponseEntity<?> regenerateSummary(@PathVariable Long id) {
+        try {
+            documentAdminService.regenerateSummary(id);
+            return ResponseEntity.ok(Map.of("message", "Đã đưa vào hàng đợi AI để phân tích lại!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("message", "Lỗi: " + e.getMessage()));
+        }
+    }
 }
