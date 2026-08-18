@@ -3,6 +3,7 @@ package com.polyhub.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.Loader;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ import java.io.InputStream;
 public class TextExtractorService {
 
     public String extractTextFromPdf(InputStream inputStream) {
-        try (PDDocument document = PDDocument.load(inputStream)) {
+        try (PDDocument document = Loader.loadPDF(inputStream.readAllBytes())) {
             if (document.isEncrypted()) {
                 log.warn("Tài liệu PDF bị mã hóa, không thể đọc nội dung.");
                 return null;

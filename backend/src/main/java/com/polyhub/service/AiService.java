@@ -49,14 +49,27 @@ public class AiService {
                 + extractedText + "\n"
                 + "---\n"
                 + "Hãy thực hiện 2 nhiệm vụ và trả về DUY NHẤT một JSON theo định dạng sau,\n"
-                + "không giải thích thêm bất kỳ điều gì:\n"
+                + "không có markdown, không có giải thích thêm, chỉ JSON thuần túy:\n"
                 + "{\"summary\": \"Đoạn tóm tắt tiếng Việt 100-150 từ, súc tích, học thuật\",\n"
                 + " \"keywords\": [\"từ khóa 1\", \"từ khóa 2\", \"... tối đa 8 từ khóa\"]}";
 
-        String jsonResponse = callAiWithFallback(prompt);
+        String rawResponse = callAiWithFallback(prompt);
+
+        // Bước 1: Trích xuất chính xác khối JSON từ response (phòng trường hợp AI nói thêm "Dưới đây là JSON...")
+        String jsonResponse = rawResponse.trim();
+        int startIndex = jsonResponse.indexOf('{');
+        int endIndex = jsonResponse.lastIndexOf('}');
+        
+        if (startIndex == -1 || endIndex == -1 || startIndex > endIndex) {
+            log.error("AI không trả về khối JSON nào. Raw Response: {}", jsonResponse);
+            throw new RuntimeException("AI không trả về JSON hợp lệ.");
+        }
+        
+        jsonResponse = jsonResponse.substring(startIndex, endIndex + 1);
+
         try {
             JsonNode rootNode = objectMapper.readTree(jsonResponse);
-            String summary = rootNode.path("summary").asText("");
+            String summary = rootNode.path("summary").asText("").trim();
             java.util.List<String> keywords = new java.util.ArrayList<>();
             JsonNode keywordsNode = rootNode.path("keywords");
             if (keywordsNode.isArray()) {
@@ -64,16 +77,24 @@ public class AiService {
                     keywords.add(keywordNode.asText());
                 }
             }
+
+            // Bước 3: Validate summary không được rỗng
+            if (summary.isBlank()) {
+                log.error("AI trả về JSON nhưng field 'summary' rỗng. JSON: {}", jsonResponse);
+                throw new RuntimeException("AI trả về summary rỗng.");
+            }
+
             return new DocumentSummaryResult(summary, keywords);
+        } catch (RuntimeException e) {
+            throw e; // Re-throw để DocumentSummaryService catch và đánh dấu FAILED
         } catch (Exception e) {
-            log.error("Lỗi khi parse JSON từ AI trả về cho chức năng summarizeDocument: {}", e.getMessage(), e);
-            // Fallback: Nếu AI không trả về đúng chuẩn JSON, lấy nguyên text AI trả về làm summary
-            return new DocumentSummaryResult(jsonResponse, new java.util.ArrayList<>());
+            log.error("Lỗi parse JSON từ AI: {}", e.getMessage());
+            throw new RuntimeException("Lỗi parse JSON từ AI: " + e.getMessage(), e);
         }
     }
 
     public String improveText(String originalText) {
-        String prompt = "Hãy sửa lỗi chính tả, làm câu văn mượt mà hơn, chuyên nghiệp hơn và thêm một vài emoji phù hợp cho đoạn văn sau. Trả về trực tiếp nội dung đã sửa, không cần giải thích thêm:\n\n"
+        String prompt = "Hãy sửa lỗi chính tả, làm câu văn mượt mà hơn, viết thêm nội dung khoảng 1 đoạn cho câu văn chuyên nghiệp hơn và thêm một vài emoji phù hợp cho đoạn văn sau. Trả về trực tiếp nội dung đã sửa, không cần giải thích thêm:\n\n"
                 + originalText;
         return callAiWithFallback(prompt);
     }
