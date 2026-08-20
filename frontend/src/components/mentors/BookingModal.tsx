@@ -22,11 +22,21 @@ interface DayAvailability {
   busySlots: { startTime: string; endTime: string; status: string }[];
 }
 
+export const getCoinsForDuration = (duration: number): number => {
+  if (duration <= 1) return 5;
+  if (duration <= 20) return 10;
+  if (duration <= 30) return 15;
+  if (duration <= 40) return 20;
+  if (duration <= 50) return 25;
+  return 30; // 60 phút
+};
+
 export default function BookingModal({ isOpen, onClose, mentor }: BookingModalProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const [duration, setDuration] = useState<number>(30);
   const userCoins = user?.coins ?? 100;
-  const coinsRequired = 10;
+  const coinsRequired = getCoinsForDuration(duration);
   const hasEnoughCoins = userCoins >= coinsRequired;
 
   const [loading, setLoading] = useState(true);
@@ -35,7 +45,6 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
   // Form states
   const [startTime, setStartTime] = useState('09:00');
-  const [duration, setDuration] = useState<number>(30);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -641,81 +650,93 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                             Thời lượng cuộc gọi
                           </div>
                           <div className="bk-duration-grid">
-                            {[1, 20, 30, 40, 50, 60].map((mins) => (
-                              <button
-                                key={mins}
-                                type="button"
-                                onClick={() => setDuration(mins)}
-                                className={`bk-dur-btn ${duration === mins ? 'selected' : ''}`}
-                              >
-                                {mins} phút
-                              </button>
-                            ))}
+                            {[1, 20, 30, 40, 50, 60].map((mins) => {
+                              const cost = getCoinsForDuration(mins);
+                              return (
+                                <button
+                                  key={mins}
+                                  type="button"
+                                  onClick={() => setDuration(mins)}
+                                  className={`bk-dur-btn ${duration === mins ? 'selected' : ''}`}
+                                >
+                                  <span className="bk-dur-time">{mins}p</span>
+                                  <span className="bk-dur-coin">{cost} Xu</span>
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Validation Banner */}
-                    {(validationMsg.text || true) && (
-                      <div className={`bk-validation-banner ${validationMsg.isValid ? 'valid' : 'invalid'}`}>
-                        <i className={`bi ${validationMsg.isValid ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}`} />
-                        <span>{validationMsg.text || 'Đang xác thực thời gian...'}</span>
+                    {/* Khi thời gian không hợp lệ: Hiển thị 1 banner cảnh báo rõ ràng */}
+                    {!validationMsg.isValid && validationMsg.text && (
+                      <div className="bk-validation-banner invalid">
+                        <i className="bi bi-exclamation-triangle-fill" />
+                        <span>{validationMsg.text}</span>
                       </div>
                     )}
 
-                    {lockStatus && (
-                      <div className={`bk-validation-banner ${lockStatus.locked ? 'valid' : 'invalid'}`} style={{ marginTop: 10, background: lockStatus.locked ? 'rgba(25, 135, 84, 0.15)' : 'rgba(239, 68, 68, 0.15)', borderColor: lockStatus.locked ? '#198754' : '#dc3545', color: lockStatus.locked ? '#2eb573' : '#ff4757' }}>
-                        <i className={`bi ${lockStatus.locked ? 'bi-lock-fill' : 'bi-exclamation-circle-fill'}`} />
-                        <span>{lockStatus.message}</span>
-                      </div>
-                    )}
-
-                    {/* Summary Card */}
+                    {/* Khi thời gian hợp lệ: Hiển thị 1 Card Tóm tắt & Chi phí Xu thống nhất, sang trọng */}
                     {validationMsg.isValid && (
-                      <div className="bk-summary-card">
-                        <i className="bi bi-calendar-check-fill bk-summary-icon" />
-                        <div>
-                          <div className="bk-summary-label">Cuộc hẹn của bạn</div>
-                          <div className="bk-summary-time">
-                            {startTime} – {getEndTimeString()}
-                            <span style={{ fontSize: 14, fontWeight: 600, opacity: 0.85, marginLeft: 8 }}>({duration} phút)</span>
+                      <div className="bk-summary-unified" style={{
+                        background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+                        border: '1.5px solid #fed7aa',
+                        borderRadius: '16px',
+                        padding: '16px 20px',
+                        marginBottom: '16px',
+                        boxShadow: '0 4px 16px rgba(242, 113, 37, 0.08)'
+                      }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16, alignItems: 'center' }}>
+                          {/* Cột trái: Chi tiết thời gian cuộc hẹn */}
+                          <div style={{ borderRight: '1px solid #fed7aa', paddingRight: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#c2410c' }}>
+                                Lịch hẹn của bạn
+                              </span>
+                              {lockStatus?.locked && (
+                                <span style={{ fontSize: 10.5, fontWeight: 600, background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: 20, border: '1px solid #bbf7d0' }}>
+                                  🔒 Đã giữ chỗ 3p
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 17, fontWeight: 800, color: '#9a3412', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <i className="bi bi-clock-fill" style={{ color: '#ea580c', fontSize: 15 }} />
+                              {startTime} – {getEndTimeString()}
+                              <span style={{ fontSize: 11.5, fontWeight: 600, color: '#c2410c', background: 'rgba(234,88,12,0.1)', padding: '2px 6px', borderRadius: 6 }}>
+                                {duration} phút
+                              </span>
+                            </div>
+                            <div style={{ fontSize: 12, color: '#7c2d12', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <i className="bi bi-calendar3" style={{ fontSize: 11 }} />
+                              {formatFullDateVietnamese(selectedDay.date)}
+                            </div>
                           </div>
-                          <div className="bk-summary-date">
-                            <i className="bi bi-geo-alt-fill" />
-                            {formatFullDateVietnamese(selectedDay.date)}
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
-                    {/* Chi phí xu */}
-                    <div className="bk-form-section" style={{ background: '#fff7ed', border: '1px solid #ffedd5', padding: '14px 16px', borderRadius: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontSize: 24 }}>🪙</span>
+                          {/* Cột phải: Chi phí & Số dư Xu */}
                           <div>
-                            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#9a3412' }}>Chi phí xu cho buổi call</div>
-                            <div style={{ fontSize: 12, color: '#c2410c' }}>
-                              Số xu hiện có: <strong>{userCoins} Xu</strong>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#9a3412' }}>Chi phí gói:</span>
+                              <span style={{ fontSize: 17, fontWeight: 800, color: hasEnoughCoins ? '#ea580c' : '#dc2626' }}>
+                                -{coinsRequired} Xu
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, color: '#7c2d12', borderTop: '1px dashed #fed7aa', paddingTop: 4 }}>
+                              <span>Số dư ({userCoins} Xu):</span>
+                              <span style={{ fontWeight: 700, color: hasEnoughCoins ? '#15803d' : '#dc2626' }}>
+                                {hasEnoughCoins ? `Còn ${userCoins - coinsRequired} Xu` : '⚠️ Thiếu xu'}
+                              </span>
                             </div>
                           </div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 16, fontWeight: 800, color: hasEnoughCoins ? '#15803d' : '#dc2626' }}>
-                            -{coinsRequired} Xu
-                          </div>
-                          <div style={{ fontSize: 11, color: hasEnoughCoins ? '#166534' : '#b91c1c', fontWeight: 600 }}>
-                            {hasEnoughCoins ? `Còn lại: ${userCoins - coinsRequired} Xu` : '⚠️ Không đủ xu'}
-                          </div>
-                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {!hasEnoughCoins && (
-                      <div className="bk-validation-banner invalid" style={{ marginTop: 10 }}>
+                    {/* Cảnh báo thiếu xu nếu có */}
+                    {validationMsg.isValid && !hasEnoughCoins && (
+                      <div className="bk-validation-banner invalid" style={{ marginBottom: 16 }}>
                         <i className="bi bi-exclamation-triangle-fill" />
-                        <span>Bạn không đủ xu để đặt lịch (Hiện có: {userCoins} Xu, cần: {coinsRequired} Xu).</span>
+                        <span>Bạn không đủ xu để đặt gói {duration} phút (Cần {coinsRequired} Xu, hiện có {userCoins} Xu). Vui lòng chọn gói ngắn hơn hoặc nạp thêm xu.</span>
                       </div>
                     )}
 

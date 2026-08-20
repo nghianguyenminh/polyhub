@@ -41,6 +41,7 @@ interface Booking {
     comment?: string;
     createdAt?: string;
   };
+  coinsSpent?: number;
 }
 
 interface ScheduleSlot {
@@ -1191,7 +1192,7 @@ export default function BookingsPage() {
                                         {booking.startTime} – {booking.endTime}
                                       </div>
                                       <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '4px', whiteSpace: 'nowrap' }}>
-                                        {formattedDate} ({booking.duration} phút)
+                                        {formattedDate} ({booking.duration} phút • 🪙 {booking.coinsSpent ?? 10} Xu)
                                       </div>
                                     </td>
 
@@ -1801,7 +1802,7 @@ export default function BookingsPage() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5, color: '#334155', background: '#f8fafc', padding: 10, borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 12 }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 750 }}>
                                         <i className="bi bi-clock-fill" style={{ color: '#f27125' }} />
-                                        {booking.startTime} - {booking.endTime} ({booking.duration} phút)
+                                        {booking.startTime} - {booking.endTime} ({booking.duration} phút • 🪙 {booking.coinsSpent ?? 10} Xu)
                                       </div>
                                       
                                       {booking.status === 'APPROVED' && cdt.text && (

@@ -85,6 +85,16 @@ public class BookingApiController {
     }
     private final Map<String, SlotLock> activeLocks = new java.util.concurrent.ConcurrentHashMap<>();
 
+    // Bảng giá xu tăng dần theo từng mức thời lượng booking
+    public static int calculateCoinsForDuration(int duration) {
+        if (duration <= 1) return 5;
+        if (duration <= 20) return 10;
+        if (duration <= 30) return 15;
+        if (duration <= 40) return 20;
+        if (duration <= 50) return 25;
+        return 30; // 60 phút
+    }
+
     // Tự động đóng các lịch hẹn quá hạn 10 phút không tham gia, hoặc đã hết thời lượng
     private void checkAndCloseExpiredBookings() {
         try {
@@ -293,11 +303,11 @@ public class BookingApiController {
                 }
             }
 
-            // Kiểm tra số dư xu của Sinh viên (chỉ kiểm tra điều kiện đủ xu, chưa trừ xu lúc đặt lịch)
-            int coinsRequired = 10;
+            // Kiểm tra số dư xu của Sinh viên theo từng mức thời lượng (chỉ kiểm tra điều kiện đủ xu, chưa trừ xu lúc đặt lịch)
+            int coinsRequired = calculateCoinsForDuration(duration);
             int studentCoins = student.getCoins() != null ? student.getCoins() : 100;
             if (studentCoins < coinsRequired) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Bạn không đủ xu để đặt lịch (Cần tối thiểu " + coinsRequired + " xu trong tài khoản)"));
+                return ResponseEntity.badRequest().body(Map.of("error", "Bạn không đủ xu để đặt lịch gói " + duration + " phút (Cần tối thiểu " + coinsRequired + " xu trong tài khoản)"));
             }
 
             Booking booking = new Booking();
