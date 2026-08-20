@@ -67,6 +67,12 @@ public class User implements Serializable {
     @Column(name = "is_two_factor_enabled")
     private Boolean IsTwoFactorEnabled;
 
+    @Column(name = "balance", columnDefinition = "bigint default 0")
+    private Long balance = 0L;
+
+    @Column(name = "price_per_minute", columnDefinition = "bigint default 1000")
+    private Long pricePerMinute = 1000L;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_follows",
