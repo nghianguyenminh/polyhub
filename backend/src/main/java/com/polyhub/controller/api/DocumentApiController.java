@@ -75,6 +75,9 @@ public class DocumentApiController {
                     map.put("downloadCount", doc.getDownloadCount());
                     map.put("createdAt", doc.getCreatedAt());
                     map.put("isSaved", savedDocIds.contains(doc.getId()));
+                    map.put("aiSummary", doc.getAiSummary());
+                    map.put("aiKeywords", doc.getAiKeywords());
+                    map.put("summaryStatus", doc.getSummaryStatus() != null ? doc.getSummaryStatus().name() : null);
                     if (doc.getCategory() != null) {
                         map.put("category", Map.of(
                                 "id", doc.getCategory().getId(),

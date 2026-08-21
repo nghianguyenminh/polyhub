@@ -24,6 +24,7 @@ public class DocumentAdminService {
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
     private final EmailService emailService; // Thêm EmailService
+    private final com.polyhub.service.DocumentSummaryService documentSummaryService;
 
 
     // Filter, Sort and Pagination
@@ -44,6 +45,15 @@ public class DocumentAdminService {
         doc.setStatus(DocumentStatus.APPROVED);
         doc.setRejectionReason(null);
         documentRepository.save(doc);
+        
+        // Kích hoạt tiến trình tóm tắt AI bất đồng bộ
+        documentSummaryService.generateSummaryAsync(doc.getId());
+    }
+
+    // Kích hoạt lại tiến trình tóm tắt AI
+    public void regenerateSummary(Long id) {
+        Document doc = getDocumentById(id);
+        documentSummaryService.generateSummaryAsync(doc.getId());
     }
 
     // Từ chối / Gỡ tài liệu
