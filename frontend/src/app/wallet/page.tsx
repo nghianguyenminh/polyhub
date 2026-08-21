@@ -17,7 +17,7 @@ function WalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState<number | ''>('');
   const [depositAmount, setDepositAmount] = useState<number | ''>('');
   const [loading, setLoading] = useState(true);
-  
+
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'history'>('deposit');
   const [transactions, setTransactions] = useState<any[]>([]);
   const [pendingDeposit, setPendingDeposit] = useState<any>(null);
@@ -64,7 +64,7 @@ function WalletPage() {
   if (authLoading || !user) {
     return (
       <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
-        <div className="spinner-border text-primary" role="status">
+        <div className="spinner-border text-poly" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -106,7 +106,7 @@ function WalletPage() {
       toast.showError('Số tiền nạp tối thiểu là 10.000 VNĐ');
       return;
     }
-    
+
     try {
       const res = await fetchAPI('/api/wallet/deposit', {
         method: 'POST',
@@ -147,27 +147,27 @@ function WalletPage() {
           <LeftSidebar activeMenu="wallet" />
 
           <div className="poly-main-feed" style={{ maxWidth: '850px' }}>
-            <div className="poly-card bg-white p-4 shadow-sm" style={{ minHeight: 'calc(100vh - 100px)' }}>
-              <h4 className="fw-bold mb-4"><i className="bi bi-wallet2 text-success me-2"></i> Ví của tôi</h4>
-              
+            <div className="poly-card bg-white p-3 mb-4">
+              <h4 className="fw-bold mb-4"><i className="bi bi-wallet2 text-poly me-2"></i> Ví của tôi</h4>
+
               {loading ? (
                 <div className="text-center py-4">
-                  <div className="spinner-border text-primary" role="status">
+                  <div className="spinner-border text-poly" role="status">
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
               ) : (
                 <div className="text-center bg-light rounded-3 p-4 mb-4 border shadow-sm">
                   <p className="text-muted mb-1 fw-medium">Số dư hiện tại</p>
-                  <h2 className="text-success fw-bold mb-0">{balance.toLocaleString('vi-VN')} đ</h2>
+                  <h2 className="text-poly fw-bold mb-0">{balance.toLocaleString('vi-VN')} đ</h2>
                 </div>
               )}
 
               {/* Tabs */}
               <ul className="nav nav-tabs mb-4 border-bottom-0 gap-2">
                 <li className="nav-item">
-                  <button 
-                    className={`nav-link fw-bold px-4 py-2 border-0 rounded-pill ${activeTab === 'deposit' ? 'bg-primary text-white shadow-sm' : 'bg-light text-muted'}`} 
+                  <button
+                    className={`nav-link fw-bold px-4 py-2 border-0 rounded-pill ${activeTab === 'deposit' ? 'bg-poly text-white shadow-sm' : 'bg-light text-muted'}`}
                     onClick={() => setActiveTab('deposit')}
                   >
                     Nạp tiền
@@ -175,8 +175,8 @@ function WalletPage() {
                 </li>
                 {user?.role === 'MENTOR' && (
                   <li className="nav-item">
-                    <button 
-                      className={`nav-link fw-bold px-4 py-2 border-0 rounded-pill ${activeTab === 'withdraw' ? 'bg-danger text-white shadow-sm' : 'bg-light text-muted'}`} 
+                    <button
+                      className={`nav-link fw-bold px-4 py-2 border-0 rounded-pill ${activeTab === 'withdraw' ? 'bg-poly text-white shadow-sm' : 'bg-light text-muted'}`}
                       onClick={() => setActiveTab('withdraw')}
                     >
                       Rút tiền
@@ -184,8 +184,8 @@ function WalletPage() {
                   </li>
                 )}
                 <li className="nav-item">
-                  <button 
-                    className={`nav-link fw-bold px-4 py-2 border-0 rounded-pill ${activeTab === 'history' ? 'bg-dark text-white shadow-sm' : 'bg-light text-muted'}`} 
+                  <button
+                    className={`nav-link fw-bold px-4 py-2 border-0 rounded-pill ${activeTab === 'history' ? 'bg-poly text-white shadow-sm' : 'bg-light text-muted'}`}
                     onClick={() => setActiveTab('history')}
                   >
                     Lịch sử giao dịch
@@ -195,37 +195,37 @@ function WalletPage() {
 
               {/* Deposit Tab */}
               {activeTab === 'deposit' && (
-                <div className="border rounded-3 p-4 bg-white shadow-sm border-primary border-opacity-25">
-                  <h5 className="fw-bold mb-3 text-primary"><i className="bi bi-box-arrow-in-down me-2"></i>Nạp tiền vào ví</h5>
-                  
+                <div className="border rounded-3 p-4 bg-white shadow-sm" style={{ borderColor: 'rgba(242, 113, 37, 0.3)' }}>
+                  <h5 className="fw-bold mb-3 text-poly"><i className="bi bi-box-arrow-in-down me-2"></i>Nạp tiền vào ví</h5>
+
                   {!pendingDeposit ? (
                     <form onSubmit={handleCreateDeposit}>
                       <div className="mb-3">
                         <label className="form-label fw-medium">Số tiền cần nạp (VND)</label>
-                        <input 
-                          type="number" 
-                          className="form-control form-control-lg" 
+                        <input
+                          type="number"
+                          className="form-control form-control-lg"
                           placeholder="Tối thiểu 10,000 đ"
                           value={depositAmount}
                           onChange={(e) => setDepositAmount(Number(e.target.value))}
                           min="10000"
                         />
                       </div>
-                      <button type="submit" className="btn btn-primary btn-lg w-100 fw-bold" disabled={!depositAmount || Number(depositAmount) < 10000}>
+                      <button type="submit" className="btn btn-poly-gradient text-white btn-lg w-100 fw-bold" disabled={!depositAmount || Number(depositAmount) < 10000}>
                         Tạo mã nạp tiền
                       </button>
                     </form>
                   ) : (
                     <div className="text-center">
                       <div className="alert alert-warning mb-4 shadow-sm border-0">
-                        <strong>Mã giao dịch:</strong> <span className="text-danger fw-bold">{pendingDeposit.txCode}</span> <br/>
+                        <strong>Mã giao dịch:</strong> <span className="text-danger fw-bold">{pendingDeposit.txCode}</span> <br />
                         <strong>Số tiền:</strong> {pendingDeposit.amount.toLocaleString('vi-VN')} VND
                       </div>
                       <p className="mb-2 fw-medium text-dark fs-5">Mở App Ngân hàng bất kỳ để quét mã QR:</p>
-                      
+
                       <div className="d-flex justify-content-center mb-4">
                         <div className="p-3 border rounded-4 bg-white shadow d-inline-block">
-                          <img 
+                          <img
                             src={`https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact.jpg?amount=${pendingDeposit.amount}&addInfo=${pendingDeposit.txCode}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`}
                             alt="VietQR"
                             style={{ width: '280px', height: 'auto', borderRadius: '8px' }}
@@ -234,11 +234,11 @@ function WalletPage() {
                       </div>
 
                       <hr className="my-4" />
-                      
+
                       <div className="p-3 bg-light rounded text-start mb-3 border">
                         <h6 className="fw-bold text-danger mb-2"><i className="bi bi-shield-check me-1"></i>Dành cho Demo / Hackathon</h6>
                         <p className="small text-muted mb-3">Vì đây là môi trường thử nghiệm và không có Webhook từ ngân hàng thực, vui lòng bấm nút bên dưới để mô phỏng rằng bạn đã thanh toán thành công.</p>
-                        <button onClick={handleConfirmMock} disabled={confirming} className="btn btn-success btn-lg w-100 fw-bold shadow-sm">
+                        <button onClick={handleConfirmMock} disabled={confirming} className="btn btn-poly-gradient text-white btn-lg w-100 fw-bold shadow-sm">
                           {confirming ? (
                             <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xác nhận...</>
                           ) : (
@@ -257,8 +257,8 @@ function WalletPage() {
 
               {/* Withdraw Tab */}
               {activeTab === 'withdraw' && user?.role === 'MENTOR' && (
-                <div className="border rounded-3 p-4 bg-white shadow-sm border-danger border-opacity-25">
-                  <h5 className="fw-bold mb-3 text-danger"><i className="bi bi-box-arrow-up me-2"></i>Rút tiền (Dành cho Mentor)</h5>
+                <div className="border rounded-3 p-4 bg-white shadow-sm" style={{ borderColor: 'rgba(242, 113, 37, 0.3)' }}>
+                  <h5 className="fw-bold mb-3 text-poly"><i className="bi bi-box-arrow-up me-2"></i>Rút tiền (Dành cho Mentor)</h5>
                   <p className="text-muted small mb-3">
                     <i className="bi bi-info-circle me-1"></i>
                     Lưu ý: Hệ thống sẽ thu 10% phí / thuế khi bạn thực hiện rút tiền.
@@ -266,9 +266,9 @@ function WalletPage() {
                   <form onSubmit={handleWithdraw}>
                     <div className="mb-3">
                       <label className="form-label fw-medium">Số tiền cần rút (VND)</label>
-                      <input 
-                        type="number" 
-                        className="form-control form-control-lg" 
+                      <input
+                        type="number"
+                        className="form-control form-control-lg"
                         placeholder="Ví dụ: 100000"
                         value={withdrawAmount}
                         onChange={(e) => setWithdrawAmount(Number(e.target.value))}
@@ -277,13 +277,13 @@ function WalletPage() {
                       />
                     </div>
                     {withdrawAmount && Number(withdrawAmount) > 0 && Number(withdrawAmount) <= balance && (
-                      <div className="alert alert-info py-2 small border-0 shadow-sm">
+                      <div className="alert alert-warning py-2 small border-0 shadow-sm">
                         <div>Số tiền rút: {Number(withdrawAmount).toLocaleString('vi-VN')} đ</div>
                         <div>Phí 10%: {(Number(withdrawAmount) * 0.1).toLocaleString('vi-VN')} đ</div>
-                        <div className="fw-bold text-success mt-1">Thực nhận: {(Number(withdrawAmount) * 0.9).toLocaleString('vi-VN')} đ</div>
+                        <div className="fw-bold text-poly mt-1">Thực nhận: {(Number(withdrawAmount) * 0.9).toLocaleString('vi-VN')} đ</div>
                       </div>
                     )}
-                    <button type="submit" className="btn btn-danger btn-lg w-100 fw-bold shadow-sm" disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > balance}>
+                    <button type="submit" className="btn btn-poly-gradient text-white btn-lg w-100 fw-bold shadow-sm" disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > balance}>
                       Thực hiện rút tiền
                     </button>
                   </form>
@@ -319,14 +319,14 @@ function WalletPage() {
                               <td className="px-4 py-3 fw-medium text-muted">{tx.txCode}</td>
                               <td>
                                 {tx.type === 'DEPOSIT' ? (
-                                  <span className="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3 py-2">Nạp tiền</span>
+                                  <span className="badge bg-poly text-white border rounded-pill px-3 py-2" style={{ borderColor: 'var(--poly-primary)' }}>Nạp tiền</span>
                                 ) : (
-                                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill px-3 py-2">Rút tiền</span>
+                                  <span className="badge bg-danger text-white border border-danger-subtle rounded-pill px-3 py-2">Rút tiền</span>
                                 )}
                               </td>
                               <td className="fw-bold fs-6">
                                 {tx.type === 'DEPOSIT' ? (
-                                  <span className="text-success">+{tx.amount.toLocaleString('vi-VN')} đ</span>
+                                  <span className="text-poly">+{tx.amount.toLocaleString('vi-VN')} đ</span>
                                 ) : (
                                   <span className="text-danger">-{tx.amount.toLocaleString('vi-VN')} đ</span>
                                 )}
@@ -336,7 +336,7 @@ function WalletPage() {
                               </td>
                               <td>
                                 {tx.status === 'SUCCESS' ? (
-                                  <span className="text-success fw-medium"><i className="bi bi-check-circle-fill me-1"></i>Thành công</span>
+                                  <span className="text-poly fw-medium"><i className="bi bi-check-circle-fill me-1"></i>Thành công</span>
                                 ) : (
                                   <span className="text-warning fw-medium"><i className="bi bi-hourglass-split me-1"></i>Chờ xử lý</span>
                                 )}

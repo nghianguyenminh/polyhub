@@ -72,13 +72,11 @@ export default function ConnectionsPage() {
     <>
      <Header />
     <div className="app-container">
-      {/* Thêm pt-4 nếu ở trang chủ bạn có dùng pt-4 để đẩy nội dung xuống một chút */}
-      <main className="w-100 d-flex justify-content-between pt-4">
+      <main className="w-100 d-flex justify-content-between">
         <LeftSidebar activeMenu="connections" />
         
-        {/* SỬA CHÍNH Ở ĐÂY: Thêm flex-grow-1, mx-4 và minWidth: '0' */}
-        <div className="poly-main-feed flex-grow-1 mx-4" style={{ maxWidth: '850px', minWidth: '0' }}>
-          <div className="poly-card p-3 mb-4" style={{ background: 'linear-gradient(to right, #ffffff, #f0f7ff)' }}>
+        <div className="poly-main-feed" style={{ maxWidth: '850px' }}>
+          <div className="poly-card p-3 mb-4 bg-white">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <div>
                 <h5 className="fw-bold mb-1 text-dark">Góc Kết nối PolyHUB</h5>
@@ -86,8 +84,8 @@ export default function ConnectionsPage() {
               </div>
             </div>
               
-              <form onSubmit={handleSearch} className="input-group mt-3 shadow-sm" style={{ borderRadius: '50rem', border: '1px solid rgba(8, 102, 255, 0.2)', background: 'white' }}>
-                <span className="input-group-text bg-transparent border-0 text-primary ps-3 pe-2 py-2">
+              <form onSubmit={handleSearch} className="input-group mt-3 shadow-sm" style={{ borderRadius: '50rem', border: '1px solid rgba(242, 113, 37, 0.3)', background: 'white' }}>
+                <span className="input-group-text bg-transparent border-0 text-poly ps-3 pe-2 py-2">
                   <i className="bi bi-search"></i>
                 </span>
                 <input 
@@ -98,14 +96,14 @@ export default function ConnectionsPage() {
                   style={{ fontSize: '13.5px' }} 
                   placeholder="Tìm kiếm người dùng theo tên, email..."
                 />
-                <button type="submit" className="btn btn-primary px-4 fw-bold py-2" style={{ borderRadius: '0 50rem 50rem 0', fontSize: '13.5px' }}>Tìm kiếm</button>
+                <button type="submit" className="btn btn-poly-gradient text-white border-0 px-4 fw-bold py-2" style={{ borderRadius: '0 50rem 50rem 0', fontSize: '13.5px' }}>Tìm kiếm</button>
               </form>
             </div>
 
             <div className="row row-cols-1 row-cols-md-2 g-3 mb-5">
               {isFetching ? (
                 <div className="col-12 text-center my-5">
-                  <div className="spinner-border text-primary" role="status"></div>
+                  <div className="spinner-border text-poly" role="status"></div>
                 </div>
               ) : users.length === 0 ? (
                 <div className="col-12 text-center my-5 text-muted">
@@ -128,8 +126,8 @@ export default function ConnectionsPage() {
                           </div>
                           {!u.isSelf && (
                             <button 
-                              className={`btn btn-sm rounded-pill fw-bold ${u.isFollowing ? 'btn-primary' : 'btn-outline-primary'}`} 
-                              style={{ fontSize: '12px', marginTop: '10px' }}
+                              className={`btn btn-sm rounded-pill fw-bold ${u.isFollowing ? 'btn-poly-gradient text-white border-0' : 'bg-white text-poly border'}`} 
+                              style={{ fontSize: '12px', marginTop: '10px', borderColor: u.isFollowing ? 'transparent' : 'var(--poly-primary)' }}
                               onClick={(e) => handleFollowToggle(e, u.username, u.isFollowing)}
                             >
                               <i className={`bi me-1 ${u.isFollowing ? 'bi-person-check-fill' : 'bi-person-plus-fill'}`}></i>
@@ -154,7 +152,7 @@ export default function ConnectionsPage() {
                           <Link href={`/profile/${u.username}`} className="btn btn-light flex-grow-1 rounded-pill fw-bold text-dark border shadow-sm btn-action text-center text-decoration-none">
                             Hồ sơ
                           </Link>
-                          <Link href={`/chat?userId=${u.username}`} className="btn btn-primary flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none text-center">
+                          <Link href={`/chat?userId=${u.username}`} className="btn btn-poly-gradient border-0 flex-grow-1 rounded-pill fw-bold btn-action text-white text-decoration-none text-center">
                             <i className="bi bi-chat-dots-fill me-1"></i> Nhắn tin
                           </Link>
                         </div>
