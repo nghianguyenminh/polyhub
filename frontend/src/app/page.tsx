@@ -206,7 +206,7 @@ export default function HomePage() {
         formData.append('images', img);
       });
 
-      await fetchAPI('/api/v2/posts/create', {
+      const response = await fetchAPI('/api/v2/posts/create', {
         method: 'POST',
         body: formData,
         noRedirectOn401: true,
@@ -221,8 +221,13 @@ export default function HomePage() {
       const closeBtn = document.getElementById('closeCreatePostModal');
       if (closeBtn) closeBtn.click();
 
-      // Refresh feed (force bypass cache)
-      loadFeed(0, true);
+      // Add the new post directly to the feed (optimistic update)
+      // We don't refresh the feed, so it will disappear on the next reload
+      // which aligns with the requirement to only show it once.
+      if (response.post) {
+        setPosts((prev) => [response.post, ...prev]);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (err: any) {
       showError(err.message || 'Có lỗi xảy ra khi tạo bài viết');
     } finally {

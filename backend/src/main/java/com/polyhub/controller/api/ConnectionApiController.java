@@ -61,10 +61,9 @@ public class ConnectionApiController {
         Pageable userPageable = PageRequest.of(page - 1, size);
         Page<User> userPage;
         if (keyword != null && !keyword.trim().isEmpty()) {
-            userPage = userRepository.findByFullnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                    keyword.trim(), keyword.trim(), userPageable);
+            userPage = userRepository.searchUsersExcludingAdmins(keyword.trim(), userPageable);
         } else {
-            userPage = userRepository.findAll(userPageable);
+            userPage = userRepository.findAllExcludingAdmins(userPageable);
         }
 
         User currentUser = null;

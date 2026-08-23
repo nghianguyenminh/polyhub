@@ -20,14 +20,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     long countByModerationStatus(ModerationStatus status);
 
     @Query("SELECT p FROM Post p " +
-            "WHERE ((p.isPrivate = false OR p.isPrivate IS NULL) OR p.user.username = :viewerUsername) " +
+            "WHERE (p.isPrivate = false OR p.isPrivate IS NULL) " +
+            "AND p.user.username != :viewerUsername " +
             "AND (p.isLocked = false OR p.isLocked IS NULL) " +
             "AND (p.isDeleted = false OR p.isDeleted IS NULL) " +
             "ORDER BY " +
             "  CASE " +
-            "    WHEN p.user.username = :viewerUsername THEN 1 " +
-            "    WHEN p.user.username IN (SELECT f.username FROM User u JOIN u.following f WHERE u.username = :viewerUsername) THEN 1 "
-            +
+            "    WHEN p.user.username IN (SELECT f.username FROM User u JOIN u.following f WHERE u.username = :viewerUsername) THEN 1 " +
             "    ELSE 0 " +
             "  END DESC, " +
             "  p.hotScore DESC, " +
