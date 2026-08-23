@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+*.pth
+.DS_Store
+
+# An toan: khong bao gio commit anh test CCCD/CMND that len Git
+test*.jpg
+test*.jpeg
+test*.png

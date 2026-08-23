@@ -1,0 +1,474 @@
+package com.polyhub.service;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+@Service
+public class EmailService {
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    /**
+     * Gửi email song song để không làm chậm luồng code khi User/Admin dùng chức năng.
+     * Sử dụng HTML Mail để trình bày thư đẹp hơn.
+     */
+    @Async
+    public void sendRejectionEmail(String toEmail, String studentName, String documentTitle, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Tài liệu của bạn KHÔNG ĐƯỢC PHÊ DUYỆT");
+
+            // HTML Form Template nhẹ nhàng, sạch sẽ
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #e02424; text-align: center;\">Tài Liệu Bị Từ Chối</h2>"
+                    + "<p>Chào <strong>" + studentName + "</strong>,</p>"
+                    + "<p>Cảm ơn bạn đã đóng góp tài liệu: <strong style=\"color:#333;\">" + documentTitle + "</strong> cho thư viện PolyHUB.</p>"
+                    + "<p>Rất tiếc, sau khi đội ngũ Quản lý kiểm duyệt, tài liệu của bạn chưa đáp ứng đủ tiêu chuẩn vì lý do sau:</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Vui lòng điều chỉnh lại rắc rối của bản chia sẻ thay vì Spam lại nếu chưa khắc phục để tránh tài khoản bị khoá (Ban) bởi hệ thống.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống Chia sẻ Tài Liệu PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true); // True = Enable HTML
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+            // Vì chạy nền Async, ko ném exception chết App, chỉ log lỗi ở Console
+        }
+    }
+
+    @Async
+    public void sendMentorRejectionEmail(String toEmail, String fullname, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu đăng ký Mentor bị từ chối");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #e02424; text-align: center;\">Yêu Cầu Mentor Bị Từ Chối</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Cảm ơn bạn đã gửi yêu cầu đăng ký trở thành Mentor trên hệ thống PolyHUB.</p>"
+                    + "<p>Rất tiếc, sau khi xem xét hồ sơ, chúng tôi chưa thể phê duyệt yêu cầu của bạn tại thời điểm này vì lý do sau:</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Bạn hoàn toàn có thể cải thiện và gửi yêu cầu đăng ký lại sau.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendMentorApprovalEmail(String toEmail, String fullname) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Chúc mừng! Bạn đã trở thành Mentor");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #057A55; text-align: center;\">Xác Nhận Cấp Quyền Mentor</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Hồ sơ đăng ký của bạn đã được ban quản trị PolyHUB xem xét và <strong>phê duyệt thành công!</strong></p>"
+                    + "<p>Từ giờ bạn đã chính thức có quyền Mentor. Bạn có thể bắt đầu hỗ trợ các thành viên khác, cũng như tiếp cận các tính năng dành riêng cho trải nghiệm giảng dạy, kết nối của mình.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendMentorRevokeEmail(String toEmail, String fullname, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Quyền Mentor của bạn đã bị thu hồi");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #e02424; text-align: center;\">Thu Hồi Quyền Mentor</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Chúng tôi rất lấy làm tiếc phải thông báo rằng quyền Mentor của bạn trên hệ thống PolyHUB vừa bị <strong>thu hồi (tước quyền)</strong>. Tài khoản của bạn đã được chuyển về mức quyền Sinh viên mặc định.</p>"
+                    + "<p>Quyết định này được đưa ra sau khi Ban quản trị đánh giá, với lý do cụ thể như sau:</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Nếu bạn có thắc mắc hoặc cần khiếu nại, vui lòng liên hệ trực tiếp với bộ phận chăm sóc để được giải đáp.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendOTPEmail(String toEmail, String fullname, String otpCode) {
+        try {
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu Cấp lại Mật khẩu");
+            String htmlContent = "<div style=\"font-family: Inter, Arial, sans-serif; padding: 20px; background-color: #f3f4f6;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-top: 5px solid #f27125;\">"
+                    + "<div style=\"text-align: center; margin-bottom: 30px;\">"
+                    + "<h1 style=\"color: #111827; margin: 0; font-size: 24px;\">Quên Mật Khẩu?</h1>"
+                    + "</div>"
+                    + "<p style=\"color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 20px;\">Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p style=\"color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 30px;\">Chúng tôi nhận được yêu cầu cấp lại mật khẩu cho tài khoản liên kết với email này. Để tiếp tục, vui lòng sử dụng mã xác thực (OTP) có hiệu lực trong 5 phút dưới đây:</p>"
+                    + "<div style=\"background-color: #fef3c7; border: 2px dashed #f59e0b; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 30px;\">"
+                    + "<span style=\"display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #b45309;\">" + otpCode + "</span>"
+                    + "</div>"
+                    + "<p style=\"color: #6b7280; font-size: 14px; line-height: 1.5; margin-bottom: 0;\">Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng bỏ qua email này. Không chia sẻ mã OTP với bất kỳ ai để đảm bảo an toàn cho tài khoản.</p>"
+                    + "<hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 40px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #9ca3af; font-size: 13px; margin: 0;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi OTP Email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    public void sendAccountLockEmail(String toEmail, String fullname, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã bị khóa");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #e02424; text-align: center;\">Tài Khoản Bị Khóa</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Chúng tôi rất lấy làm tiếc phải thông báo rằng tài khoản của bạn trên hệ thống PolyHUB đã bị <strong>khóa</strong>.</p>"
+                    + "<p>Lý do cụ thể như sau:</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Nếu bạn có thắc mắc hoặc cần khiếu nại, vui lòng liên hệ trực tiếp với bộ phận chăm sóc để được giải đáp.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void sendAccountUnlockEmail(String toEmail, String fullname) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Tài khoản của bạn đã được mở khóa");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #057A55; text-align: center;\">Tài Khoản Được Mở Khóa</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Tài khoản của bạn trên hệ thống PolyHUB vừa được Ban quản trị <strong>mở khóa</strong> thành công.</p>"
+                    + "<p>Bạn có thể tiếp tục truy cập và sử dụng dịch vụ của chúng tôi.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    @Async
+    public void sendRoleAssignmentEmail(String toEmail, String fullname, String roleName) {
+        try {
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Thông báo: Cập nhật quyền hạn tài khoản");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #057A55; text-align: center;\">Cập Nhật Quyền Hạn</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Tài khoản của bạn trên hệ thống PolyHUB vừa được cập nhật vai trò mới.</p>"
+                    + "<p>Vai trò hiện tại của bạn là: <strong style=\"color: #EE0979;\">" + roleName + "</strong></p>"
+                    + "<p>Hãy đăng nhập lại vào hệ thống để trải nghiệm các chức năng tương ứng với quyền hạn mới của bạn.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void sendBookingStatusEmail(String toEmail, String studentName, String mentorName, String date, String time, String status, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            String statusText = "APPROVED".equalsIgnoreCase(status) ? "ĐÃ ĐƯỢC PHÊ DUYỆT" : "BỊ TỪ CHỐI";
+            String subject = "PolyHUB - Thông báo: Lịch hẹn với Mentor " + ("APPROVED".equalsIgnoreCase(status) ? "Được chấp nhận" : "Bị từ chối");
+            helper.setSubject(subject);
+
+            String color = "APPROVED".equalsIgnoreCase(status) ? "#057A55" : "#e02424";
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: " + color + "; text-align: center;\">Lịch Hẹn Call Video " + statusText + "</h2>"
+                    + "<p>Chào <strong>" + studentName + "</strong>,</p>"
+                    + "<p>Yêu cầu đặt lịch call video của bạn với Mentor <strong>" + mentorName + "</strong> vào ngày <strong>" + date + "</strong> lúc <strong>" + time + "</strong>:</p>"
+                    + "<h3 style=\"color: " + color + ";\">Trạng thái: " + ("APPROVED".equalsIgnoreCase(status) ? "Chấp nhận cuộc hẹn" : "Từ chối cuộc hẹn") + "</h3>";
+
+            if ("REJECTED".equalsIgnoreCase(status) && reason != null && !reason.isEmpty()) {
+                htmlContent += "<p>Lý do từ chối từ Mentor:</p>"
+                        + "<div style=\"background-color: #fef2f2; border-left: 4px solid #f87171; padding: 15px; margin: 20px 0; color: #991b1b;\">"
+                        +   "<em>\"" + reason + "\"</em>"
+                        + "</div>";
+            } else if ("APPROVED".equalsIgnoreCase(status)) {
+                htmlContent += "<p>Cuộc gọi video được tích hợp trực tiếp trên hệ thống PolyHUB. Bạn vui lòng truy cập trang <strong>Lịch hẹn Call video</strong> khi đến giờ hẹn để tham gia cuộc gọi.</p>";
+            }
+
+            htmlContent += "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email thông báo lịch hẹn: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void sendPostWarningEmail(String toEmail, String fullname, String postContent, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - CẢNH BÁO: Bài viết của bạn bị báo cáo vi phạm");
+
+            String snippet = postContent.length() > 100 ? postContent.substring(0, 100) + "..." : postContent;
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #d97706; text-align: center;\">Cảnh Báo Nội Dung Vi Phạm</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Hệ thống PolyHUB nhận thấy bài viết của bạn có nội dung bị báo cáo vi phạm.</p>"
+                    + "<div style=\"background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0;\">"
+                    +   "<strong>Nội dung bài viết:</strong><p style=\"color: #4b5563; font-style: italic;\">\"" + snippet + "\"</p>"
+                    +   "<strong>Lý do báo cáo:</strong> <span style=\"color: #b45309;\">" + reason + "</span>"
+                    + "</div>"
+                    + "<p style=\"color: #dc2626; font-weight: bold;\">Yêu cầu quan trọng:</p>"
+                    + "<p>Vui lòng tự <strong>chỉnh sửa</strong> hoặc <strong>xóa</strong> bài viết này trong vòng <strong>2 ngày (48 giờ)</strong> kể từ khi nhận được email này.</p>"
+                    + "<p style=\"color: #dc2626; font-weight: bold;\">Nếu sau 2 ngày bạn không thực hiện chỉnh sửa hoặc xóa, tài khoản của bạn sẽ bị KHÓA tạm thời/vĩnh viễn theo điều khoản cộng đồng.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email cảnh báo: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void sendLockRequestEmail(String toEmail, String adminName, String reportedUserFullname, String reportedUsername, String postContent, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu khóa tài khoản người dùng vi phạm");
+
+            String snippet = postContent.length() > 100 ? postContent.substring(0, 100) + "..." : postContent;
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #dc2626; text-align: center;\">Yêu Cầu Khóa Tài Khoản</h2>"
+                    + "<p>Chào Admin quản lý người dùng <strong>" + adminName + "</strong>,</p>"
+                    + "<p>Ban quản lý nội dung vừa gửi một yêu cầu xem xét khóa tài khoản do vi phạm tiêu chuẩn cộng đồng mà không sửa chữa.</p>"
+                    + "<div style=\"background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 15px 0;\">"
+                    +   "<strong>Tài khoản bị yêu cầu khóa:</strong> " + reportedUserFullname + " (Username: <code>" + reportedUsername + "</code>)<br/>"
+                    +   "<strong>Lý do báo cáo bài viết:</strong> <span style=\"color: #b91c1c;\">" + reason + "</span><br/>"
+                    +   "<strong>Nội dung bài viết:</strong><p style=\"color: #4b5563; font-style: italic; margin-top: 5px;\">\"" + snippet + "\"</p>"
+                    + "</div>"
+                    + "<p>Vui lòng đăng nhập vào trang quản trị <strong>Quản lý Người Dùng</strong> để tiến hành xem xét khóa tài khoản này nếu cần thiết.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email yêu cầu khóa: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void sendMentorUpdateEmail(String toEmail, String fullname, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Yêu cầu bổ sung hồ sơ Mentor");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #f59e0b; text-align: center;\">Yêu Cầu Bổ Sung Hồ Sơ</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Ban quản trị PolyHUB đã xem xét hồ sơ đăng ký Mentor của bạn và nhận thấy cần bổ sung một số thông tin trước khi tiếp tục:</p>"
+                    + "<div style=\"background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; color: #b45309;\">"
+                    +   "<em>\"" + reason + "\"</em>"
+                    + "</div>"
+                    + "<p>Vui lòng đăng nhập vào PolyHUB và cập nhật lại hồ sơ của bạn theo yêu cầu trên.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendMentorInterviewEmail(String toEmail, String fullname, String notes) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("nmn00525@gmail.com", "PolyHUB");
+
+            helper.setTo(toEmail);
+            helper.setSubject("PolyHUB - Lịch phỏng vấn Mentor");
+
+            String htmlContent = "<div style=\"font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9;\">"
+                    + "<div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                    + "<h2 style=\"color: #3b82f6; text-align: center;\">Thư Mời Phỏng Vấn</h2>"
+                    + "<p>Chào <strong>" + fullname + "</strong>,</p>"
+                    + "<p>Hồ sơ của bạn đã vượt qua vòng sơ loại của chương trình Mentor trên PolyHUB!</p>"
+                    + "<p>Chúng tôi muốn mời bạn tham gia một buổi trao đổi ngắn để hiểu rõ hơn về định hướng và kỹ năng của bạn. Chi tiết như sau:</p>"
+                    + "<div style=\"background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; color: #1e40af;\">"
+                    +   "<em>\"" + notes + "\"</em>"
+                    + "</div>"
+                    + "<p>Vui lòng kiểm tra kỹ thời gian và đường dẫn tham gia. Nếu có bất kỳ thay đổi nào, hãy liên hệ với chúng tôi.</p>"
+                    + "<hr style=\"border-top:1px solid #eee; margin: 30px 0;\"/>"
+                    + "<p style=\"text-align: center; color: #888; font-size: 13px;\">Hệ thống PolyHUB &copy; 2026</p>"
+                    + "</div></div>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Lỗi gửi Email: " + e.getMessage());
+        }
+    }
+    public void send2FAEmail(String toEmail, String fullname, String otp) {
+    try {
+        jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+        org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+        
+        helper.setTo(toEmail);
+        helper.setSubject("Mã xác minh bảo mật 2 bước - Polyhub");
+        
+        String htmlMsg = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 30px; border-radius: 8px;'>"
+                + "<div style='text-align: center; margin-bottom: 20px;'>"
+                + "<h2 style='color: #f27125; margin: 0;'>Xác Minh Đăng Nhập</h2>"
+                + "</div>"
+                + "<p style='font-size: 16px; color: #333;'>Xin chào <strong>" + fullname + "</strong>,</p>"
+                + "<p style='font-size: 15px; color: #555; line-height: 1.5;'>Bạn đang cố gắng đăng nhập vào hệ thống Polyhub. Vui lòng sử dụng mã xác minh gồm 6 chữ số dưới đây để hoàn tất quá trình đăng nhập:</p>"
+                + "<div style='text-align: center; margin: 30px 0;'>"
+                + "<span style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111; background-color: #f4f4f4; padding: 15px 30px; border-radius: 6px; border: 1px dashed #ccc; display: inline-block;'>" + otp + "</span>"
+                + "</div>"
+                + "<p style='font-size: 14px; color: #777; line-height: 1.5;'>Tuyệt đối không chia sẻ mã này cho bất kỳ ai. Nếu bạn không thực hiện yêu cầu này, vui lòng đổi mật khẩu ngay lập tức.</p>"
+                + "<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;' />"
+                + "</div>";
+        
+        helper.setText(htmlMsg, true);
+        mailSender.send(message);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+}

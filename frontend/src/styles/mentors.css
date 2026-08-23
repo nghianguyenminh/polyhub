@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ==========================================================================
+   POLY MENTOR — Trang kết nối Mentor
+   Tinh chỉnh: card mềm mại hơn, dropdown/search tuỳ biến, chiều sâu tinh tế
+   ========================================================================== */
+
+/* --- Khối giới thiệu (hero strip) --- */
+.mentor-hero-card {
+  border-radius: 20px;
+  border: 1px solid rgba(242, 113, 37, 0.12);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(242, 113, 37, 0.18);
+}
+
+.mentor-hero-title {
+  letter-spacing: -0.01em;
+}
+
+.mentor-hero-subtitle {
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* CTA "Trở thành Mentor" */
+.mentor-cta-btn {
+  background: linear-gradient(135deg, #F27125 0%, #FF9E67 100%);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 6px 16px -4px rgba(242, 113, 37, 0.45);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.mentor-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 10px 22px -4px rgba(242, 113, 37, 0.5);
+  color: #fff;
+}
+
+.mentor-cta-btn:active {
+  transform: translateY(0);
+}
+
+/* --- Thanh tìm kiếm --- */
+.mentor-search-bar {
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(242, 113, 37, 0.14) !important;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.mentor-search-bar:focus-within {
+  border-color: rgba(242, 113, 37, 0.45) !important;
+  box-shadow: 0 0 0 4px rgba(242, 113, 37, 0.08);
+}
+
+.mentor-search-icon {
+  color: #F27125;
+  opacity: 0.75;
+}
+
+.mentor-search-input {
+  font-size: 13.5px;
+  color: #1f2937;
+}
+
+.mentor-search-input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.mentor-search-submit {
+  background: linear-gradient(135deg, #F27125 0%, #FF9E67 100%);
+  border-radius: 0 14px 14px 0 !important;
+  font-size: 13.5px;
+  letter-spacing: 0.01em;
+  transition: filter 0.2s ease;
+}
+
+.mentor-search-submit:hover {
+  filter: brightness(1.05);
+  color: #fff;
+}
+
+/* --- Thanh filter / sort --- */
+.mentor-filter-row {
+  margin-bottom: 0;
+}
+
+.mentor-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 50rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.mentor-filter-pill:hover {
+  border-color: rgba(242, 113, 37, 0.3);
+  color: #F27125;
+  background: rgba(242, 113, 37, 0.04);
+}
+
+.mentor-filter-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Custom select — bỏ mũi tên mặc định, thay icon riêng */
+.mentor-sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23F27125' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 50rem !important;
+  padding: 9px 34px 9px 16px !important;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.mentor-sort-select:hover {
+  border-color: rgba(242, 113, 37, 0.3) !important;
+}
+
+.mentor-sort-select:focus {
+  outline: none;
+  border-color: rgba(242, 113, 37, 0.45) !important;
+  box-shadow: 0 0 0 4px rgba(242, 113, 37, 0.08) !important;
+}
+
+/* --- THẺ MENTOR (MENTOR PROFILE CARD) --- */
+.mentor-profile-card {
+  background-color: var(--bg-card, #ffffff);
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease;
+}
+
+.mentor-profile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 20px 32px -16px rgba(242, 113, 37, 0.28);
+  border-color: rgba(242, 113, 37, 0.18);
+}
+
+/* Ảnh bìa */
+.mentor-card-cover {
+  height: 92px;
+  background-size: cover;
+  background-position: center;
+  background-color: #eef0f2;
+  position: relative;
+}
+
+.mentor-card-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(242, 113, 37, 0.06), rgba(0, 0, 0, 0.22));
+}
+
+/* Nội dung card */
+.mentor-card-body {
+  padding: 0 22px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* Avatar — viền gradient mảnh thay vì viền trắng dày */
+.mentor-card-avatar-wrap {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  margin-top: -38px;
+  padding: 3px;
+  background: linear-gradient(135deg, #F27125, #FFC371);
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(242, 113, 37, 0.25);
+}
+
+.mentor-card-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  background-color: white;
+  object-fit: cover;
+  display: block;
+}
+
+/* Tên + badge xác thực */
+.mentor-card-name {
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.mentor-verified-badge {
+  background: -webkit-linear-gradient(45deg, #f27121, #e94057);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mentor-card-headline {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #8b8f99;
+}
+
+/* Giới thiệu ngắn gọn */
+.mentor-bio {
+  font-size: 13.5px;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.6;
+  margin-bottom: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: normal;
+}
+
+/* Tags kỹ năng */
+.mentor-tag {
+  background-color: rgba(0, 0, 0, 0.035);
+  color: #5b6573;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 5px 11px;
+  border-radius: 7px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mentor-profile-card:hover .mentor-tag {
+  background-color: rgba(242, 113, 37, 0.1);
+  color: #F27125;
+}
+
+/* Nút Action */
+.btn-action {
+  padding: 9px 0;
+  font-size: 13.5px;
+  letter-spacing: 0.005em;
+  transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+}
+
+.btn-action:active {
+  transform: scale(0.96);
+}
+
+.mentor-btn-profile {
+  background: #f8f9fb;
+  border: 1px solid rgba(0, 0, 0, 0.07) !important;
+}
+
+.mentor-btn-profile:hover {
+  background: #f1f2f5;
+}
+
+.mentor-btn-message {
+  background: linear-gradient(135deg, #F27125 0%, #e94057 100%);
+  box-shadow: 0 4px 10px -2px rgba(242, 113, 37, 0.35);
+}
+
+.mentor-btn-message:hover {
+  box-shadow: 0 6px 14px -2px rgba(242, 113, 37, 0.45);
+  color: #fff;
+}
+
+.mentor-btn-book {
+  background: linear-gradient(135deg, #F27125 0%, #FF9E67 100%);
+  box-shadow: 0 4px 12px -2px rgba(242, 113, 37, 0.4);
+}
+
+.mentor-btn-book:hover {
+  box-shadow: 0 6px 16px -2px rgba(242, 113, 37, 0.5);
+  filter: brightness(1.03);
+  color: #fff;
+}
+
+/* --- Trạng thái rỗng / loading --- */
+.mentor-empty-state {
+  padding: 64px 24px;
+  color: #9aa0ab;
+}
+
+.mentor-empty-icon {
+  font-size: 32px;
+  color: #F27125;
+  opacity: 0.35;
+  margin-bottom: 10px;
+}
+
+/* --- Phân trang --- */
+.poly-pagination .page-link {
+  border-radius: 10px !important;
+  margin: 0 3px;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 13.5px;
+  transition: all 0.2s ease;
+}
+
+.poly-pagination .page-item.active .page-link {
+  background: linear-gradient(135deg, #F27125 0%, #FF9E67 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 10px -2px rgba(242, 113, 37, 0.4);
+}
+
+.poly-pagination .page-link:hover {
+  border-color: rgba(242, 113, 37, 0.3);
+  color: #F27125;
+}
+
+.poly-pagination .page-item.disabled .page-link {
+  color: #c7cad1;
+  background: #f8f9fb;
+}
+
+/* Style cho thanh filter kế thừa từ groups.css nhưng khai báo lại để độc lập file */
+.filter-coursera:hover,
+.filter-coursera:focus {
+  background-color: #f8f9fa;
+  border-color: #d2d5d6;
+  color: #000;
+}
+
+.filter-coursera::after {
+  display: none;
+}

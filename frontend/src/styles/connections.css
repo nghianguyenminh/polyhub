@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* 
+   Connections page reuses mentor card styles from mentors.css.
+   Only connections-specific overrides are defined here.
+*/
+
+/* Đánh giá sao (chỉ dùng ở connections) */
+.mentor-rating {
+  background: #ffffff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  position: relative;
+  z-index: 2;
+}
+
+/* Style cho thanh filter kế thừa từ groups.css nhưng khai báo lại để độc lập file */
+
+.filter-coursera:hover,
+.filter-coursera:focus {
+  background-color: #f8f9fa;
+  border-color: #d2d5d6;
+  color: #000;
+}
+
+.filter-coursera::after {
+  display: none;
+}
+
+/* ------------------ */

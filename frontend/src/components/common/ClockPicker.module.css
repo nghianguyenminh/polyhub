@@ -1,0 +1,310 @@
+.clockPickerContainer {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.inputLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.timeDisplayInput {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.timeDisplayInput:hover {
+  border-color: #f27125;
+  box-shadow: 0 0 0 3px rgba(242, 113, 37, 0.15);
+}
+
+.timeText {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.clockIcon {
+  font-size: 1.1rem;
+}
+
+/* Dropdown styling - Glassmorphism & Shadows */
+.clockDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 500;
+  width: 250px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  animation: dropdownFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Digital Display Header */
+.digitalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.digitalNum {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.digitalNum:hover {
+  color: #4b5563;
+  background-color: #f3f4f6;
+}
+
+.activeText {
+  color: #f27125 !important;
+  background-color: rgba(242, 113, 37, 0.08);
+}
+
+.digitalSeparator {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #d1d5db;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.ampmToggleInHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 12px;
+  border-left: 1px solid #e5e7eb;
+  padding-left: 10px;
+}
+
+.ampmHeaderBtn {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.ampmHeaderBtn:hover {
+  color: #4b5563;
+  background-color: #f3f4f6;
+}
+
+.ampmHeaderBtnActive {
+  color: #ffffff !important;
+  background-color: #4b5563;
+}
+
+/* Clock Dial Face */
+.clockDialWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.clockDial {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  background-color: #f3f4f6;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+  user-select: none;
+  touch-action: none;
+}
+
+.centerDot {
+  position: absolute;
+  left: calc(50% - 4px);
+  top: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  background-color: #f27125;
+  border-radius: 50%;
+  z-index: 10;
+}
+
+/* Clock needle/hand */
+.clockHand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0px;
+  height: 0px;
+  transform-origin: 0 0;
+  z-index: 5;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clockHand.dragging {
+  transition: none !important;
+}
+
+.handLine {
+  position: absolute;
+  left: -1px;
+  bottom: 0;
+  width: 2px;
+  height: 70px; /* points to numbers */
+  background-color: #f27125;
+}
+
+.handPointer {
+  position: absolute;
+  left: -12px;
+  top: -82px; /* centered at radius 70px (70px + 12px) */
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(242, 113, 37, 0.2);
+  border: 2px solid #f27125;
+  box-sizing: border-box;
+}
+
+/* Number buttons positioned around dial */
+.dialNumber {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4b5563;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 8;
+}
+
+.dialNumber:hover {
+  background-color: rgba(242, 113, 37, 0.1);
+  color: #f27125;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.activeNumber {
+  background-color: #f27125 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(242, 113, 37, 0.3);
+  transform: translate(-50%, -50%) scale(1.1) !important;
+}
+
+/* Adjustment Panel */
+.adjustmentPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 12px;
+  margin-bottom: 12px;
+}
+
+.adjustBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.adjustBtn:hover {
+  background-color: #f3f4f6;
+  color: #f27125;
+  border-color: #d1d5db;
+}
+
+.adjustmentLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Footer / Action panel */
+.footerPanel {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.confirmBtn {
+  width: 100%;
+  padding: 8px 0;
+  background: linear-gradient(135deg, #f27125 0%, #ff9040 100%);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(242, 113, 37, 0.2);
+}
+
+.confirmBtn:hover {
+  opacity: 0.95;
+  box-shadow: 0 6px 14px rgba(242, 113, 37, 0.3);
+  transform: translateY(-1px);
+}
+
+.confirmBtn:active {
+  transform: translateY(0);
+}

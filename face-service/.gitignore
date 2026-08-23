@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# An toan: khong bao gio commit anh/video khuon mat that len Git
+test*.jpg
+test*.jpeg
+test*.png
+*.mp4
+*.webm
+*.mov

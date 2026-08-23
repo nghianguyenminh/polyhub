@@ -1,0 +1,14 @@
+numpy==1.26.4
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+onnxruntime==1.18.0
+opencv-python==4.9.0.80
+
+# insightface KHONG cai qua requirements.txt (khong co wheel Windows
+# chinh thuc tren PyPI, se bi loi thieu trinh bien dich C++). Cai rieng
+# bang lenh sau, SAU KHI da cai xong cac goi o tren:
+#
+#   pip install https://github.com/Gourieff/Assets/raw/main/Insightface/insightface-0.7.3-cp311-cp311-win_amd64.whl
+#
+# (doi cp311 thanh dung ban Python neu khac - repo co san cp39 toi cp313)
