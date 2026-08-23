@@ -503,7 +503,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                         {selectedDay.busySlots.length === 0 ? (
                           <span className="bk-slot-chip free">
                             <i className="bi bi-check-circle-fill" />
-                            Trống lịch cả ngày
+                            Chưa có lịch bận
                           </span>
                         ) : (
                           selectedDay.busySlots.map((b, idx) => (
@@ -585,13 +585,13 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                             <span className="bk-section-num">3</span>
                             Giờ bắt đầu
                           </div>
-                          <ClockPicker 
-                            value={startTime} 
+                          <ClockPicker
+                            value={startTime}
                             onChange={(val) => {
                               setStartTime(val);
                               setHasManuallySelectedTime(true);
-                            }} 
-                           />
+                            }}
+                          />
                           <div className="bk-hint-text">
                             <i className="bi bi-info-circle" />
                             Đã gợi ý giờ trống sớm nhất
