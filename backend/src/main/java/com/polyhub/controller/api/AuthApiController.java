@@ -1,6 +1,8 @@
 package com.polyhub.controller.api;
 
 import com.polyhub.config.JwtService;
+import com.polyhub.dto.GoogleLoginRequest;
+import com.polyhub.dto.JwtAuthResponse;
 import com.polyhub.entity.Role;
 import com.polyhub.entity.User;
 import com.polyhub.repository.RoleRepository;
@@ -25,6 +27,7 @@ import java.util.Random;
 import com.polyhub.service.EmailService;
 import com.polyhub.service.OtpService;
 import com.polyhub.service.SmsService;
+import com.polyhub.service.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -40,7 +43,10 @@ public class AuthApiController {
     private UserDetailsService userDetailsService;
 
     @Autowired
-    private JwtService jwtService;
+    private UserService userService;
+
+    @Autowired
+    private com.polyhub.config.JwtService jwtService;
 
     @Autowired
     private UserRepository userRepository;
@@ -114,6 +120,12 @@ public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
                 .body(Map.of("error", "Đã xảy ra lỗi: " + e.getMessage()));
     }
 }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> loginWithGoogle(@RequestBody GoogleLoginRequest request) {
+        String jwtToken = userService.processGoogleLogin(request);
+        return ResponseEntity.ok(new JwtAuthResponse(jwtToken));
+    }
 
     @PostMapping("/send-2fa-sms")
     public ResponseEntity<?> send2FASms(@RequestBody Map<String, String> request) {

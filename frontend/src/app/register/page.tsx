@@ -42,7 +42,6 @@ export default function RegisterPage() {
     };
   }, []);
 
-  // Particle background effect
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -208,7 +207,6 @@ export default function RegisterPage() {
     
     const errs: Record<string, string> = {};
 
-    // 1. Validate fullname
     const cleanFullname = fullname.trim();
     if (!cleanFullname) {
       errs.fullname = 'Vui lòng nhập họ và tên';
@@ -218,7 +216,6 @@ export default function RegisterPage() {
       errs.fullname = 'Họ tên không chứa số hoặc ký tự đặc biệt';
     }
 
-    // 2. Validate username (Mã sinh viên FPT: VD PS12345, PC12345)
     const cleanUsername = username.trim().toUpperCase();
     if (!cleanUsername) {
       errs.username = 'Vui lòng nhập mã sinh viên';
@@ -226,7 +223,6 @@ export default function RegisterPage() {
       errs.username = 'Mã sinh viên không hợp lệ (VD: PS12345, PC12345)';
     }
 
-    // 3. Validate email (Chấp nhận tất cả định dạng email hợp lệ)
     const cleanEmail = email.trim();
     if (!cleanEmail) {
       errs.email = 'Vui lòng nhập email';
@@ -234,7 +230,6 @@ export default function RegisterPage() {
       errs.email = 'Email không hợp lệ (Ví dụ: user@example.com)';
     }
 
-    // 4. Validate phone
     const cleanPhone = phone.trim();
     if (cleanPhone) {
       if (!/^(0[3|5|7|8|9])+([0-9]{8})$/.test(cleanPhone)) {
@@ -242,7 +237,6 @@ export default function RegisterPage() {
       }
     }
 
-    // 5. Validate birthday
     if (birthday) {
       const birthDate = new Date(birthday);
       const today = new Date();
@@ -258,14 +252,12 @@ export default function RegisterPage() {
       }
     }
 
-    // 6. Validate password
     if (!password) {
       errs.password = 'Vui lòng nhập mật khẩu';
     } else if (password.length < 6) {
       errs.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
 
-    // 7. Validate confirmPassword
     if (!confirmPassword) {
       errs.confirmPassword = 'Vui lòng xác nhận mật khẩu';
     } else if (password !== confirmPassword) {
@@ -478,6 +470,22 @@ export default function RegisterPage() {
               ) : 'Đăng ký tài khoản'}
             </button>
           </form>
+
+          <div className="position-relative text-center mt-4 mb-3">
+            <hr style={{ borderColor: '#E5E7EB', margin: 0 }} />
+            <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted" style={{ fontSize: '14px' }}>
+              Hoặc
+            </span>
+          </div>
+
+          <a 
+            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/oauth2/authorization/google`} 
+            className="btn-submit d-flex align-items-center justify-content-center text-decoration-none w-100"
+            style={{ backgroundColor: '#ffffff', color: '#374151', border: '1px solid #D1D5DB' }}
+          >
+            <i className="bi bi-google me-2" style={{ color: '#EA4335' }}></i>
+            Tiếp tục với Google
+          </a>
 
           <div className="text-center mt-4 pt-2">
             <span style={{ fontSize: '14px', color: '#6B7280' }}>Đã có tài khoản? </span>

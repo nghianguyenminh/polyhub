@@ -23,9 +23,8 @@ function LoginContent() {
   const [otp, setOtp] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
   
-  // States mới cho việc đổi phương thức xác minh (Email / Phone)
   const [method, setMethod] = useState<'email' | 'phone'>('email');
-  const [isPhoneAvailable, setIsPhoneAvailable] = useState(false); // Đổi thành true nếu muốn test nhảy sang SMS thành công
+  const [isPhoneAvailable, setIsPhoneAvailable] = useState(false);
   const [phoneString, setPhoneString] = useState('********89');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -33,6 +32,14 @@ function LoginContent() {
   const showLogoutSuccess = searchParams.get('logout') === 'true';
   const showRegisterSuccess = searchParams.get('registerSuccess') === 'true';
   const showResetSuccess = searchParams.get('resetSuccess') === 'true';
+
+  useEffect(() => {
+  const token = searchParams.get('token');
+  if (token) {
+    localStorage.setItem('token', token);
+    window.location.href = '/';
+  }
+}, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -52,7 +59,6 @@ function LoginContent() {
     }
   }, []);
 
-  // Particle background effect
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -232,21 +238,21 @@ function LoginContent() {
       }
 
       if (data.status === 'REQUIRES_2FA') {
-  setMaskedEmail(data.email);
-  
-  if (data.phone) {
-    setIsPhoneAvailable(true);
-    const phoneStr = String(data.phone);
-    const maskedPhone = "********" + phoneStr.slice(-2);
-    setPhoneString(maskedPhone);
-  } else {
-    setIsPhoneAvailable(false);
-  }
-  
-  setStep(2);
-  setLoadingState(false);
-  return;
-}
+        setMaskedEmail(data.email);
+        
+        if (data.phone) {
+          setIsPhoneAvailable(true);
+          const phoneStr = String(data.phone);
+          const maskedPhone = "********" + phoneStr.slice(-2);
+          setPhoneString(maskedPhone);
+        } else {
+          setIsPhoneAvailable(false);
+        }
+        
+        setStep(2);
+        setLoadingState(false);
+        return;
+      }
 
       await login(username, password);
     } catch (err: any) {
@@ -266,7 +272,7 @@ function LoginContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, code: otp }), // Có thể cần gửi thêm tham số `method` xuống backend nếu API yêu cầu phân biệt SMS/Email
+        body: JSON.stringify({ username, code: otp }),
       });
 
       const data = await res.json();
@@ -288,7 +294,6 @@ function LoginContent() {
     }
   };
 
-  // Hàm xử lý khi bấm nút "Thử cách khác"
   const handleTryOtherWay = async () => {
     if (!isPhoneAvailable) {
       setErrorMsg('Phương thức không khả dụng do bạn chưa xác minh số điện thoại.');
@@ -428,6 +433,22 @@ function LoginContent() {
                 </button>
               </form>
 
+              <div className="position-relative text-center mt-4 mb-3">
+                <hr style={{ borderColor: '#E5E7EB', margin: 0 }} />
+                <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted" style={{ fontSize: '14px' }}>
+                  Hoặc
+                </span>
+              </div>
+
+              <a 
+                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/oauth2/authorization/google`} 
+                className="btn-submit d-flex align-items-center justify-content-center text-decoration-none w-100"
+                style={{ backgroundColor: '#ffffff', color: '#374151', border: '1px solid #D1D5DB' }}
+              >
+                <i className="bi bi-google me-2" style={{ color: '#EA4335' }}></i>
+                Đăng nhập với Google
+              </a>
+
               <div className="text-center mt-4 pt-2">
                 <span style={{ fontSize: '14px', color: '#6B7280' }}>Chưa có tài khoản? </span>
                 <Link href="/register" className="text-poly text-decoration-none fw-semibold" style={{ fontSize: '14px' }}>Đăng ký ngay</Link>
@@ -469,23 +490,13 @@ function LoginContent() {
                 ) : 'Xác minh'}
               </button>
 
-                {/* <button 
-                  type="button" 
-                  className="btn btn-link text-decoration-none w-100 mb-2 fw-medium" 
-                  style={{ color: '#f26522', fontSize: '14px' }}
-                  onClick={handleTryOtherWay} 
-                  disabled={loadingState}
-                >
-                  Thử cách khác
-                </button> */}
-
               <button 
                 type="button" 
                 className="btn btn-link text-decoration-none w-100" 
                 style={{ color: '#6B7280', fontSize: '14px' }}
                 onClick={() => {
                   setStep(1);
-                  setMethod('email'); // Reset về email khi back lại
+                  setMethod('email');
                   setErrorMsg('');
                 }} 
                 disabled={loadingState}

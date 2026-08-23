@@ -9,4 +9,5 @@ public interface UserService {
      * @return String: Thông báo kết quả ("success" nếu thành công, hoặc các lỗi cụ thể như "Trùng username")
      */
     String registerUser(RegisterRequest request);
+    String processGoogleLogin(com.polyhub.dto.GoogleLoginRequest request);
 }

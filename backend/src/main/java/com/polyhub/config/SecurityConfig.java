@@ -2,7 +2,6 @@ package com.polyhub.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -17,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.polyhub.config.OAuth2LoginSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -35,7 +36,9 @@ public class SecurityConfig {
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
-    // 1. Khai báo công cụ mã hóa mật khẩu BCrypt
+    @Autowired
+    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -53,9 +56,6 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    /**
-     * Security chain áp dụng cho toàn bộ ứng dụng — Stateless + JWT.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -63,11 +63,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Các endpoint auth công khai
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/verify-otp", "/api/auth/reset-password", "/error").permitAll()
-                // Cho phép kết nối WebSocket chat
                 .requestMatchers("/ws-chat/**").permitAll()
-                // API công khai: xem feed, xem bài viết, tài liệu, mentors, categories (không cần đăng nhập)
                 .requestMatchers("/api/v2/posts/feed", "/api/v2/posts/user/**").permitAll()
                 .requestMatchers("/api/categories", "/api/categories/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/documents").permitAll()
@@ -77,16 +74,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/verify-otp", "/api/auth/send-2fa-sms").permitAll()
                 .requestMatchers("/api/auth/verify-2fa").permitAll()
                 .requestMatchers("/api/comments/**").permitAll()
-                // Các action bài viết (like, share, create...): JWT filter tự xác thực,
-                // controller tự kiểm tra Principal — tương tự pattern của /api/comments/**
                 .requestMatchers("/api/posts/**").permitAll()
                 .requestMatchers("/api/v2/posts/**").permitAll()
                 .requestMatchers("/api/saved/**").permitAll()
-                // Admin API
                 .requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "USER_ADMIN", "CONTENT_ADMIN")
-                // Tất cả các request còn lại cần đăng nhập
                 .anyRequest().authenticated()
             )
+            .oauth2Login(oauth2 -> oauth2
+    .successHandler(oAuth2LoginSuccessHandler)
+)
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setContentType("application/json;charset=UTF-8");
@@ -103,6 +99,5 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-        
     }
 }
