@@ -30,7 +30,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
   // Form states
   const [startTime, setStartTime] = useState('09:00');
-  const [duration, setDuration] = useState<number>(30);
+  const [duration, setDuration] = useState<number>(1);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -89,7 +89,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
     if (isOpen && mentor.user?.username) {
       loadAvailability();
       setStartTime('09:00');
-      setDuration(30);
+      setDuration(1);
       setNote('');
       setError('');
       setSuccess(false);
