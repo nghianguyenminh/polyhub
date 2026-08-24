@@ -66,7 +66,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
   const [balance, setBalance] = useState<number>(0);
 
   useEffect(() => {
-    fetchAPI('/api/wallet/balance').then(data => setBalance(data.balance || 0)).catch(() => {});
+    fetchAPI('/api/wallet/balance').then(data => setBalance(data.balance || 0)).catch(() => { });
   }, []);
 
   const fetchExtendLimit = useCallback(async () => {
@@ -174,7 +174,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       setModalShownOnce(false);
       setExtMsg({ text: `Da gia han them ${mins} phut! Tong: ${data.newDuration} phut.`, ok: true });
       playBeep(523, 0.3);
-      fetchAPI('/api/wallet/balance').then(data => setBalance(data.balance || 0)).catch(() => {});
+      fetchAPI('/api/wallet/balance').then(data => setBalance(data.balance || 0)).catch(() => { });
       setTimeout(() => { setShowExtModal(false); setExtMsg(null); }, 1600);
     } catch (err: any) {
       setExtMsg({ text: err.message || 'Gia han that bai. Thu lai!', ok: false });
@@ -243,7 +243,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
           animation: isCritical ? 'pulse-r 1s infinite' : isWarning ? 'warnPulse 1.4s infinite' : 'none',
         }}>
           <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', backgroundColor: isCritical ? '#dc3545' : isWarning ? '#F27125' : '#10b981', animation: 'blink 1s infinite' }} />
-          <span>Thoi gian con lai: {fmtTime(timeLeft)}</span>
+          <span>Thời Gian Còn Lại: {fmtTime(timeLeft)}</span>
           {extCount > 0 && <span style={{ background: '#F27125', color: '#fff', borderRadius: 10, padding: '2px 8px', fontSize: 11, fontWeight: 700, marginLeft: 4 }}>+{extMinutes}ph</span>}
         </div>
       )}
@@ -258,15 +258,15 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
               <div style={{ width: 64, height: 64, borderRadius: 32, margin: '0 auto 16px', background: 'rgba(255,152,0,0.12)', border: '1.5px solid rgba(255,152,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
                 &#9200;
               </div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Sap het thoi gian!</div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Sắp hết thời gian!</div>
               <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15 }}>
-                Con <span style={{ color: '#FF9800', fontWeight: 700 }}>{fmtTime(timeLeft)}</span> trong cuoc goi nay
+                Còn <span style={{ color: '#FF9800', fontWeight: 700 }}>{fmtTime(timeLeft)}</span> trong cuộc gọi này
               </div>
             </div>
 
             {/* Ext count */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 10, color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
-              Da gia han {extCount}/{maxExt} lan
+              Đã gia hạn {extCount}/{maxExt} lần
             </div>
 
             {/* Feedback */}
@@ -281,21 +281,21 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
             {/* Extend buttons or limit msg */}
             {canExtend && allowedOptions.length > 0 ? (
               <>
-                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, marginBottom: 14 }}>Chon thoi gian gia han:</div>
+                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, marginBottom: 14 }}>Chọn thời gian gia hạn:</div>
                 <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto', paddingBottom: 10 }}>
                   {allowedOptions.map(mins => {
                     const cost = mins * 1000;
                     const canAfford = balance >= cost;
                     return (
-                    <button key={mins} onClick={() => handleExtend(mins)} disabled={isExtending || !canAfford}
-                      style={{ minWidth: 80, flexShrink: 0, background: 'rgba(255,152,0,0.1)', border: '1.5px solid rgba(255,152,0,0.4)', borderRadius: 16, padding: '18px 0', cursor: isExtending || !canAfford ? 'not-allowed' : 'pointer', opacity: isExtending || !canAfford ? 0.5 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
-                      onMouseEnter={e => { if (!isExtending && canAfford) e.currentTarget.style.background = 'rgba(255,152,0,0.22)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,152,0,0.1)'; }}>
-                      <span style={{ fontSize: 18 }}>&#43;</span>
-                      <span style={{ color: '#fff', fontWeight: 700, fontSize: 22 }}>+{mins}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>phut</span>
-                      <span style={{ color: canAfford ? '#10b981' : '#dc3545', fontSize: 10, marginTop: 4 }}>{cost.toLocaleString('vi-VN')}đ</span>
-                    </button>
+                      <button key={mins} onClick={() => handleExtend(mins)} disabled={isExtending || !canAfford}
+                        style={{ minWidth: 80, flexShrink: 0, background: 'rgba(255,152,0,0.1)', border: '1.5px solid rgba(255,152,0,0.4)', borderRadius: 16, padding: '18px 0', cursor: isExtending || !canAfford ? 'not-allowed' : 'pointer', opacity: isExtending || !canAfford ? 0.5 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+                        onMouseEnter={e => { if (!isExtending && canAfford) e.currentTarget.style.background = 'rgba(255,152,0,0.22)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,152,0,0.1)'; }}>
+                        <span style={{ fontSize: 18 }}>&#43;</span>
+                        <span style={{ color: '#fff', fontWeight: 700, fontSize: 22 }}>{mins}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>phút</span>
+                        <span style={{ color: canAfford ? '#10b981' : '#dc3545', fontSize: 10, marginTop: 4 }}>{cost.toLocaleString('vi-VN')}đ</span>
+                      </button>
                     );
                   })}
                 </div>
@@ -306,7 +306,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
             ) : (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.22)', borderRadius: 12, padding: 14, marginBottom: 18 }}>
                 <span>&#9888;&#65039;</span>
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.6 }}>Da dat gioi han gia han ({maxExt} lan).<br />Cuoc goi se tu dong ket thuc khi het gio.</span>
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 1.6 }}>Đã đạt giới hạn gia hạn ({maxExt} lần).<br />Cuộc gọi sẽ tự động kết thúc khi hết giờ.</span>
               </div>
             )}
 
@@ -315,13 +315,13 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
               style={{ width: '100%', padding: '15px 0', background: '#B71C1C', border: 'none', borderRadius: 14, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}
               onMouseEnter={e => { e.currentTarget.style.background = '#C62828'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#B71C1C'; }}>
-              &#128244; Ket thuc cuoc goi
+              &#128244; Kết thúc gọi
             </button>
 
             {/* Dismiss */}
             {canExtend && (
               <button onClick={() => setShowExtModal(false)} style={{ width: '100%', padding: '10px 0', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer' }}>
-                Dong canh bao &amp; tiep tuc goi
+                Đóng cảnh báo &amp; Tiếp tục Gọi
               </button>
             )}
           </div>

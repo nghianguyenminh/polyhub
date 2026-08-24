@@ -899,6 +899,11 @@ public class BookingApiController {
         response.put("maxExtensions", maxExtensions);
         response.put("extendedMinutes", booking.getExtendedMinutes() != null ? booking.getExtendedMinutes() : 0);
         response.put("canExtend", currentExtCount < maxExtensions);
+        // ✅ FIX: Trả về status để mobile client kiểm tra đúng (thiếu field này gây tự tắt call)
+        response.put("status", booking.getStatus() != null ? booking.getStatus().name() : "APPROVED");
+        response.put("duration", totalMinutes);
+        response.put("startedAt", booking.getStartedAt() != null ? booking.getStartedAt().toString() : null);
+        response.put("calculatedEndAt", endAt.toString());
 
         return ResponseEntity.ok(response);
     }

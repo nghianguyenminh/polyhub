@@ -204,7 +204,9 @@ export const VideoCallScreen = () => {
       const data: RemainingTimeInfo = response.data;
       setTimeInfo(data);
 
-      if (data.status !== 'APPROVED') {
+      // ✅ FIX: Chỉ thoát khi status có giá trị RÕ RÀNG và không phải APPROVED
+      // Tránh thoát khi status là undefined (backend chưa trả về field này)
+      if (data.status && data.status !== 'APPROVED') {
         clearAllTimers();
         navigation.goBack();
         return;
