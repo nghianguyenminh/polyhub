@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchAPI } from '@/lib/api';
 
 interface RatingModalProps {
@@ -14,6 +14,21 @@ export default function RatingModal({ bookingId, mentorName, onClose }: RatingMo
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const fetchExistingReview = async () => {
+      try {
+        const data = await fetchAPI(`/api/reviews/booking/${bookingId}`);
+        if (data && data.rating) {
+          setRating(data.rating);
+          if (data.comment) setComment(data.comment);
+        }
+      } catch (err) {
+        console.error("Failed to fetch existing review:", err);
+      }
+    };
+    fetchExistingReview();
+  }, [bookingId]);
 
   const handleSubmit = async () => {
     if (rating === 0) {

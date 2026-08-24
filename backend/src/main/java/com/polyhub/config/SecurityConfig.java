@@ -74,6 +74,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/verify-otp", "/api/auth/send-2fa-sms").permitAll()
                 .requestMatchers("/api/auth/verify-2fa").permitAll()
                 .requestMatchers("/api/comments/**").permitAll()
+<<<<<<< HEAD
+=======
+                .requestMatchers("/api/wallet/test-add").permitAll()
+                // Các action bài viết (like, share, create...): JWT filter tự xác thực,
+                // controller tự kiểm tra Principal — tương tự pattern của /api/comments/**
+>>>>>>> Test2
                 .requestMatchers("/api/posts/**").permitAll()
                 .requestMatchers("/api/v2/posts/**").permitAll()
                 .requestMatchers("/api/saved/**").permitAll()

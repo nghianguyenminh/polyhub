@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Trash2,
   Eye,
+  Sparkles,
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 import styles from "./DocumentManagement.module.css";
@@ -152,6 +153,18 @@ export default function DocumentManagement() {
       loadDocuments(currentPage, keyword, status);
     } catch (err: any) {
       setMessage({ text: err.message || "Lỗi duyệt tài liệu", type: "Danger" });
+    }
+  };
+
+  const handleSummarize = async (id: number) => {
+    try {
+      const result = await fetchAPI(`/api/admin/documents/${id}/summarize`, {
+        method: "POST",
+      });
+      setMessage({ text: result.message, type: "Success" });
+      loadDocuments(currentPage, keyword, status);
+    } catch (err: any) {
+      setMessage({ text: err.message || "Lỗi yêu cầu AI tóm tắt", type: "Danger" });
     }
   };
 
@@ -465,13 +478,23 @@ export default function DocumentManagement() {
                               </>
                             )}
                             {doc.status === "APPROVED" && (
-                              <button
-                                onClick={() => openTakedownModal(doc.id)}
-                                className={`${styles.btnAction} ${styles.btnWarning}`}
-                                title="Gỡ tài liệu"
-                              >
-                                <ShieldOff size={16} /> Gỡ
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => handleSummarize(doc.id)}
+                                  className={`${styles.btnAction}`}
+                                  style={{ background: "#e0e7ff", color: "#4338ca" }}
+                                  title="Tóm tắt AI"
+                                >
+                                  <Sparkles size={16} /> Tóm tắt AI
+                                </button>
+                                <button
+                                  onClick={() => openTakedownModal(doc.id)}
+                                  className={`${styles.btnAction} ${styles.btnWarning}`}
+                                  title="Gỡ tài liệu"
+                                >
+                                  <ShieldOff size={16} /> Gỡ
+                                </button>
+                              </>
                             )}
                             {(doc.status === "REJECTED" ||
                               doc.status === "TAKEDOWN") && (

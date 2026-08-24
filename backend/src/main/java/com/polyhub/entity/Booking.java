@@ -73,6 +73,9 @@ public class Booking implements Serializable {
     @Column(name = "extended_minutes")
     private Integer extendedMinutes = 0; // Tổng số phút đã được gia hạn thêm
 
+    @Column(name = "cost", columnDefinition = "bigint default 0")
+    private Long cost = 0L; // Số tiền bị trừ
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -90,6 +93,7 @@ public class Booking implements Serializable {
         if (extensionCount == null) extensionCount = 0;
         if (maxExtensions == null) maxExtensions = 2;
         if (extendedMinutes == null) extendedMinutes = 0;
+        if (cost == null) cost = 0L;
     }
 
     @PreUpdate

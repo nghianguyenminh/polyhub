@@ -132,7 +132,7 @@ export default function UserProfilePage() {
   if (authLoading || profileLoading) {
     return (
       <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
-        <div className="spinner-border text-primary" role="status">
+        <div className="spinner-border text-poly" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function UserProfilePage() {
       <div className="text-center p-5 bg-light min-vh-100">
         <h3>Không tìm thấy trang cá nhân</h3>
         <p className="text-muted">Người dùng không tồn tại hoặc đã bị khóa tài khoản.</p>
-        <button className="btn btn-primary" onClick={() => router.push('/')}>Quay lại trang chủ</button>
+        <button className="btn btn-poly-gradient text-white border-0" onClick={() => router.push('/')}>Quay lại trang chủ</button>
       </div>
     );
   }
@@ -189,13 +189,11 @@ export default function UserProfilePage() {
               <div className="profile-info px-4 pb-4 position-relative">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-end text-center text-md-start">
 
-                  <div className="avatar-wrapper position-relative z-2" style={{ marginTop: '-65px', marginBottom: '10px' }}>
+                  <div className="avatar-wrapper position-relative z-2 flex-shrink-0" style={{ width: '130px', height: '130px', marginTop: '-65px', marginBottom: '10px' }}>
                     <img
-                      src={profileUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                      src={profileUser.avatar && profileUser.avatar !== 'default.png' ? profileUser.avatar : `https://ui-avatars.com/api/?name=${profileUser.fullname}&background=random&rounded=true&size=130`}
                       alt="Avatar"
-                      className="profile-avatar border border-4 border-white rounded-circle shadow-sm"
-                      width="130"
-                      height="130"
+                      className="profile-avatar border border-4 border-white rounded-circle shadow-sm w-100 h-100"
                       style={{ objectFit: 'cover', background: '#fff' }}
                     />
                     {isOwner && (
@@ -212,7 +210,7 @@ export default function UserProfilePage() {
                     <h2 className="mb-1 fw-bold text-dark d-flex justify-content-center justify-content-md-start align-items-center flex-wrap gap-2">
                       <span className="d-flex align-items-center gap-1">
                         {profileUser.fullname}
-                        <i className="bi bi-check-circle-fill text-primary ms-1" style={{ fontSize: '20px' }} title="Tài khoản xác thực"></i>
+                        <i className="bi bi-check-circle-fill text-poly ms-1" style={{ fontSize: '20px' }} title="Tài khoản xác thực"></i>
                       </span>
                       {profileUser.role === 'MENTOR' && (
                         <span className="badge d-flex align-items-center gap-1 px-2 py-1 fw-bold shadow-sm"
@@ -242,7 +240,7 @@ export default function UserProfilePage() {
                       <>
                         {/* <button className="btn btn-primary rounded-pill px-4 fw-medium shadow-sm bg-poly border-0"><i className="bi bi-plus-lg me-1"></i> Thêm vào tin</button> */}
                         <button
-                          className="btn btn-primary border-0 rounded-pill px-4 fw-medium shadow-sm bg-poly"
+                          className="btn btn-poly-gradient border-0 text-white rounded-pill px-4 fw-medium shadow-sm"
                           onClick={() => router.push('/settings')}
                         >
                           <i className="bi bi-pencil me-1"></i> Chỉnh sửa
@@ -250,7 +248,7 @@ export default function UserProfilePage() {
                       </>
                     ) : (
                       <button
-                        className={`btn ${isFollowing ? 'btn-secondary bg-light text-dark border' : 'btn-primary bg-poly'} rounded-pill px-4 fw-medium shadow-sm border-0`}
+                        className={`btn ${isFollowing ? 'btn-secondary bg-light text-dark border' : 'btn-poly-gradient text-white'} rounded-pill px-4 fw-medium shadow-sm border-0`}
                         onClick={handleFollowToggle}
                       >
                         <i className={`bi ${isFollowing ? 'bi-person-check-fill' : 'bi-person-plus-fill'} me-1`}></i>

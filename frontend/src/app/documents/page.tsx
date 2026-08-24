@@ -50,7 +50,7 @@ export default function DocumentsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [docTypeCounts, setDocTypeCounts] = useState<Record<string, number>>({});
-  
+
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [keyword, setKeyword] = useState('');
@@ -86,7 +86,7 @@ export default function DocumentsPage() {
       if (documentType) params.append('document_type', documentType);
 
       const data = await fetchAPI(`/api/documents?${params.toString()}`);
-      
+
       setDocuments(data.documents || []);
       setCategories(data.categories || []);
       setCategoryCounts(data.categoryCounts || {});
@@ -131,7 +131,7 @@ export default function DocumentsPage() {
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFile || !uploadTitle || !uploadCatId) return;
-    
+
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -154,7 +154,7 @@ export default function DocumentsPage() {
       // Close modal
       const closeBtn = document.getElementById('closeUploadModal');
       if (closeBtn) closeBtn.click();
-      
+
       loadDocuments(1);
     } catch (err) {
       console.error('Upload failed', err);
@@ -224,7 +224,7 @@ export default function DocumentsPage() {
       <div className="app-container">
         <main className="w-100 d-flex justify-content-between">
           <LeftSidebar activeMenu="documents" />
-          
+
           <div className="poly-main-feed" style={{ maxWidth: '1000px', width: '100%' }}>
             <form onSubmit={handleSearch} id="filterForm">
               <div className="poly-card p-3 mb-4" style={{ background: 'linear-gradient(to right, #ffffff, #fffaf5)' }}>
@@ -237,17 +237,17 @@ export default function DocumentsPage() {
                     <i className="bi bi-cloud-arrow-up-fill me-2 fs-5"></i> Chia sẻ tài liệu
                   </button>
                 </div>
-                
+
                 <div className="input-group mt-3 shadow-sm" style={{ borderRadius: '50rem', border: '1px solid rgba(242, 113, 37, 0.2)', background: 'white' }}>
                   <span className="input-group-text bg-transparent border-0 text-poly ps-3 pe-2 py-2">
                     <i className="bi bi-search"></i>
                   </span>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
-                    className="form-control bg-transparent border-0 py-2 shadow-none" 
-                    style={{ fontSize: '13.5px' }} 
+                    className="form-control bg-transparent border-0 py-2 shadow-none"
+                    style={{ fontSize: '13.5px' }}
                     placeholder="Tìm kiếm theo mã môn (vd: SOF3021), tên tài liệu, chuyên ngành..."
                   />
                   <button type="submit" className="btn btn-poly-gradient px-4 fw-bold py-2" style={{ borderRadius: '0 50rem 50rem 0', fontSize: '13.5px' }}>Tìm kiếm</button>
@@ -258,8 +258,8 @@ export default function DocumentsPage() {
                 <button type="button" onClick={handleClearFilters} className="filter-coursera shadow-sm fw-bold text-dark border-0">
                   <i className="bi bi-arrow-clockwise"></i> Xoá lọc
                 </button>
-                <div className="vr mx-1 opacity-25"></div> 
-                
+                <div className="vr mx-1 opacity-25"></div>
+
                 <div className="dropdown">
                   <button className={`filter-coursera dropdown-toggle ${categoryId ? 'bg-poly text-white border-poly' : ''}`} type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                     Chuyên ngành <i className="bi bi-chevron-down ms-1" style={{ fontSize: '11px' }}></i>
@@ -269,12 +269,12 @@ export default function DocumentsPage() {
                     <div className="coursera-filter-body">
                       {categories.map(cat => (
                         <div className="form-check custom-radio mb-2" key={cat.id}>
-                          <input 
-                            className="form-check-input shadow-none" 
-                            type="radio" 
-                            name="category_id" 
-                            id={`d_cn_${cat.id}`} 
-                            value={cat.id} 
+                          <input
+                            className="form-check-input shadow-none"
+                            type="radio"
+                            name="category_id"
+                            id={`d_cn_${cat.id}`}
+                            value={cat.id}
                             checked={categoryId === cat.id.toString()}
                             onChange={(e) => setCategoryId(e.target.value)}
                           />
@@ -300,17 +300,17 @@ export default function DocumentsPage() {
                     <div className="coursera-filter-body">
                       {['PDF', 'WORD', 'EXCEL', 'OTHER'].map(type => (
                         <div className="form-check custom-radio mb-2" key={type}>
-                          <input 
-                            className="form-check-input shadow-none" 
-                            type="radio" 
-                            name="document_type" 
-                            id={`type-${type}`} 
-                            value={type} 
+                          <input
+                            className="form-check-input shadow-none"
+                            type="radio"
+                            name="document_type"
+                            id={`type-${type}`}
+                            value={type}
                             checked={documentType === type}
                             onChange={(e) => setDocumentType(e.target.value)}
                           />
                           <label className="form-check-label d-flex justify-content-between w-100" htmlFor={`type-${type}`}>
-                            <span>{type === 'WORD' ? 'Word (DOC/DOCX)' : type === 'EXCEL' ? 'Excel (XLS/XLSX)' : type === 'OTHER' ? 'Khác' : type}</span> 
+                            <span>{type === 'WORD' ? 'Word (DOC/DOCX)' : type === 'EXCEL' ? 'Excel (XLS/XLSX)' : type === 'OTHER' ? 'Khác' : type}</span>
                             <span className="text-muted" style={{ fontSize: '11.5px' }}>({docTypeCounts[type] || 0})</span>
                           </label>
                         </div>
@@ -338,17 +338,17 @@ export default function DocumentsPage() {
                   const { box, icon } = getDocIconAndClass(doc.documentType);
                   return (
                     <div className="col" key={doc.id}>
-                      <div 
-                        className="doc-card h-100 d-flex flex-column position-relative" 
-                        style={{ cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }} 
-                        data-bs-toggle="modal" 
+                      <div
+                        className="doc-card h-100 d-flex flex-column position-relative"
+                        style={{ cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+                        data-bs-toggle="modal"
                         data-bs-target="#viewDocModal"
                         onClick={() => setSelectedDoc(doc)}
                       >
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div className={`doc-icon-box ${box}`}>
                             <i className={`bi ${icon}`}></i>
-                          </div> 
+                          </div>
                           <div className="d-flex align-items-center gap-2">
                             <button
                               type="button"
@@ -358,8 +358,8 @@ export default function DocumentsPage() {
                             >
                               <i className="bi bi-flag"></i>
                             </button>
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className={`btn-icon-transparent z-3 position-relative border-0 bg-transparent ${doc.isSaved ? 'text-poly' : 'text-muted'}`}
                               onClick={(e) => handleToggleSave(e, doc.id)}
                               title="Lưu tài liệu"
@@ -368,30 +368,36 @@ export default function DocumentsPage() {
                             </button>
                           </div>
                         </div>
-                        
-                        <div className="mb-2 flex-grow-1">
-                          <span className="badge bg-light text-dark border mb-2 fw-normal">{doc.category?.name || 'Tài liệu'}</span>
+
+                        <div className="mb-2 flex-grow-1 position-relative">
+                          <span className="badge bg-light text-dark border mb-2 fw-normal me-2">{doc.category?.name || 'Tài liệu'}</span>
+                          {doc.summaryStatus === 'COMPLETED' && (
+                            <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca', border: '1px solid #c7d2fe', fontSize: '10px' }} title={doc.aiSummary}>✨ AI Tóm tắt</span>
+                          )}
+                          {doc.summaryStatus === 'PROCESSING' && (
+                            <span className="badge bg-light text-secondary border" style={{ fontSize: '10px' }}>⏳ Đang phân tích...</span>
+                          )}
                           <h6 className="doc-title text-dark">{doc.title}</h6>
                         </div>
-                        
+
                         <div className="doc-meta text-muted mb-3 d-flex align-items-center">
-                          <img 
-                            src={doc.uploader?.avatar && doc.uploader.avatar !== 'default.png' ? doc.uploader.avatar : `https://ui-avatars.com/api/?name=${doc.uploader?.fullname || 'PolyHub'}&background=random`} 
-                            className="rounded-circle me-2 object-fit-cover" 
-                            width="22" 
-                            height="22" 
-                            alt="avatar" 
+                          <img
+                            src={doc.uploader?.avatar && doc.uploader.avatar !== 'default.png' ? doc.uploader.avatar : `https://ui-avatars.com/api/?name=${doc.uploader?.fullname || 'PolyHub'}&background=random`}
+                            className="rounded-circle me-2 object-fit-cover"
+                            width="22"
+                            height="22"
+                            alt="avatar"
                           />
                           <span className="text-truncate fw-medium text-dark" style={{ fontSize: '13px' }}>{doc.uploader?.fullname || 'Hệ thống'}</span>
                         </div>
-                        
+
                         <div className="d-flex justify-content-between align-items-center mt-auto pt-2 border-top z-3 position-relative">
                           <div className="text-muted" style={{ fontSize: '11.5px' }}><i className="bi bi-download me-1"></i> <span>{doc.downloadCount || 0}</span></div>
-                          <a 
-                            href={`${API_BASE_URL}/api/documents/download/${doc.id}`} 
-                            target="_blank" 
+                          <a
+                            href={`${API_BASE_URL}/api/documents/download/${doc.id}`}
+                            target="_blank"
                             rel="noreferrer"
-                            onClick={(e) => e.stopPropagation()} 
+                            onClick={(e) => e.stopPropagation()}
                             className="btn btn-download btn-sm rounded-pill fw-bold"
                           >
                             Tải về
@@ -438,7 +444,7 @@ export default function DocumentsPage() {
                 <i className="bi bi-x fs-4 text-muted"></i>
               </div>
             </div>
-            
+
             <form onSubmit={handleUploadSubmit}>
               <div className="modal-body pt-3 pb-4 px-4">
                 <div className="row g-4">
@@ -491,7 +497,7 @@ export default function DocumentsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="modal-body px-4 py-3">
                   <div className="d-flex mb-3">
                     <div className={`doc-icon-box me-3 mt-1 d-flex align-items-center justify-content-center ${getDocIconAndClass(selectedDoc.documentType).box}`} style={{ width: '48px', height: '48px', borderRadius: '12px', fontSize: '24px' }}>
@@ -506,23 +512,63 @@ export default function DocumentsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="p-3 mb-4 mt-2" style={{ background: 'rgba(242, 113, 37, 0.04)', border: '1px solid rgba(242, 113, 37, 0.1)', borderRadius: '12px' }}>
                     <h6 className="fw-bold mb-2 text-dark" style={{ fontSize: '13.5px' }}>Mô tả tài liệu:</h6>
                     <p className="mb-0 text-muted" style={{ fontSize: '14px', lineHeight: 1.6 }}>
                       {selectedDoc.description || 'Chưa có mô tả cho tài liệu này.'}
                     </p>
                   </div>
-                  
+
+                  {/* AI Summary Section */}
+                  <div className="p-3 mb-4" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                    <h6 className="fw-bold mb-2 d-flex align-items-center" style={{ fontSize: '13.5px', color: '#334155' }}>
+                      <span className="me-2 fs-5"></span> Tóm tắt bởi AI
+                    </h6>
+
+                    {selectedDoc.summaryStatus === 'COMPLETED' ? (
+                      <>
+                        <p className="mb-3 text-dark" style={{ fontSize: '14px', lineHeight: 1.6 }}>
+                          {selectedDoc.aiSummary}
+                        </p>
+                        {selectedDoc.aiKeywords && (
+                          <div className="d-flex flex-wrap gap-1 mt-2">
+                            <span className="text-muted fw-medium me-1" style={{ fontSize: '12.5px' }}>📌 Từ khóa:</span>
+                            {selectedDoc.aiKeywords.split(',').map((kw, idx) => (
+                              <span key={idx} className="badge rounded-pill fw-medium" style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
+                                {kw.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : selectedDoc.summaryStatus === 'PROCESSING' ? (
+                      <div className="d-flex align-items-center text-muted">
+                        <div className="spinner-border spinner-border-sm me-2" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span style={{ fontSize: '13.5px' }}>Hệ thống đang phân tích tài liệu...</span>
+                      </div>
+                    ) : selectedDoc.summaryStatus === 'UNSUPPORTED' ? (
+                      <div className="text-muted" style={{ fontSize: '13.5px' }}>
+                        📄 Tài liệu này không hỗ trợ tóm tắt tự động (ảnh scan hoặc định dạng không tương thích).
+                      </div>
+                    ) : (
+                      <div className="text-muted" style={{ fontSize: '13.5px' }}>
+                        Tài liệu chưa được phân tích.
+                      </div>
+                    )}
+                  </div>
+
                   <hr className="border-light" />
-                  
+
                   <div className="d-flex align-items-center justify-content-between mt-2 mb-2">
                     <div>
                       <p className="text-muted mb-1" style={{ fontSize: '12px', fontWeight: 500, textTransform: 'uppercase' }}>Người chia sẻ</p>
                       <div className="d-flex align-items-center">
-                        <img 
-                          src={selectedDoc.uploader?.avatar && selectedDoc.uploader.avatar !== 'default.png' ? selectedDoc.uploader.avatar : `https://ui-avatars.com/api/?name=${selectedDoc.uploader?.fullname || 'PolyHub'}&background=random`} 
-                          className="rounded-circle me-2 object-fit-cover shadow-sm border border-white" 
+                        <img
+                          src={selectedDoc.uploader?.avatar && selectedDoc.uploader.avatar !== 'default.png' ? selectedDoc.uploader.avatar : `https://ui-avatars.com/api/?name=${selectedDoc.uploader?.fullname || 'PolyHub'}&background=random`}
+                          className="rounded-circle me-2 object-fit-cover shadow-sm border border-white"
                           width="36" height="36" alt="uploader"
                         />
                         <div>
@@ -533,7 +579,7 @@ export default function DocumentsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="modal-footer border-0 pt-0 pb-4 px-4 d-flex">
                   <a href={`${API_BASE_URL}/api/documents/download/${selectedDoc.id}`} target="_blank" rel="noreferrer" className="btn btn-poly-gradient fw-bold rounded-pill w-100 py-2 d-flex justify-content-center align-items-center" style={{ fontSize: '15px' }}>
                     <i className="bi bi-cloud-arrow-down-fill me-2 fs-5"></i> Tải Xuống Tài Liệu
@@ -547,11 +593,11 @@ export default function DocumentsPage() {
 
       {/* MODAL BÁO CÁO TÀI LIỆU */}
       {reportDoc && (
-        <div 
+        <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1055, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
           onClick={handleCloseReport}
         >
-          <div 
+          <div
             style={{ width: '100%', maxWidth: '400px', background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.15)' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -616,8 +662,8 @@ export default function DocumentsPage() {
           </div>
         </div>
       )}
-      
-      
+
+
 
       <style jsx>{`
         .trendy-input {

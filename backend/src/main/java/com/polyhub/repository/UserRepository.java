@@ -28,6 +28,12 @@ public interface UserRepository extends JpaRepository<User, String> {
     Page<User> findByFullnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
             String fullname, String email, Pageable pageable);
 
+    @Query("SELECT u FROM User u LEFT JOIN u.role r WHERE u.username != 'admin' AND (r IS NULL OR r.id NOT LIKE '%ADMIN%') AND (LOWER(u.fullname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<User> searchUsersExcludingAdmins(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT u FROM User u LEFT JOIN u.role r WHERE u.username != 'admin' AND (r IS NULL OR r.id NOT LIKE '%ADMIN%')")
+    Page<User> findAllExcludingAdmins(Pageable pageable);
+
     List<User> findByFollowers_Username(String username);
 
     @org.springframework.data.jpa.repository.Query("SELECT MONTH(u.createdAt) as month, COUNT(u) as count FROM User u WHERE YEAR(u.createdAt) = :year GROUP BY MONTH(u.createdAt)")

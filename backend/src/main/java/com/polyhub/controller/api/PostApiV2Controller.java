@@ -75,6 +75,7 @@ public class PostApiV2Controller {
                 response.put("message", "⏳ Bài viết của bạn đang được đội ngũ PolyHUB xem xét. Bạn sẽ nhận thông báo khi được duyệt. ⏳");
             } else {
                 response.put("message", "Đã tạo bài viết thành công!");
+                response.put("post", buildPostResponse(newPost, new HashSet<>(), username));
             }
 
             return ResponseEntity.ok(response);
