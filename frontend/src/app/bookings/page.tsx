@@ -11,6 +11,7 @@ import ClockPicker from '@/components/common/ClockPicker';
 import CustomDatePicker from '@/components/common/CustomDatePicker';
 import RatingModal from '@/components/common/RatingModal';
 import BookingModal from '@/components/mentors/BookingModal';
+import MentorReviewsTab from '@/components/mentor/MentorReviewsTab';
 import { Mentor } from '@/lib/types';
 import '@/styles/bookings.css';
 
@@ -242,7 +243,7 @@ const SuggestedMentorsWidget = ({
 
 export default function BookingsPage() {
   const { user, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'student' | 'mentor-bookings' | 'mentor-schedule'>('student');
+  const [activeTab, setActiveTab] = useState<'student' | 'mentor-bookings' | 'mentor-schedule' | 'mentor-reviews'>('student');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -944,14 +945,30 @@ export default function BookingsPage() {
                     <i className="bi bi-gear-fill" />
                     Cài đặt lịch rảnh
                   </button>
+                  <button
+                    className={`bkp-tab ${activeTab === 'mentor-reviews' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('mentor-reviews')}
+                  >
+                    <i className="bi bi-star-fill" />
+                    Đánh giá của tôi
+                  </button>
                 </>
               )}
             </div>
 
             {/* ═══════════════════════════════════════
+                MENTOR REVIEWS TAB
+            ═══════════════════════════════════════ */}
+            {activeTab === 'mentor-reviews' && user?.role === 'MENTOR' && (
+              <div style={{ paddingTop: 8, paddingBottom: 40 }}>
+                <MentorReviewsTab mentorUsername={user.username} />
+              </div>
+            )}
+
+            {/* ═══════════════════════════════════════
                 BOOKINGS LIST TAB
             ═══════════════════════════════════════ */}
-            {activeTab !== 'mentor-schedule' ? (
+            {activeTab !== 'mentor-schedule' && activeTab !== 'mentor-reviews' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
                 {/* Lọc theo trạng thái và Chế độ xem */}
                 <div className="bkp-filters" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
