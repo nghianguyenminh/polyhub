@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -50,6 +51,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             user.setEmail(email);
             user.setFullname(name);
             user.setAvatar(avatar);
+            // OAuth2 users don't have a password — set a random non-usable placeholder
+            user.setPassword(UUID.randomUUID().toString());
             
             Role defaultRole = roleRepository.findById("STUDENT").orElse(null);
             if (defaultRole != null) {
