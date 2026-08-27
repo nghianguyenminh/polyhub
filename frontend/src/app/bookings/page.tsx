@@ -1175,6 +1175,17 @@ export default function BookingsPage() {
                                           </button>
                                         )}
 
+                                        {isStudentView && booking.status === 'CLOSED' && (
+                                          <button
+                                            onClick={() => setRatingBooking(booking)}
+                                            className="bkp-btn-approve"
+                                            style={{ padding: '6px 12px', fontSize: '12px', background: 'rgba(242,113,37,0.08)', color: '#F27125', border: '1px solid rgba(242,113,37,0.2)', display: 'flex', alignItems: 'center', gap: 4 }}
+                                            title="Đánh giá Mentor"
+                                          >
+                                            <i className="bi bi-star-fill" style={{ marginRight: 0 }} />
+                                          </button>
+                                        )}
+
                                         {(booking.status === 'CANCELLED' || booking.status === 'REJECTED' || booking.status === 'CLOSED' || (booking.status === 'PENDING' && isBookingPast(booking))) && (
                                           <button
                                             onClick={() => handleDeleteBooking(booking.id)}
@@ -1703,6 +1714,28 @@ export default function BookingsPage() {
                                         )
                                       )}
                                       
+                                      {isStudentView && booking.status === 'CLOSED' && (
+                                        <button
+                                          onClick={() => setRatingBooking(booking)}
+                                          style={{
+                                            padding: '5px 10px',
+                                            fontSize: 11.5,
+                                            background: 'rgba(242,113,37,0.1)',
+                                            color: '#f27125',
+                                            border: '1px solid rgba(242,113,37,0.25)',
+                                            borderRadius: 8,
+                                            cursor: 'pointer',
+                                            fontWeight: 600,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 4,
+                                          }}
+                                          title="Đánh giá Mentor"
+                                        >
+                                          <i className="bi bi-star-fill" /> Đánh giá
+                                        </button>
+                                      )}
+
                                       {(booking.status === 'CANCELLED' || booking.status === 'REJECTED' || booking.status === 'CLOSED') && (
                                         <button
                                           onClick={() => handleDeleteBooking(booking.id)}

@@ -26,6 +26,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
   const [loading, setLoading] = useState(true);
   const [availability, setAvailability] = useState<DayAvailability[]>([]);
   const [selectedDay, setSelectedDay] = useState<DayAvailability | null>(null);
+  const [balance, setBalance] = useState<number>(0);
 
   // Form states
   const [startTime, setStartTime] = useState('09:00');
@@ -95,8 +96,18 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
       setSelectedDay(null);
       setZoom(1);
       setHasManuallySelectedTime(false);
+      loadBalance();
     }
   }, [isOpen, mentor]);
+
+  const loadBalance = async () => {
+    try {
+      const data = await fetchAPI('/api/wallet/balance');
+      setBalance(data.balance || 0);
+    } catch (e) {
+      console.error('Failed to load balance', e);
+    }
+  };
 
   const loadAvailability = async () => {
     setLoading(true);
@@ -492,7 +503,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                         {selectedDay.busySlots.length === 0 ? (
                           <span className="bk-slot-chip free">
                             <i className="bi bi-check-circle-fill" />
-                            Trống lịch cả ngày
+                            Chưa có lịch bận
                           </span>
                         ) : (
                           selectedDay.busySlots.map((b, idx) => (
@@ -574,13 +585,13 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                             <span className="bk-section-num">3</span>
                             Giờ bắt đầu
                           </div>
-                          <ClockPicker 
-                            value={startTime} 
+                          <ClockPicker
+                            value={startTime}
                             onChange={(val) => {
                               setStartTime(val);
                               setHasManuallySelectedTime(true);
-                            }} 
-                           />
+                            }}
+                          />
                           <div className="bk-hint-text">
                             <i className="bi bi-info-circle" />
                             Đã gợi ý giờ trống sớm nhất
@@ -627,7 +638,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                     {validationMsg.isValid && (
                       <div className="bk-summary-card">
                         <i className="bi bi-calendar-check-fill bk-summary-icon" />
-                        <div>
+                        <div style={{ flex: 1 }}>
                           <div className="bk-summary-label">Cuộc hẹn của bạn</div>
                           <div className="bk-summary-time">
                             {startTime} – {getEndTimeString()}
@@ -636,6 +647,15 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                           <div className="bk-summary-date">
                             <i className="bi bi-geo-alt-fill" />
                             {formatFullDateVietnamese(selectedDay.date)}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 13, color: '#6c757d', marginBottom: 4 }}>Chi phí dự kiến</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#dc3545' }}>
+                            {(duration * 1000).toLocaleString('vi-VN')} đ
+                          </div>
+                          <div style={{ fontSize: 12, color: balance >= duration * 1000 ? '#198754' : '#dc3545', marginTop: 4 }}>
+                            Số dư: {balance.toLocaleString('vi-VN')} đ
                           </div>
                         </div>
                       </div>
@@ -663,12 +683,20 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
 
                 {/* Footer */}
                 <div className="bk-modal-footer" style={{ marginTop: 20, padding: '16px 0 0', background: 'transparent', border: 'none', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                  <div style={{ flex: 1 }}>
+                    {balance < duration * 1000 && (
+                      <span style={{ color: '#dc3545', fontSize: 13, fontWeight: 600 }}>
+                        <i className="bi bi-exclamation-circle-fill" style={{ marginRight: 6 }} />
+                        Số dư không đủ. Cần thêm {((duration * 1000) - balance).toLocaleString('vi-VN')} đ.
+                      </span>
+                    )}
+                  </div>
                   <button type="button" className="bk-btn-cancel" onClick={onClose}>
                     Đóng
                   </button>
                   <button
                     type="submit"
-                    disabled={submitting || !selectedDay || !validationMsg.isValid}
+                    disabled={submitting || !selectedDay || !validationMsg.isValid || balance < duration * 1000}
                     className="bk-btn-submit"
                   >
                     {submitting ? (

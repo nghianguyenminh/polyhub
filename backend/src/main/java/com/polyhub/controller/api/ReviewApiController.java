@@ -69,11 +69,7 @@ public class ReviewApiController {
             return ResponseEntity.badRequest().body(Map.of("error", "Chỉ được đánh giá cuộc gọi đã diễn ra."));
         }
 
-        if (reviewRepository.existsByBookingId(booking.getId())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Bạn đã đánh giá cuộc gọi này rồi."));
-        }
-
-        Review review = new Review();
+        Review review = reviewRepository.findByBookingId(booking.getId()).orElse(new Review());
         review.setBooking(booking);
         review.setStudent(student);
         review.setMentor(booking.getMentor());
@@ -113,6 +109,15 @@ public class ReviewApiController {
         response.put("reviewCount", reviewCount != null ? reviewCount : 0);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/booking/{bookingId}")
+    public ResponseEntity<?> getReviewByBookingId(@PathVariable Long bookingId) {
+        Review review = reviewRepository.findByBookingId(bookingId).orElse(null);
+        if (review == null) {
+            return ResponseEntity.ok(Map.of());
+        }
+        return ResponseEntity.ok(buildReviewMap(review));
     }
 
     private Map<String, Object> buildReviewMap(Review r) {

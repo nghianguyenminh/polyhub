@@ -72,6 +72,9 @@ export interface Document {
   downloadCount: number;
   createdAt: string;
   isSaved?: boolean;
+  aiSummary?: string;
+  aiKeywords?: string;
+  summaryStatus?: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'UNSUPPORTED';
   category?: {
     id: number;
     name: string;

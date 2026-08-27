@@ -96,6 +96,17 @@ public class BookingApiController {
                         if (b.getStartedAt() == null || !b.getStudentJoined() || !b.getMentorJoined()) {
                             b.setStatus(BookingStatus.CLOSED);
                             b.setRejectionReason("Tự động đóng do một hoặc cả hai bên không tham gia cuộc gọi sau 10 phút.");
+                            
+                            // Hoàn tiền cho sinh viên
+                            User student = b.getStudent();
+                            long currentBalance = student.getBalance() != null ? student.getBalance() : 0L;
+                            long cost = b.getCost() != null ? b.getCost() : 0L;
+                            if (cost > 0) {
+                                student.setBalance(currentBalance + cost);
+                                userRepository.save(student);
+                                b.setCost(0L);
+                            }
+
                             toUpdate.add(b);
 
                             // Tạo thông báo cho cả 2 bên
@@ -112,6 +123,17 @@ public class BookingApiController {
                         LocalDateTime scheduledEnd = b.getStartedAt().plusMinutes(b.getDuration());
                         if (now.isAfter(scheduledEnd)) {
                             b.setStatus(BookingStatus.CLOSED);
+                            
+                            // Chuyển tiền cho Mentor
+                            User mentor = b.getMentor();
+                            long mentorBalance = mentor.getBalance() != null ? mentor.getBalance() : 0L;
+                            long cost = b.getCost() != null ? b.getCost() : 0L;
+                            if (cost > 0) {
+                                mentor.setBalance(mentorBalance + cost);
+                                userRepository.save(mentor);
+                                b.setCost(0L);
+                            }
+
                             toUpdate.add(b);
                             
                             createSystemNotification(b.getStudent(), "Cuộc gọi kết thúc", 
@@ -128,6 +150,17 @@ public class BookingApiController {
                     if (now.isAfter(scheduledStart)) {
                         b.setStatus(BookingStatus.REJECTED);
                         b.setRejectionReason("Tự động từ chối do quá hạn thời gian phê duyệt (lịch hẹn đã bắt đầu).");
+                        
+                        // Hoàn tiền cho sinh viên
+                        User student = b.getStudent();
+                        long currentBalance = student.getBalance() != null ? student.getBalance() : 0L;
+                        long cost = b.getCost() != null ? b.getCost() : 0L;
+                        if (cost > 0) {
+                            student.setBalance(currentBalance + cost);
+                            userRepository.save(student);
+                            b.setCost(0L);
+                        }
+
                         toUpdate.add(b);
 
                         createSystemNotification(b.getStudent(), "Lịch hẹn bị hủy tự động", 
@@ -254,6 +287,18 @@ public class BookingApiController {
             Booking booking = new Booking();
             booking.setStudent(student);
             booking.setMentor(mentor);
+
+            // Kiểm tra và trừ tiền Student
+            long mentorPrice = mentor.getPricePerMinute() != null ? mentor.getPricePerMinute() : 1000L;
+            long totalCost = mentorPrice * duration;
+            long studentBalance = student.getBalance() != null ? student.getBalance() : 0L;
+            if (studentBalance < totalCost) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Số dư ví không đủ (" + totalCost + " VND). Vui lòng nạp thêm tiền."));
+            }
+            student.setBalance(studentBalance - totalCost);
+            userRepository.save(student);
+
+            booking.setCost(totalCost);
             booking.setBookingDate(bookingDate);
             booking.setStartTime(startTime);
             booking.setEndTime(endTime);
@@ -332,6 +377,17 @@ public class BookingApiController {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Bạn không có quyền hủy lịch hẹn này"));
                 }
                 booking.setStatus(BookingStatus.CANCELLED);
+                
+                // Refund
+                User student = booking.getStudent();
+                long currentBalance = student.getBalance() != null ? student.getBalance() : 0L;
+                long cost = booking.getCost() != null ? booking.getCost() : 0L;
+                if (cost > 0) {
+                    student.setBalance(currentBalance + cost);
+                    userRepository.save(student);
+                    booking.setCost(0L);
+                }
+
                 bookingRepository.save(booking);
 
                 // Tạo thông báo cho bên đối phương
@@ -354,6 +410,17 @@ public class BookingApiController {
                 booking.setStatus(BookingStatus.CLOSED);
                 String reason = payload.get("reason");
                 booking.setRejectionReason(reason != null ? reason : "Cuộc gọi video đã được kết thúc do hết thời gian hoặc do người dùng rời phòng.");
+                
+                // Transfer to Mentor
+                User mentor = booking.getMentor();
+                long mentorBalance = mentor.getBalance() != null ? mentor.getBalance() : 0L;
+                long cost = booking.getCost() != null ? booking.getCost() : 0L;
+                if (cost > 0) {
+                    mentor.setBalance(mentorBalance + cost);
+                    userRepository.save(mentor);
+                    booking.setCost(0L); // Tránh cộng đúp
+                }
+
                 bookingRepository.save(booking);
 
                 // Tạo thông báo cho bên đối phương
@@ -402,6 +469,17 @@ public class BookingApiController {
                     booking.setStatus(BookingStatus.REJECTED);
                     String reason = payload.get("reason");
                     booking.setRejectionReason(reason != null ? reason : "Mentor không sắp xếp được thời gian");
+                    
+                    // Refund
+                    User student = booking.getStudent();
+                    long currentBalance = student.getBalance() != null ? student.getBalance() : 0L;
+                    long cost = booking.getCost() != null ? booking.getCost() : 0L;
+                    if (cost > 0) {
+                        student.setBalance(currentBalance + cost);
+                        userRepository.save(student);
+                        booking.setCost(0L);
+                    }
+
                     bookingRepository.save(booking);
 
                     // Cấp quyền ưu tiên đặt lại lịch 48h cho sinh viên khi bị từ chối
@@ -894,14 +972,30 @@ public class BookingApiController {
             }
         }
 
+        // Kiểm tra và trừ tiền gia hạn của sinh viên
+        User student = booking.getStudent();
+        User mentor = booking.getMentor();
+        long mentorPrice = mentor.getPricePerMinute() != null ? mentor.getPricePerMinute() : 1000L;
+        long extendCost = mentorPrice * additionalMinutes;
+        long studentBalance = student.getBalance() != null ? student.getBalance() : 0L;
+        if (studentBalance < extendCost) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Số dư ví không đủ (" + extendCost + " VND) để gia hạn."));
+        }
+        
+        // Trừ tiền sinh viên
+        student.setBalance(studentBalance - extendCost);
+        userRepository.save(student);
+
         // Cập nhật booking
         int newDuration = booking.getDuration() + additionalMinutes;
         int newExtendedMinutes = (booking.getExtendedMinutes() != null ? booking.getExtendedMinutes() : 0) + additionalMinutes;
+        long currentCost = booking.getCost() != null ? booking.getCost() : 0L;
 
         booking.setDuration(newDuration);
         booking.setExtensionCount(currentExtCount + 1);
         booking.setExtendedMinutes(newExtendedMinutes);
         booking.setEndTime(booking.getEndTime().plusMinutes(additionalMinutes));
+        booking.setCost(currentCost + extendCost);
 
         Booking saved = bookingRepository.save(booking);
 

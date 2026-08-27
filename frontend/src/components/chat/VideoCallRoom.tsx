@@ -63,6 +63,11 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
   const [isExtending, setIsExtending] = useState(false);
   const [extMsg, setExtMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [allowedOptions, setAllowedOptions] = useState<number[]>(EXTENSION_OPTIONS);
+  const [balance, setBalance] = useState<number>(0);
+
+  useEffect(() => {
+    fetchAPI('/api/wallet/balance').then(data => setBalance(data.balance || 0)).catch(() => {});
+  }, []);
 
   const fetchExtendLimit = useCallback(async () => {
     if (!bookingId) return;
@@ -169,6 +174,7 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
       setModalShownOnce(false);
       setExtMsg({ text: `Da gia han them ${mins} phut! Tong: ${data.newDuration} phut.`, ok: true });
       playBeep(523, 0.3);
+      fetchAPI('/api/wallet/balance').then(data => setBalance(data.balance || 0)).catch(() => {});
       setTimeout(() => { setShowExtModal(false); setExtMsg(null); }, 1600);
     } catch (err: any) {
       setExtMsg({ text: err.message || 'Gia han that bai. Thu lai!', ok: false });
@@ -277,16 +283,24 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
               <>
                 <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, marginBottom: 14 }}>Chon thoi gian gia han:</div>
                 <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto', paddingBottom: 10 }}>
-                  {allowedOptions.map(mins => (
-                    <button key={mins} onClick={() => handleExtend(mins)} disabled={isExtending}
-                      style={{ minWidth: 80, flexShrink: 0, background: 'rgba(255,152,0,0.1)', border: '1.5px solid rgba(255,152,0,0.4)', borderRadius: 16, padding: '18px 0', cursor: isExtending ? 'not-allowed' : 'pointer', opacity: isExtending ? 0.5 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
-                      onMouseEnter={e => { if (!isExtending) e.currentTarget.style.background = 'rgba(255,152,0,0.22)'; }}
+                  {allowedOptions.map(mins => {
+                    const cost = mins * 1000;
+                    const canAfford = balance >= cost;
+                    return (
+                    <button key={mins} onClick={() => handleExtend(mins)} disabled={isExtending || !canAfford}
+                      style={{ minWidth: 80, flexShrink: 0, background: 'rgba(255,152,0,0.1)', border: '1.5px solid rgba(255,152,0,0.4)', borderRadius: 16, padding: '18px 0', cursor: isExtending || !canAfford ? 'not-allowed' : 'pointer', opacity: isExtending || !canAfford ? 0.5 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+                      onMouseEnter={e => { if (!isExtending && canAfford) e.currentTarget.style.background = 'rgba(255,152,0,0.22)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,152,0,0.1)'; }}>
                       <span style={{ fontSize: 18 }}>&#43;</span>
                       <span style={{ color: '#fff', fontWeight: 700, fontSize: 22 }}>+{mins}</span>
                       <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>phut</span>
+                      <span style={{ color: canAfford ? '#10b981' : '#dc3545', fontSize: 10, marginTop: 4 }}>{cost.toLocaleString('vi-VN')}đ</span>
                     </button>
-                  ))}
+                    );
+                  })}
+                </div>
+                <div style={{ textAlign: 'center', color: '#fff', fontSize: 13, marginBottom: 14 }}>
+                  Số dư của bạn: <strong style={{ color: '#10b981' }}>{balance.toLocaleString('vi-VN')} đ</strong>
                 </div>
               </>
             ) : (

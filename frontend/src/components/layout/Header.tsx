@@ -253,6 +253,11 @@ export default function Header() {
                     <i className="bi bi-gear fs-5 me-2 text-muted"></i> Cài đặt & Quyền riêng tư
                   </Link>
                 </li>
+                <li>
+                  <Link className="dropdown-item py-2 fw-medium d-flex align-items-center" href="/wallet">
+                    <i className="bi bi-wallet2 fs-5 me-2 text-muted"></i> Ví của tôi
+                  </Link>
+                </li>
                 <li><hr className="dropdown-divider opacity-10" /></li>
                 <li>
                   <button className="dropdown-item py-2 fw-medium text-danger d-flex align-items-center btn btn-link w-100 text-start border-0 shadow-none" onClick={logout}>

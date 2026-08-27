@@ -1534,14 +1534,14 @@ export default function MentorRegisterPage() {
 
                 <div className="mr-row">
                   <FileZone
-                    id="certificateFile" label="Chứng chỉ liên quan (nếu có)"
+                    id="certificateFile" label="Chứng chỉ liên quan"
                     hint="PDF, JPG, PNG — Tối đa 5MB"
                     accept=".pdf,.jpg,.jpeg,.png"
                     file={certificateFile}
                     onChange={setCertificateFile}
                   />
                   <FileZone
-                    id="degreeFile" label="Bằng cấp chuyên môn (nếu có)"
+                    id="degreeFile" label="Bằng cấp chuyên môn"
                     hint="PDF, JPG, PNG — Tối đa 5MB"
                     accept=".pdf,.jpg,.jpeg,.png"
                     file={degreeFile}
