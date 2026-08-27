@@ -89,4 +89,5 @@ public class User implements Serializable {
     @ToString.Exclude
     @JsonIgnore
     private java.util.Set<User> following = new java.util.HashSet<>();
+    
 }

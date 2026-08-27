@@ -44,17 +44,26 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         if (optionalUser.isPresent()) {
             user = optionalUser.get();
+            if (user.getRole() == null) {
+                Role defaultRole = roleRepository.findById("CLIENT").orElse(null);
+                if (defaultRole != null) {
+                    user.setRole(defaultRole);
+                }
+                userRepository.save(user);
+            }
         } else {
             user = new User();
-            user.setUsername(email);
+            user.setUsername(email.split("@")[0]);
             user.setEmail(email);
             user.setFullname(name);
             user.setAvatar(avatar);
+            user.setPassword(java.util.UUID.randomUUID().toString());
             
-            Role defaultRole = roleRepository.findById("STUDENT").orElse(null);
+            Role defaultRole = roleRepository.findById("CLIENT").orElse(null);
             if (defaultRole != null) {
                 user.setRole(defaultRole);
             }
+            
             userRepository.save(user);
         }
 
