@@ -63,19 +63,27 @@ public class AdminReportApiController {
         List<DocumentReport> docReports = documentReportRepository.findByStatusInWithDetails(
                 java.util.List.of(ReportStatus.PENDING));
 
-        // ===== Build từng item, gộp chung 1 danh sách =====
+        // ===== Build từng item, gộp theo bài viết (Group by Post) =====
         java.util.List<Map<String, Object>> merged = new java.util.ArrayList<>();
+        Map<Long, Map<String, Object>> postGroupMap = new java.util.LinkedHashMap<>();
 
         for (PostReport r : postReports) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", r.getId());
-            item.put("type", "POST");
-            item.put("reason", r.getReason());
-            item.put("status", r.getStatus() != null ? r.getStatus() : "PENDING");
-            item.put("createdAt", r.getCreatedAt());
-            item.put("createdAtRaw", r.getCreatedAt());
+            Long postId = (r.getPost() != null) ? r.getPost().getId() : null;
+            if (postId == null) continue;
 
-            if (r.getPost() != null) {
+            if (!postGroupMap.containsKey(postId)) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", r.getId());
+                item.put("type", "POST");
+                item.put("reason", r.getReason());
+                item.put("status", r.getStatus() != null ? r.getStatus() : "PENDING");
+                item.put("createdAt", r.getCreatedAt());
+                item.put("createdAtRaw", r.getCreatedAt());
+
+                long reportCount = postReportRepository.countByPostIdAndStatusNot(postId, "REJECTED");
+                item.put("reportCount", reportCount);
+                item.put("canLock", reportCount >= 2 || "WARNED".equals(r.getStatus()));
+
                 Map<String, Object> postMap = new HashMap<>();
                 postMap.put("id", r.getPost().getId());
                 postMap.put("content", r.getPost().getContent());
@@ -90,17 +98,48 @@ public class AdminReportApiController {
                     postMap.put("user", postUser);
                 }
                 item.put("post", postMap);
-            }
 
-            if (r.getReporter() != null) {
-                Map<String, Object> reporterMap = new HashMap<>();
-                reporterMap.put("username", r.getReporter().getUsername());
-                reporterMap.put("fullname", r.getReporter().getFullname());
-                item.put("reporter", reporterMap);
-            }
+                if (r.getReporter() != null) {
+                    Map<String, Object> reporterMap = new HashMap<>();
+                    reporterMap.put("username", r.getReporter().getUsername());
+                    reporterMap.put("fullname", r.getReporter().getFullname());
+                    item.put("reporter", reporterMap);
+                }
 
-            merged.add(item);
+                java.util.List<Map<String, Object>> allReports = new java.util.ArrayList<>();
+                Map<String, Object> singleReport = new HashMap<>();
+                singleReport.put("id", r.getId());
+                singleReport.put("reason", r.getReason());
+                singleReport.put("reporter", r.getReporter() != null ? r.getReporter().getFullname() : "Ẩn danh");
+                singleReport.put("createdAt", r.getCreatedAt());
+                allReports.add(singleReport);
+                item.put("allReports", allReports);
+
+                postGroupMap.put(postId, item);
+            } else {
+                Map<String, Object> existing = postGroupMap.get(postId);
+                if ("WARNED".equals(r.getStatus())) {
+                    existing.put("status", "WARNED");
+                    existing.put("canLock", true);
+                }
+                String existingReason = (String) existing.get("reason");
+                if (existingReason != null && !existingReason.contains(r.getReason())) {
+                    existing.put("reason", existingReason + " • " + r.getReason());
+                }
+                @SuppressWarnings("unchecked")
+                java.util.List<Map<String, Object>> allReports = (java.util.List<Map<String, Object>>) existing.get("allReports");
+                if (allReports != null) {
+                    Map<String, Object> singleReport = new HashMap<>();
+                    singleReport.put("id", r.getId());
+                    singleReport.put("reason", r.getReason());
+                    singleReport.put("reporter", r.getReporter() != null ? r.getReporter().getFullname() : "Ẩn danh");
+                    singleReport.put("createdAt", r.getCreatedAt());
+                    allReports.add(singleReport);
+                }
+            }
         }
+
+        merged.addAll(postGroupMap.values());
 
         for (DocumentReport r : docReports) {
             Map<String, Object> item = new HashMap<>();
@@ -196,6 +235,16 @@ public class AdminReportApiController {
             PostReport report = postReportRepository.findById(id).orElse(null);
             if (report != null && report.getPost() != null) {
                 Post post = report.getPost();
+                
+                // Kiểm tra điều kiện khóa: Nhận từ 2 báo cáo trở lên HOẶC đã được gửi Cảnh báo trước đó
+                long reportCount = postReportRepository.countByPostIdAndStatusNot(post.getId(), "REJECTED");
+                boolean isWarned = "WARNED".equals(report.getStatus());
+                if (reportCount < 2 && !isWarned) {
+                    return ResponseEntity.status(400).body(Map.of(
+                        "message", "Bài viết này mới có 1 lượt báo cáo (" + reportCount + "/2). Bạn có thể bấm 'Cảnh báo' để nhắc nhở người dùng tự chỉnh sửa trước khi khóa bài."
+                    ));
+                }
+
                 post.setIsLocked(true);
                 postRepository.save(post);
                 
@@ -208,7 +257,7 @@ public class AdminReportApiController {
                 notificationService.createNotification(
                     post.getUser().getUsername(),
                     null,
-                    "Bài viết của bạn đã bị khóa bởi Quản trị viên do vi phạm quy chuẩn cộng đồng.",
+                    "【Hệ thống】 Bài viết của bạn đã bị khóa bởi Quản trị viên do vi phạm quy chuẩn cộng đồng.",
                     "SYSTEM",
                     post.getId()
                 );
@@ -227,9 +276,17 @@ public class AdminReportApiController {
     public ResponseEntity<?> rejectReport(@PathVariable Long id) {
         PostReport report = postReportRepository.findById(id).orElse(null);
         if (report != null) {
-            report.setStatus("REJECTED");
-            postReportRepository.save(report);
-            return ResponseEntity.ok(Map.of("message", "Đã từ chối báo cáo."));
+            if (report.getPost() != null) {
+                java.util.List<PostReport> relatedReports = postReportRepository.findByPostId(report.getPost().getId());
+                for (PostReport r : relatedReports) {
+                    r.setStatus("REJECTED");
+                    postReportRepository.save(r);
+                }
+            } else {
+                report.setStatus("REJECTED");
+                postReportRepository.save(report);
+            }
+            return ResponseEntity.ok(Map.of("message", "Đã từ chối báo cáo bài viết."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Lỗi từ chối báo cáo."));
     }
@@ -239,14 +296,23 @@ public class AdminReportApiController {
         PostReport report = postReportRepository.findById(id).orElse(null);
         if (report != null && report.getPost() != null && report.getPost().getUser() != null) {
             User reportedUser = report.getPost().getUser();
-            emailService.sendPostWarningEmail(
-                    reportedUser.getEmail(),
-                    reportedUser.getFullname(),
-                    report.getPost().getContent(),
-                    report.getReason());
-            report.setStatus("WARNED");
-            postReportRepository.save(report);
-            return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh báo yêu cầu chỉnh sửa/xóa bài viết đến người dùng "
+            
+            // Gửi Thông báo trên chuông thông báo hệ thống web PolyHUB (không gửi email)
+            notificationService.createNotification(
+                    reportedUser.getUsername(),
+                    null,
+                    "【Cảnh báo Quản trị viên】 Bài viết của bạn bị báo cáo vì lý do: \"" + report.getReason() + "\". Vui lòng tự chỉnh sửa hoặc xóa bài viết trong vòng 2 ngày (48h) để tránh bị khóa bài/tài khoản.",
+                    "WARNING",
+                    report.getPost().getId()
+            );
+
+            java.util.List<PostReport> relatedReports = postReportRepository.findByPostId(report.getPost().getId());
+            for (PostReport r : relatedReports) {
+                r.setStatus("WARNED");
+                postReportRepository.save(r);
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Đã gửi thông báo cảnh báo đến người dùng "
                     + reportedUser.getUsername() + " thành công (Hạn chót 2 ngày)."));
         }
         return ResponseEntity.status(400).body(Map.of("message", "Lỗi gửi cảnh báo."));
