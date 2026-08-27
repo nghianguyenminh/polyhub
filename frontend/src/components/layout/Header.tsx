@@ -36,7 +36,7 @@ export default function Header() {
       const data = await fetchAPI('/api/notifications?page=1&size=20');
       const newNotifications = data.notifications || [];
       const newUnreadCount = data.unreadCount || 0;
-      
+
       // Hiển thị Toast nếu có thông báo mới
       if (newUnreadCount > unreadCount && unreadCount !== 0) {
         const newNoti = newNotifications.find((n: any) => !n.isRead);
@@ -46,7 +46,7 @@ export default function Header() {
           toast.showInfo('🔔 Bạn có thông báo mới. Hãy kiểm tra hộp thư của bạn.');
         }
       }
-      
+
       setNotifications(newNotifications);
       setUnreadCount(newUnreadCount);
     } catch (err) {
@@ -97,7 +97,7 @@ export default function Header() {
   return (
     <header className="poly-header fixed-top d-flex align-items-center px-3 px-md-4">
       <div className="d-flex align-items-center w-100 mx-auto justify-content-between" style={{ maxWidth: '100%' }}>
-        
+
         <Link href="/" className="text-decoration-none d-flex align-items-center me-4">
           <h3 className="mb-0 fw-bold text-poly" style={{ letterSpacing: '-0.5px' }}>PolyHUB</h3>
         </Link>
@@ -106,17 +106,17 @@ export default function Header() {
           {/* Notifications Dropdown */}
           {user && (
             <div className="dropdown">
-              <button 
-                className="btn-icon-circle position-relative shadow-none border-0" 
-                id="notificationDropdown" 
-                data-bs-toggle="dropdown" 
-                aria-expanded="false" 
+              <button
+                className="btn-icon-circle position-relative shadow-none border-0"
+                id="notificationDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
                 data-bs-auto-close="outside"
               >
                 <i className="bi bi-bell-fill fs-5"></i>
                 {unreadCount > 0 && (
-                  <span 
-                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" 
+                  <span
+                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light"
                     style={{ marginTop: '10px', marginLeft: '-10px', fontSize: '9px', padding: '3px 5px' }}
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -128,9 +128,9 @@ export default function Header() {
                 <div className="p-3 d-flex justify-content-between align-items-center border-bottom bg-white">
                   <h5 className="fw-bold mb-0" style={{ fontSize: '18px', color: '#1c1e21' }}>Thông Báo</h5>
                   {unreadCount > 0 && (
-                    <button 
-                      className="text-decoration-none fw-semibold btn btn-link p-0 shadow-none border-0" 
-                      style={{ color: 'var(--poly-orange, #F27125)', fontSize: '13.5px' }} 
+                    <button
+                      className="text-decoration-none fw-semibold btn btn-link p-0 shadow-none border-0"
+                      style={{ color: 'var(--poly-orange, #F27125)', fontSize: '13.5px' }}
                       onClick={handleMarkAllAsRead}
                     >
                       Đánh dấu đã đọc
@@ -150,7 +150,7 @@ export default function Header() {
                       const isSystem = !noti.sender;
                       let displayTitle = isSystem ? 'Hệ thống' : noti.sender.fullname;
                       let displayBody = noti.message || '';
-                      
+
                       // Extract title in brackets if exists
                       const match = displayBody.match(/^【(.*?)】\s*(.*)$/);
                       if (match) {
@@ -159,12 +159,12 @@ export default function Header() {
                       }
 
                       return (
-                        <div 
-                          key={noti.id} 
+                        <div
+                          key={noti.id}
                           className={`noti-item d-flex gap-3 p-3 border-bottom transition-all position-relative`}
                           onClick={() => handleNotificationClick(noti)}
-                          style={{ 
-                            cursor: 'pointer', 
+                          style={{
+                            cursor: 'pointer',
                             backgroundColor: !noti.isRead ? '#fff0e6' : '#ffffff',
                             transition: 'background-color 0.2s ease'
                           }}
@@ -172,16 +172,16 @@ export default function Header() {
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = !noti.isRead ? '#fff0e6' : '#ffffff')}
                         >
                           {isSystem ? (
-                            <div 
-                              className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0 shadow-sm" 
+                            <div
+                              className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0 shadow-sm"
                               style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, var(--poly-orange, #F27125), #ff8a47)' }}
                             >
                               <i className="bi bi-robot fs-5"></i>
                             </div>
                           ) : (
-                            <img 
-                              src={noti.sender.avatar && noti.sender.avatar !== 'default.png' ? noti.sender.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(noti.sender.fullname)}&background=random`} 
-                              className="rounded-circle flex-shrink-0 shadow-sm" width="48" height="48" alt="avatar" 
+                            <img
+                              src={noti.sender.avatar && noti.sender.avatar !== 'default.png' ? noti.sender.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(noti.sender.fullname)}&background=random`}
+                              className="rounded-circle flex-shrink-0 shadow-sm" width="48" height="48" alt="avatar"
                               style={{ objectFit: 'cover' }}
                             />
                           )}
@@ -208,15 +208,15 @@ export default function Header() {
                 </div>
                 <div className="p-3 border-top bg-white d-flex justify-content-center align-items-center">
                   <Link href="/bookings" className="btn w-100 rounded-pill fw-bold fs-7 shadow-sm" style={{ backgroundColor: '#fff0e6', color: 'var(--poly-orange, #F27125)', transition: '0.2s', border: '1px solid #ffe5d3' }}
-                    onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = 'var(--poly-orange, #F27125)'; e.currentTarget.style.color = '#fff';}}
-                    onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#fff0e6'; e.currentTarget.style.color = 'var(--poly-orange, #F27125)';}}>
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--poly-orange, #F27125)'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff0e6'; e.currentTarget.style.color = 'var(--poly-orange, #F27125)'; }}>
                     <i className="bi bi-camera-video-fill me-2"></i>Xem lịch hẹn call video
                   </Link>
                 </div>
               </div>
             </div>
           )}
-          
+
           {user && (
             <Link href="/chat" className="btn-icon-circle text-decoration-none shadow-none border-0 d-flex align-items-center justify-content-center">
               <i className="bi bi-chat-dots-fill fs-5"></i>
@@ -226,12 +226,12 @@ export default function Header() {
           {user ? (
             <div className="dropdown">
               <a href="#" className="d-flex align-items-center text-decoration-none border-0 shadow-none" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-                <img 
-                  src={user.avatar && user.avatar !== 'default.png' ? user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'} 
-                  alt="User" 
-                  width="38" 
-                  height="38" 
-                  className="rounded-circle border border-2 border-white shadow-sm" 
+                <img
+                  src={user.avatar && user.avatar !== 'default.png' ? user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                  alt="User"
+                  width="38"
+                  height="38"
+                  className="rounded-circle border border-2 border-white shadow-sm"
                   style={{ objectFit: 'cover' }}
                 />
               </a>
@@ -253,11 +253,11 @@ export default function Header() {
                     <i className="bi bi-gear fs-5 me-2 text-muted"></i> Cài đặt & Quyền riêng tư
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link className="dropdown-item py-2 fw-medium d-flex align-items-center" href="/wallet">
                     <i className="bi bi-wallet2 fs-5 me-2 text-muted"></i> Ví của tôi
                   </Link>
-                </li>
+                </li> */}
                 <li><hr className="dropdown-divider opacity-10" /></li>
                 <li>
                   <button className="dropdown-item py-2 fw-medium text-danger d-flex align-items-center btn btn-link w-100 text-start border-0 shadow-none" onClick={logout}>

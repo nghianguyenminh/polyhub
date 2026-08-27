@@ -294,14 +294,11 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
                         <span style={{ fontSize: 18 }}>&#43;</span>
                         <span style={{ color: '#fff', fontWeight: 700, fontSize: 22 }}>{mins}</span>
                         <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>phút</span>
-                        <span style={{ color: canAfford ? '#10b981' : '#dc3545', fontSize: 10, marginTop: 4 }}>{cost.toLocaleString('vi-VN')}đ</span>
                       </button>
                     );
                   })}
                 </div>
-                <div style={{ textAlign: 'center', color: '#fff', fontSize: 13, marginBottom: 14 }}>
-                  Số dư của bạn: <strong style={{ color: '#10b981' }}>{balance.toLocaleString('vi-VN')} đ</strong>
-                </div>
+
               </>
             ) : (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.22)', borderRadius: 12, padding: 14, marginBottom: 18 }}>

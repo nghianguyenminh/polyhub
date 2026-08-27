@@ -649,7 +649,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                             {formatFullDateVietnamese(selectedDay.date)}
                           </div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
+                        {/* <div style={{ textAlign: 'right' }}>
                           <div style={{ fontSize: 13, color: '#6c757d', marginBottom: 4 }}>Chi phí dự kiến</div>
                           <div style={{ fontSize: 18, fontWeight: 700, color: '#dc3545' }}>
                             {(duration * 1000).toLocaleString('vi-VN')} đ
@@ -657,7 +657,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                           <div style={{ fontSize: 12, color: balance >= duration * 1000 ? '#198754' : '#dc3545', marginTop: 4 }}>
                             Số dư: {balance.toLocaleString('vi-VN')} đ
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     )}
 
