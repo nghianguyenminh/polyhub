@@ -369,22 +369,24 @@ export default function ChatContent() {
                           </div>
                         )}
 
-                        <div className={`msg-bubble${isSent ? ' msg-sent' : ' msg-received'}`}>
-                          {msg.content}
+                        <div className="msg-bubble-wrapper">
+                          <div className={`msg-bubble${isSent ? ' msg-sent' : ' msg-received'}`}>
+                            {msg.content}
+                          </div>
+                          
+                          {/* Reactions Display */}
+                          {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                            <div className="msg-reactions-display">
+                              {Array.from(new Set(Object.values(msg.reactions))).map((emoji: any, i) => (
+                                <span key={i}>{emoji}</span>
+                              ))}
+                              <span style={{ marginLeft: 2, fontWeight: 600 }}>
+                                {Object.keys(msg.reactions).length > 1 ? Object.keys(msg.reactions).length : ''}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="msg-time">{timeStr}</div>
-
-                        {/* Reactions Display */}
-                        {msg.reactions && Object.keys(msg.reactions).length > 0 && (
-                          <div className="msg-reactions-display">
-                            {Array.from(new Set(Object.values(msg.reactions))).map((emoji: any, i) => (
-                              <span key={i}>{emoji}</span>
-                            ))}
-                            <span style={{ marginLeft: 2, fontWeight: 600 }}>
-                              {Object.keys(msg.reactions).length > 1 ? Object.keys(msg.reactions).length : ''}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
