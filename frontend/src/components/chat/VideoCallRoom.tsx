@@ -188,8 +188,8 @@ export default function VideoCallRoom({ roomId, user, onLeaveRoom, bookingId, du
     joinedRef.current = true;
     const initZego = async () => {
       try {
-        const appID = 905044708;
-        const serverSecret = '3bdf8aafea76e67ccb4c669d005c0835';
+        const appID = 1211604349;
+        const serverSecret = '66b914edb36063123e09aae7c578f4a1';
         const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomId, user.username, user.fullname || 'Nguoi dung');
         const zp = ZegoUIKitPrebuilt.create(kitToken);
         zpRef.current = zp;

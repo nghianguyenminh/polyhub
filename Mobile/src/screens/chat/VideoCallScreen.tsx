@@ -22,8 +22,8 @@ import api from '../../services/api';
 const Icon = Feather as any;
 
 // ZegoCloud configuration
-const APP_ID = 905044708;
-const APP_SIGN = "4270820a8d733faada23745c7e0bc5ea1db7d6412c55a990f78bc3d507fdd2f5";
+const APP_ID = 1211604349;
+const APP_SIGN = "ecb62d9220105218956ac9ed75ced85fbac33ff3f1f4f185e55112efa5d485d7";
 
 import { ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn';
 const isZegoSupported = true; // Chạy trên dev client / APK luôn hỗ trợ
