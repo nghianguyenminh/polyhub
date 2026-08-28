@@ -74,6 +74,9 @@ export const ChatDetailScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any>(null);
+  const [activeReactionMsgId, setActiveReactionMsgId] = useState<string | null>(null);
+
+  const EMOJIS = ['👍', '❤️', '😂', '😮', '😢'];
 
   const stompClientRef = useRef<Client | null>(null);
   const flatListRef = useRef<FlatList | null>(null);
@@ -164,6 +167,13 @@ export const ChatDetailScreen = () => {
             return;
           }
 
+          if (newMsg.type === 'REACTION_UPDATED') {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === newMsg.id ? { ...m, reactions: newMsg.reactions } : m))
+            );
+            return;
+          }
+
           // Only add text message or call actions
           setMessages((prev) => {
             // Check if message is already added (e.g. sent by me and optimistically added)
@@ -208,6 +218,25 @@ export const ChatDetailScreen = () => {
     });
 
     setInputText('');
+  };
+
+  const handleSendReaction = (messageId: string, emoji: string) => {
+    if (!roomId || !isConnected || !stompClientRef.current || !user) return;
+
+    const reactionMsg = {
+      roomId: roomId,
+      senderId: user.username,
+      content: emoji,
+      type: 'REACTION',
+      targetMessageId: messageId,
+    };
+
+    stompClientRef.current.publish({
+      destination: '/app/chat.sendMessage',
+      body: JSON.stringify(reactionMsg),
+    });
+    
+    setActiveReactionMsgId(null);
   };
 
   const handleVideoCall = () => {
@@ -257,21 +286,40 @@ export const ChatDetailScreen = () => {
     }
 
     return (
-      <View style={[styles.messageWrapper, isMe ? styles.messageWrapperMe : styles.messageWrapperOther]}>
+      <TouchableOpacity 
+        activeOpacity={0.8}
+        onLongPress={() => item.id && setActiveReactionMsgId(item.id)}
+        style={[styles.messageWrapper, isMe ? styles.messageWrapperMe : styles.messageWrapperOther]}
+      >
         {!isMe && <Image source={{ uri: targetAvatar }} style={styles.messageAvatar} />}
-        <View style={[styles.messageBubble, isMe ? styles.messageBubbleMe : styles.messageBubbleOther]}>
-          <PolyText color={isMe ? '#FFFFFF' : theme.colors.textMain}>{item.content}</PolyText>
-          {timeStr ? (
-            <PolyText 
-              variant="small" 
-              color={isMe ? 'rgba(255,255,255,0.7)' : theme.colors.textLight} 
-              style={styles.messageTime}
-            >
-              {timeStr}
-            </PolyText>
-          ) : null}
+        <View style={{ position: 'relative' }}>
+          <View style={[styles.messageBubble, isMe ? styles.messageBubbleMe : styles.messageBubbleOther]}>
+            <PolyText color={isMe ? '#FFFFFF' : theme.colors.textMain}>{item.content}</PolyText>
+            {timeStr ? (
+              <PolyText 
+                variant="small" 
+                color={isMe ? 'rgba(255,255,255,0.7)' : theme.colors.textLight} 
+                style={styles.messageTime}
+              >
+                {timeStr}
+              </PolyText>
+            ) : null}
+          </View>
+          
+          {item.reactions && Object.keys(item.reactions).length > 0 && (
+            <View style={[styles.reactionBadge, isMe ? styles.reactionBadgeMe : styles.reactionBadgeOther]}>
+              <PolyText style={{ fontSize: 12 }}>
+                {Array.from(new Set(Object.values(item.reactions))).join(' ')}
+              </PolyText>
+              {Object.keys(item.reactions).length > 1 && (
+                <PolyText style={{ fontSize: 10, marginLeft: 4, fontWeight: 'bold' }}>
+                  {Object.keys(item.reactions).length}
+                </PolyText>
+              )}
+            </View>
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -387,6 +435,27 @@ export const ChatDetailScreen = () => {
             </View>
           </View>
         </View>
+      )}
+
+      {/* Reaction Picker Overlay */}
+      {activeReactionMsgId && (
+        <TouchableOpacity 
+          style={styles.reactionOverlay}
+          activeOpacity={1}
+          onPress={() => setActiveReactionMsgId(null)}
+        >
+          <View style={styles.reactionPickerCard}>
+            {EMOJIS.map((emoji) => (
+              <TouchableOpacity 
+                key={emoji}
+                style={styles.reactionEmojiBtn}
+                onPress={() => handleSendReaction(activeReactionMsgId, emoji)}
+              >
+                <PolyText style={{ fontSize: 32 }}>{emoji}</PolyText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
       )}
     </KeyboardAvoidingView>
   );
@@ -583,5 +652,55 @@ const styles = StyleSheet.create({
   },
   callAcceptBtn: {
     backgroundColor: theme.colors.success,
+  },
+  reactionOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  reactionPickerCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.card,
+    borderRadius: 30,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  reactionEmojiBtn: {
+    padding: 8,
+  },
+  reactionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.card,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginTop: -8,
+    alignSelf: 'flex-start',
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  reactionBadgeMe: {
+    alignSelf: 'flex-end',
+    marginRight: 10,
+  },
+  reactionBadgeOther: {
+    alignSelf: 'flex-start',
+    marginLeft: 10,
   },
 });

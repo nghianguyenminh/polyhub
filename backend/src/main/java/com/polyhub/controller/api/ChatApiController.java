@@ -148,6 +148,29 @@ public class ChatApiController {
             return;
         }
 
+        // ── Tín hiệu cảm xúc: REACTION ──────────────────────────
+        if ("REACTION".equals(type)) {
+            chatMessageRepository.findById(chatMessage.getTargetMessageId()).ifPresent(target -> {
+                if (target.getReactions() == null) {
+                    target.setReactions(new HashMap<>());
+                }
+                
+                // Nếu content rỗng -> xóa cảm xúc của user này. Ngược lại -> thêm/cập nhật
+                if (chatMessage.getContent() == null || chatMessage.getContent().isEmpty()) {
+                    target.getReactions().remove(chatMessage.getSenderId());
+                } else {
+                    target.getReactions().put(chatMessage.getSenderId(), chatMessage.getContent());
+                }
+                
+                chatMessageRepository.save(target);
+                
+                // Trả về bản cập nhật của tin nhắn với type = REACTION_UPDATED
+                target.setType("REACTION_UPDATED");
+                messagingTemplate.convertAndSend("/topic/chat/" + chatMessage.getRoomId(), target);
+            });
+            return;
+        }
+
         // ── Lưu vào Database ────────────────────────────────────────────────────────
         ChatMessage savedMsg = chatMessageRepository.save(chatMessage);
 

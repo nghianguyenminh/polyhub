@@ -24,6 +24,9 @@ export default function ChatContent() {
   const roomIdRef = useRef<string | null>(null);
   const [inCall, setInCall] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any>(null);
+  const [activeReactionMsgId, setActiveReactionMsgId] = useState<string | null>(null);
+
+  const EMOJIS = ['👍', '❤️', '😂', '😮', '😢'];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -98,6 +101,13 @@ export default function ChatContent() {
             return;
           }
 
+          if (newMsg.type === 'REACTION_UPDATED') {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === newMsg.id ? { ...m, reactions: newMsg.reactions } : m))
+            );
+            return;
+          }
+
           setMessages((prev) => [...prev, newMsg]);
 
           const now = new Date().toISOString();
@@ -167,6 +177,25 @@ export default function ChatContent() {
       });
     }
     setInCall(false);
+  };
+
+  const handleSendReaction = (messageId: string, emoji: string) => {
+    if (!stompClientRef.current || !roomId || !user) return;
+    if (!stompClientRef.current.connected) return;
+
+    const reactionMessage = {
+      roomId: roomId,
+      senderId: user.username,
+      content: emoji,
+      type: "REACTION",
+      targetMessageId: messageId,
+    };
+
+    stompClientRef.current.publish({
+      destination: '/app/chat.sendMessage',
+      body: JSON.stringify(reactionMessage)
+    });
+    setActiveReactionMsgId(null);
   };
 
   const sendMessage = (e: React.FormEvent) => {
@@ -313,11 +342,49 @@ export default function ChatContent() {
                           className="msg-avatar"
                         />
                       )}
-                      <div className="msg-group">
+                      <div className="msg-group" onMouseLeave={() => setActiveReactionMsgId(null)}>
+                        {/* Reaction Trigger Button */}
+                        {msg.id && (
+                          <button
+                            className="msg-reaction-btn"
+                            onClick={() => setActiveReactionMsgId(activeReactionMsgId === msg.id ? null : msg.id)}
+                            title="Thả cảm xúc"
+                          >
+                            <i className="bi bi-emoji-smile" />
+                          </button>
+                        )}
+
+                        {/* Reaction Picker Popup */}
+                        {activeReactionMsgId === msg.id && (
+                          <div className="reaction-picker">
+                            {EMOJIS.map(emoji => (
+                              <button
+                                key={emoji}
+                                className="reaction-emoji-btn"
+                                onClick={() => handleSendReaction(msg.id, emoji)}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
                         <div className={`msg-bubble${isSent ? ' msg-sent' : ' msg-received'}`}>
                           {msg.content}
                         </div>
                         <div className="msg-time">{timeStr}</div>
+
+                        {/* Reactions Display */}
+                        {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                          <div className="msg-reactions-display">
+                            {Array.from(new Set(Object.values(msg.reactions))).map((emoji: any, i) => (
+                              <span key={i}>{emoji}</span>
+                            ))}
+                            <span style={{ marginLeft: 2, fontWeight: 600 }}>
+                              {Object.keys(msg.reactions).length > 1 ? Object.keys(msg.reactions).length : ''}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -329,9 +396,7 @@ export default function ChatContent() {
             <footer className="chat-footer">
               <form onSubmit={sendMessage}>
                 <div className="chat-input-bar">
-                  <button type="button" className="attach-btn" title="Đính kèm tệp">
-                    <i className="bi bi-paperclip" />
-                  </button>
+
 
                   <input
                     type="text"

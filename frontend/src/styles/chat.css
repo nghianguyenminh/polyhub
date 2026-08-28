@@ -860,3 +860,125 @@
   background: #1B5E20;
   transform: scale(1.1);
 }
+
+/* ── Reactions ──────────────────────────────────────────── */
+.msg-group {
+  position: relative;
+}
+
+.msg-reaction-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition);
+  z-index: 5;
+}
+
+.msg-row.sent .msg-reaction-btn {
+  left: -36px;
+}
+
+.msg-row.recv .msg-reaction-btn {
+  right: -36px;
+}
+
+.msg-row:hover .msg-reaction-btn {
+  opacity: 1;
+}
+
+.msg-reaction-btn:hover {
+  background: var(--poly-orange-light);
+  color: var(--poly-orange);
+  border-color: var(--poly-orange);
+}
+
+.reaction-picker {
+  position: absolute;
+  top: -38px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  padding: 6px 8px;
+  display: flex;
+  gap: 8px;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+  animation: slideUpFade 0.2s ease;
+}
+
+/* Thêm cầu nối vô hình để chuột không bị rời khỏi msg-group khi di chuyển lên popup */
+.reaction-picker::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+}
+
+.msg-row.sent .reaction-picker {
+  right: 0;
+}
+
+.msg-row.recv .reaction-picker {
+  left: 0;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reaction-emoji-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 0;
+  line-height: 1;
+}
+
+.reaction-emoji-btn:hover {
+  transform: scale(1.3) translateY(-2px);
+}
+
+.msg-reactions-display {
+  position: absolute;
+  bottom: -10px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2px 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  font-size: 12px;
+  z-index: 2;
+}
+
+.msg-row.sent .msg-reactions-display {
+  right: 15px;
+}
+
+.msg-row.recv .msg-reactions-display {
+  left: 15px;
+}

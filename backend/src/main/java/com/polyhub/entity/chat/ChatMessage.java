@@ -8,6 +8,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.data.annotation.Transient;
 
 @Data
 @Builder
@@ -36,4 +39,12 @@ public class ChatMessage {
 
     // Thời gian gửi
     private Date timestamp;
+
+    // Phản hồi cảm xúc (userId -> emoji)
+    @Builder.Default
+    private Map<String, String> reactions = new HashMap<>();
+
+    // ID của tin nhắn đích (dành riêng cho type = "REACTION", không lưu vào DB)
+    @Transient
+    private String targetMessageId;
 }
