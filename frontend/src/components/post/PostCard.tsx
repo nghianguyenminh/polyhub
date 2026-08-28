@@ -261,7 +261,7 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
       } else {
         setComments((prev) => [newComment, ...prev]);
       }
-      
+
       setCommentsCount((c) => c + 1);
       setCommentText('');
       setReplyingTo(null);
@@ -504,12 +504,7 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
         </div>
 
         {/* ─── Content ─── */}
-        {post.moderationStatus === 'PENDING_REVIEW' && (
-          <div className="mx-3 mb-2 px-3 py-2 bg-warning bg-opacity-10 text-warning rounded-2 d-flex align-items-center gap-2" style={{ fontSize: '13px', border: '1px solid rgba(255,193,7,0.3)' }}>
-            <i className="bi bi-hourglass-split text-warning"></i>
-            <span className="fw-medium">Bài viết của bạn đang chờ quản trị viên kiểm duyệt. Hiện tại nó bị ẩn với người khác.</span>
-          </div>
-        )}
+
         <div className="px-3 pb-2">
           {isEditing ? (
             <div className="mb-2 mt-2">
@@ -756,10 +751,10 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
                   <span className="text-muted me-1">Đang trả lời</span>
                   <span className="fw-bold text-dark">{replyingTo.fullname}</span>
                 </div>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  style={{ fontSize: '10px' }} 
+                <button
+                  type="button"
+                  className="btn-close"
+                  style={{ fontSize: '10px' }}
                   onClick={() => setReplyingTo(null)}
                 ></button>
               </div>
@@ -884,7 +879,7 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
                         {editingCommentId !== c.id && (
                           <div className="d-flex align-items-center gap-3 mt-1 ms-3" style={{ fontSize: '11px', color: '#65676B' }}>
                             <span>{formatDate(c.createdAt)}{c.updatedAt && c.updatedAt !== c.createdAt && ' (đã chỉnh sửa)'}</span>
-                            <span 
+                            <span
                               style={{ cursor: 'pointer', fontWeight: '600', transition: 'color 0.2s' }}
                               onMouseEnter={(e) => e.currentTarget.style.color = '#F27125'}
                               onMouseLeave={(e) => e.currentTarget.style.color = '#65676B'}
@@ -981,13 +976,13 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
                               {editingCommentId !== reply.id && (
                                 <div className="d-flex align-items-center gap-3 mt-1 ms-3" style={{ fontSize: '11px', color: '#65676B' }}>
                                   <span>{formatDate(reply.createdAt)}{reply.updatedAt && reply.updatedAt !== reply.createdAt && ' (đã chỉnh sửa)'}</span>
-                                  <span 
+                                  <span
                                     style={{ cursor: 'pointer', fontWeight: '600', transition: 'color 0.2s' }}
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#F27125'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = '#65676B'}
-                                    onClick={() => { 
-                                      setReplyingTo({ id: c.id, fullname: reply.fullname }); 
-                                      commentInputRef.current?.focus(); 
+                                    onClick={() => {
+                                      setReplyingTo({ id: c.id, fullname: reply.fullname });
+                                      commentInputRef.current?.focus();
                                       if (!commentText) setCommentText(`@${reply.username} `);
                                     }}
                                   >
