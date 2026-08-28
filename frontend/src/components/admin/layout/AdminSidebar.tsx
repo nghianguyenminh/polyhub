@@ -24,7 +24,7 @@ const navItems = [
   { name: 'Mentors', path: '/admin/mentors', icon: GraduationCap },
   { name: 'Nghỉ phép', path: '/admin/vacations', icon: Calendar },
   { name: 'Báo cáo', path: '/admin/reports', icon: Flag },
-  { name: 'Cài đặt', path: '/admin/settings', icon: Settings },
+  // { name: 'Cài đặt', path: '/admin/settings', icon: Settings },
 ];
 
 interface AdminSidebarProps {
@@ -58,9 +58,8 @@ export default function AdminSidebar({ isOpen = false }: AdminSidebarProps) {
             <Link
               key={item.path}
               href={item.path}
-              className={`${styles.navLink} ${
-                isActive ? styles.navLinkActive : ''
-              }`}
+              className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''
+                }`}
             >
               <Icon className={styles.icon} />
               <span>{item.name}</span>

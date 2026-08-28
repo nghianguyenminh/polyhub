@@ -130,7 +130,7 @@ export default function AdminVacationPage() {
                       <span style={{ fontSize: '13px', color: '#9ca3af' }}>@{req.mentorUsername}</span>
                     </div>
                   </div>
-                  
+
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12.5px', fontWeight: 'bold', background: req.adminApproved ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: req.adminApproved ? '#34d399' : '#f87171', border: `1px solid ${req.adminApproved ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}` }}>
                       {req.adminApproved ? 'Đã duyệt' : 'Chờ duyệt'}
@@ -160,14 +160,7 @@ export default function AdminVacationPage() {
                     </p>
                   </div>
 
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#9ca3af', fontSize: '13px', marginBottom: '6px' }}>
-                      <Award size={15} /> Điểm phạt uy tín đề xuất (AI)
-                    </div>
-                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f59e0b', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                      {req.reliabilityImpact}% <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#9ca3af' }}>sự tín nhiệm</span>
-                    </div>
-                  </div>
+
                 </div>
 
                 {/* Approval Section */}
@@ -180,7 +173,7 @@ export default function AdminVacationPage() {
                     ) : (
                       <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <h4 style={{ fontSize: '14.5px', fontWeight: 'bold', color: '#fff', marginBottom: '12px' }}>Cấu hình điểm phạt uy tín thực tế</h4>
-                        
+
                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '14px' }}>
                           <div style={{ flex: '1', minWidth: '180px' }}>
                             <label style={{ fontSize: '12px', color: '#9ca3af', display: 'block', marginBottom: '6px' }}>Mức điểm phạt (%)</label>

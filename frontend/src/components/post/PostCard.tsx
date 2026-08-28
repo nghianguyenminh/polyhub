@@ -108,17 +108,23 @@ export default function PostCard({ post, onPostUpdated }: PostCardProps) {
     }
   };
 
-  const submitReport = async (reason: string) => {
+  const submitReport = async (reason: string, force: boolean = false) => {
     try {
       await fetchAPI(`/api/v2/posts/${post.id}/report`, {
         method: 'POST',
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason, force }),
         noRedirectOn401: true,
       });
       setShowReportModal(false);
       alert('Cảm ơn bạn đã báo cáo. Quản trị viên sẽ xem xét.');
     } catch (err: any) {
-      showError(err?.message || 'Báo cáo thất bại');
+      if (err?.message === 'Bạn đã báo cáo bài viết này rồi, bạn vẫn muốn báo cáo nữa chứ?') {
+        if (window.confirm(err.message)) {
+          submitReport(reason, true);
+        }
+      } else {
+        showError(err?.message || 'Báo cáo thất bại');
+      }
     }
   };
 

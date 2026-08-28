@@ -222,6 +222,12 @@ if (images != null && images.length > 0) {
         }
     }
 
+    public static class AlreadyReportedException extends RuntimeException {
+        public AlreadyReportedException(String message) {
+            super(message);
+        }
+    }
+
     public void softDeletePost(Long postId, String username) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
@@ -248,7 +254,7 @@ if (images != null && images.length > 0) {
         return postRepository.save(post);
     }
 
-    public void reportPost(Long postId, String reason, String username) {
+    public void reportPost(Long postId, String reason, String username, boolean force) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
 
@@ -259,8 +265,8 @@ if (images != null && images.length > 0) {
             throw new RuntimeException("Bạn không thể báo cáo bài viết của chính mình");
         }
 
-        if (postReportRepository.existsByPostIdAndReporterUsername(postId, username)) {
-            throw new RuntimeException("Bạn đã gửi báo cáo cho bài viết này rồi, hệ thống đang xem xét.");
+        if (!force && postReportRepository.existsByPostIdAndReporterUsername(postId, username)) {
+            throw new AlreadyReportedException("Bạn đã báo cáo bài viết này rồi, bạn vẫn muốn báo cáo nữa chứ?");
         }
 
         PostReport report = new PostReport();

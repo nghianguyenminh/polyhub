@@ -426,18 +426,21 @@ public class PostApiV2Controller {
     }
 
     @PostMapping("/{postId}/report")
-    public ResponseEntity<?> reportPost(@PathVariable Long postId, @RequestBody Map<String, String> body,
+    public ResponseEntity<?> reportPost(@PathVariable Long postId, @RequestBody Map<String, Object> body,
             Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để báo cáo bài viết."));
         }
-        String reason = body.get("reason");
+        String reason = (String) body.get("reason");
+        boolean force = Boolean.TRUE.equals(body.get("force"));
         if (reason == null || reason.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Lý do báo cáo không được để trống."));
         }
         try {
-            postService.reportPost(postId, reason, principal.getName());
+            postService.reportPost(postId, reason, principal.getName(), force);
             return ResponseEntity.ok(Map.of("message", "Cảm ơn bạn đã báo cáo. Quản trị viên sẽ xem xét sớm."));
+        } catch (PostService.AlreadyReportedException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage(), "code", "ALREADY_REPORTED"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
