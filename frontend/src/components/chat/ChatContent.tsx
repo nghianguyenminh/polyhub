@@ -297,9 +297,9 @@ export default function ChatContent() {
               </div>
 
               <div className="chat-header-actions">
-                <button className="header-action-btn" onClick={handleStartVideoCall} title="Gọi video">
+                {/* <button className="header-action-btn" onClick={handleStartVideoCall} title="Gọi video">
                   <i className="bi bi-camera-video-fill" />
-                </button>
+                </button> */}
               </div>
             </header>
 
@@ -373,7 +373,7 @@ export default function ChatContent() {
                           <div className={`msg-bubble${isSent ? ' msg-sent' : ' msg-received'}`}>
                             {msg.content}
                           </div>
-                          
+
                           {/* Reactions Display */}
                           {msg.reactions && Object.keys(msg.reactions).length > 0 && (
                             <div className="msg-reactions-display">

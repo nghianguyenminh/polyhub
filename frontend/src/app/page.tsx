@@ -280,9 +280,6 @@ export default function HomePage() {
 
               <div className="d-flex justify-content-between px-1 mt-3">
                 <button className="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                  <i className="bi bi-camera-reels text-danger me-2 fs-5"></i> Video
-                </button>
-                <button className="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal">
                   <i className="bi bi-image text-success me-2 fs-5"></i> Ảnh/GIF
                 </button>
                 <button className="btn-ghost flex-grow-1" data-bs-toggle="modal" data-bs-target="#createPostModal">

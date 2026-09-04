@@ -503,7 +503,7 @@ export default function BookingModal({ isOpen, onClose, mentor }: BookingModalPr
                         {selectedDay.busySlots.length === 0 ? (
                           <span className="bk-slot-chip free">
                             <i className="bi bi-check-circle-fill" />
-                            Chưa có lịch bận
+                            Chưa có lịch hẹn
                           </span>
                         ) : (
                           selectedDay.busySlots.map((b, idx) => (
