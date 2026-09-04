@@ -12,6 +12,16 @@ from PIL import Image
 _det_engine = None
 _recognizer = None
 
+# Bỏ qua lỗi chứng chỉ SSL hết hạn của server vocr.vn (khi tải config vietocr)
+import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_old_get = requests.get
+def _new_get(*args, **kwargs):
+    kwargs['verify'] = False
+    return _old_get(*args, **kwargs)
+requests.get = _new_get
+
 
 def _get_engines():
     global _det_engine, _recognizer
@@ -59,3 +69,4 @@ def get_ocr_lines(image_path: str) -> list[str]:
 
     lines.sort(key=lambda x: x[0])
     return [text for _, text in lines]
+    
