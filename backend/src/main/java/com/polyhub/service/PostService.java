@@ -265,15 +265,66 @@ if (images != null && images.length > 0) {
             throw new RuntimeException("Bạn không thể báo cáo bài viết của chính mình");
         }
 
-        if (!force && postReportRepository.existsByPostIdAndReporterUsername(postId, username)) {
-            throw new AlreadyReportedException("Bạn đã báo cáo bài viết này rồi, bạn vẫn muốn báo cáo nữa chứ?");
-        }
-
         PostReport report = new PostReport();
         report.setPost(post);
         report.setReporter(reporter);
         report.setReason(reason);
+        report.setStatus("PENDING");
 
         postReportRepository.save(report);
+
+        // Đếm tổng số báo cáo hợp lệ chưa bị từ chối của bài viết này từ cộng đồng
+        long validReportCount = postReportRepository.countByPostIdAndStatusNot(postId, "REJECTED");
+
+        // Gửi thông báo đến toàn bộ Quản trị viên (Admin)
+        java.util.List<User> admins = userRepository.findAdmins();
+        String authorName = (post.getUser() != null) ? post.getUser().getFullname() : "Người dùng";
+
+        // Mức 3: Tự động tạm ẩn nếu nhận từ 5 lượt báo cáo trở lên (Auto-Shield)
+        if (validReportCount >= 5) {
+            post.setIsLocked(true);
+            postRepository.save(post);
+
+            // Gửi thông báo cho tác giả bài viết
+            notificationService.createNotification(
+                    post.getUser().getUsername(),
+                    null,
+                    "【Hệ thống】 Bài viết của bạn đã tự động tạm ẩn do nhận " + validReportCount + " lượt báo cáo từ cộng đồng. Ban quản trị sẽ sớm xem xét lại.",
+                    "SYSTEM",
+                    post.getId()
+            );
+
+            // Gửi cảnh báo khẩn cho Admin
+            String urgentMsg = String.format("【KHẨN CẤP】 Bài viết của %s đã nhận %d lượt báo cáo và đã được hệ thống tự động tạm ẩn. Vui lòng kiểm duyệt.",
+                    authorName, validReportCount);
+            if (admins != null && !admins.isEmpty()) {
+                for (User admin : admins) {
+                    notificationService.createNotification(admin.getUsername(), username, urgentMsg, "REPORT", postId);
+                }
+            }
+            return;
+        }
+
+        // Mức 1 & Mức 2: Thông báo Admin
+        String notifMsg;
+        if (validReportCount == 1) {
+            notifMsg = String.format("【Báo cáo bài viết】 Bài viết của %s vừa bị báo cáo lần 1 bởi @%s. Lý do: %s. Bài viết vẫn đang hiển thị.",
+                    authorName, username, reason);
+        } else {
+            notifMsg = String.format("【Cảnh báo vi phạm】 Bài viết của %s đã nhận %d lượt báo cáo từ cộng đồng. Quản trị viên hiện có thể khóa bài viết.",
+                    authorName, validReportCount);
+        }
+
+        if (admins != null && !admins.isEmpty()) {
+            for (User admin : admins) {
+                notificationService.createNotification(
+                        admin.getUsername(),
+                        username,
+                        notifMsg,
+                        "REPORT",
+                        postId
+                );
+            }
+        }
     }
 }

@@ -148,7 +148,7 @@ function AdminReportsContent() {
   const handleWarn = async (id: number) => {
     if (
       !confirm(
-        "Gửi cảnh báo yêu cầu chỉnh sửa/xóa bài viết đến người dùng? Họ có 2 ngày để thực hiện.",
+        "Gửi thông báo cảnh báo yêu cầu tác giả tự chỉnh sửa hoặc xóa bài viết vi phạm (Hạn chót 48 giờ)?",
       )
     )
       return;
@@ -421,13 +421,33 @@ function AdminReportsContent() {
                               className={`bi ${isDocument ? "bi-file-earmark-x-fill" : "bi-exclamation-triangle-fill"} me-1`}
                             ></i>{" "}
                             {report.reason}
-                            {isDocument && (
+                            {isDocument ? (
                               <span
                                 className="badge bg-info text-white"
                                 style={{ fontSize: "10px", fontWeight: 600 }}
                               >
                                 Tài liệu
                               </span>
+                            ) : (
+                              <>
+                                {!report.canLock ? (
+                                  <span
+                                    className="badge bg-warning-subtle text-warning-emphasis border border-warning"
+                                    style={{ fontSize: "10px", fontWeight: 600 }}
+                                    title="Bài viết vẫn đang hiển thị. Cần tối thiểu 2 lượt báo cáo hoặc gửi Cảnh báo trước để khóa."
+                                  >
+                                    <i className="bi bi-flag-fill me-1"></i> {report.reportCount || 1} lượt báo cáo - Đang hiển thị
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="badge bg-danger text-white shadow-sm"
+                                    style={{ fontSize: "10px", fontWeight: 600 }}
+                                    title="Đủ điều kiện khóa bài viết."
+                                  >
+                                    <i className="bi bi-shield-exclamation me-1"></i> {report.reportCount} lượt báo cáo (Có thể khóa)
+                                  </span>
+                                )}
+                              </>
                             )}
                             {report.status === "WARNED" && (
                               <span
@@ -522,13 +542,32 @@ function AdminReportsContent() {
                             </button>
                           ) : (
                             <>
-                              <button
-                                onClick={() => handleApprove(report.id)}
-                                className="btn btn-sm btn-outline-danger me-2"
-                                title="Khóa bài viết (Đồng ý báo cáo)"
-                              >
-                                <i className="bi bi-lock"></i> Khóa bài
-                              </button>
+                              {report.canLock ? (
+                                <button
+                                  onClick={() => handleApprove(report.id)}
+                                  className="btn btn-sm btn-outline-danger me-2"
+                                  title="Khóa bài viết vi phạm"
+                                >
+                                  <i className="bi bi-lock-fill"></i> Khóa bài
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleWarn(report.id)}
+                                    className="btn btn-sm btn-outline-warning text-dark me-2"
+                                    title="Gửi thông báo cảnh báo đến tác giả (Hạn 48h)"
+                                  >
+                                    <i className="bi bi-bell-fill"></i> Cảnh báo
+                                  </button>
+                                  <button
+                                    onClick={() => alert("Bài viết mới nhận 1 lượt báo cáo (1/2). Bạn có thể bấm 'Cảnh báo' để gửi thông báo nhắc nhở tác giả trước, hoặc chờ thêm báo cáo từ cộng đồng để khóa bài.")}
+                                    className="btn btn-sm btn-outline-secondary opacity-75 me-2"
+                                    title="Cần tối thiểu 2 báo cáo hoặc gửi Cảnh báo trước"
+                                  >
+                                    <i className="bi bi-lock"></i> Khóa (1/2)
+                                  </button>
+                                </>
+                              )}
                               <button
                                 onClick={() => handleReject(report.id)}
                                 className="btn btn-sm btn-outline-secondary"
@@ -729,8 +768,8 @@ function AdminReportsContent() {
                     Ngày gửi:{" "}
                     {new Date(selectedReport.createdAt).toLocaleString("vi-VN")}
                   </div>
-                  <div className="mt-2">
-                    Trạng thái:{" "}
+                  <div className="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                    <span>Trạng thái:</span>
                     {selectedReport.status === "WARNED" ? (
                       <span className="badge bg-warning text-dark">
                         Đã gửi email cảnh báo (Hạn 2 ngày)
@@ -744,9 +783,44 @@ function AdminReportsContent() {
                         Chờ xử lý
                       </span>
                     )}
+
+                    {selectedReport.type === "POST" && (
+                      (selectedReport.reportCount || 1) < 2 ? (
+                        <span className="badge bg-warning-subtle text-warning-emphasis border border-warning">
+                          <i className="bi bi-flag-fill me-1"></i> Báo cáo lần 1 (1/2 lượt) - Đang hiển thị
+                        </span>
+                      ) : (
+                        <span className="badge bg-danger text-white">
+                          <i className="bi bi-shield-exclamation me-1"></i> Báo cáo lần {selectedReport.reportCount} (Đủ điều kiện khóa)
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Banner quy tắc 2 lượt báo cáo đối với bài viết */}
+              {selectedReport.type === "POST" && (
+                <div className="mb-4">
+                  {(selectedReport.reportCount || 1) < 2 && selectedReport.status !== "WARNED" ? (
+                    <div className="p-3 rounded-3 border border-warning bg-warning bg-opacity-10 d-flex gap-3 align-items-start">
+                      <i className="bi bi-info-circle-fill text-warning fs-5 mt-1"></i>
+                      <div style={{ fontSize: "13px", color: "#854d0e" }}>
+                        <div className="fw-bold mb-1">Quy định xử lý: Báo cáo lần 1 (1/2)</div>
+                        <div>Bài viết này mới nhận <b>1 lượt báo cáo</b>, bài viết <b>vẫn đang hiển thị</b> bình thường cho cộng đồng. Quản trị viên có thể bấm <b>Gửi Cảnh báo</b> để gửi thông báo chuông nhắc tác giả tự chỉnh sửa/gỡ nội dung trong 48h. Tính năng <b>Khóa bài viết</b> sẽ được kích hoạt khi có từ <b>2 lượt báo cáo</b> hoặc sau khi Admin gửi Cảnh báo.</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-3 border border-danger bg-danger bg-opacity-10 d-flex gap-3 align-items-start">
+                      <i className="bi bi-shield-exclamation text-danger fs-5 mt-1"></i>
+                      <div style={{ fontSize: "13px", color: "#991b1b" }}>
+                        <div className="fw-bold mb-1">Đủ điều kiện xử lý: Đã nhận {selectedReport.reportCount} lượt báo cáo {selectedReport.status === "WARNED" ? "(Đã cảnh báo)" : ""}</div>
+                        <div>Bài viết đã đủ điều kiện kiểm duyệt. Quản trị viên có thể tiến hành <b>Khóa bài viết</b> ngay lập tức để ẩn bài khỏi bảng tin và gửi thông báo vi phạm cho tác giả.</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {selectedReport.type === "DOCUMENT" ? (
                 <>
@@ -940,6 +1014,33 @@ function AdminReportsContent() {
                       </div>
                     )}
                   </div>
+
+                  {/* Section 4 (Post): Danh sách tất cả lý do báo cáo */}
+                  {selectedReport.allReports && selectedReport.allReports.length > 0 && (
+                    <div className="mb-2">
+                      <h6
+                        className="fw-bold text-uppercase text-muted mb-2"
+                        style={{ fontSize: "11px", letterSpacing: "0.5px" }}
+                      >
+                        <i className="bi bi-list-ul me-1"></i>
+                        Tổng hợp {selectedReport.allReports.length} lượt báo cáo
+                      </h6>
+                      <div className="d-flex flex-column gap-2">
+                        {selectedReport.allReports.map((r: any, idx: number) => (
+                          <div key={idx} className="p-2 border rounded-2 bg-light d-flex gap-2 align-items-start">
+                            <span className="badge bg-secondary" style={{ fontSize: "10px", minWidth: 22 }}>{idx + 1}</span>
+                            <div style={{ fontSize: "13px" }}>
+                              <span className="fw-semibold text-danger">{r.reason}</span>
+                              <span className="text-muted ms-2">— {r.reporter}</span>
+                              <div className="text-muted" style={{ fontSize: "11px" }}>
+                                {new Date(r.createdAt).toLocaleString("vi-VN")}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -985,13 +1086,34 @@ function AdminReportsContent() {
                       Từ chối
                     </button>
                     {selectedReport.post && (
-                      <button
-                        onClick={() => handleApprove(selectedReport.id)}
-                        className="btn btn-sm btn-danger"
-                        title="Khóa bài viết vi phạm"
-                      >
-                        Khóa bài
-                      </button>
+                      <>
+                        {selectedReport.status !== "WARNED" && (
+                          <button
+                            onClick={() => handleWarn(selectedReport.id)}
+                            className="btn btn-sm btn-outline-warning text-dark"
+                            title="Gửi thông báo cảnh báo đến tác giả bài viết"
+                          >
+                            <i className="bi bi-bell-fill me-1"></i> Gửi cảnh báo
+                          </button>
+                        )}
+                        {selectedReport.canLock ? (
+                          <button
+                            onClick={() => handleApprove(selectedReport.id)}
+                            className="btn btn-sm btn-danger"
+                            title="Khóa bài viết vi phạm"
+                          >
+                            <i className="bi bi-lock-fill me-1"></i> Khóa bài
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => alert("Bài viết mới nhận 1 lượt báo cáo (1/2). Bạn có thể bấm 'Gửi cảnh báo' để thông báo tác giả tự chỉnh sửa trước, hoặc chờ thêm báo cáo để khóa bài.")}
+                            className="btn btn-sm btn-secondary opacity-75"
+                            title="Cần tối thiểu 2 báo cáo hoặc gửi Cảnh báo trước"
+                          >
+                            <i className="bi bi-lock me-1"></i> Khóa bài (1/2)
+                          </button>
+                        )}
+                      </>
                     )}
                   </>
                 )}
