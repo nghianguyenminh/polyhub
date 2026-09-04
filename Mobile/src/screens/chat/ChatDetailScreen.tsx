@@ -292,7 +292,10 @@ export const ChatDetailScreen = () => {
         style={[styles.messageWrapper, isMe ? styles.messageWrapperMe : styles.messageWrapperOther]}
       >
         {!isMe && <Image source={{ uri: targetAvatar }} style={styles.messageAvatar} />}
-        <View style={{ position: 'relative' }}>
+        <View style={[
+          styles.messageBubbleWrapper,
+          isMe ? styles.messageBubbleWrapperMe : styles.messageBubbleWrapperOther,
+        ]}>
           <View style={[styles.messageBubble, isMe ? styles.messageBubbleMe : styles.messageBubbleOther]}>
             <PolyText color={isMe ? '#FFFFFF' : theme.colors.textMain}>{item.content}</PolyText>
             {timeStr ? (
@@ -515,8 +518,17 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginRight: theme.spacing.sm,
   },
-  messageBubble: {
+  messageBubbleWrapper: {
     maxWidth: '75%',
+    flexShrink: 1,
+  },
+  messageBubbleWrapperMe: {
+    alignItems: 'flex-end',
+  },
+  messageBubbleWrapperOther: {
+    alignItems: 'flex-start',
+  },
+  messageBubble: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: 10,
     borderRadius: 18,
