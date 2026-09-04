@@ -6,9 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchAPI } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import '@/styles/legacy_static/client/css/settings.css';
 
-type SettingTab = 'account' | 'security' | 'privacy' | 'notifications' | 'display';
+type SettingTab = 'account' | 'security' | 'display';
 
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -35,15 +34,6 @@ export default function SettingsPage() {
   const [passwordStrengthText, setPasswordStrengthText] = useState('Chưa có');
   const [passwordMatchValid, setPasswordMatchValid] = useState<boolean | null>(null);
 
-  const [whoCanSeeFollowers, setWhoCanSeeFollowers] = useState('private');
-  const [whoCanMessage, setWhoCanMessage] = useState('everyone');
-
-  const [notifyEmail, setNotifyEmail] = useState(true);
-  const [notifyComment, setNotifyComment] = useState(true);
-  const [notifyLike, setNotifyLike] = useState(true);
-  const [notifyFollow, setNotifyFollow] = useState(true);
-  const [notifyRecommend, setNotifyRecommend] = useState(false);
-
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
   const [language, setLanguage] = useState<'vi' | 'en'>('vi');
 
@@ -66,36 +56,18 @@ export default function SettingsPage() {
       const storedToken = localStorage.getItem('token');
       setToken(storedToken);
 
-      const storedSeeFollowers = localStorage.getItem('polyhub_privacy_see_followers');
-      if (storedSeeFollowers) setWhoCanSeeFollowers(storedSeeFollowers);
-
-      const storedMessage = localStorage.getItem('polyhub_privacy_message');
-      if (storedMessage) setWhoCanMessage(storedMessage);
-
-      const storedNotifyEmail = localStorage.getItem('polyhub_notify_email');
-      if (storedNotifyEmail) setNotifyEmail(storedNotifyEmail === 'true');
-
-      const storedNotifyComment = localStorage.getItem('polyhub_notify_comment');
-      if (storedNotifyComment) setNotifyComment(storedNotifyComment === 'true');
-
-      const storedNotifyLike = localStorage.getItem('polyhub_notify_like');
-      if (storedNotifyLike) setNotifyLike(storedNotifyLike === 'true');
-
-      const storedNotifyFollow = localStorage.getItem('polyhub_notify_follow');
-      if (storedNotifyFollow) setNotifyFollow(storedNotifyFollow === 'true');
-
-      const storedNotifyRecommend = localStorage.getItem('polyhub_notify_recommend');
-      if (storedNotifyRecommend) setNotifyRecommend(storedNotifyRecommend === 'true');
-
-      const storedTheme = localStorage.getItem('polyhub_theme');
-      if (storedTheme) setThemeMode(storedTheme as 'light' | 'dark');
+      const storedTheme = localStorage.getItem('polyhub_theme') as 'light' | 'dark';
+      if (storedTheme) {
+        setThemeMode(storedTheme);
+        applyThemeToDOM(storedTheme);
+      }
 
       const storedLang = localStorage.getItem('polyhub_language');
       if (storedLang) setLanguage(storedLang as 'vi' | 'en');
     }
   }, [user, authLoading, router]);
 
-useEffect(() => {
+  useEffect(() => {
     const fetch2FAStatus = async () => {
       if (!user) return;
       try {
@@ -104,7 +76,7 @@ useEffect(() => {
           method: 'GET'
         });
         
-        setIs2FAEnabled(data.IsTwoFactorEnabled ?? data.IsTwoFactorEnabled ?? false);
+        setIs2FAEnabled(data.IsTwoFactorEnabled ?? false);
       } catch (err) {
       }
     };
@@ -115,7 +87,7 @@ useEffect(() => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '') as SettingTab;
-      if (['account', 'security', 'privacy', 'notifications', 'display'].includes(hash)) {
+      if (['account', 'security', 'display'].includes(hash)) {
         setActiveTab(hash);
       }
     }
@@ -229,9 +201,15 @@ useEffect(() => {
     }
   };
 
-const handleToggle2FA = async (checked: boolean) => {
-    // Thêm dòng này để TypeScript yên tâm
+  const handleToggle2FA = async (checked: boolean) => {
     if (!user) return; 
+
+    const actionText = checked ? "bật" : "tắt";
+    const confirmAction = window.confirm(`Bạn có chắc chắn muốn ${actionText} xác minh 2 bước?`);
+    
+    if (!confirmAction) {
+      return; 
+    }
 
     setIs2FAEnabled(checked);
     setErrorMsg('');
@@ -244,31 +222,27 @@ const handleToggle2FA = async (checked: boolean) => {
 
       setSuccessMsg(data.message || (checked ? 'Đã bật xác thực 2 yếu tố!' : 'Đã tắt xác thực 2 yếu tố.'));
     } catch (err: any) {
-      setIs2FAEnabled(!checked);
+      setIs2FAEnabled(!checked); 
       setErrorMsg(err.message || 'Không thể thay đổi cài đặt 2FA lúc này.');
     }
   };
 
-  const handlePrivacySave = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('polyhub_privacy_see_followers', whoCanSeeFollowers);
-    localStorage.setItem('polyhub_privacy_message', whoCanMessage);
-    setSuccessMsg('Đã lưu cấu hình quyền riêng tư!');
-  };
-
-  const handleNotifySave = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('polyhub_notify_email', notifyEmail ? 'true' : 'false');
-    localStorage.setItem('polyhub_notify_comment', notifyComment ? 'true' : 'false');
-    localStorage.setItem('polyhub_notify_like', notifyLike ? 'true' : 'false');
-    localStorage.setItem('polyhub_notify_follow', notifyFollow ? 'true' : 'false');
-    localStorage.setItem('polyhub_notify_recommend', notifyRecommend ? 'true' : 'false');
-    setSuccessMsg('Đã lưu cấu hình thông báo thành công!');
+  const applyThemeToDOM = (mode: 'light' | 'dark') => {
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.setAttribute('data-bs-theme', mode); 
+      if (mode === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
   };
 
   const handleThemeModeSelect = (mode: 'light' | 'dark') => {
     setThemeMode(mode);
     localStorage.setItem('polyhub_theme', mode);
+    applyThemeToDOM(mode);
     setSuccessMsg(`Đã chuyển đổi sang Giao diện ${mode === 'light' ? 'Sáng' : 'Tối'}!`);
   };
 
@@ -290,6 +264,58 @@ const handleToggle2FA = async (checked: boolean) => {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          [data-bs-theme="dark"], .dark-mode {
+            --bs-body-color: #f8f9fa;
+            --bs-heading-color: #ffffff;
+          }
+          [data-bs-theme="dark"] .text-dark,
+          .dark-mode .text-dark,
+          [data-bs-theme="dark"] h1, 
+          [data-bs-theme="dark"] h2, 
+          [data-bs-theme="dark"] h4, 
+          [data-bs-theme="dark"] h6 {
+            color: #f8f9fa !important;
+          }
+          [data-bs-theme="dark"] .text-muted,
+          .dark-mode .text-muted,
+          [data-bs-theme="dark"] small,
+          [data-bs-theme="dark"] span,
+          [data-bs-theme="dark"] p {
+            color: #adb5bd !important;
+          }
+          [data-bs-theme="dark"] .poly-card,
+          [data-bs-theme="dark"] .settings-nav {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+          }
+          [data-bs-theme="dark"] .list-group-item {
+            color: #e2e8f0;
+            background-color: transparent !important;
+          }
+          [data-bs-theme="dark"] .list-group-item:hover,
+          [data-bs-theme="dark"] .list-group-item.active {
+            background-color: #334155 !important;
+            color: #ffffff !important;
+          }
+          [data-bs-theme="dark"] aside,
+          [data-bs-theme="dark"] .left-sidebar,
+          [data-bs-theme="dark"] a,
+          [data-bs-theme="dark"] .menu-item,
+          [data-bs-theme="dark"] li {
+            color: #e2e8f0 !important;
+          }
+          [data-bs-theme="dark"] .alert-success {
+            background-color: #064e3b !important;
+            color: #34d399 !important;
+            border-color: #065f46 !important;
+          }
+          [data-bs-theme="dark"] .settings-icon-wrapper {
+            background-color: #334155 !important;
+          }
+        `
+      }} />
       <Header />
       <div className="app-container">
         <main className="w-100 d-flex justify-content-between">
@@ -314,7 +340,7 @@ const handleToggle2FA = async (checked: boolean) => {
 
             <div className="row g-4">
               <div className="col-md-4">
-                <div className="poly-card p-0 overflow-hidden sticky-top" style={{ top: '80px', zIndex: 10, backgroundColor: 'white' }}>
+                <div className="poly-card p-0 overflow-hidden sticky-top" style={{ top: '80px', zIndex: 10, backgroundColor: 'var(--bs-body-bg, white)' }}>
                   <div className="list-group list-group-flush settings-nav">
                     <button 
                       onClick={() => handleTabChange('account')} 
@@ -341,30 +367,6 @@ const handleToggle2FA = async (checked: boolean) => {
                       </div>
                     </button>
                     <button 
-                      onClick={() => handleTabChange('privacy')} 
-                      className={`list-group-item list-group-item-action d-flex align-items-center text-start border-0 ${activeTab === 'privacy' ? 'active' : ''}`}
-                    >
-                      <div className="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
-                        <i className="bi bi-eye-fill"></i>
-                      </div>
-                      <div>
-                        <h6 className="mb-0 fw-semibold">Quyền riêng tư</h6>
-                        <small className="text-muted d-block" style={{ fontSize: '12px' }}>Kiểm soát chia sẻ & ẩn dữ liệu</small>
-                      </div>
-                    </button>
-                    <button 
-                      onClick={() => handleTabChange('notifications')} 
-                      className={`list-group-item list-group-item-action d-flex align-items-center text-start border-0 ${activeTab === 'notifications' ? 'active' : ''}`}
-                    >
-                      <div className="settings-icon-wrapper rounded-circle me-3 d-flex align-items-center justify-content-center">
-                        <i className="bi bi-bell-fill"></i>
-                      </div>
-                      <div>
-                        <h6 className="mb-0 fw-semibold">Thông báo</h6>
-                        <small className="text-muted d-block" style={{ fontSize: '12px' }}>Tùy chỉnh nhận thông báo</small>
-                      </div>
-                    </button>
-                    <button 
                       onClick={() => handleTabChange('display')} 
                       className={`list-group-item list-group-item-action d-flex align-items-center text-start border-0 ${activeTab === 'display' ? 'active' : ''}`}
                     >
@@ -384,17 +386,17 @@ const handleToggle2FA = async (checked: boolean) => {
                 <div className="tab-content">
                   
                   {activeTab === 'account' && (
-                    <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
-                      <h4 className="fw-bold mb-1 text-dark">Thông tin cá nhân</h4>
+                    <div className="poly-card p-4 rounded-3 shadow-sm border border-light" style={{ backgroundColor: 'var(--bs-body-bg, white)' }}>
+                      <h4 className="fw-bold mb-1">Thông tin cá nhân</h4>
                       <p className="text-muted mb-4" style={{ fontSize: '14.5px' }}>Quản lý thông tin định danh của bạn trên hệ thống PolyHUB.</p>
                       
                       <form onSubmit={handleUpdateAccount}>
                         <div className="row g-3 mb-3">
                           <div className="col-sm-6">
-                            <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Họ và Tên</label>
+                            <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Họ và Tên</label>
                             <input 
                               type="text" 
-                              className="form-control form-control-poly text-dark" 
+                              className="form-control form-control-poly" 
                               value={fullname}
                               onChange={(e) => setFullname(e.target.value)}
                               placeholder="Họ và tên của bạn"
@@ -402,10 +404,10 @@ const handleToggle2FA = async (checked: boolean) => {
                             />
                           </div>
                           <div className="col-sm-6">
-                            <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Mã Sinh Viên</label>
+                            <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Mã Sinh Viên</label>
                             <input 
                               type="text" 
-                              className="form-control form-control-poly bg-light text-muted" 
+                              className="form-control form-control-poly bg-secondary bg-opacity-10 text-muted" 
                               value={user.username} 
                               readOnly 
                             />
@@ -414,20 +416,20 @@ const handleToggle2FA = async (checked: boolean) => {
                         
                         <div className="row g-3 mb-3">
                           <div className="col-sm-6">
-                            <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Điện thoại</label>
+                            <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Điện thoại</label>
                             <input 
                               type="tel" 
-                              className="form-control form-control-poly text-dark" 
+                              className="form-control form-control-poly" 
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
                               placeholder="Nhập số điện thoại"
                             />
                           </div>
                           <div className="col-sm-6">
-                            <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Email liên hệ</label>
+                            <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Email liên hệ</label>
                             <input 
                               type="email" 
-                              className="form-control form-control-poly bg-light text-muted" 
+                              className="form-control form-control-poly bg-secondary bg-opacity-10 text-muted" 
                               value={user.email} 
                               readOnly 
                             />
@@ -436,19 +438,19 @@ const handleToggle2FA = async (checked: boolean) => {
 
                         <div className="row g-3 mb-3">
                           <div className="col-sm-6">
-                            <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Chuyên ngành</label>
+                            <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Chuyên ngành</label>
                             <input 
                               type="text" 
-                              className="form-control form-control-poly text-dark" 
+                              className="form-control form-control-poly" 
                               value={major}
                               onChange={(e) => setMajor(e.target.value)}
                               placeholder="VD: Thiết kế trang web, Agile..."
                             />
                           </div>
                           <div className="col-sm-6">
-                            <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Giới tính</label>
+                            <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Giới tính</label>
                             <select 
-                              className="form-select form-control-poly text-dark" 
+                              className="form-select form-control-poly" 
                               value={gender ? "true" : "false"}
                               onChange={(e) => setGender(e.target.value === "true")}
                             >
@@ -459,19 +461,19 @@ const handleToggle2FA = async (checked: boolean) => {
                         </div>
 
                         <div className="mb-3">
-                          <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Ngày sinh</label>
+                          <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Ngày sinh</label>
                           <input 
                             type="date" 
-                            className="form-control form-control-poly text-dark" 
+                            className="form-control form-control-poly" 
                             value={birthday}
                             onChange={(e) => setBirthday(e.target.value)}
                           />
                         </div>
 
                         <div className="mb-4">
-                          <label className="form-label fw-medium text-dark" style={{ fontSize: '14px' }}>Giới thiệu ngắn (Tiểu sử)</label>
+                          <label className="form-label fw-medium" style={{ fontSize: '14px' }}>Giới thiệu ngắn (Tiểu sử)</label>
                           <textarea 
-                            className="form-control form-control-poly text-dark" 
+                            className="form-control form-control-poly" 
                             rows={3} 
                             placeholder="Viết vài dòng giới thiệu về bản thân bạn..." 
                             value={bio}
@@ -489,23 +491,23 @@ const handleToggle2FA = async (checked: boolean) => {
                   )}
 
                   {activeTab === 'security' && (
-                    <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
+                    <div className="poly-card p-4 rounded-3 shadow-sm border border-light" style={{ backgroundColor: 'var(--bs-body-bg, white)' }}>
                       <div className="d-flex align-items-center mb-4">
-                        <div className="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style={{ width: '48px', height: '48px' }}>
+                        <div className="rounded-circle bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style={{ width: '48px', height: '48px' }}>
                           <i className="bi bi-key-fill text-poly fs-4"></i>
                         </div>
                         <div>
-                          <h4 className="fw-bold mb-1 text-dark">Đổi mật khẩu</h4>
+                          <h4 className="fw-bold mb-1">Đổi mật khẩu</h4>
                           <p className="text-muted mb-0" style={{ fontSize: '14px' }}>Bảo vệ tài khoản bằng mật khẩu mạnh và an toàn.</p>
                         </div>
                       </div>
 
                       <form onSubmit={handleChangePassword} className="mb-4">
                         <div className="mb-3">
-                          <label className="form-label fw-semibold text-dark" style={{ fontSize: '14px' }}>Mật khẩu hiện tại</label>
+                          <label className="form-label fw-semibold" style={{ fontSize: '14px' }}>Mật khẩu hiện tại</label>
                           <input 
                             type="password" 
-                            className="form-control form-control-poly text-dark" 
+                            className="form-control form-control-poly" 
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             placeholder="Nhập mật khẩu đang sử dụng"
@@ -515,10 +517,10 @@ const handleToggle2FA = async (checked: boolean) => {
                         
                         <div className="row g-3 mb-3">
                           <div className="col-md-6">
-                            <label className="form-label fw-semibold text-dark" style={{ fontSize: '14px' }}>Mật khẩu mới</label>
+                            <label className="form-label fw-semibold" style={{ fontSize: '14px' }}>Mật khẩu mới</label>
                             <input 
                               type="password" 
-                              className="form-control form-control-poly text-dark" 
+                              className="form-control form-control-poly" 
                               value={newPassword}
                               onChange={(e) => handleNewPasswordChange(e.target.value)}
                               placeholder="Tối thiểu 8 ký tự"
@@ -541,10 +543,10 @@ const handleToggle2FA = async (checked: boolean) => {
                           </div>
                           
                           <div className="col-md-6">
-                            <label className="form-label fw-semibold text-dark" style={{ fontSize: '14px' }}>Xác nhận mật khẩu mới</label>
+                            <label className="form-label fw-semibold" style={{ fontSize: '14px' }}>Xác nhận mật khẩu mới</label>
                             <input 
                               type="password" 
-                              className="form-control form-control-poly text-dark" 
+                              className="form-control form-control-poly" 
                               value={confirmPassword}
                               onChange={(e) => handleConfirmPasswordChange(e.target.value)}
                               placeholder="Nhập lại mật khẩu mới"
@@ -573,7 +575,7 @@ const handleToggle2FA = async (checked: boolean) => {
                       <div className="border-top pt-4">
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
-                            <h5 className="fw-bold mb-1 text-dark">Xác thực 2 yếu tố (2FA)</h5>
+                            <h5 className="fw-bold mb-1">Xác thực 2 yếu tố (2FA)</h5>
                             <p className="text-muted mb-0" style={{ fontSize: '13.5px' }}>Bảo vệ tài khoản của bạn bằng lớp bảo mật thứ hai.</p>
                           </div>
                           <div className="form-switch">
@@ -590,163 +592,40 @@ const handleToggle2FA = async (checked: boolean) => {
                     </div>
                   )}
 
-                  {activeTab === 'privacy' && (
-                    <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
-                      <h4 className="fw-bold mb-1 text-dark">Quyền riêng tư</h4>
-                      <p className="text-muted mb-4" style={{ fontSize: '14.5px' }}>Kiểm soát tính riêng tư của dữ liệu cá nhân.</p>
-
-                      <form onSubmit={handlePrivacySave} className="mb-4">
-                        <div className="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-                          <div>
-                            <h6 className="fw-semibold mb-1 text-dark" style={{ fontSize: '14.5px' }}>Ai có thể xem danh sách theo dõi của bạn?</h6>
-                            <span className="text-muted d-block" style={{ fontSize: '12.5px' }}>Giới hạn người có thể thấy bạn bè/người bạn theo dõi.</span>
-                          </div>
-                          <select 
-                            className="form-select form-control-poly w-auto d-inline-block text-dark"
-                            value={whoCanSeeFollowers}
-                            onChange={(e) => setWhoCanSeeFollowers(e.target.value)}
-                          >
-                            <option value="public">Công khai</option>
-                            <option value="friends">Bạn bè</option>
-                            <option value="private">Chỉ mình tôi</option>
-                          </select>
-                        </div>
-
-                        <div className="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
-                          <div>
-                            <h6 className="fw-semibold mb-1 text-dark" style={{ fontSize: '14.5px' }}>Ai có thể nhắn tin cho bạn?</h6>
-                            <span className="text-muted d-block" style={{ fontSize: '12.5px' }}>Kiểm soát ai sẽ được phép gửi tin nhắn trực tiếp.</span>
-                          </div>
-                          <select 
-                            className="form-select form-control-poly w-auto d-inline-block text-dark"
-                            value={whoCanMessage}
-                            onChange={(e) => setWhoCanMessage(e.target.value)}
-                          >
-                            <option value="everyone">Mọi người</option>
-                            <option value="friends">Chỉ bạn bè</option>
-                          </select>
-                        </div>
-
-                        <div className="d-flex justify-content-end">
-                          <button type="submit" className="btn btn-poly fw-semibold px-4 rounded-pill">Lưu cấu hình</button>
-                        </div>
-                      </form>
-
-                      <div className="p-4 border border-danger border-opacity-25 rounded-3 bg-danger bg-opacity-10 mt-3">
-                        <h5 className="fw-bold text-danger mb-2"><i className="bi bi-exclamation-triangle-fill me-2"></i>Vùng nguy hiểm</h5>
-                        <p className="text-danger opacity-75 mb-3" style={{ fontSize: '13.5px' }}>Khi bạn xóa tài khoản, toàn bộ dữ liệu, bài viết và tương tác của bạn sẽ bị xóa vĩnh viễn và không thể khôi phục lại được.</p>
-                        <button className="btn btn-outline-danger fw-semibold rounded-pill px-4" onClick={() => alert('Yêu cầu xóa tài khoản đã được chuyển tới BQT. Chúng tôi sẽ gửi mail xác nhận trong 24 giờ.')}>Yêu cầu xóa tài khoản</button>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === 'notifications' && (
-                    <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
-                      <h4 className="fw-bold mb-4 text-dark">Cài đặt thông báo</h4>
-
-                      <form onSubmit={handleNotifySave}>
-                        <div className="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
-                          <div>
-                            <h6 className="fw-semibold mb-1 text-dark" style={{ fontSize: '14.5px' }}>Thông báo qua Email</h6>
-                            <span className="text-muted d-block" style={{ fontSize: '12.5px' }}>Nhận email tổng hợp các thông báo chưa đọc.</span>
-                          </div>
-                          <div className="form-switch">
-                            <input 
-                              className="form-check-input" 
-                              type="checkbox" 
-                              role="switch" 
-                              checked={notifyEmail}
-                              onChange={(e) => setNotifyEmail(e.target.checked)}
-                            />
-                          </div>
-                        </div>
-
-                        <h6 className="fw-bold mb-3 text-poly mt-4">Thông báo ứng dụng (Push Notifications)</h6>
-                        
-                        <div className="d-flex flex-column gap-3 mb-4">
-                          <label className="d-flex align-items-center custom-checkbox cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              className="form-check-input shadow-none mt-0 me-3" 
-                              checked={notifyComment}
-                              onChange={(e) => setNotifyComment(e.target.checked)}
-                              style={{ width: '20px', height: '20px' }}
-                            />
-                            <span style={{ fontSize: '14.5px' }} className="fw-medium text-dark">Có người bình luận bài viết của bạn</span>
-                          </label>
-                          <label className="d-flex align-items-center custom-checkbox cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              className="form-check-input shadow-none mt-0 me-3" 
-                              checked={notifyLike}
-                              onChange={(e) => setNotifyLike(e.target.checked)}
-                              style={{ width: '20px', height: '20px' }}
-                            />
-                            <span style={{ fontSize: '14.5px' }} className="fw-medium text-dark">Có người thích bài viết của bạn</span>
-                          </label>
-                          <label className="d-flex align-items-center custom-checkbox cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              className="form-check-input shadow-none mt-0 me-3" 
-                              checked={notifyFollow}
-                              onChange={(e) => setNotifyFollow(e.target.checked)}
-                              style={{ width: '20px', height: '20px' }}
-                            />
-                            <span style={{ fontSize: '14.5px' }} className="fw-medium text-dark">Có người theo dõi mới</span>
-                          </label>
-                          <label className="d-flex align-items-center custom-checkbox cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              className="form-check-input shadow-none mt-0 me-3" 
-                              checked={notifyRecommend}
-                              onChange={(e) => setNotifyRecommend(e.target.checked)}
-                              style={{ width: '20px', height: '20px' }}
-                            />
-                            <span style={{ fontSize: '14.5px' }} className="fw-medium text-dark">Đề xuất khóa học/Nhóm mới</span>
-                          </label>
-                        </div>
-
-                        <div className="d-flex justify-content-end">
-                          <button type="submit" className="btn btn-poly fw-semibold px-4 rounded-pill">Lưu cài đặt</button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-
                   {activeTab === 'display' && (
-                    <div className="poly-card p-4 bg-white rounded-3 shadow-sm border border-light">
-                      <h4 className="fw-bold mb-4 text-dark">Giao diện hệ thống</h4>
+                    <div className="poly-card p-4 rounded-3 shadow-sm border border-light" style={{ backgroundColor: 'var(--bs-body-bg, white)' }}>
+                      <h4 className="fw-bold mb-4">Giao diện hệ thống</h4>
                       
-                      <h6 className="fw-semibold mb-3 text-dark">Chế độ hiển thị</h6>
+                      <h6 className="fw-semibold mb-3">Chế độ hiển thị</h6>
                       <div className="d-flex gap-3 mb-4">
                         <div className="theme-option text-center">
                           <div 
                             onClick={() => handleThemeModeSelect('light')}
-                            className={`border rounded p-2 mb-2 shadow-sm cursor-pointer ${themeMode === 'light' ? 'active-theme' : ''}`} 
+                            className={`border rounded p-2 mb-2 shadow-sm cursor-pointer ${themeMode === 'light' ? 'border-primary border-2' : ''}`} 
                             style={{ width: '120px', height: '80px', backgroundColor: '#ffffff' }}
                           >
                             <div className="w-100 bg-light rounded mb-1" style={{ height: '15px' }}></div>
                             <div className="w-75 bg-light rounded" style={{ height: '30px' }}></div>
                           </div>
-                          <span className="fw-medium text-dark" style={{ fontSize: '13.5px' }}>Giao diện Sáng</span>
+                          <span className="fw-medium" style={{ fontSize: '13.5px' }}>Giao diện Sáng</span>
                         </div>
                         <div className="theme-option text-center">
                           <div 
                             onClick={() => handleThemeModeSelect('dark')}
-                            className={`border rounded p-2 mb-2 shadow-sm cursor-pointer ${themeMode === 'dark' ? 'active-theme' : ''}`} 
+                            className={`border rounded p-2 mb-2 shadow-sm cursor-pointer ${themeMode === 'dark' ? 'border-primary border-2' : ''}`} 
                             style={{ width: '120px', height: '80px', backgroundColor: '#1e293b' }}
                           >
                             <div className="w-100 bg-secondary bg-opacity-25 rounded mb-1" style={{ height: '15px' }}></div>
                             <div className="w-75 bg-secondary bg-opacity-25 rounded" style={{ height: '30px' }}></div>
                           </div>
-                          <span className="fw-medium text-dark" style={{ fontSize: '13.5px' }}>Giao diện Tối</span>
+                          <span className="fw-medium" style={{ fontSize: '13.5px' }}>Giao diện Tối</span>
                         </div>
                       </div>
 
                       <div className="border-top pt-4">
-                        <h6 className="fw-semibold mb-3 text-dark">Ngôn ngữ</h6>
+                        <h6 className="fw-semibold mb-3">Ngôn ngữ</h6>
                         <select 
-                          className="form-select form-control-poly w-50 text-dark"
+                          className="form-select form-control-poly w-50"
                           value={language}
                           onChange={(e) => handleLanguageSelect(e.target.value as 'vi' | 'en')}
                         >
