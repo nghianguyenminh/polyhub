@@ -267,7 +267,7 @@ function LoginContent() {
     setLoadingState(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/verify-2fa`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/verify-2fa`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -441,7 +441,7 @@ function LoginContent() {
               </div>
 
               <a 
-                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/oauth2/authorization/google`} 
+                href={`${API_BASE_URL}/oauth2/authorization/google`} 
                 className="btn-submit d-flex align-items-center justify-content-center text-decoration-none w-100"
                 style={{ backgroundColor: '#ffffff', color: '#374151', border: '1px solid #D1D5DB' }}
               >

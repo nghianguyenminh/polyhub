@@ -34,14 +34,14 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           <Menu size={24} />
         </button>
 
-        <div className={styles.searchContainer}>
+        {/* <div className={styles.searchContainer}>
           <Search className={styles.searchIcon} />
           <input
             type="text"
             placeholder="Tìm kiếm nội dung..."
             className={styles.searchInput}
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Right Section: Notifications & Profile */}
@@ -56,10 +56,10 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
         <Link href={`/profile/${user?.username}`} className={styles.profileButton} style={{ textDecoration: 'none' }}>
           <div className={styles.avatar}>
             {user?.avatar && user.avatar !== 'default.png' ? (
-              <img 
-                src={user.avatar.startsWith('http') ? user.avatar : `https://ui-avatars.com/api/?name=${user.fullname}`} 
-                alt={user.fullname} 
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
+              <img
+                src={user.avatar.startsWith('http') ? user.avatar : `https://ui-avatars.com/api/?name=${user.fullname}`}
+                alt={user.fullname}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
               />
             ) : (
               user?.fullname ? user.fullname.charAt(0).toUpperCase() : 'A'
